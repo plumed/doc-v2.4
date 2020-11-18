@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/VectorMean.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - VectorMean.cpp<span style="font-size: 80%;"> (source / <a href="VectorMean.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">92.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;vesselbase/VesselRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;vesselbase/FunctionVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;vesselbase/ActionWithVessel.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;multicolvar/ActionVolume.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;VectorMultiColvar.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<a name="29"><span class="lineNum">      29 </span>            : namespace crystallization {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         12 : class VectorMean : public vesselbase::FunctionVessel {</span>
+<span class="lineNum">      32 </span>            : private:
+<span class="lineNum">      33 </span>            :   unsigned nder;
+<span class="lineNum">      34 </span>            : public:
+<span class="lineNum">      35 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      36 </span>            :   static void reserveKeyword( Keywords&amp; keys );
+<span class="lineNum">      37 </span>            :   explicit VectorMean( const vesselbase::VesselOptions&amp; da );
+<span class="lineNum">      38 </span>            :   std::string value_descriptor();
+<span class="lineNum">      39 </span>            :   void resize();
+<span class="lineNum">      40 </span>            :   void calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) const ;
+<span class="lineNum">      41 </span>            :   void finish( const std::vector&lt;double&gt;&amp; buffer );
+<a name="42"><span class="lineNum">      42 </span>            : };</a>
+<span class="lineNum">      43 </span>            : 
+<a name="44"><span class="lineNum">      44 </span><span class="lineCov">       6458 : PLUMED_REGISTER_VESSEL(VectorMean,&quot;VMEAN&quot;)</span></a>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">          6 : void VectorMean::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      47 </span><span class="lineCov">          6 :   vesselbase::FunctionVessel::registerKeywords(keys);</span>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">       1613 : void VectorMean::reserveKeyword( Keywords&amp; keys ) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">       6452 :   keys.reserve(&quot;vessel&quot;,&quot;VMEAN&quot;,&quot;calculate the norm of the mean vector.&quot;);</span>
+<span class="lineNum">      52 </span><span class="lineCov">       6452 :   keys.addOutputComponent(&quot;vmean&quot;,&quot;VMEAN&quot;,&quot;the norm of the mean vector. The output component can be refererred to elsewhere in the input &quot;</span>
+<span class="lineNum">      53 </span>            :                           &quot;file by using the label.vmean&quot;);
+<a name="54"><span class="lineNum">      54 </span><span class="lineCov">       1613 : }</span></a>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">          6 : VectorMean::VectorMean( const vesselbase::VesselOptions&amp; da ) :</span>
+<span class="lineNum">      57 </span>            :   FunctionVessel(da),
+<span class="lineNum">      58 </span><span class="lineCov">          6 :   nder(0)</span>
+<span class="lineNum">      59 </span>            : {
+<a name="60"><span class="lineNum">      60 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">          6 : std::string VectorMean::value_descriptor() {</span>
+<span class="lineNum">      63 </span><span class="lineCov">          6 :   return &quot;the norm of the mean vector&quot;;</span>
+<a name="64"><span class="lineNum">      64 </span>            : }</a>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">         23 : void VectorMean::resize() {</span>
+<span class="lineNum">      67 </span><span class="lineCov">         23 :   unsigned ncomp=getAction()-&gt;getNumberOfQuantities() - 2;</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">         23 :   if( getAction()-&gt;derivativesAreRequired() ) {</span>
+<span class="lineNum">      70 </span><span class="lineCov">         16 :     nder=getAction()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">      71 </span><span class="lineCov">         32 :     resizeBuffer( (1+nder)*(ncomp+1) ); getFinalValue()-&gt;resizeDerivatives( nder );</span>
+<span class="lineNum">      72 </span>            :   } else {
+<span class="lineNum">      73 </span><span class="lineCov">          7 :     nder=0; resizeBuffer(ncomp+1);</span>
+<span class="lineNum">      74 </span>            :   }
+<a name="75"><span class="lineNum">      75 </span><span class="lineCov">         23 : }</span></a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">      14712 : void VectorMean::calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) const {</span>
+<span class="lineNum">      78 </span><span class="lineCov">      14712 :   unsigned ncomp=getAction()-&gt;getNumberOfQuantities()-2;</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">      14712 :   double weight=myvals.get(0); plumed_dbg_assert( weight&gt;=getTolerance() );</span>
+<span class="lineNum">      81 </span><span class="lineCov">      29424 :   buffer[bufstart] += weight;</span>
+<span class="lineNum">      82 </span><span class="lineCov">     154296 :   for(unsigned i=0; i&lt;ncomp; ++i) buffer[bufstart + (1+i)*(1+nder)] += weight*myvals.get(2+i);</span>
+<span class="lineNum">      83 </span><span class="lineCov">      14712 :   if( !getAction()-&gt;derivativesAreRequired() ) return;</span>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">      14712 :   if( diffweight ) myvals.chainRule( 0, 0, 1, 0, 1.0, bufstart, buffer );</span>
+<span class="lineNum">      86 </span><span class="lineCov">     107768 :   for(unsigned i=0; i&lt;ncomp; ++i) {</span>
+<span class="lineNum">      87 </span><span class="lineCov">      93056 :     double colvar=myvals.get(2+i);</span>
+<span class="lineNum">      88 </span><span class="lineCov">      46528 :     myvals.chainRule( 2+i, 1+i, 1, 0, weight, bufstart, buffer );</span>
+<span class="lineNum">      89 </span><span class="lineCov">      46528 :     if( diffweight ) myvals.chainRule( 0, 1+i, 1, 0, colvar, bufstart, buffer );</span>
+<span class="lineNum">      90 </span>            :   }
+<span class="lineNum">      91 </span>            :   return;
+<a name="92"><span class="lineNum">      92 </span>            : }</a>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">       1828 : void VectorMean::finish( const std::vector&lt;double&gt;&amp; buffer ) {</span>
+<span class="lineNum">      95 </span><span class="lineCov">       1828 :   unsigned ncomp=getAction()-&gt;getNumberOfQuantities()-2;</span>
+<span class="lineNum">      96 </span><span class="lineCov">       3656 :   double sum=0, ww=buffer[bufstart];</span>
+<span class="lineNum">      97 </span><span class="lineCov">      12888 :   for(unsigned i=0; i&lt;ncomp; ++i) {</span>
+<span class="lineNum">      98 </span><span class="lineCov">      11060 :     double tmp = buffer[bufstart+(nder+1)*(i+1)] / ww;</span>
+<span class="lineNum">      99 </span><span class="lineCov">       5530 :     sum+=tmp*tmp;</span>
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span><span class="lineCov">       1828 :   setOutputValue( sqrt(sum) );</span>
+<span class="lineNum">     102 </span><span class="lineCov">       1828 :   if( !getAction()-&gt;derivativesAreRequired() ) return;</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">       1828 :   Value* fval=getFinalValue(); double tw = 1.0 / sqrt(sum);</span>
+<span class="lineNum">     105 </span><span class="lineCov">       7358 :   for(unsigned icomp=0; icomp&lt;ncomp; ++icomp) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">      11060 :     double tmp = buffer[bufstart + (icomp+1)*(1+nder)] / ww;</span>
+<span class="lineNum">     107 </span><span class="lineCov">       5530 :     unsigned bstart = bufstart + (1+icomp)*(nder+1) + 1;</span>
+<span class="lineNum">     108 </span><span class="lineCov">    1825954 :     for(unsigned jder=0; jder&lt;nder; ++jder) fval-&gt;addDerivative( jder, (tw*tmp/ww)*( buffer[bstart + jder] - tmp*buffer[bufstart + 1 + jder] ) );</span>
+<span class="lineNum">     109 </span>            :   }
+<span class="lineNum">     110 </span>            : }
+<a name="111"><span class="lineNum">     111 </span>            : </a>
+<span class="lineNum">     112 </span>            : }
+<span class="lineNum">     113 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

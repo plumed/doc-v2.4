@@ -1,0 +1,476 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/OFile.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - OFile.cpp<span style="font-size: 80%;"> (source / <a href="OFile.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">205</td>
+            <td class="headerCovTableEntry">211</td>
+            <td class="headerCovTableEntryHi">97.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;OFile.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/Action.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Communicator.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      29 </span>            : #include &lt;cstdarg&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      33 </span>            : #include &lt;string&gt;
+<span class="lineNum">      34 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      35 </span>            : #include &lt;cerrno&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">      38 </span>            : #include &lt;zlib.h&gt;
+<span class="lineNum">      39 </span>            : #endif
+<span class="lineNum">      40 </span>            : 
+<a name="41"><span class="lineNum">      41 </span>            : namespace PLMD {</a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">    3904837 : size_t OFile::llwrite(const char*ptr,size_t s) {</span>
+<span class="lineNum">      44 </span>            :   size_t r;
+<span class="lineNum">      45 </span><span class="lineCov">    3904837 :   if(linked) return linked-&gt;llwrite(ptr,s);</span>
+<span class="lineNum">      46 </span><span class="lineCov">    3904832 :   if(! (comm &amp;&amp; comm-&gt;Get_rank()&gt;0)) {</span>
+<span class="lineNum">      47 </span><span class="lineCov">    3213423 :     if(!fp) plumed_merror(&quot;writing on uninitilized File&quot;);</span>
+<span class="lineNum">      48 </span><span class="lineCov">    3213423 :     if(gzfp) {</span>
+<span class="lineNum">      49 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">      50 </span><span class="lineCov">       1254 :       r=gzwrite(gzFile(gzfp),ptr,s);</span>
+<span class="lineNum">      51 </span>            : #else
+<span class="lineNum">      52 </span>            :       plumed_merror(&quot;file &quot; + getPath() + &quot;: trying to use a gz file without zlib being linked&quot;);
+<span class="lineNum">      53 </span>            : #endif
+<span class="lineNum">      54 </span>            :     } else {
+<span class="lineNum">      55 </span><span class="lineCov">    3212169 :       r=fwrite(ptr,1,s,fp);</span>
+<span class="lineNum">      56 </span>            :     }
+<span class="lineNum">      57 </span>            :   }
+<span class="lineNum">      58 </span>            : //  This barrier is apparently useless since it comes
+<span class="lineNum">      59 </span>            : //  just before a Bcast.
+<span class="lineNum">      60 </span>            : //
+<span class="lineNum">      61 </span>            : //  Anyway, it looks like it is solving an issue that appeared on
+<span class="lineNum">      62 </span>            : //  TRAVIS (at least on my laptop) so I add it here.
+<span class="lineNum">      63 </span>            : //  GB
+<span class="lineNum">      64 </span><span class="lineCov">    3904832 :   if(comm) comm-&gt;Barrier();</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">    3904832 :   if(comm) comm-&gt;Bcast(r,0);</span>
+<span class="lineNum">      68 </span><span class="lineCov">    3904832 :   return r;</span>
+<a name="69"><span class="lineNum">      69 </span>            : }</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">       5620 : OFile::OFile():</span>
+<span class="lineNum">      72 </span>            :   linked(NULL),
+<span class="lineNum">      73 </span>            :   fieldChanged(false),
+<span class="lineNum">      74 </span>            :   backstring(&quot;bck&quot;),
+<span class="lineNum">      75 </span>            :   enforceRestart_(false),
+<span class="lineNum">      76 </span><span class="lineCov">      28100 :   enforceBackup_(false)</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span><span class="lineCov">       5620 :   fmtField();</span>
+<span class="lineNum">      79 </span><span class="lineCov">       5620 :   buflen=1;</span>
+<span class="lineNum">      80 </span><span class="lineCov">       5620 :   actual_buffer_length=0;</span>
+<span class="lineNum">      81 </span><span class="lineCov">       5620 :   buffer=new char[buflen];</span>
+<span class="lineNum">      82 </span>            : // these are set to zero to avoid valgrind errors
+<span class="lineNum">      83 </span><span class="lineCov">      11240 :   for(int i=0; i&lt;buflen; ++i) buffer[i]=0;</span>
+<span class="lineNum">      84 </span><span class="lineCov">       5620 :   buffer_string=new char [1000];</span>
+<span class="lineNum">      85 </span>            : // these are set to zero to avoid valgrind errors
+<span class="lineNum">      86 </span><span class="lineCov">    5625620 :   for(unsigned i=0; i&lt;1000; ++i) buffer_string[i]=0;</span>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">       5620 : }</span></a>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">      21135 : OFile::~OFile() {</span>
+<span class="lineNum">      90 </span><span class="lineCov">       5620 :   delete [] buffer_string;</span>
+<span class="lineNum">      91 </span><span class="lineCov">       5620 :   delete [] buffer;</span>
+<a name="92"><span class="lineNum">      92 </span><span class="lineCov">       6508 : }</span></a>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">          1 : OFile&amp; OFile::link(OFile&amp;l) {</span>
+<span class="lineNum">      95 </span><span class="lineCov">          1 :   fp=NULL;</span>
+<span class="lineNum">      96 </span><span class="lineCov">          1 :   gzfp=NULL;</span>
+<span class="lineNum">      97 </span><span class="lineCov">          1 :   linked=&amp;l;</span>
+<span class="lineNum">      98 </span><span class="lineCov">          1 :   return *this;</span>
+<a name="99"><span class="lineNum">      99 </span>            : }</a>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">       2233 : OFile&amp; OFile::setLinePrefix(const std::string&amp;l) {</span>
+<span class="lineNum">     102 </span><span class="lineCov">       2233 :   linePrefix=l;</span>
+<span class="lineNum">     103 </span><span class="lineCov">       2233 :   return *this;</span>
+<a name="104"><span class="lineNum">     104 </span>            : }</a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">   18077884 : int OFile::printf(const char*fmt,...) {</span>
+<span class="lineNum">     107 </span>            :   va_list arg;
+<span class="lineNum">     108 </span><span class="lineCov">   18077884 :   va_start(arg, fmt);</span>
+<span class="lineNum">     109 </span><span class="lineCov">   18077884 :   int r=std::vsnprintf(&amp;buffer[actual_buffer_length],buflen-actual_buffer_length,fmt,arg);</span>
+<span class="lineNum">     110 </span><span class="lineCov">   18077884 :   va_end(arg);</span>
+<span class="lineNum">     111 </span><span class="lineCov">   18077884 :   if(r&gt;=buflen-actual_buffer_length) {</span>
+<span class="lineNum">     112 </span>            :     int newlen=buflen;
+<span class="lineNum">     113 </span><span class="lineCov">      33324 :     while(newlen&lt;=r+actual_buffer_length) newlen*=2;</span>
+<span class="lineNum">     114 </span><span class="lineCov">      10664 :     char* newbuf=new char [newlen];</span>
+<span class="lineNum">     115 </span><span class="lineCov">      10664 :     memmove(newbuf,buffer,buflen);</span>
+<span class="lineNum">     116 </span><span class="lineCov">    1846599 :     for(int k=buflen; k&lt;newlen; k++) newbuf[k]=0;</span>
+<span class="lineNum">     117 </span><span class="lineCov">      10664 :     delete [] buffer;</span>
+<span class="lineNum">     118 </span><span class="lineCov">      10664 :     buffer=newbuf;</span>
+<span class="lineNum">     119 </span><span class="lineCov">      10664 :     buflen=newlen;</span>
+<span class="lineNum">     120 </span>            :     va_list arg;
+<span class="lineNum">     121 </span><span class="lineCov">      10664 :     va_start(arg, fmt);</span>
+<span class="lineNum">     122 </span><span class="lineCov">      10664 :     r=std::vsnprintf(&amp;buffer[actual_buffer_length],buflen-actual_buffer_length,fmt,arg);</span>
+<span class="lineNum">     123 </span><span class="lineCov">      10664 :     va_end(arg);</span>
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span><span class="lineCov">   18077884 :   plumed_massert(r&gt;-1 &amp;&amp; r&lt;buflen-actual_buffer_length,&quot;error using fmt string &quot; + std::string(fmt));</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : // Line is buffered until newline, then written with a PLUMED: prefix
+<span class="lineNum">     128 </span><span class="lineCov">   18077884 :   char*p1=buffer;</span>
+<span class="lineNum">     129 </span>            :   char*p2;
+<span class="lineNum">     130 </span>            : // newline is only searched in the just added portion:
+<span class="lineNum">     131 </span><span class="lineCov">   18077884 :   char*psearch=p1+actual_buffer_length;</span>
+<span class="lineNum">     132 </span><span class="lineCov">   18077884 :   actual_buffer_length+=r;</span>
+<span class="lineNum">     133 </span><span class="lineCov">   25507632 :   while((p2=strchr(psearch,'\n'))) {</span>
+<span class="lineNum">     134 </span><span class="lineCov">    3904832 :     if(linePrefix.length()&gt;0) llwrite(linePrefix.c_str(),linePrefix.length());</span>
+<span class="lineNum">     135 </span><span class="lineCov">    3714874 :     llwrite(p1,p2-p1+1);</span>
+<span class="lineNum">     136 </span><span class="lineCov">    3714874 :     actual_buffer_length-=(p2-p1)+1;</span>
+<span class="lineNum">     137 </span><span class="lineCov">    3714874 :     p1=p2+1;</span>
+<span class="lineNum">     138 </span>            :     psearch=p1;
+<span class="lineNum">     139 </span>            :   };
+<span class="lineNum">     140 </span><span class="lineCov">   18077884 :   if(buffer!=p1) memmove(buffer,p1,actual_buffer_length);</span>
+<span class="lineNum">     141 </span><span class="lineCov">   18077884 :   return r;</span>
+<a name="142"><span class="lineNum">     142 </span>            : }</a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">      24541 : OFile&amp; OFile::addConstantField(const std::string&amp;name) {</span>
+<span class="lineNum">     145 </span>            :   Field f;
+<span class="lineNum">     146 </span>            :   f.name=name;
+<span class="lineNum">     147 </span><span class="lineCov">      24541 :   const_fields.push_back(f);</span>
+<span class="lineNum">     148 </span><span class="lineCov">      24541 :   return *this;</span>
+<span class="lineNum">     149 </span>            : }
+<a name="150"><span class="lineNum">     150 </span>            : </a>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">       2965 : OFile&amp; OFile::clearFields() {</span>
+<span class="lineNum">     153 </span>            :   fields.clear();
+<span class="lineNum">     154 </span>            :   const_fields.clear();
+<span class="lineNum">     155 </span>            :   previous_fields.clear();
+<span class="lineNum">     156 </span><span class="lineCov">       2965 :   return *this;</span>
+<a name="157"><span class="lineNum">     157 </span>            : }</a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">   12467756 : OFile&amp; OFile::fmtField(const std::string&amp;fmt) {</span>
+<span class="lineNum">     160 </span><span class="lineCov">   12467756 :   this-&gt;fieldFmt=fmt;</span>
+<span class="lineNum">     161 </span><span class="lineCov">   12467756 :   return *this;</span>
+<a name="162"><span class="lineNum">     162 </span>            : }</a>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">      11188 : OFile&amp; OFile::fmtField() {</span>
+<span class="lineNum">     165 </span><span class="lineCov">      11188 :   this-&gt;fieldFmt=&quot;%23.16lg&quot;;</span>
+<span class="lineNum">     166 </span><span class="lineCov">      11188 :   return *this;</span>
+<a name="167"><span class="lineNum">     167 </span>            : }</a>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">   13055585 : OFile&amp; OFile::printField(const std::string&amp;name,double v) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">   13055585 :   sprintf(buffer_string,fieldFmt.c_str(),v);</span>
+<span class="lineNum">     171 </span><span class="lineCov">   26111170 :   printField(name,buffer_string);</span>
+<span class="lineNum">     172 </span><span class="lineCov">   13055585 :   return *this;</span>
+<a name="173"><span class="lineNum">     173 </span>            : }</a>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">    5587149 : OFile&amp; OFile::printField(const std::string&amp;name,int v) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">    5587149 :   sprintf(buffer_string,&quot; %d&quot;,v);</span>
+<span class="lineNum">     177 </span><span class="lineCov">   11174298 :   printField(name,buffer_string);</span>
+<span class="lineNum">     178 </span><span class="lineCov">    5587149 :   return *this;</span>
+<a name="179"><span class="lineNum">     179 </span>            : }</a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">   33527832 : OFile&amp; OFile::printField(const std::string&amp;name,const std::string &amp; v) {</span>
+<span class="lineNum">     182 </span>            :   unsigned i;
+<span class="lineNum">     183 </span><span class="lineCov">  511356388 :   for(i=0; i&lt;const_fields.size(); i++) if(const_fields[i].name==name) break;</span>
+<span class="lineNum">     184 </span><span class="lineCov">   33527832 :   if(i&gt;=const_fields.size()) {</span>
+<span class="lineNum">     185 </span>            :     Field field;
+<span class="lineNum">     186 </span>            :     field.name=name;
+<span class="lineNum">     187 </span>            :     field.value=v;
+<span class="lineNum">     188 </span><span class="lineCov">   13974929 :     fields.push_back(field);</span>
+<span class="lineNum">     189 </span>            :   } else {
+<span class="lineNum">     190 </span><span class="lineCov">   39105806 :     if(const_fields[i].value!=v) fieldChanged=true;</span>
+<span class="lineNum">     191 </span>            :     const_fields[i].value=v;
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span><span class="lineCov">   33527832 :   return *this;</span>
+<a name="194"><span class="lineNum">     194 </span>            : }</a>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">       4004 : OFile&amp; OFile::setupPrintValue( Value *val ) {</span>
+<span class="lineNum">     197 </span><span class="lineCov">       4004 :   if( val-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     198 </span><span class="lineCov">        450 :     addConstantField(&quot;min_&quot; + val-&gt;getName() );</span>
+<span class="lineNum">     199 </span><span class="lineCov">        450 :     addConstantField(&quot;max_&quot; + val-&gt;getName() );</span>
+<span class="lineNum">     200 </span>            :   }
+<span class="lineNum">     201 </span><span class="lineCov">       4004 :   return *this;</span>
+<a name="202"><span class="lineNum">     202 </span>            : }</a>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">     113957 : OFile&amp; OFile::printField( Value* val, const double&amp; v ) {</span>
+<span class="lineNum">     205 </span><span class="lineCov">     227914 :   printField( val-&gt;getName(), v );</span>
+<span class="lineNum">     206 </span><span class="lineCov">     113957 :   if( val-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     207 </span><span class="lineCov">       6475 :     std::string min, max; val-&gt;getDomain( min, max );</span>
+<span class="lineNum">     208 </span><span class="lineCov">      12950 :     printField( &quot;min_&quot; + val-&gt;getName(), min );</span>
+<span class="lineNum">     209 </span><span class="lineCov">      12950 :     printField(&quot;max_&quot; + val-&gt;getName(), max );</span>
+<span class="lineNum">     210 </span>            :   }
+<span class="lineNum">     211 </span><span class="lineCov">     113957 :   return *this;</span>
+<a name="212"><span class="lineNum">     212 </span>            : }</a>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">    3378878 : OFile&amp; OFile::printField() {</span>
+<span class="lineNum">     215 </span>            :   bool reprint=false;
+<span class="lineNum">     216 </span><span class="lineCov">    6753510 :   if(fieldChanged || fields.size()!=previous_fields.size()) {</span>
+<span class="lineNum">     217 </span>            :     reprint=true;
+<span class="lineNum">     218 </span><span class="lineCov">   31253863 :   } else for(unsigned i=0; i&lt;fields.size(); i++) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">   55760142 :       if( previous_fields[i].name!=fields[i].name ||</span>
+<span class="lineNum">     220 </span><span class="lineCov">   13940034 :           (fields[i].constant &amp;&amp; fields[i].value!=previous_fields[i].value) ) {</span>
+<span class="lineNum">     221 </span>            :         reprint=true;
+<span class="lineNum">     222 </span>            :         break;
+<span class="lineNum">     223 </span>            :       }
+<span class="lineNum">     224 </span>            :     }
+<span class="lineNum">     225 </span><span class="lineCov">    3378878 :   if(reprint) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">       5085 :     printf(&quot;#! FIELDS&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">     114861 :     for(unsigned i=0; i&lt;fields.size(); i++) printf(&quot; %s&quot;,fields[i].name.c_str());</span>
+<span class="lineNum">     228 </span><span class="lineCov">       5085 :     printf(&quot;\n&quot;);</span>
+<span class="lineNum">     229 </span><span class="lineCov">      83721 :     for(unsigned i=0; i&lt;const_fields.size(); i++) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">      24517 :       printf(&quot;#! SET %s %s&quot;,const_fields[i].name.c_str(),const_fields[i].value.c_str());</span>
+<span class="lineNum">     231 </span><span class="lineCov">      24517 :       printf(&quot;\n&quot;);</span>
+<span class="lineNum">     232 </span>            :     }
+<span class="lineNum">     233 </span>            :   }
+<span class="lineNum">     234 </span><span class="lineCov">   48682543 :   for(unsigned i=0; i&lt;fields.size(); i++) printf(&quot;%s&quot;,fields[i].value.c_str());</span>
+<span class="lineNum">     235 </span><span class="lineCov">    3378878 :   printf(&quot;\n&quot;);</span>
+<span class="lineNum">     236 </span><span class="lineCov">    3378878 :   previous_fields=fields;</span>
+<span class="lineNum">     237 </span>            :   fields.clear();
+<span class="lineNum">     238 </span><span class="lineCov">    3378878 :   fieldChanged=false;</span>
+<span class="lineNum">     239 </span><span class="lineCov">    3378878 :   return *this;</span>
+<a name="240"><span class="lineNum">     240 </span>            : }</a>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineCov">         55 : void OFile::setBackupString( const std::string&amp; str ) {</span>
+<span class="lineNum">     243 </span><span class="lineCov">         55 :   backstring=str;</span>
+<a name="244"><span class="lineNum">     244 </span><span class="lineCov">         55 : }</span></a>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">          4 : void OFile::backupAllFiles( const std::string&amp; str ) {</span>
+<span class="lineNum">     247 </span><span class="lineCov">          4 :   if(str==&quot;/dev/null&quot;) return;</span>
+<span class="lineNum">     248 </span><span class="lineCov">          8 :   plumed_assert( backstring!=&quot;bck&quot; &amp;&amp; !checkRestart());</span>
+<span class="lineNum">     249 </span>            :   size_t found=str.find_last_of(&quot;/\\&quot;);
+<span class="lineNum">     250 </span><span class="lineCov">          8 :   std::string filename = appendSuffix(str,getSuffix());</span>
+<span class="lineNum">     251 </span><span class="lineCov">          4 :   std::string directory=filename.substr(0,found+1);</span>
+<span class="lineNum">     252 </span><span class="lineCov">          4 :   std::string file=filename.substr(found+1);</span>
+<span class="lineNum">     253 </span><span class="lineCov">          4 :   if( FileExist(filename) ) backupFile(&quot;bck&quot;, filename);</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :   for(int i=0;; i++) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">          4 :     std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         20 :     std::string filestr = directory + backstring + &quot;.&quot; + num + &quot;.&quot; + file;</span>
+<span class="lineNum">     257 </span><span class="lineCov">          4 :     if( !FileExist(filestr) ) break;</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :     backupFile( &quot;bck&quot;, filestr);</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :   }</span>
+<a name="260"><span class="lineNum">     260 </span>            : }</a>
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span><span class="lineCov">       2514 : void OFile::backupFile( const std::string&amp; bstring, const std::string&amp; fname ) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">       2662 :   if(fname==&quot;/dev/null&quot;) return;</span>
+<span class="lineNum">     264 </span><span class="lineCov">       2366 :   int maxbackup=100;</span>
+<span class="lineNum">     265 </span><span class="lineCov">       2366 :   if(std::getenv(&quot;PLUMED_MAXBACKUP&quot;)) Tools::convert(std::getenv(&quot;PLUMED_MAXBACKUP&quot;),maxbackup);</span>
+<span class="lineNum">     266 </span><span class="lineCov">       2366 :   if(maxbackup&gt;0 &amp;&amp; (!comm || comm-&gt;Get_rank()==0)) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">       1979 :     FILE* ff=std::fopen(const_cast&lt;char*&gt;(fname.c_str()),&quot;r&quot;);</span>
+<span class="lineNum">     268 </span><span class="lineCov">       1979 :     if(ff) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">         52 :       std::fclose(ff);</span>
+<span class="lineNum">     270 </span>            :       std::string backup;
+<span class="lineNum">     271 </span>            :       size_t found=fname.find_last_of(&quot;/\\&quot;);
+<span class="lineNum">     272 </span><span class="lineCov">         52 :       std::string directory=fname.substr(0,found+1);</span>
+<span class="lineNum">     273 </span><span class="lineCov">         52 :       std::string file=fname.substr(found+1);</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :       for(int i=0;; i++) {</span>
+<span class="lineNum">     275 </span>            :         std::string num;
+<span class="lineNum">     276 </span><span class="lineCov">         52 :         Tools::convert(i,num);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         52 :         if(i&gt;maxbackup) plumed_merror(&quot;cannot backup file &quot;+file+&quot; maximum number of backup is &quot;+num+&quot;\n&quot;);</span>
+<span class="lineNum">     278 </span><span class="lineCov">        312 :         backup=directory+bstring +&quot;.&quot;+num+&quot;.&quot;+file;</span>
+<span class="lineNum">     279 </span><span class="lineCov">         52 :         FILE* fff=std::fopen(backup.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     280 </span><span class="lineCov">         52 :         if(!fff) break;</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :         else std::fclose(fff);</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :       }</span>
+<span class="lineNum">     283 </span><span class="lineCov">         52 :       int check=rename(fname.c_str(),backup.c_str());</span>
+<span class="lineNum">     284 </span><span class="lineCov">         52 :       plumed_massert(check==0,&quot;renaming &quot;+fname+&quot; into &quot;+backup+&quot; failed for reason: &quot;+strerror(errno));</span>
+<span class="lineNum">     285 </span>            :     }
+<span class="lineNum">     286 </span>            :   }
+<a name="287"><span class="lineNum">     287 </span>            : }</a>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineCov">       2743 : OFile&amp; OFile::open(const std::string&amp;path) {</span>
+<span class="lineNum">     290 </span><span class="lineCov">       2743 :   plumed_assert(!cloned);</span>
+<span class="lineNum">     291 </span><span class="lineCov">       2743 :   eof=false;</span>
+<span class="lineNum">     292 </span><span class="lineCov">       2743 :   err=false;</span>
+<span class="lineNum">     293 </span><span class="lineCov">       2743 :   fp=NULL;</span>
+<span class="lineNum">     294 </span><span class="lineCov">       2743 :   gzfp=NULL;</span>
+<span class="lineNum">     295 </span><span class="lineCov">       2743 :   this-&gt;path=path;</span>
+<span class="lineNum">     296 </span><span class="lineCov">       8229 :   this-&gt;path=appendSuffix(path,getSuffix());</span>
+<span class="lineNum">     297 </span><span class="lineCov">       2743 :   if(checkRestart()) {</span>
+<span class="lineNum">     298 </span><span class="lineCov">        458 :     fp=std::fopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;a&quot;);</span>
+<span class="lineNum">     299 </span><span class="lineCov">        229 :     mode=&quot;a&quot;;</span>
+<span class="lineNum">     300 </span><span class="lineCov">        458 :     if(Tools::extension(this-&gt;path)==&quot;gz&quot;) {</span>
+<span class="lineNum">     301 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     302 </span><span class="lineCov">         48 :       gzfp=(void*)gzopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;a9&quot;);</span>
+<span class="lineNum">     303 </span>            : #else
+<span class="lineNum">     304 </span>            :       plumed_merror(&quot;file &quot; + getPath() + &quot;: trying to use a gz file without zlib being linked&quot;);
+<span class="lineNum">     305 </span>            : #endif
+<span class="lineNum">     306 </span>            :     }
+<span class="lineNum">     307 </span>            :   } else {
+<span class="lineNum">     308 </span><span class="lineCov">       2514 :     backupFile( backstring, this-&gt;path );</span>
+<span class="lineNum">     309 </span><span class="lineCov">       2514 :     if(comm)comm-&gt;Barrier();</span>
+<span class="lineNum">     310 </span><span class="lineCov">       5028 :     fp=std::fopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;w&quot;);</span>
+<span class="lineNum">     311 </span><span class="lineCov">       2514 :     mode=&quot;w&quot;;</span>
+<span class="lineNum">     312 </span><span class="lineCov">       5028 :     if(Tools::extension(this-&gt;path)==&quot;gz&quot;) {</span>
+<span class="lineNum">     313 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     314 </span><span class="lineCov">          2 :       gzfp=(void*)gzopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;w9&quot;);</span>
+<span class="lineNum">     315 </span>            : #else
+<span class="lineNum">     316 </span>            :       plumed_merror(&quot;file &quot; + getPath() + &quot;: trying to use a gz file without zlib being linked&quot;);
+<span class="lineNum">     317 </span>            : #endif
+<span class="lineNum">     318 </span>            :     }
+<span class="lineNum">     319 </span>            :   }
+<span class="lineNum">     320 </span><span class="lineCov">       2743 :   if(plumed) plumed-&gt;insertFile(*this);</span>
+<span class="lineNum">     321 </span><span class="lineCov">       2743 :   return *this;</span>
+<a name="322"><span class="lineNum">     322 </span>            : }</a>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineCov">         94 : OFile&amp; OFile::rewind() {</span>
+<span class="lineNum">     325 </span>            : // we use here &quot;hard&quot; rewind, which means close/reopen
+<span class="lineNum">     326 </span>            : // the reason is that normal rewind does not work when in append mode
+<span class="lineNum">     327 </span>            : // moreover, we can take a backup of the file
+<span class="lineNum">     328 </span><span class="lineCov">         94 :   plumed_assert(fp);</span>
+<span class="lineNum">     329 </span><span class="lineCov">         94 :   clearFields();</span>
+<span class="lineNum">     330 </span><span class="lineCov">         94 :   if(gzfp) {</span>
+<span class="lineNum">     331 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     332 </span><span class="lineCov">         15 :     gzclose((gzFile)gzfp);</span>
+<span class="lineNum">     333 </span>            : #endif
+<span class="lineNum">     334 </span><span class="lineCov">         79 :   } else fclose(fp);</span>
+<span class="lineNum">     335 </span><span class="lineCov">         94 :   if(!comm || comm-&gt;Get_rank()==0) {</span>
+<span class="lineNum">     336 </span><span class="lineCov">         76 :     std::string fname=this-&gt;path;</span>
+<span class="lineNum">     337 </span>            :     size_t found=fname.find_last_of(&quot;/\\&quot;);
+<span class="lineNum">     338 </span><span class="lineCov">         76 :     std::string directory=fname.substr(0,found+1);</span>
+<span class="lineNum">     339 </span><span class="lineCov">         76 :     std::string file=fname.substr(found+1);</span>
+<span class="lineNum">     340 </span><span class="lineCov">        228 :     std::string backup=directory+backstring +&quot;.last.&quot;+file;</span>
+<span class="lineNum">     341 </span><span class="lineCov">         76 :     int check=rename(fname.c_str(),backup.c_str());</span>
+<span class="lineNum">     342 </span><span class="lineCov">         76 :     plumed_massert(check==0,&quot;renaming &quot;+fname+&quot; into &quot;+backup+&quot; failed for reason: &quot;+strerror(errno));</span>
+<span class="lineNum">     343 </span>            :   }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">         94 :   if(comm) comm-&gt;Barrier();</span>
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span><span class="lineCov">         94 :   if(gzfp) {</span>
+<span class="lineNum">     348 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     349 </span><span class="lineCov">         15 :     gzfp=(void*)gzopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;w9&quot;);</span>
+<span class="lineNum">     350 </span>            : #endif
+<span class="lineNum">     351 </span><span class="lineCov">         79 :   } else fp=std::fopen(const_cast&lt;char*&gt;(path.c_str()),&quot;w&quot;);</span>
+<span class="lineNum">     352 </span><span class="lineCov">         94 :   return *this;</span>
+<a name="353"><span class="lineNum">     353 </span>            : }</a>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span><span class="lineCov">       7160 : FileBase&amp; OFile::flush() {</span>
+<span class="lineNum">     356 </span><span class="lineCov">       7160 :   if(heavyFlush) {</span>
+<span class="lineNum">     357 </span><span class="lineCov">       3751 :     if(gzfp) {</span>
+<span class="lineNum">     358 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     359 </span><span class="lineCov">          9 :       gzclose(gzFile(gzfp));</span>
+<span class="lineNum">     360 </span><span class="lineCov">         18 :       gzfp=(void*)gzopen(const_cast&lt;char*&gt;(path.c_str()),&quot;a&quot;);</span>
+<span class="lineNum">     361 </span>            : #endif
+<span class="lineNum">     362 </span>            :     } else {
+<span class="lineNum">     363 </span><span class="lineCov">       3742 :       fclose(fp);</span>
+<span class="lineNum">     364 </span><span class="lineCov">       7484 :       fp=std::fopen(const_cast&lt;char*&gt;(path.c_str()),&quot;a&quot;);</span>
+<span class="lineNum">     365 </span>            :     }
+<span class="lineNum">     366 </span>            :   } else {
+<span class="lineNum">     367 </span><span class="lineCov">       3409 :     FileBase::flush();</span>
+<span class="lineNum">     368 </span>            :     // if(gzfp) gzflush(gzFile(gzfp),Z_FINISH);
+<span class="lineNum">     369 </span>            :     // for some reason flushing with Z_FINISH has problems on linux
+<span class="lineNum">     370 </span>            :     // I thus use this (incomplete) flush
+<span class="lineNum">     371 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     372 </span><span class="lineCov">       3409 :     if(gzfp) gzflush(gzFile(gzfp),Z_FULL_FLUSH);</span>
+<span class="lineNum">     373 </span>            : #endif
+<span class="lineNum">     374 </span>            :   }
+<span class="lineNum">     375 </span><span class="lineCov">       7160 :   return *this;</span>
+<a name="376"><span class="lineNum">     376 </span>            : }</a>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineCov">       2747 : bool OFile::checkRestart()const {</span>
+<span class="lineNum">     379 </span><span class="lineCov">       2747 :   if(enforceRestart_) return true;</span>
+<span class="lineNum">     380 </span><span class="lineCov">       2746 :   else if(enforceBackup_) return false;</span>
+<span class="lineNum">     381 </span><span class="lineCov">       3370 :   else if(action) return action-&gt;getRestart();</span>
+<span class="lineNum">     382 </span><span class="lineCov">        170 :   else if(plumed) return plumed-&gt;getRestart();</span>
+<span class="lineNum">     383 </span>            :   else return false;
+<a name="384"><span class="lineNum">     384 </span>            : }</a>
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span><span class="lineCov">          1 : OFile&amp; OFile::enforceRestart() {</span>
+<span class="lineNum">     387 </span><span class="lineCov">          1 :   enforceRestart_=true;</span>
+<span class="lineNum">     388 </span><span class="lineCov">          1 :   enforceBackup_=false;</span>
+<span class="lineNum">     389 </span><span class="lineCov">          1 :   return *this;</span>
+<a name="390"><span class="lineNum">     390 </span>            : }</a>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineCov">        976 : OFile&amp; OFile::enforceBackup() {</span>
+<span class="lineNum">     393 </span><span class="lineCov">        976 :   enforceBackup_=true;</span>
+<span class="lineNum">     394 </span><span class="lineCov">        976 :   enforceRestart_=false;</span>
+<span class="lineNum">     395 </span><span class="lineCov">        976 :   return *this;</span>
+<span class="lineNum">     396 </span>            : }
+<a name="397"><span class="lineNum">     397 </span>            : </a>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

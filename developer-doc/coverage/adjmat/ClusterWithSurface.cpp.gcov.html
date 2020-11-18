@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/ClusterWithSurface.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - ClusterWithSurface.cpp<span style="font-size: 80%;"> (source / <a href="ClusterWithSurface.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">51</td>
+            <td class="headerCovTableEntry">59</td>
+            <td class="headerCovTableEntryMed">86.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ClusteringBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AdjacencyMatrixVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;AdjacencyMatrixBase.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //+PLUMEDOC MATRIXF CLUSTER_WITHSURFACE
+<span class="lineNum">      28 </span>            : /*
+<span class="lineNum">      29 </span>            : Take a connected component that was found using a clustering algorithm and create a new cluster that contains those atoms that are in the cluster together with those atoms that are within a certain cutoff of the cluster.
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : As discussed in the section of the manual on \ref contactmatrix a useful tool for developing complex collective variables is the notion of the
+<span class="lineNum">      32 </span>            : so called adjacency matrix.  An adjacency matrix is an \f$N \times N\f$ matrix in which the \f$i\f$th, \f$j\f$th element tells you whether
+<span class="lineNum">      33 </span>            : or not the \f$i\f$th and \f$j\f$th atoms/molecules from a set of \f$N\f$ atoms/molecules are adjacent or not.  When analysing these matrix
+<span class="lineNum">      34 </span>            : we can treat them as a graph and find connected components using some clustering algorithm.  This action is used in tandem with this form of analysis
+<span class="lineNum">      35 </span>            : and takes one of the connected components that was found during this analysis and creates a new cluster that includes all the atoms within the
+<span class="lineNum">      36 </span>            : connected component that was found together that were within a certain cutoff distance of the atoms in the connected component.  This form of analysis
+<span class="lineNum">      37 </span>            : has been used sucessfully in the forward flux sampling simulations described in this paper \cite gab-ice-kaolinite
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \par Examples
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : The following input uses PLUMED to calculate a adjacency matrix that connects a pair of atoms if they both have a coordination number that is less
+<span class="lineNum">      42 </span>            : than 13.5 and if they are within 0.38 nm of each other.  Depth first search clustering is used to find the connected components in this matrix.  The
+<span class="lineNum">      43 </span>            : number of atoms with indices that are between 1 and 1996 and that are either in the second largest cluster or that are within within 0.3 nm of one of the
+<span class="lineNum">      44 </span>            : atoms within the the second largest cluster are then counted and this number of atoms is output to a file called size.  In addition the indices of the atoms
+<span class="lineNum">      45 </span>            : that were counted are output to a file called dfs2.dat.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \plumedfile
+<span class="lineNum">      48 </span>            : c1: COORDINATIONNUMBER SPECIES=1-1996 SWITCH={CUBIC D_0=0.34 D_MAX=0.38}
+<span class="lineNum">      49 </span>            : cf: MFILTER_LESS DATA=c1 SWITCH={CUBIC D_0=13 D_MAX=13.5}
+<span class="lineNum">      50 </span>            : mat: CONTACT_MATRIX ATOMS=cf SWITCH={CUBIC D_0=0.34 D_MAX=0.38}
+<span class="lineNum">      51 </span>            : dfs: DFSCLUSTERING MATRIX=mat
+<span class="lineNum">      52 </span>            : clust2a: CLUSTER_WITHSURFACE CLUSTERS=dfs RCUT_SURF=0.3
+<span class="lineNum">      53 </span>            : size2a: CLUSTER_NATOMS CLUSTERS=clust2a CLUSTER=2
+<span class="lineNum">      54 </span>            : PRINT ARG=size2a FILE=size FMT=%8.4f
+<span class="lineNum">      55 </span>            : OUTPUT_CLUSTER CLUSTERS=clust2a CLUSTER=2 FILE=dfs2.dat
+<span class="lineNum">      56 </span>            : \endplumedfile
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : */
+<span class="lineNum">      60 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : namespace PLMD {
+<a name="63"><span class="lineNum">      63 </span>            : namespace adjmat {</a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">          4 : class ClusterWithSurface : public ClusteringBase {</span>
+<span class="lineNum">      66 </span>            : private:
+<span class="lineNum">      67 </span>            : /// The clusters that we are adding surface atoms to
+<span class="lineNum">      68 </span>            :   ClusteringBase* myclusters;
+<span class="lineNum">      69 </span>            : /// The cutoff for surface atoms
+<span class="lineNum">      70 </span>            :   double rcut_surf2;
+<span class="lineNum">      71 </span>            : public:
+<span class="lineNum">      72 </span>            : /// Create manual
+<span class="lineNum">      73 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      74 </span>            : /// Constructor
+<span class="lineNum">      75 </span>            :   explicit ClusterWithSurface(const ActionOptions&amp;);
+<span class="lineNum">      76 </span>            : ///
+<span class="lineNum">      77 </span>            :   unsigned getNumberOfDerivatives();
+<span class="lineNum">      78 </span>            : ///
+<span class="lineNum">      79 </span>            :   unsigned getNumberOfNodes() const ;
+<span class="lineNum">      80 </span>            : ///
+<span class="lineNum">      81 </span>            :   AtomNumber getAbsoluteIndexOfCentralAtom(const unsigned&amp; i) const ;
+<span class="lineNum">      82 </span>            : ///
+<span class="lineNum">      83 </span>            :   void retrieveAtomsInCluster( const unsigned&amp; clust, std::vector&lt;unsigned&gt;&amp; myatoms ) const ;
+<span class="lineNum">      84 </span>            : ///
+<span class="lineNum">      85 </span>            :   void getInputData( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms, std::vector&lt;double&gt;&amp; orient0 ) const ;
+<span class="lineNum">      86 </span>            : ///
+<span class="lineNum">      87 </span>            :   MultiValue&amp; getInputDerivatives( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      88 </span>            : ///
+<a name="89"><span class="lineNum">      89 </span>            :   unsigned getNumberOfQuantities() const ;</a>
+<span class="lineNum">      90 </span>            : /// Do the calculation
+<span class="lineNum">      91 </span><span class="lineCov">          2 :   void performClustering() {};</span>
+<span class="lineNum">      92 </span>            : ///
+<span class="lineNum">      93 </span>            :   double  getCutoffForConnection() const ;
+<span class="lineNum">      94 </span>            : ///
+<span class="lineNum">      95 </span>            :   Vector getPositionOfAtomForLinkCells( const unsigned&amp; taskIndex ) const ;
+<a name="96"><span class="lineNum">      96 </span>            : };</a>
+<span class="lineNum">      97 </span>            : 
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(ClusterWithSurface,&quot;CLUSTER_WITHSURFACE&quot;)</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          3 : void ClusterWithSurface::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">          3 :   ClusteringBase::registerKeywords( keys );</span>
+<span class="lineNum">     102 </span><span class="lineCov">          6 :   keys.remove(&quot;MATRIX&quot;);</span>
+<span class="lineNum">     103 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;CLUSTERS&quot;,&quot;the label of the action that does the clustering&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;RCUT_SURF&quot;,&quot;you also have the option to find the atoms on the surface of the cluster.  An atom must be within this distance of one of the atoms &quot;</span>
+<span class="lineNum">     105 </span>            :            &quot;of the cluster in order to be considered a surface atom&quot;);
+<a name="106"><span class="lineNum">     106 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">          2 : ClusterWithSurface::ClusterWithSurface(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     109 </span>            :   Action(ao),
+<span class="lineNum">     110 </span><span class="lineCov">          2 :   ClusteringBase(ao)</span>
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span>            :   std::vector&lt;AtomNumber&gt; fake_atoms;
+<span class="lineNum">     113 </span><span class="lineCov">          4 :   if( !parseMultiColvarAtomList(&quot;CLUSTERS&quot;,-1,fake_atoms ) ) error(&quot;unable to find CLUSTERS input&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          2 :   if( mybasemulticolvars.size()!=1 ) error(&quot;should be exactly one multicolvar input&quot;);</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :   // Retrieve the adjacency matrix of interest
+<span class="lineNum">     117 </span><span class="lineCov">          4 :   atom_lab.resize(0); myclusters = dynamic_cast&lt;ClusteringBase*&gt;( mybasemulticolvars[0] );</span>
+<span class="lineNum">     118 </span><span class="lineCov">          2 :   if( !myclusters ) error( mybasemulticolvars[0]-&gt;getLabel() + &quot; does not calculate clusters&quot;);</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :   // Setup switching function for surface atoms
+<span class="lineNum">     121 </span><span class="lineCov">          4 :   double rcut_surf; parse(&quot;RCUT_SURF&quot;,rcut_surf);</span>
+<span class="lineNum">     122 </span><span class="lineCov">          2 :   if( rcut_surf&gt;0 ) log.printf(&quot;  counting surface atoms that are within %f of the cluster atoms \n&quot;,rcut_surf);</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 :   rcut_surf2=rcut_surf*rcut_surf;</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :   // And now finish the setup of everything in the base
+<span class="lineNum">     126 </span><span class="lineCov">          2 :   setupMultiColvarBase( fake_atoms );</span>
+<a name="127"><span class="lineNum">     127 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">          4 : unsigned ClusterWithSurface::getNumberOfDerivatives() {</span>
+<span class="lineNum">     130 </span><span class="lineCov">          4 :   return myclusters-&gt;getNumberOfDerivatives();</span>
+<a name="131"><span class="lineNum">     131 </span>            : }</a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">   16155834 : unsigned ClusterWithSurface::getNumberOfNodes() const {</span>
+<span class="lineNum">     134 </span><span class="lineCov">   16155834 :   return myclusters-&gt;getNumberOfNodes();</span>
+<a name="135"><span class="lineNum">     135 </span>            : }</a>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineCov">        128 : AtomNumber ClusterWithSurface::getAbsoluteIndexOfCentralAtom(const unsigned&amp; i) const {</span>
+<span class="lineNum">     138 </span><span class="lineCov">        128 :   return myclusters-&gt;getAbsoluteIndexOfCentralAtom(i);</span>
+<a name="139"><span class="lineNum">     139 </span>            : }</a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 : void ClusterWithSurface::getInputData( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms, std::vector&lt;double&gt;&amp; orient0 ) const {</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   myclusters-&gt;getInputData( ind, normed, myatoms, orient0 );</span>
+<a name="143"><span class="lineNum">     143 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 : MultiValue&amp; ClusterWithSurface::getInputDerivatives( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :   return myclusters-&gt;getInputDerivatives( ind, normed, myatoms );</span>
+<a name="147"><span class="lineNum">     147 </span>            : }</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         14 : unsigned ClusterWithSurface::getNumberOfQuantities() const {</span>
+<span class="lineNum">     150 </span><span class="lineCov">         14 :   return myclusters-&gt;getNumberOfQuantities();</span>
+<a name="151"><span class="lineNum">     151 </span>            : }</a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">          2 : double  ClusterWithSurface::getCutoffForConnection() const {</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :   double tcut = myclusters-&gt;getCutoffForConnection();</span>
+<span class="lineNum">     155 </span><span class="lineCov">          2 :   if( tcut&gt;sqrt(rcut_surf2) ) return tcut;</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   return sqrt(rcut_surf2);</span>
+<a name="157"><span class="lineNum">     157 </span>            : }</a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">          6 : void ClusterWithSurface::retrieveAtomsInCluster( const unsigned&amp; clust, std::vector&lt;unsigned&gt;&amp; myatoms ) const {</span>
+<span class="lineNum">     160 </span><span class="lineCov">          6 :   std::vector&lt;unsigned&gt; tmpat; myclusters-&gt;retrieveAtomsInCluster( clust, tmpat );</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :   // Prevent double counting
+<span class="lineNum">     163 </span><span class="lineCov">          6 :   std::vector&lt;bool&gt; incluster( getNumberOfNodes(), false );</span>
+<span class="lineNum">     164 </span><span class="lineCov">        348 :   for(unsigned i=0; i&lt;tmpat.size(); ++i) incluster[tmpat[i]]=true;</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   // Find the atoms in the the clusters
+<span class="lineNum">     167 </span><span class="lineCov">          6 :   std::vector&lt;bool&gt; surface_atom( getNumberOfNodes(), false );</span>
+<span class="lineNum">     168 </span><span class="lineCov">        264 :   for(unsigned i=0; i&lt;tmpat.size(); ++i) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">     335412 :     for(unsigned j=0; j&lt;getNumberOfNodes(); ++j) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">     335328 :       if( incluster[j] ) continue;</span>
+<span class="lineNum">     171 </span><span class="lineCov">     499464 :       double dist2=getSeparation( getPosition(tmpat[i]), getPosition(j) ).modulo2();</span>
+<span class="lineNum">     172 </span><span class="lineCov">     166488 :       if( dist2&lt;rcut_surf2 ) { surface_atom[j]=true; }</span>
+<span class="lineNum">     173 </span>            :     }
+<span class="lineNum">     174 </span>            :   }
+<span class="lineNum">     175 </span>            :   unsigned nsurf_at=0;
+<span class="lineNum">     176 </span><span class="lineCov">      23958 :   for(unsigned j=0; j&lt;getNumberOfNodes(); ++j) {</span>
+<span class="lineNum">     177 </span><span class="lineCov">      23952 :     if( surface_atom[j] ) nsurf_at++;</span>
+<span class="lineNum">     178 </span>            :   }
+<span class="lineNum">     179 </span><span class="lineCov">         12 :   myatoms.resize( nsurf_at + tmpat.size() );</span>
+<span class="lineNum">     180 </span><span class="lineCov">        264 :   for(unsigned i=0; i&lt;tmpat.size(); ++i) myatoms[i]=tmpat[i];</span>
+<span class="lineNum">     181 </span><span class="lineCov">          6 :   unsigned nn=tmpat.size();</span>
+<span class="lineNum">     182 </span><span class="lineCov">      23958 :   for(unsigned j=0; j&lt;getNumberOfNodes(); ++j) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">      24252 :     if( surface_atom[j] ) { myatoms[nn]=j; nn++; }</span>
+<span class="lineNum">     184 </span>            :   }
+<span class="lineNum">     185 </span><span class="lineCov">         12 :   plumed_assert( nn==myatoms.size() );</span>
+<a name="186"><span class="lineNum">     186 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 : Vector ClusterWithSurface::getPositionOfAtomForLinkCells( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :   return myclusters-&gt;getPositionOfAtomForLinkCells( iatom );</span>
+<span class="lineNum">     190 </span>            : }
+<a name="191"><span class="lineNum">     191 </span>            : </a>
+<span class="lineNum">     192 </span>            : }
+<span class="lineNum">     193 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

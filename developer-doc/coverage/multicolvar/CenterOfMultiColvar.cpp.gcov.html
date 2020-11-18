@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/CenterOfMultiColvar.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - CenterOfMultiColvar.cpp<span style="font-size: 80%;"> (source / <a href="CenterOfMultiColvar.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">78</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntryHi">96.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionWithVirtualAtom.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;CatomPack.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;BridgedMultiColvarFunction.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;vesselbase/StoreDataVessel.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC VATOM CENTER_OF_MULTICOLVAR
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Calculate a a weighted average position based on the value of some multicolvar.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : This action calculates the position of a new virtual atom using the following formula:
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \f[
+<span class="lineNum">      40 </span>            : x_\alpha = \frac{1}{2\pi} \arctan \left[ \frac{ \sum_i w_i f_i \sin\left( 2\pi x_{i,\alpha} \right) }{ \sum_i w_i f_i \cos\left( 2\pi x_{i,\alpha} \right) } \right]
+<span class="lineNum">      41 </span>            : \f]
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : Where in this expression the \f$w_i\f$ values are a set of weights calculated within a multicolvar
+<span class="lineNum">      44 </span>            : action and the \f$f_i\f$ are the values of the multicolvar functions. The \f$x_{i,\alpha}\f$ values are
+<span class="lineNum">      45 </span>            : the positions (in scaled coordinates) associated with each of the multicolvars calculated.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \bug The virial contribution for this type of virtual atom is not currently evaluated so do not use in bias functions unless the volume of the cell is fixed
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \par Examples
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : Lets suppose that you are examining the formation of liquid droplets from gas.  You may want to
+<span class="lineNum">      52 </span>            : determine the center of mass of any of the droplets formed.  In doing this calculation you recognise that
+<span class="lineNum">      53 </span>            : the atoms in the liquid droplets will have a higher coordination number than those in the surrounding gas.
+<span class="lineNum">      54 </span>            : As you want to calculate the position of the droplets you thus recognise that these atoms with high coordination
+<span class="lineNum">      55 </span>            : numbers should have a high weight in the weighted average you are using to calculate the position of the droplet.
+<span class="lineNum">      56 </span>            : You can thus calculate the position of the droplet using an input like the one shown below:
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : \plumedfile
+<span class="lineNum">      59 </span>            : c1: COORDINATIONNUMBER SPECIES=1-512 SWITCH={EXP D_0=4.0 R_0=0.5}
+<span class="lineNum">      60 </span>            : cc: CENTER_OF_MULTICOLVAR DATA=c1
+<span class="lineNum">      61 </span>            : \endplumedfile
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : The first line here calclates the coordination numbers of all the atoms in the system.  The virtual atom then uses the values
+<span class="lineNum">      64 </span>            : of the coordination numbers calculated by the action labelled c1 when it calculates the Berry Phase average described above.
+<span class="lineNum">      65 </span>            : (N.B. the \f$w_i\f$ in the above expression are all set equal to 1 in this case)
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : The above input is fine we can, however, refine this somewhat by making use of a multicolvar transform action as shown below:
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : \plumedfile
+<span class="lineNum">      70 </span>            : c1: COORDINATIONNUMBER SPECIES=1-512 SWITCH={EXP D_0=4.0 R_0=0.5}
+<span class="lineNum">      71 </span>            : cf: MTRANSFORM_MORE DATA=c1 SWITCH={RATIONAL D_0=2.0 R_0=0.1} LOWMEM
+<span class="lineNum">      72 </span>            : cc: CENTER_OF_MULTICOLVAR DATA=cf
+<span class="lineNum">      73 </span>            : \endplumedfile
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : This input once again calculates the coordination numbers of all the atoms in the system.  The middle line then transforms these
+<span class="lineNum">      76 </span>            : coordinations numbers to numbers between 0 and 1.  Essentially any atom with a coordination number larger than 2.0 is given a weight
+<span class="lineNum">      77 </span>            : of one and below this value the transformed value decays to zero.  It is these transformed coordination numbers that are used to calculate
+<span class="lineNum">      78 </span>            : the Berry phase average described in the previous section.
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : */
+<span class="lineNum">      81 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : namespace PLMD {
+<span class="lineNum">      84 </span>            : namespace multicolvar {
+<a name="85"><span class="lineNum">      85 </span>            : </a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          3 : class CenterOfMultiColvar : public ActionWithVirtualAtom {</span>
+<span class="lineNum">      88 </span>            : private:
+<span class="lineNum">      89 </span>            :   unsigned comp;
+<span class="lineNum">      90 </span>            :   vesselbase::StoreDataVessel* mystash;
+<span class="lineNum">      91 </span>            :   MultiColvarBase* mycolv;
+<span class="lineNum">      92 </span>            : public:
+<span class="lineNum">      93 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      94 </span>            :   explicit CenterOfMultiColvar(const ActionOptions&amp;ao);
+<span class="lineNum">      95 </span>            :   void calculate();
+<a name="96"><span class="lineNum">      96 </span>            : };</a>
+<span class="lineNum">      97 </span>            : 
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">       6455 : PLUMED_REGISTER_ACTION(CenterOfMultiColvar,&quot;CENTER_OF_MULTICOLVAR&quot;)</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          4 : void CenterOfMultiColvar::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">          4 :   ActionWithVirtualAtom::registerKeywords(keys);</span>
+<span class="lineNum">     102 </span><span class="lineCov">         16 :   keys.add(&quot;compulsory&quot;,&quot;DATA&quot;,&quot;find the average value for a multicolvar&quot;);</span>
+<span class="lineNum">     103 </span><span class="lineCov">         16 :   keys.add(&quot;optional&quot;,&quot;COMPONENT&quot;,&quot;if your input multicolvar is a vector then specify which component you would like to use in calculating the weight&quot;);</span>
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">          3 : CenterOfMultiColvar::CenterOfMultiColvar(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     107 </span>            :   Action(ao),
+<span class="lineNum">     108 </span><span class="lineCov">          3 :   ActionWithVirtualAtom(ao)</span>
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span><span class="lineCov">          6 :   std::string mlab; parse(&quot;DATA&quot;,mlab);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          6 :   mycolv= plumed.getActionSet().selectWithLabel&lt;MultiColvarBase*&gt;(mlab);</span>
+<span class="lineNum">     112 </span><span class="lineCov">          3 :   if(!mycolv) error(&quot;action labelled &quot; +  mlab + &quot; does not exist or does not have vessels&quot;);</span>
+<span class="lineNum">     113 </span>            :   // Copy the atoms from the input multicolvar
+<span class="lineNum">     114 </span><span class="lineCov">          3 :   BridgedMultiColvarFunction* mybr=dynamic_cast&lt;BridgedMultiColvarFunction*&gt;( mycolv );</span>
+<span class="lineNum">     115 </span><span class="lineCov">          3 :   if( mybr ) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">          2 :     requestAtoms( (mybr-&gt;getPntrToMultiColvar())-&gt;getAbsoluteIndexes() ); comp=1;</span>
+<span class="lineNum">     117 </span>            :   } else {
+<span class="lineNum">     118 </span><span class="lineCov">          1 :     if( mycolv-&gt;getNumberOfQuantities()&gt;5 ) {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :       int incomp=-1; parse(&quot;COMPONENT&quot;,incomp);</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :       if( incomp&lt;0 ) error(&quot;vector input but component was not specified&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :       comp=incomp;</span>
+<span class="lineNum">     122 </span>            :     } else {
+<span class="lineNum">     123 </span><span class="lineCov">          1 :       comp=1;</span>
+<span class="lineNum">     124 </span>            :     }
+<span class="lineNum">     125 </span><span class="lineCov">          1 :     requestAtoms( mycolv-&gt;getAbsoluteIndexes () );</span>
+<span class="lineNum">     126 </span>            :   }
+<span class="lineNum">     127 </span>            :   // We need the derivatives
+<span class="lineNum">     128 </span><span class="lineCov">          3 :   mycolv-&gt;turnOnDerivatives(); addDependency(mycolv);</span>
+<span class="lineNum">     129 </span><span class="lineCov">          3 :   mystash = mycolv-&gt;buildDataStashes( NULL );</span>
+<span class="lineNum">     130 </span><span class="lineCov">          6 :   log.printf(&quot;  building center of mass based on weights calculated in multicolvar action named %s \n&quot;,mycolv-&gt;getLabel().c_str() );</span>
+<a name="131"><span class="lineNum">     131 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">          4 : void CenterOfMultiColvar::calculate() {</span>
+<span class="lineNum">     134 </span>            :   // Retrieve the periodic boundary conditions
+<span class="lineNum">     135 </span><span class="lineCov">          4 :   const Pbc&amp; pbc=mycolv-&gt;getPbc();</span>
+<span class="lineNum">     136 </span><span class="lineCov">          4 :   if( !pbc.isOrthorombic() ) error(&quot;Berry phase does not work for non orthorhombic cells&quot;);</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Create a multivalue to store the derivatives
+<span class="lineNum">     139 </span><span class="lineCov">          8 :   MultiValue myvals( 7, mycolv-&gt;getNumberOfDerivatives() ); myvals.clearAll();</span>
+<span class="lineNum">     140 </span><span class="lineCov">          8 :   MultiValue tvals( mycolv-&gt;getNumberOfQuantities(), mycolv-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     141 </span><span class="lineCov">          4 :   tvals.clearAll();</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :   // Now loop over all active multicolvars
+<span class="lineNum">     144 </span><span class="lineCov">          4 :   Vector stmp, ctmp, scom, ccom, sder, cder;</span>
+<span class="lineNum">     145 </span><span class="lineCov">          4 :   scom.zero(); ccom.zero(); double norm=0;</span>
+<span class="lineNum">     146 </span><span class="lineCov">          4 :   std::vector&lt;double&gt; cvals( mycolv-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     147 </span><span class="lineCov">       1818 :   for(unsigned i=0; i&lt;mystash-&gt;getNumberOfStoredValues(); ++i) {</span>
+<span class="lineNum">     148 </span>            :     // Retrieve value and derivatives
+<span class="lineNum">     149 </span><span class="lineCov">       1814 :     mystash-&gt;retrieveSequentialValue( i, false, cvals );</span>
+<span class="lineNum">     150 </span><span class="lineCov">       3628 :     mystash-&gt;retrieveDerivatives( mycolv-&gt;getPositionInFullTaskList(i), false, tvals );</span>
+<span class="lineNum">     151 </span>            :     // Convert position into fractionals
+<span class="lineNum">     152 </span><span class="lineCov">       3628 :     Vector fpos = pbc.realToScaled( mycolv-&gt;getCentralAtomPos( mycolv-&gt;getPositionInFullTaskList(i) ) );</span>
+<span class="lineNum">     153 </span>            :     // Now accumulate Berry phase averages
+<span class="lineNum">     154 </span><span class="lineCov">      12698 :     for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">       5442 :       stmp[j] = sin( 2*pi*fpos[j] ); ctmp[j] = cos( 2*pi*fpos[j] );</span>
+<span class="lineNum">     156 </span><span class="lineCov">      21768 :       scom[j] += cvals[0]*cvals[comp]*stmp[j]; ccom[j] += cvals[0]*cvals[comp]*ctmp[j];</span>
+<span class="lineNum">     157 </span><span class="lineCov">       5442 :       double icell = 1.0 / getPbc().getBox().getRow(j).modulo();</span>
+<span class="lineNum">     158 </span><span class="lineCov">      16326 :       sder[j] = 2*pi*icell*cvals[0]*cvals[comp]*cos( 2*pi*fpos[j] );</span>
+<span class="lineNum">     159 </span><span class="lineCov">      16326 :       cder[j]=-2*pi*icell*cvals[0]*cvals[comp]*sin( 2*pi*fpos[j] );</span>
+<span class="lineNum">     160 </span>            :     }
+<span class="lineNum">     161 </span>            :     // Now accumulate derivatives
+<span class="lineNum">     162 </span><span class="lineCov">    3245306 :     for(unsigned k=0; k&lt;tvals.getNumberActive(); ++k) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">    1621746 :       unsigned icomp=tvals.getActiveIndex(k);</span>
+<span class="lineNum">     164 </span><span class="lineCov">    3243492 :       myvals.addDerivative( 0, icomp, cvals[0]*tvals.getDerivative( comp, icomp ) + cvals[comp]*tvals.getDerivative( 0, icomp ) );</span>
+<span class="lineNum">     165 </span><span class="lineCov">   11352222 :       for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">   19460952 :         myvals.addDerivative( 1+k, icomp, stmp[k]*( cvals[0]*tvals.getDerivative( comp, icomp ) +</span>
+<span class="lineNum">     167 </span><span class="lineCov">   14595714 :                               cvals[comp]*tvals.getDerivative( 0, icomp ) ) );</span>
+<span class="lineNum">     168 </span><span class="lineCov">   19460952 :         myvals.addDerivative( 4+k, icomp, ctmp[k]*( cvals[0]*tvals.getDerivative( comp, icomp ) +</span>
+<span class="lineNum">     169 </span><span class="lineCov">   14595714 :                               cvals[comp]*tvals.getDerivative( 0, icomp ) ) );</span>
+<span class="lineNum">     170 </span>            :       }
+<span class="lineNum">     171 </span>            :     }
+<span class="lineNum">     172 </span>            :     // Get the central atom pack
+<span class="lineNum">     173 </span><span class="lineCov">       5442 :     CatomPack mypack; mycolv-&gt;getCentralAtomPack( 0, mycolv-&gt;getPositionInFullTaskList(i), mypack );</span>
+<span class="lineNum">     174 </span><span class="lineCov">       7256 :     for(unsigned j=0; j&lt;mypack.getNumberOfAtomsWithDerivatives(); ++j) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">       1814 :       unsigned jder=3*mypack.getIndex(j);</span>
+<span class="lineNum">     176 </span>            :       // Derivatives of sine
+<span class="lineNum">     177 </span><span class="lineCov">       1814 :       myvals.addDerivative( 1, jder+0, mypack.getDerivative(j, 0, sder) );</span>
+<span class="lineNum">     178 </span><span class="lineCov">       1814 :       myvals.addDerivative( 2, jder+1, mypack.getDerivative(j, 1, sder) );</span>
+<span class="lineNum">     179 </span><span class="lineCov">       1814 :       myvals.addDerivative( 3, jder+2, mypack.getDerivative(j, 2, sder) );</span>
+<span class="lineNum">     180 </span>            :       // Derivatives of cosine
+<span class="lineNum">     181 </span><span class="lineCov">       1814 :       myvals.addDerivative( 4, jder+0, mypack.getDerivative(j, 0, cder) );</span>
+<span class="lineNum">     182 </span><span class="lineCov">       1814 :       myvals.addDerivative( 5, jder+1, mypack.getDerivative(j, 1, cder) );</span>
+<span class="lineNum">     183 </span><span class="lineCov">       1814 :       myvals.addDerivative( 6, jder+2, mypack.getDerivative(j, 2, cder) );</span>
+<span class="lineNum">     184 </span>            :     }
+<span class="lineNum">     185 </span><span class="lineCov">       3628 :     norm += cvals[0]*cvals[comp]; tvals.clearAll();</span>
+<span class="lineNum">     186 </span>            :   }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :   // And now finish Berry phase average
+<span class="lineNum">     189 </span><span class="lineCov">          4 :   scom /= norm; ccom /=norm; Vector cpos;</span>
+<span class="lineNum">     190 </span><span class="lineCov">         16 :   for(unsigned j=0; j&lt;3; ++j) cpos[j] = atan2( scom[j], ccom[j] ) / (2*pi);</span>
+<span class="lineNum">     191 </span><span class="lineCov">          4 :   Vector cart_pos = pbc.scaledToReal( cpos );</span>
+<span class="lineNum">     192 </span>            :   setPosition(cart_pos); setMass(1.0);   // This could be much cleverer but not without changing many things in PLMED
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :   // And derivatives
+<span class="lineNum">     195 </span><span class="lineCov">          8 :   Vector tander; myvals.updateDynamicList(); double inv_weight = 1.0 / norm;</span>
+<span class="lineNum">     196 </span><span class="lineCov">         28 :   for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     197 </span><span class="lineCov">         12 :     double tmp = scom[j] / ccom[j];</span>
+<span class="lineNum">     198 </span><span class="lineCov">         12 :     tander[j] = getPbc().getBox().getRow(j).modulo() / (2*pi*( 1 + tmp*tmp ));</span>
+<span class="lineNum">     199 </span>            :   }
+<span class="lineNum">     200 </span><span class="lineCov">      11152 :   for(unsigned i=0; i&lt;myvals.getNumberActive(); ++i) {</span>
+<span class="lineNum">     201 </span>            :     unsigned ider=myvals.getActiveIndex(i);
+<span class="lineNum">     202 </span><span class="lineCov">      39018 :     for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">      50166 :       double sderv = inv_weight*myvals.getDerivative(1+j,ider) - inv_weight*scom[j]*myvals.getDerivative(0,ider);</span>
+<span class="lineNum">     204 </span><span class="lineCov">      33444 :       double cderv = inv_weight*myvals.getDerivative(4+j,ider) - inv_weight*ccom[j]*myvals.getDerivative(0,ider);</span>
+<span class="lineNum">     205 </span><span class="lineCov">      16722 :       myvals.setDerivative( 1+j, ider, tander[j]*(sderv/ccom[j]  - scom[j]*cderv/(ccom[j]*ccom[j])) );</span>
+<span class="lineNum">     206 </span>            :       //if( j==2 ) printf(&quot;DERIV %d %10.4f %10.4f %10.4f %10.4f \n&quot;,i,myvals.getDerivative(0,ider),sderv,cderv,myvals.getDerivative(1+j,ider ) );
+<span class="lineNum">     207 </span>            :     }
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :   // Atom derivatives
+<span class="lineNum">     211 </span><span class="lineCov">          4 :   std::vector&lt;Tensor&gt; fderiv( getNumberOfAtoms() );</span>
+<span class="lineNum">     212 </span><span class="lineCov">       4100 :   for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     213 </span><span class="lineCov">      14336 :     for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">      45516 :       if( myvals.isActive(3*j+k) ) for(unsigned n=0; n&lt;3; ++n) fderiv[j](k,n) = myvals.getDerivative( 1+n, 3*j+k );</span>
+<span class="lineNum">     215 </span><span class="lineCov">       4242 :       else for(unsigned n=0; n&lt;3; ++n) fderiv[j](k,n) = 0;</span>
+<span class="lineNum">     216 </span>            :     }
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            :   setAtomsDerivatives( fderiv );
+<span class="lineNum">     219 </span>            :   // Box derivatives?
+<span class="lineNum">     220 </span><span class="lineCov">          4 : }</span>
+<a name="221"><span class="lineNum">     221 </span>            : </a>
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/Moments.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - Moments.cpp<span style="font-size: 80%;"> (source / <a href="Moments.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">64</td>
+            <td class="headerCovTableEntry">71</td>
+            <td class="headerCovTableEntryHi">90.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;VesselRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;StoreDataVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionWithVessel.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : namespace PLMD {
+<span class="lineNum">      27 </span>            : namespace vesselbase {
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : // This is not the most efficient implementation
+<span class="lineNum">      30 </span>            : // The calculation of all the colvars is parallelized
+<a name="31"><span class="lineNum">      31 </span>            : // but the loops for calculating moments are not</a>
+<span class="lineNum">      32 </span>            : // Feel free to reimplement this if you know how
+<span class="lineNum">      33 </span><span class="lineCov">         15 : class Moments : public StoreDataVessel {</span>
+<span class="lineNum">      34 </span>            : private:
+<span class="lineNum">      35 </span>            :   std::vector&lt;unsigned&gt; powers;
+<span class="lineNum">      36 </span>            :   std::vector&lt;Value*&gt; value_out;
+<span class="lineNum">      37 </span>            : public:
+<span class="lineNum">      38 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      39 </span>            :   static void reserveKeyword( Keywords&amp; keys );
+<span class="lineNum">      40 </span>            :   explicit Moments( const vesselbase::VesselOptions&amp; da );
+<span class="lineNum">      41 </span>            :   std::string description();
+<span class="lineNum">      42 </span>            :   void resize();
+<span class="lineNum">      43 </span>            :   void finish( const std::vector&lt;double&gt;&amp; buffer );
+<span class="lineNum">      44 </span>            :   bool applyForce( std::vector&lt;double&gt;&amp; forces );
+<a name="45"><span class="lineNum">      45 </span>            : };</a>
+<span class="lineNum">      46 </span>            : 
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">       6457 : PLUMED_REGISTER_VESSEL(Moments,&quot;MOMENTS&quot;)</span></a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">          5 : void Moments::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      50 </span><span class="lineCov">          5 :   StoreDataVessel::registerKeywords( keys );</span>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">       1613 : void Moments::reserveKeyword( Keywords&amp; keys ) {</span>
+<span class="lineNum">      54 </span><span class="lineCov">       6452 :   keys.reserve(&quot;optional&quot;,&quot;MOMENTS&quot;,&quot;calculate the moments of the distribution of collective variables. &quot;</span>
+<span class="lineNum">      55 </span>            :                &quot;The \\f$m\\f$th moment of a distribution is calculated using \\f$\\frac{1}{N} \\sum_{i=1}^N ( s_i - \\overline{s} )^m \\f$, where \\f$\\overline{s}\\f$ is &quot;
+<span class="lineNum">      56 </span>            :                &quot;the average for the distribution. The moments keyword takes a lists of integers as input or a range. Each integer is a value of \\f$m\\f$. The final &quot;
+<span class="lineNum">      57 </span>            :                &quot;calculated values can be referenced using moment-\\f$m\\f$.&quot;);
+<span class="lineNum">      58 </span><span class="lineCov">       4839 :   keys.reset_style(&quot;MOMENTS&quot;,&quot;vessel&quot;);</span>
+<span class="lineNum">      59 </span><span class="lineCov">       6452 :   keys.addOutputComponent(&quot;moment&quot;,&quot;MOMENTS&quot;,&quot;the central moments of the distribution of values. The second moment &quot;</span>
+<span class="lineNum">      60 </span>            :                           &quot;would be referenced elsewhere in the input file using &quot;
+<span class="lineNum">      61 </span>            :                           &quot;&lt;em&gt;label&lt;/em&gt;.moment-2, the third as &lt;em&gt;label&lt;/em&gt;.moment-3, etc.&quot;);
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">       1613 : }</span></a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          5 : Moments::Moments( const vesselbase::VesselOptions&amp; da) :</span>
+<span class="lineNum">      65 </span><span class="lineCov">         10 :   StoreDataVessel(da)</span>
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span><span class="lineCov">          5 :   ActionWithValue* a=dynamic_cast&lt;ActionWithValue*&gt;( getAction() );</span>
+<span class="lineNum">      68 </span><span class="lineCov">          5 :   plumed_massert(a,&quot;cannot create passable values as base action does not inherit from ActionWithValue&quot;);</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">         15 :   std::vector&lt;std::string&gt; moments=Tools::getWords(getAllInput(),&quot;\t\n ,&quot;);</span>
+<span class="lineNum">      71 </span><span class="lineCov">          5 :   Tools::interpretRanges(moments); unsigned nn;</span>
+<span class="lineNum">      72 </span><span class="lineCov">         28 :   for(unsigned i=0; i&lt;moments.size(); ++i) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">         12 :     a-&gt;addComponentWithDerivatives( &quot;moment-&quot; + moments[i] );</span>
+<span class="lineNum">      74 </span><span class="lineCov">         12 :     a-&gt;componentIsNotPeriodic( &quot;moment-&quot; + moments[i] );</span>
+<span class="lineNum">      75 </span><span class="lineCov">         12 :     value_out.push_back( a-&gt;copyOutput( a-&gt;getNumberOfComponents()-1 ) );</span>
+<span class="lineNum">      76 </span><span class="lineCov">          6 :     Tools::convert( moments[i], nn );</span>
+<span class="lineNum">      77 </span><span class="lineCov">          6 :     if( nn&lt;2 ) error(&quot;moments are only possible for m&gt;=2&quot; );</span>
+<span class="lineNum">      78 </span><span class="lineCov">         12 :     powers.push_back( nn ); std::string num; Tools::convert(powers[i],num);</span>
+<span class="lineNum">      79 </span>            :   }
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">        229 : void Moments::resize() {</span>
+<span class="lineNum">      83 </span><span class="lineCov">        229 :   StoreDataVessel::resize();</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">        229 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">          5 : std::string Moments::description() {</span>
+<span class="lineNum">      87 </span>            :   std::string descri, num;
+<span class="lineNum">      88 </span><span class="lineCov">          5 :   Tools::convert(powers[0],num);</span>
+<span class="lineNum">      89 </span><span class="lineCov">         45 :   descri = &quot;value &quot; + getAction()-&gt;getLabel() + &quot;.&quot; + &quot;moment-&quot; + num + &quot; contains the &quot; + num + &quot;th moment of the distribution&quot;;</span>
+<span class="lineNum">      90 </span><span class="lineCov">         13 :   for(unsigned i=1; i&lt;powers.size(); ++i) {</span>
+<span class="lineNum">      91 </span><span class="lineCov">          1 :     Tools::convert(powers[i],num);</span>
+<span class="lineNum">      92 </span><span class="lineCov">         10 :     descri = descri + &quot;\n  value &quot; + getAction()-&gt;getLabel() + &quot;.&quot; + &quot;moment-&quot; + num + &quot; contains the &quot; + num + &quot;th moment of the distribution&quot;;</span>
+<span class="lineNum">      93 </span>            :   }
+<span class="lineNum">      94 </span><span class="lineCov">          5 :   return descri;</span>
+<a name="95"><span class="lineNum">      95 </span>            : }</a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">        610 : void Moments::finish( const std::vector&lt;double&gt;&amp; buffer ) {</span>
+<span class="lineNum">      98 </span><span class="lineCov">        610 :   StoreDataVessel::finish( buffer );</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :   const double pi=3.141592653589793238462643383279502884197169399375105820974944592307;
+<span class="lineNum">     101 </span>            :   unsigned nvals=getAction()-&gt;getFullNumberOfTasks();
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">       1220 :   double mean=0; Value myvalue;</span>
+<span class="lineNum">     104 </span><span class="lineCov">        610 :   if( getAction()-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     std::string str_min, str_max; getAction()-&gt;retrieveDomain( str_min, str_max );</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     double pfactor, min, max; Tools::convert(str_min,min); Tools::convert(str_max,max);</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :     pfactor = 2*pi / ( max-min ); myvalue.setDomain( str_min, str_max );</span>
+<span class="lineNum">     108 </span>            :     double sinsum=0, cossum=0;
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;nvals; ++i) { double val=pfactor*( buffer[bufstart + i*nspace*vecsize+nspace] - min ); sinsum+=sin(val); cossum+=cos(val); }</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :     mean = 0.5 + atan2( sinsum / static_cast&lt;double&gt;( nvals ), cossum / static_cast&lt;double&gt;( nvals ) ) / (2*pi);</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :     mean = min + (max-min)*mean;</span>
+<span class="lineNum">     112 </span>            :   } else {
+<span class="lineNum">     113 </span><span class="lineCov">      11610 :     for(unsigned i=0; i&lt;nvals; ++i) mean+=buffer[bufstart + i*nspace*vecsize+nspace];</span>
+<span class="lineNum">     114 </span><span class="lineCov">        610 :     mean/=static_cast&lt;double&gt;( nvals ); myvalue.setNotPeriodic();</span>
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">       3650 :   for(unsigned npow=0; npow&lt;powers.size(); ++npow) {</span>
+<span class="lineNum">     118 </span>            :     double dev1=0;
+<span class="lineNum">     119 </span><span class="lineCov">        810 :     if( value_out[0]-&gt;getNumberOfDerivatives()&gt;0 ) {</span>
+<span class="lineNum">     120 </span><span class="lineCov">      12710 :       for(unsigned i=0; i&lt;nvals; ++i) dev1+=pow( myvalue.difference( mean, buffer[bufstart + i*nspace*vecsize+nspace] ), powers[npow] - 1 );</span>
+<span class="lineNum">     121 </span><span class="lineCov">        410 :       dev1/=static_cast&lt;double&gt;( nvals );</span>
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :     double moment=0;
+<span class="lineNum">     125 </span><span class="lineCov">       2430 :     MultiValue myvals( getNumberOfComponents(), getAction()-&gt;getNumberOfDerivatives() ); myvals.clearAll();</span>
+<span class="lineNum">     126 </span><span class="lineCov">       7710 :     for(unsigned i=0; i&lt;nvals; ++i) {</span>
+<span class="lineNum">     127 </span><span class="lineCov">      13800 :       double tmp=myvalue.difference( mean, buffer[bufstart + i*nspace*vecsize+nspace] );</span>
+<span class="lineNum">     128 </span><span class="lineCov">       6900 :       moment+=pow( tmp, powers[npow] );</span>
+<span class="lineNum">     129 </span><span class="lineCov">       6900 :       if( value_out[npow]-&gt;getNumberOfDerivatives() ) {</span>
+<span class="lineNum">     130 </span><span class="lineCov">       4100 :         double pref=pow( tmp, powers[npow] - 1 ) - dev1;</span>
+<span class="lineNum">     131 </span><span class="lineCov">       4100 :         retrieveDerivatives( i, false, myvals );</span>
+<span class="lineNum">     132 </span><span class="lineCov">     323900 :         for(unsigned j=0; j&lt;myvals.getNumberActive(); ++j) {</span>
+<span class="lineNum">     133 </span>            :           unsigned jatom=myvals.getActiveIndex(j);
+<span class="lineNum">     134 </span><span class="lineCov">     319800 :           value_out[npow]-&gt;addDerivative(jatom, pref*myvals.getDerivative( 1, jatom ) );</span>
+<span class="lineNum">     135 </span>            :         }
+<span class="lineNum">     136 </span><span class="lineCov">       4100 :         myvals.clearAll();</span>
+<span class="lineNum">     137 </span>            :       }
+<span class="lineNum">     138 </span>            :     }
+<span class="lineNum">     139 </span><span class="lineCov">       1630 :     if( value_out[npow]-&gt;getNumberOfDerivatives()&gt;0 ) value_out[npow]-&gt;chainRule( powers[npow] / static_cast&lt;double&gt;( nvals ) );</span>
+<span class="lineNum">     140 </span><span class="lineCov">        810 :     value_out[npow]-&gt;set( moment / static_cast&lt;double&gt;( nvals ) );</span>
+<span class="lineNum">     141 </span>            :   }
+<a name="142"><span class="lineNum">     142 </span><span class="lineCov">        610 : }</span></a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">        220 : bool Moments::applyForce( std::vector&lt;double&gt;&amp; forces ) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">        220 :   std::vector&lt;double&gt; tmpforce( forces.size() );</span>
+<span class="lineNum">     146 </span><span class="lineCov">        440 :   forces.assign(forces.size(),0.0); bool wasforced=false;</span>
+<span class="lineNum">     147 </span><span class="lineCov">       1700 :   for(unsigned i=0; i&lt;value_out.size(); ++i) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">        420 :     if( value_out[i]-&gt;applyForce( tmpforce ) ) {</span>
+<span class="lineNum">     149 </span>            :       wasforced=true;
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :       for(unsigned j=0; j&lt;forces.size(); ++j) forces[j]+=tmpforce[j];</span>
+<span class="lineNum">     151 </span>            :     }
+<span class="lineNum">     152 </span>            :   }
+<span class="lineNum">     153 </span><span class="lineCov">        220 :   return wasforced;</span>
+<span class="lineNum">     154 </span>            : }
+<a name="155"><span class="lineNum">     155 </span>            : </a>
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

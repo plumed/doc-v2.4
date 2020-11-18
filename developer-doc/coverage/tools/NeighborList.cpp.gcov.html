@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/NeighborList.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - NeighborList.cpp<span style="font-size: 80%;"> (source / <a href="NeighborList.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntry">93</td>
+            <td class="headerCovTableEntryMed">88.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryMed">78.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;NeighborList.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Vector.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Pbc.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;AtomNumber.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">        169 : NeighborList::NeighborList(const vector&lt;AtomNumber&gt;&amp; list0, const vector&lt;AtomNumber&gt;&amp; list1,</span>
+<span class="lineNum">      34 </span>            :                            const bool&amp; do_pair, const bool&amp; do_pbc, const Pbc&amp; pbc,
+<span class="lineNum">      35 </span><span class="lineCov">        169 :                            const double&amp; distance, const unsigned&amp; stride): reduced(false),</span>
+<span class="lineNum">      36 </span><span class="lineCov">        338 :   do_pair_(do_pair), do_pbc_(do_pbc), pbc_(&amp;pbc),</span>
+<span class="lineNum">      37 </span><span class="lineCov">        676 :   distance_(distance), stride_(stride)</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            : // store full list of atoms needed
+<span class="lineNum">      40 </span><span class="lineCov">        169 :   fullatomlist_=list0;</span>
+<span class="lineNum">      41 </span><span class="lineCov">        169 :   fullatomlist_.insert(fullatomlist_.end(),list1.begin(),list1.end());</span>
+<span class="lineNum">      42 </span><span class="lineCov">        169 :   nlist0_=list0.size();</span>
+<span class="lineNum">      43 </span><span class="lineCov">        169 :   nlist1_=list1.size();</span>
+<span class="lineNum">      44 </span><span class="lineCov">        169 :   twolists_=true;</span>
+<span class="lineNum">      45 </span><span class="lineCov">        169 :   if(!do_pair) {</span>
+<span class="lineNum">      46 </span><span class="lineCov">        152 :     nallpairs_=nlist0_*nlist1_;</span>
+<span class="lineNum">      47 </span>            :   } else {
+<span class="lineNum">      48 </span><span class="lineCov">         17 :     plumed_massert(nlist0_==nlist1_,&quot;when using PAIR option, the two groups should have the same number of elements&quot;);</span>
+<span class="lineNum">      49 </span><span class="lineCov">         17 :     nallpairs_=nlist0_;</span>
+<span class="lineNum">      50 </span>            :   }
+<span class="lineNum">      51 </span><span class="lineCov">        169 :   initialize();</span>
+<span class="lineNum">      52 </span><span class="lineCov">        169 :   lastupdate_=0;</span>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">        169 : }</span></a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">          9 : NeighborList::NeighborList(const vector&lt;AtomNumber&gt;&amp; list0, const bool&amp; do_pbc,</span>
+<span class="lineNum">      56 </span>            :                            const Pbc&amp; pbc, const double&amp; distance,
+<span class="lineNum">      57 </span><span class="lineCov">          9 :                            const unsigned&amp; stride): reduced(false),</span>
+<span class="lineNum">      58 </span><span class="lineCov">          9 :   do_pbc_(do_pbc), pbc_(&amp;pbc),</span>
+<span class="lineNum">      59 </span><span class="lineCov">         27 :   distance_(distance), stride_(stride) {</span>
+<span class="lineNum">      60 </span><span class="lineCov">          9 :   fullatomlist_=list0;</span>
+<span class="lineNum">      61 </span><span class="lineCov">          9 :   nlist0_=list0.size();</span>
+<span class="lineNum">      62 </span><span class="lineCov">          9 :   twolists_=false;</span>
+<span class="lineNum">      63 </span><span class="lineCov">          9 :   nallpairs_=nlist0_*(nlist0_-1)/2;</span>
+<span class="lineNum">      64 </span><span class="lineCov">          9 :   initialize();</span>
+<span class="lineNum">      65 </span><span class="lineCov">          9 :   lastupdate_=0;</span>
+<a name="66"><span class="lineNum">      66 </span><span class="lineCov">          9 : }</span></a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">        178 : void NeighborList::initialize() {</span>
+<span class="lineNum">      69 </span><span class="lineCov">        178 :   neighbors_.clear();</span>
+<span class="lineNum">      70 </span><span class="lineCov">     679798 :   for(unsigned int i=0; i&lt;nallpairs_; ++i) {</span>
+<span class="lineNum">      71 </span><span class="lineCov">     679620 :     neighbors_.push_back(getIndexPair(i));</span>
+<span class="lineNum">      72 </span>            :   }
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">        178 : }</span></a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">        339 : vector&lt;AtomNumber&gt;&amp; NeighborList::getFullAtomList() {</span>
+<span class="lineNum">      76 </span><span class="lineCov">        339 :   return fullatomlist_;</span>
+<a name="77"><span class="lineNum">      77 </span>            : }</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">     386889 : pair&lt;unsigned,unsigned&gt; NeighborList::getIndexPair(unsigned ipair) {</span>
+<span class="lineNum">      80 </span>            :   pair&lt;unsigned,unsigned&gt; index;
+<span class="lineNum">      81 </span><span class="lineCov">     386889 :   if(twolists_ &amp;&amp; do_pair_) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">        336 :     index=pair&lt;unsigned,unsigned&gt;(ipair,ipair+nlist0_);</span>
+<span class="lineNum">      83 </span><span class="lineCov">     386553 :   } else if (twolists_ &amp;&amp; !do_pair_) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">     380727 :     index=pair&lt;unsigned,unsigned&gt;(ipair/nlist1_,ipair%nlist1_+nlist0_);</span>
+<span class="lineNum">      85 </span><span class="lineCov">       5826 :   } else if (!twolists_) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">       5826 :     unsigned ii = nallpairs_-1-ipair;</span>
+<span class="lineNum">      87 </span><span class="lineCov">       5826 :     unsigned  K = unsigned(floor((sqrt(double(8*ii+1))+1)/2));</span>
+<span class="lineNum">      88 </span><span class="lineCov">       5826 :     unsigned jj = ii-K*(K-1)/2;</span>
+<span class="lineNum">      89 </span><span class="lineCov">       5826 :     index=pair&lt;unsigned,unsigned&gt;(nlist0_-1-K,nlist0_-1-jj);</span>
+<span class="lineNum">      90 </span>            :   }
+<span class="lineNum">      91 </span><span class="lineCov">     386889 :   return index;</span>
+<a name="92"><span class="lineNum">      92 </span>            : }</a>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">        125 : void NeighborList::update(const vector&lt;Vector&gt;&amp; positions) {</span>
+<span class="lineNum">      95 </span><span class="lineCov">        125 :   neighbors_.clear();</span>
+<span class="lineNum">      96 </span><span class="lineCov">        125 :   const double d2=distance_*distance_;</span>
+<span class="lineNum">      97 </span>            : // check if positions array has the correct length
+<span class="lineNum">      98 </span><span class="lineCov">        125 :   plumed_assert(positions.size()==fullatomlist_.size());</span>
+<span class="lineNum">      99 </span><span class="lineCov">      94283 :   for(unsigned int i=0; i&lt;nallpairs_; ++i) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">      47079 :     pair&lt;unsigned,unsigned&gt; index=getIndexPair(i);</span>
+<span class="lineNum">     101 </span><span class="lineCov">      47079 :     unsigned index0=index.first;</span>
+<span class="lineNum">     102 </span><span class="lineCov">      47079 :     unsigned index1=index.second;</span>
+<span class="lineNum">     103 </span><span class="lineCov">      47079 :     Vector distance;</span>
+<span class="lineNum">     104 </span><span class="lineCov">      47079 :     if(do_pbc_) {</span>
+<span class="lineNum">     105 </span><span class="lineCov">     141237 :       distance=pbc_-&gt;distance(positions[index0],positions[index1]);</span>
+<span class="lineNum">     106 </span>            :     } else {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :       distance=delta(positions[index0],positions[index1]);</span>
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span><span class="lineCov">      47079 :     double value=modulo2(distance);</span>
+<span class="lineNum">     110 </span><span class="lineCov">      47079 :     if(value&lt;=d2) {neighbors_.push_back(index);}</span>
+<span class="lineNum">     111 </span>            :   }
+<span class="lineNum">     112 </span><span class="lineCov">        125 :   setRequestList();</span>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">        125 : }</span></a>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">        125 : void NeighborList::setRequestList() {</span>
+<span class="lineNum">     116 </span><span class="lineCov">        125 :   requestlist_.clear();</span>
+<span class="lineNum">     117 </span><span class="lineCov">       2061 :   for(unsigned int i=0; i&lt;size(); ++i) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">       2904 :     requestlist_.push_back(fullatomlist_[neighbors_[i].first]);</span>
+<span class="lineNum">     119 </span><span class="lineCov">       1936 :     requestlist_.push_back(fullatomlist_[neighbors_[i].second]);</span>
+<span class="lineNum">     120 </span>            :   }
+<span class="lineNum">     121 </span><span class="lineCov">        125 :   Tools::removeDuplicates(requestlist_);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        125 :   reduced=false;</span>
+<span class="lineNum">     123 </span><span class="lineCov">        125 : }</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">         19 : vector&lt;AtomNumber&gt;&amp; NeighborList::getReducedAtomList() {</span>
+<span class="lineNum">     126 </span><span class="lineCov">        638 :   if(!reduced)for(unsigned int i=0; i&lt;size(); ++i) {</span>
+<span class="lineNum">     127 </span>            :       unsigned newindex0=0,newindex1=0;
+<span class="lineNum">     128 </span><span class="lineCov">       1857 :       AtomNumber index0=fullatomlist_[neighbors_[i].first];</span>
+<span class="lineNum">     129 </span><span class="lineCov">       1238 :       AtomNumber index1=fullatomlist_[neighbors_[i].second];</span>
+<span class="lineNum">     130 </span>            : // I exploit the fact that requestlist_ is an ordered vector
+<span class="lineNum">     131 </span><span class="lineCov">       1857 :       auto p = std::find(requestlist_.begin(), requestlist_.end(), index0); plumed_assert(p!=requestlist_.end()); newindex0=p-requestlist_.begin();</span>
+<span class="lineNum">     132 </span><span class="lineCov">       1857 :       p = std::find(requestlist_.begin(), requestlist_.end(), index1); plumed_assert(p!=requestlist_.end()); newindex1=p-requestlist_.begin();</span>
+<span class="lineNum">     133 </span>            :       neighbors_[i]=pair&lt;unsigned,unsigned&gt;(newindex0,newindex1);
+<span class="lineNum">     134 </span>            :     }
+<span class="lineNum">     135 </span><span class="lineCov">         19 :   reduced=true;</span>
+<span class="lineNum">     136 </span><span class="lineCov">         19 :   return requestlist_;</span>
+<a name="137"><span class="lineNum">     137 </span>            : }</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">       3636 : unsigned NeighborList::getStride() const {</span>
+<span class="lineNum">     140 </span><span class="lineCov">       3636 :   return stride_;</span>
+<a name="141"><span class="lineNum">     141 </span>            : }</a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : unsigned NeighborList::getLastUpdate() const {</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :   return lastupdate_;</span>
+<a name="145"><span class="lineNum">     145 </span>            : }</a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 : void NeighborList::setLastUpdate(unsigned step) {</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :   lastupdate_=step;</span>
+<a name="149"><span class="lineNum">     149 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">       4931 : unsigned NeighborList::size() const {</span>
+<span class="lineNum">     152 </span><span class="lineCov">       4931 :   return neighbors_.size();</span>
+<a name="153"><span class="lineNum">     153 </span>            : }</a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">   12261460 : pair&lt;unsigned,unsigned&gt; NeighborList::getClosePair(unsigned i) const {</span>
+<span class="lineNum">     156 </span><span class="lineCov">   24522920 :   return neighbors_[i];</span>
+<a name="157"><span class="lineNum">     157 </span>            : }</a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 : vector&lt;unsigned&gt; NeighborList::getNeighbors(unsigned index) {</span>
+<span class="lineNum">     160 </span>            :   vector&lt;unsigned&gt; neighbors;
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;size(); ++i) {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     if(neighbors_[i].first==index)  neighbors.push_back(neighbors_[i].second);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     if(neighbors_[i].second==index) neighbors.push_back(neighbors_[i].first);</span>
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :   return neighbors;</span>
+<span class="lineNum">     166 </span>            : }
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

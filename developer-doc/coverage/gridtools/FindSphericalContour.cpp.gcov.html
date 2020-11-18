@@ -1,0 +1,257 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - gridtools/FindSphericalContour.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">gridtools</a> - FindSphericalContour.cpp<span style="font-size: 80%;"> (source / <a href="FindSphericalContour.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryHi">95.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ContourFindingBase.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC GRIDANALYSIS FIND_SPHERICAL_CONTOUR
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : Find an isocontour in a three dimensional grid by searching over a Fibonacci sphere.
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : As discussed in the part of the manual on \ref Analysis PLUMED contains a number of tools that allow you to calculate
+<span class="lineNum">      31 </span>            : a function on a grid.  The function on this grid might be a \ref HISTOGRAM as a function of a few collective variables
+<span class="lineNum">      32 </span>            : or it might be a phase field that has been calcualted using \ref MULTICOLVARDENS.  If this function has one or two input
+<span class="lineNum">      33 </span>            : arguments it is relatively straightforward to plot the function.  If by contrast the data has a three dimensions it can be
+<span class="lineNum">      34 </span>            : difficult to visualize.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : This action provides one tool for visualizing these functions.  It can be used to search for a set of points on a contour
+<span class="lineNum">      37 </span>            : wher the function takes a particular value.  In other words, for the function \f$f(x,y,z)\f$ this action would find a set
+<span class="lineNum">      38 </span>            : of points \f$\{x_c,y_c,z_c\}\f$ that have:
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \f[
+<span class="lineNum">      41 </span>            : f(x_c,y_c,z_c) - c = 0
+<span class="lineNum">      42 </span>            : \f]
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : where \f$c\f$ is some constant value that is specified by the user.  The points on this contour are find by searching along a
+<span class="lineNum">      45 </span>            : set of equally spaced radii of a sphere that centered at on particular, user-speciified atom or virtual atom.  To ensure that
+<span class="lineNum">      46 </span>            : these search radii are equally spaced on the surface of the sphere the search directions are generated by using a fibonacci
+<span class="lineNum">      47 </span>            : spiral projected on a sphere.  In other words, the search directions are given by:
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \f[
+<span class="lineNum">      50 </span>            : \mathbf{r}_i = \left(
+<span class="lineNum">      51 </span>            : \begin{matrix}
+<span class="lineNum">      52 </span>            : \sqrt{1 - y^2} \cos(\phi) \\
+<span class="lineNum">      53 </span>            : \frac{2i}{n} - 1 + \frac{1}{n}  \\
+<span class="lineNum">      54 </span>            : \sqrt{1 - y^2} \sin(\phi)
+<span class="lineNum">      55 </span>            : \end{matrix}
+<span class="lineNum">      56 </span>            : \right)
+<span class="lineNum">      57 </span>            : \f]
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : where \f$y\f$ is the quantity second component of the vector defined above, \f$n\f$ is the number of directions to look in and \f$\phi\f$ is
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : \f[
+<span class="lineNum">      62 </span>            : \phi = \mod(i + R, n) \pi ( 3 - \sqrt{5} )
+<span class="lineNum">      63 </span>            : \f]
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : where \f$R\f$ is a random variable between 0 and \f$n-1\f$ that is generated during the read in of the input file and that is fixed during
+<span class="lineNum">      66 </span>            : the whole calculation.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : It is important to note that this action can only be used to detect countours in three dimensional functions.  In addition, this action will fail to
+<span class="lineNum">      69 </span>            : find the full set of contour  points if the contour does not have the same topology as a sphere.  If you are uncertain that the isocontours in your
+<span class="lineNum">      70 </span>            : function have a spherical topology you should use \ref FIND_CONTOUR in place of \ref FIND_SPHERICAL_CONTOUR.
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : \par Examples
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : The following input demonstrates how this action can be used.  The input here is used to study the shape of a droplet that has been formed during the
+<span class="lineNum">      75 </span>            : condensation of Lennard Jones from the vapour.  The input below achieves this by calculating the coordination numbers of all the atoms within the gas.
+<span class="lineNum">      76 </span>            : Obviously, those atoms within the droplet will have a large value for the coordination number while the isolated atoms in the gas will have a low value.
+<span class="lineNum">      77 </span>            : As such we can detect the sizes of the droplets by constructing a \ref CONTACT_MATRIX whose \f$ij\f$ element tells us whether atom \f$i\f$ and atom \f$j\f$
+<span class="lineNum">      78 </span>            : have coordination number that is greater that two.  The atoms within the various droplets within the system can then be found by performing a
+<span class="lineNum">      79 </span>            : \ref DFSCLUSTERING on this matrix to detect the connected components.  We can take the largest of these connected components and find the center of the droplet
+<span class="lineNum">      80 </span>            : by exploiting the functionality within \ref CENTER_OF_MULTICOLVAR.  We can then construct a phase field based on the positions of the atoms in the largest
+<span class="lineNum">      81 </span>            : cluster and the values of the coordination numbers of these atoms.  The final line in the input then finds the a set of points on the dividing surface that separates
+<span class="lineNum">      82 </span>            : teh droplet from the surrounding gas.  The value of the phase field on this isocontour is equal to 0.75.
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : \plumedfile
+<span class="lineNum">      85 </span>            : # Calculate coordination numbers
+<span class="lineNum">      86 </span>            : c1: COORDINATIONNUMBER SPECIES=1-512 SWITCH={EXP D_0=4.0 R_0=0.5 D_MAX=6.0}
+<span class="lineNum">      87 </span>            : # Select coordination numbers that are more than 2.0
+<span class="lineNum">      88 </span>            : cf: MFILTER_MORE DATA=c1 SWITCH={RATIONAL D_0=2.0 R_0=0.1} LOWMEM
+<span class="lineNum">      89 </span>            : # Build a contact matrix
+<span class="lineNum">      90 </span>            : mat: CONTACT_MATRIX ATOMS=cf SWITCH={EXP D_0=4.0 R_0=0.5 D_MAX=6.0}
+<span class="lineNum">      91 </span>            : # Find largest cluster
+<span class="lineNum">      92 </span>            : dfs: DFSCLUSTERING MATRIX=mat
+<span class="lineNum">      93 </span>            : clust1: CLUSTER_PROPERTIES CLUSTERS=dfs CLUSTER=1
+<span class="lineNum">      94 </span>            : # Find center of largest cluster
+<span class="lineNum">      95 </span>            : trans1: MTRANSFORM_MORE DATA=clust1 SWITCH={RATIONAL D_0=2.0 R_0=0.1} LOWMEM
+<span class="lineNum">      96 </span>            : cent: CENTER_OF_MULTICOLVAR DATA=trans1
+<span class="lineNum">      97 </span>            : # Calculate the phase field of the coordination
+<span class="lineNum">      98 </span>            : dens: MULTICOLVARDENS DATA=trans1 ORIGIN=cent DIR=xyz NBINS=30,30,30 BANDWIDTH=2.0,2.0,2.0
+<span class="lineNum">      99 </span>            : # Find the isocontour around the nucleus
+<span class="lineNum">     100 </span>            : FIND_SPHERICAL_CONTOUR GRID=dens CONTOUR=0.85 INNER_RADIUS=10.0 OUTER_RADIUS=40.0 FILE=mysurface.xyz UNITS=A PRECISION=4 NPOINTS=100
+<span class="lineNum">     101 </span>            : \endplumedfile
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : */
+<span class="lineNum">     104 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : namespace PLMD {
+<a name="107"><span class="lineNum">     107 </span>            : namespace gridtools {</a>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">          2 : class FindSphericalContour : public ContourFindingBase {</span>
+<span class="lineNum">     110 </span>            : private:
+<span class="lineNum">     111 </span>            :   unsigned nbins;
+<span class="lineNum">     112 </span>            :   double min, max;
+<span class="lineNum">     113 </span>            : public:
+<a name="114"><span class="lineNum">     114 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<span class="lineNum">     115 </span>            :   explicit FindSphericalContour(const ActionOptions&amp;ao);
+<span class="lineNum">     116 </span><span class="lineCov">          4 :   unsigned getNumberOfQuantities() const { return 2; }</span>
+<span class="lineNum">     117 </span>            :   void compute( const unsigned&amp; current, MultiValue&amp; myvals ) const ;
+<a name="118"><span class="lineNum">     118 </span>            : };</a>
+<span class="lineNum">     119 </span>            : 
+<a name="120"><span class="lineNum">     120 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(FindSphericalContour,&quot;FIND_SPHERICAL_CONTOUR&quot;)</span></a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">          2 : void FindSphericalContour::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 :   ContourFindingBase::registerKeywords( keys );</span>
+<span class="lineNum">     124 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;NPOINTS&quot;,&quot;the number of points for which we are looking for the contour&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;INNER_RADIUS&quot;,&quot;the minimum radius on which to look for the contour&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;OUTER_RADIUS&quot;,&quot;the outer radius on which to look for the contour&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;NBINS&quot;,&quot;1&quot;,&quot;the number of discrete sections in which to divide the distance between the inner and outer radius when searching for a contour&quot;);</span>
+<a name="128"><span class="lineNum">     128 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">          1 : FindSphericalContour::FindSphericalContour(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     131 </span>            :   Action(ao),
+<span class="lineNum">     132 </span><span class="lineCov">          1 :   ContourFindingBase(ao)</span>
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span><span class="lineCov">          2 :   if( ingrid-&gt;getDimension()!=3 ) error(&quot;input grid must be three dimensional&quot;);</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">          2 :   unsigned npoints; parse(&quot;NPOINTS&quot;,npoints);</span>
+<span class="lineNum">     137 </span><span class="lineCov">          1 :   log.printf(&quot;  searching for %u points on dividing surface \n&quot;,npoints);</span>
+<span class="lineNum">     138 </span><span class="lineCov">          4 :   parse(&quot;INNER_RADIUS&quot;,min); parse(&quot;OUTER_RADIUS&quot;,max); parse(&quot;NBINS&quot;,nbins);</span>
+<span class="lineNum">     139 </span><span class="lineCov">          1 :   log.printf(&quot;  expecting to find dividing surface at radii between %f and %f \n&quot;,min,max);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          1 :   log.printf(&quot;  looking for contour in windows of length %f \n&quot;, (max-min)/nbins);</span>
+<span class="lineNum">     141 </span>            :   // Set this here so the same set of grid points are used on every turn
+<span class="lineNum">     142 </span><span class="lineCov">          2 :   std::string vstring = &quot;TYPE=fibonacci COMPONENTS=&quot; + getLabel() + &quot; COORDINATES=x,y,z PBC=F,F,F&quot;;</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :   createGrid( &quot;grid&quot;, vstring ); mygrid-&gt;setNoDerivatives();</span>
+<span class="lineNum">     144 </span><span class="lineCov">          1 :   setAveragingAction( mygrid, true ); mygrid-&gt;setupFibonacciGrid( npoints );</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">          1 :   checkRead();</span>
+<span class="lineNum">     147 </span>            :   // Create a task list
+<span class="lineNum">     148 </span><span class="lineCov">          1 :   for(unsigned i=0; i&lt;npoints; ++i) addTaskToList( i );</span>
+<span class="lineNum">     149 </span><span class="lineCov">          1 :   deactivateAllTasks();</span>
+<span class="lineNum">     150 </span><span class="lineCov">        201 :   for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) taskFlags[i]=1;</span>
+<span class="lineNum">     151 </span><span class="lineCov">          1 :   lockContributors();</span>
+<a name="152"><span class="lineNum">     152 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineCov">        100 : void FindSphericalContour::compute( const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     155 </span>            :   // Generate contour point on inner sphere
+<span class="lineNum">     156 </span><span class="lineCov">        100 :   std::vector&lt;double&gt; contour_point(3), direction(3), der(3), tmp(3);</span>
+<span class="lineNum">     157 </span>            :   // Retrieve this contour point from grid
+<span class="lineNum">     158 </span><span class="lineCov">        100 :   mygrid-&gt;getGridPointCoordinates( current, direction );</span>
+<span class="lineNum">     159 </span>            :   // Now setup contour point on inner sphere
+<span class="lineNum">     160 </span><span class="lineCov">        700 :   for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     161 </span><span class="lineCov">        900 :     contour_point[j] = min*direction[j];</span>
+<span class="lineNum">     162 </span><span class="lineCov">        600 :     direction[j] = (max-min)*direction[j] / static_cast&lt;double&gt;(nbins);</span>
+<span class="lineNum">     163 </span>            :   }
+<span class="lineNum">     164 </span>            :   bool found=false;
+<span class="lineNum">     165 </span><span class="lineCov">        100 :   for(unsigned k=0; k&lt;nbins; ++k) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">       1300 :     for(unsigned j=0; j&lt;3; ++j) tmp[j] = contour_point[j] + direction[j];</span>
+<span class="lineNum">     167 </span>            :     double val1 = getDifferenceFromContour( contour_point, der );
+<span class="lineNum">     168 </span>            :     double val2 = getDifferenceFromContour( tmp, der );
+<span class="lineNum">     169 </span><span class="lineCov">        100 :     if( val1*val2&lt;0 ) {</span>
+<span class="lineNum">     170 </span>            :       findContour( direction, contour_point );
+<span class="lineNum">     171 </span><span class="lineCov">        700 :       double norm=0; for(unsigned j=0; j&lt;3; ++j) norm += contour_point[j]*contour_point[j];</span>
+<span class="lineNum">     172 </span><span class="lineCov">        100 :       myvals.setValue( 1, sqrt(norm) ); found=true; break;</span>
+<span class="lineNum">     173 </span>            :     }
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;3; ++j) contour_point[j] = tmp[j];</span>
+<span class="lineNum">     175 </span>            :   }
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :   if( !found ) error(&quot;range does not bracket the dividing surface&quot;);</span>
+<span class="lineNum">     177 </span><span class="lineCov">        100 : }</span>
+<a name="178"><span class="lineNum">     178 </span>            : </a>
+<span class="lineNum">     179 </span>            : }
+<span class="lineNum">     180 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

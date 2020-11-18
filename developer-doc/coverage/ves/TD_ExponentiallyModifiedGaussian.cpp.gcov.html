@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TD_ExponentiallyModifiedGaussian.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TD_ExponentiallyModifiedGaussian.cpp<span style="font-size: 80%;"> (source / <a href="TD_ExponentiallyModifiedGaussian.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">56</td>
+            <td class="headerCovTableEntry">62</td>
+            <td class="headerCovTableEntryHi">90.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace ves {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC VES_TARGETDIST TD_EXPONENTIALLY_MODIFIED_GAUSSIAN
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Target distribution given by a sum of exponentially modified Gaussian distributions (static).
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : Employ a target distribution that is given by a sum where each
+<span class="lineNum">      36 </span>            : term is a product of one-dimensional
+<span class="lineNum">      37 </span>            : [exponentially modified Gaussian distributions](http://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution),
+<span class="lineNum">      38 </span>            : \f[
+<span class="lineNum">      39 </span>            : p(\mathbf{s}) = \sum_{i} \, w_{i}
+<span class="lineNum">      40 </span>            : \prod_{k}^{d}
+<span class="lineNum">      41 </span>            : \frac{\lambda_{k,i}}{2}
+<span class="lineNum">      42 </span>            : \,
+<span class="lineNum">      43 </span>            : \exp\left[
+<span class="lineNum">      44 </span>            : \frac{\lambda_{k,i}}{2}
+<span class="lineNum">      45 </span>            : (2 \mu_{k,i} + \lambda_{k,i} \sigma_{k,i}^2 -2 s_{k})
+<span class="lineNum">      46 </span>            : \right]
+<span class="lineNum">      47 </span>            : \,
+<span class="lineNum">      48 </span>            : \mathrm{erfc}\left[
+<span class="lineNum">      49 </span>            : \frac{\mu_{k,i} + \lambda_{k,i} \sigma_{k,i}^2 - s_{k})}{\sqrt{2} \sigma_{k,i}}
+<span class="lineNum">      50 </span>            : \right]
+<span class="lineNum">      51 </span>            : \f]
+<span class="lineNum">      52 </span>            : where \f$(\mu_{1,i},\mu_{2,i},\ldots,\mu_{d,i})\f$
+<span class="lineNum">      53 </span>            : are the centers of the Gaussian component,
+<span class="lineNum">      54 </span>            : \f$(\sigma_{1,i},\sigma_{2,i},\ldots,\sigma_{d,i})\f$ are the
+<span class="lineNum">      55 </span>            : standard deviations of the Gaussian component,
+<span class="lineNum">      56 </span>            : \f$(\lambda_{1,i},\lambda_{2,i},\ldots,\lambda_{d,i})\f$ are the
+<span class="lineNum">      57 </span>            : rate parameters of the exponential component, and
+<span class="lineNum">      58 </span>            : \f$\mathrm{erfc}(x)=1-\mathrm{erf}(x)\f$ is the
+<span class="lineNum">      59 </span>            : complementary error function.
+<span class="lineNum">      60 </span>            : The weights \f$w_{i}\f$ are normalized to 1, \f$\sum_{i}w_{i}=1\f$.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : The centers \f$(\mu_{1,i},\mu_{2,i},\ldots,\mu_{d,i})\f$ are
+<span class="lineNum">      63 </span>            : given using the numbered CENTER keywords, the standard deviations
+<span class="lineNum">      64 </span>            : \f$(\sigma_{1,i},\sigma_{2,i},\ldots,\sigma_{d,i})\f$ using the
+<span class="lineNum">      65 </span>            : the numbered SIGMA keywords, and the rate parameters
+<span class="lineNum">      66 </span>            : \f$(\lambda_{1,i},\lambda_{2,i},\ldots,\lambda_{d,i})\f$ using the
+<span class="lineNum">      67 </span>            : numbered LAMBDA keywords.
+<span class="lineNum">      68 </span>            : The weights are given using the WEIGHTS keywords, if no weights are
+<span class="lineNum">      69 </span>            : given are all terms weighted equally.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : \par Examples
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : An exponentially modified Gaussian distribution in one-dimension
+<span class="lineNum">      74 </span>            : \plumedfile
+<span class="lineNum">      75 </span>            : td1: TD_EXPONENTIALLY_MODIFIED_GAUSSIAN CENTER1=-10.0 SIGMA1=1.0 LAMBDA1=0.25
+<span class="lineNum">      76 </span>            : \endplumedfile
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : A sum of two one-dimensional exponentially modified Gaussian distributions
+<span class="lineNum">      79 </span>            : \plumedfile
+<span class="lineNum">      80 </span>            : TD_EXPONENTIALLY_MODIFIED_GAUSSIAN ...
+<span class="lineNum">      81 </span>            :  CENTER1=-10.0 SIGMA1=1.0 LAMBDA1=0.5
+<span class="lineNum">      82 </span>            :  CENTER2=+10.0 SIGMA2=1.0 LAMBDA2=1.0
+<span class="lineNum">      83 </span>            :  WEIGHTS=2.0,1.0
+<span class="lineNum">      84 </span>            :  LABEL=td1
+<span class="lineNum">      85 </span>            : ... TD_EXPONENTIALLY_MODIFIED_GAUSSIAN
+<span class="lineNum">      86 </span>            : \endplumedfile
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : A sum of two two-dimensional exponentially modified Gaussian distributions
+<span class="lineNum">      89 </span>            : \plumedfile
+<span class="lineNum">      90 </span>            : TD_EXPONENTIALLY_MODIFIED_GAUSSIAN ...
+<span class="lineNum">      91 </span>            :  CENTER1=-5.0,+5.0 SIGMA1=1.0,1.0 LAMBDA1=0.5,0.5
+<span class="lineNum">      92 </span>            :  CENTER2=+5.0,+5.0 SIGMA2=1.0,1.0 LAMBDA2=1.0,1.0
+<span class="lineNum">      93 </span>            :  WEIGHTS=1.0,1.0
+<span class="lineNum">      94 </span>            :  LABEL=td1
+<span class="lineNum">      95 </span>            : ... TD_EXPONENTIALLY_MODIFIED_GAUSSIAN
+<span class="lineNum">      96 </span>            : \endplumedfile
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : */
+<a name="103"><span class="lineNum">     103 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">         18 : class TD_ExponentiallyModifiedGaussian: public TargetDistribution {</span>
+<span class="lineNum">     106 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; centers_;
+<span class="lineNum">     107 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; sigmas_;
+<span class="lineNum">     108 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; lambdas_;
+<span class="lineNum">     109 </span>            :   std::vector&lt;double&gt; weights_;
+<span class="lineNum">     110 </span>            :   unsigned int ncenters_;
+<span class="lineNum">     111 </span>            :   double ExponentiallyModifiedGaussianDiagonal(const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     112 </span>            : public:
+<span class="lineNum">     113 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     114 </span>            :   explicit TD_ExponentiallyModifiedGaussian(const ActionOptions&amp; ao);
+<span class="lineNum">     115 </span>            :   double getValue(const std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     116 </span>            : };
+<a name="117"><span class="lineNum">     117 </span>            : </a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">       6458 : PLUMED_REGISTER_ACTION(TD_ExponentiallyModifiedGaussian,&quot;TD_EXPONENTIALLY_MODIFIED_GAUSSIAN&quot;)</span>
+<a name="120"><span class="lineNum">     120 </span>            : </a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">          7 : void TD_ExponentiallyModifiedGaussian::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     123 </span><span class="lineCov">          7 :   TargetDistribution::registerKeywords(keys);</span>
+<span class="lineNum">     124 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;CENTER&quot;,&quot;The center of each exponentially modified Gaussian distributions.&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;SIGMA&quot;,&quot;The sigma parameters for each exponentially modified Gaussian distributions.&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;LAMBDA&quot;,&quot;The lambda parameters for each exponentially modified Gaussian distributions&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         28 :   keys.add(&quot;optional&quot;,&quot;WEIGHTS&quot;,&quot;The weights of the distributions. By default all are weighted equally.&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">         14 :   keys.use(&quot;WELLTEMPERED_FACTOR&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         14 :   keys.use(&quot;SHIFT_TO_ZERO&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">         14 :   keys.use(&quot;NORMALIZE&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineCov">          7 : }</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">          6 : TD_ExponentiallyModifiedGaussian::TD_ExponentiallyModifiedGaussian(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     135 </span>            :   PLUMED_VES_TARGETDISTRIBUTION_INIT(ao),
+<span class="lineNum">     136 </span>            :   centers_(0),
+<span class="lineNum">     137 </span>            :   sigmas_(0),
+<span class="lineNum">     138 </span>            :   lambdas_(0),
+<span class="lineNum">     139 </span>            :   weights_(0),
+<span class="lineNum">     140 </span><span class="lineCov">          6 :   ncenters_(0)</span>
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span><span class="lineCov">          9 :   for(unsigned int i=1;; i++) {</span>
+<span class="lineNum">     143 </span>            :     std::vector&lt;double&gt; tmp_center;
+<span class="lineNum">     144 </span><span class="lineCov">         30 :     if(!parseNumberedVector(&quot;CENTER&quot;,i,tmp_center) ) {break;}</span>
+<span class="lineNum">     145 </span><span class="lineCov">          9 :     centers_.push_back(tmp_center);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          9 :   }</span>
+<span class="lineNum">     147 </span><span class="lineCov">          9 :   for(unsigned int i=1;; i++) {</span>
+<span class="lineNum">     148 </span>            :     std::vector&lt;double&gt; tmp_sigma;
+<span class="lineNum">     149 </span><span class="lineCov">         30 :     if(!parseNumberedVector(&quot;SIGMA&quot;,i,tmp_sigma) ) {break;}</span>
+<span class="lineNum">     150 </span><span class="lineCov">         51 :     for(unsigned int k=0; k&lt;tmp_sigma.size(); k++) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">         11 :       if(tmp_sigma[k]&lt;=0.0) {plumed_merror(getName()+&quot;: the values given in SIGMA should be postive&quot;);}</span>
+<span class="lineNum">     152 </span>            :     }
+<span class="lineNum">     153 </span><span class="lineCov">          9 :     sigmas_.push_back(tmp_sigma);</span>
+<span class="lineNum">     154 </span><span class="lineCov">          9 :   }</span>
+<span class="lineNum">     155 </span><span class="lineCov">          9 :   for(unsigned int i=1;; i++) {</span>
+<span class="lineNum">     156 </span>            :     std::vector&lt;double&gt; tmp_lambda;
+<span class="lineNum">     157 </span><span class="lineCov">         30 :     if(!parseNumberedVector(&quot;LAMBDA&quot;,i,tmp_lambda) ) {break;}</span>
+<span class="lineNum">     158 </span><span class="lineCov">         51 :     for(unsigned int k=0; k&lt;tmp_lambda.size(); k++) {</span>
+<span class="lineNum">     159 </span><span class="lineCov">         11 :       if(tmp_lambda[k]&lt;=0.0) {plumed_merror(getName()+&quot;: the values given in LAMBDA should be postive&quot;);}</span>
+<span class="lineNum">     160 </span>            :     }
+<span class="lineNum">     161 </span><span class="lineCov">          9 :     lambdas_.push_back(tmp_lambda);</span>
+<span class="lineNum">     162 </span><span class="lineCov">          9 :   }</span>
+<span class="lineNum">     163 </span>            :   //
+<span class="lineNum">     164 </span><span class="lineCov">          6 :   if(centers_.size()==0) {</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: CENTER keywords seem to be missing. Note that numbered keywords start at CENTER1.&quot;);</span>
+<span class="lineNum">     166 </span>            :   }
+<span class="lineNum">     167 </span>            :   //
+<span class="lineNum">     168 </span><span class="lineCov">         12 :   if(centers_.size()!=sigmas_.size() || centers_.size()!=lambdas_.size() ) {</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: there has to be an equal amount of CENTER, SIGMA, and LAMBDA keywords&quot;);</span>
+<span class="lineNum">     170 </span>            :   }
+<span class="lineNum">     171 </span>            :   //
+<span class="lineNum">     172 </span><span class="lineCov">          6 :   setDimension(centers_[0].size());</span>
+<span class="lineNum">     173 </span><span class="lineCov">          6 :   ncenters_ = centers_.size();</span>
+<span class="lineNum">     174 </span>            :   //
+<span class="lineNum">     175 </span>            :   // check centers and sigmas
+<span class="lineNum">     176 </span><span class="lineCov">         24 :   for(unsigned int i=0; i&lt;ncenters_; i++) {</span>
+<span class="lineNum">     177 </span><span class="lineCov">         18 :     if(centers_[i].size()!=getDimension()) {</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: one of the CENTER keyword does not match the given dimension&quot;);</span>
+<span class="lineNum">     179 </span>            :     }
+<span class="lineNum">     180 </span><span class="lineCov">          9 :     if(sigmas_[i].size()!=getDimension()) {</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: one of the SIGMA keyword does not match the given dimension&quot;);</span>
+<span class="lineNum">     182 </span>            :     }
+<span class="lineNum">     183 </span><span class="lineCov">          9 :     if(lambdas_[i].size()!=getDimension()) {</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: one of the LAMBDA keyword does not match the given dimension&quot;);</span>
+<span class="lineNum">     185 </span>            :     }
+<span class="lineNum">     186 </span>            :   }
+<span class="lineNum">     187 </span>            :   //
+<span class="lineNum">     188 </span><span class="lineCov">         12 :   parseVector(&quot;WEIGHTS&quot;,weights_);</span>
+<span class="lineNum">     189 </span><span class="lineCov">         10 :   if(weights_.size()==0) {weights_.assign(centers_.size(),1.0);}</span>
+<span class="lineNum">     190 </span><span class="lineCov">          6 :   if(centers_.size()!=weights_.size()) {</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: there has to be as many weights given in WEIGHTS as numbered CENTER keywords&quot;);</span>
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span>            :   //
+<span class="lineNum">     194 </span>            :   double sum_weights=0.0;
+<span class="lineNum">     195 </span><span class="lineCov">         24 :   for(unsigned int i=0; i&lt;weights_.size(); i++) {sum_weights+=weights_[i];}</span>
+<span class="lineNum">     196 </span><span class="lineCov">         39 :   for(unsigned int i=0; i&lt;weights_.size(); i++) {weights_[i]/=sum_weights;}</span>
+<span class="lineNum">     197 </span>            :   //
+<span class="lineNum">     198 </span><span class="lineCov">          6 :   checkRead();</span>
+<span class="lineNum">     199 </span><span class="lineCov">          6 : }</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">      11206 : double TD_ExponentiallyModifiedGaussian::getValue(const std::vector&lt;double&gt;&amp; argument) const {</span>
+<span class="lineNum">     203 </span>            :   double value=0.0;
+<span class="lineNum">     204 </span><span class="lineCov">      54824 :   for(unsigned int i=0; i&lt;ncenters_; i++) {</span>
+<span class="lineNum">     205 </span><span class="lineCov">      65427 :     value+=weights_[i]*ExponentiallyModifiedGaussianDiagonal(argument,centers_[i],sigmas_[i],lambdas_[i]);</span>
+<span class="lineNum">     206 </span>            :   }
+<span class="lineNum">     207 </span><span class="lineCov">      11206 :   return value;</span>
+<span class="lineNum">     208 </span>            : }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineCov">      21809 : double TD_ExponentiallyModifiedGaussian::ExponentiallyModifiedGaussianDiagonal(const std::vector&lt;double&gt;&amp; argument, const std::vector&lt;double&gt;&amp; center, const std::vector&lt;double&gt;&amp; sigma, const std::vector&lt;double&gt;&amp; lambda) const {</span>
+<span class="lineNum">     212 </span>            :   double value = 1.0;
+<span class="lineNum">     213 </span><span class="lineCov">     170251 :   for(unsigned int k=0; k&lt;argument.size(); k++) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">     168844 :     double arg1 = 0.5*lambda[k]*(2.0*center[k]+lambda[k]*sigma[k]*sigma[k]-2.0*argument[k]);</span>
+<span class="lineNum">     215 </span><span class="lineCov">      42211 :     double arg2 = (center[k]+lambda[k]*sigma[k]*sigma[k]-argument[k])/(sqrt(2.0)*sigma[k]);</span>
+<span class="lineNum">     216 </span><span class="lineCov">      42211 :     value *= 0.5*lambda[k]*exp(arg1)*erfc(arg2);</span>
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span><span class="lineCov">      21809 :   return value;</span>
+<span class="lineNum">     219 </span>            : }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : 
+<a name="222"><span class="lineNum">     222 </span>            : </a>
+<span class="lineNum">     223 </span>            : }
+<span class="lineNum">     224 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

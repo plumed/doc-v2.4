@@ -1,0 +1,480 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TargetDistribution.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TargetDistribution.cpp<span style="font-size: 80%;"> (source / <a href="TargetDistribution.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">179</td>
+            <td class="headerCovTableEntry">207</td>
+            <td class="headerCovTableEntryMed">86.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryMed">84.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;TargetDistModifer.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &quot;VesBias.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;GridIntegrationWeights.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;VesTools.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;tools/Keywords.h&quot;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &quot;GridProjWeights.h&quot;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace PLMD {
+<span class="lineNum">      38 </span>            : namespace ves {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">        357 : void TargetDistribution::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      41 </span><span class="lineCov">        357 :   Action::registerKeywords(keys);</span>
+<span class="lineNum">      42 </span><span class="lineCov">       1428 :   keys.reserve(&quot;optional&quot;,&quot;WELLTEMPERED_FACTOR&quot;,&quot;Broaden the target distribution such that it is taken as [p(s)]^(1/\\f$\\gamma\\f$) where \\f$\\gamma\\f$ is the well tempered factor given here. If this option is active the distribution will be automatically normalized.&quot;);</span>
+<span class="lineNum">      43 </span><span class="lineCov">       1071 :   keys.reserveFlag(&quot;SHIFT_TO_ZERO&quot;,false,&quot;Shift the minimum value of the target distribution to zero. This can for example be used to avoid negative values in the target distribution. If this option is active the distribution will be automatically normalized.&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineCov">       1071 :   keys.reserveFlag(&quot;NORMALIZE&quot;,false,&quot;Renormalized the target distribution over the intervals on which it is defined to make sure that it is properly normalized to 1. In most cases this should not be needed as the target distributions should be normalized. The code will issue a warning (but still run) if this is needed for some reason.&quot;);</span>
+<span class="lineNum">      45 </span><span class="lineCov">        357 : }</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">        342 : TargetDistribution::TargetDistribution(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      49 </span>            :   Action(ao),
+<span class="lineNum">      50 </span>            :   type_(static_targetdist),
+<span class="lineNum">      51 </span>            :   force_normalization_(false),
+<span class="lineNum">      52 </span>            :   check_normalization_(true),
+<span class="lineNum">      53 </span>            :   check_nonnegative_(true),
+<span class="lineNum">      54 </span>            :   check_nan_inf_(false),
+<span class="lineNum">      55 </span>            :   shift_targetdist_to_zero_(false),
+<span class="lineNum">      56 </span>            :   dimension_(0),
+<span class="lineNum">      57 </span>            :   grid_args_(0),
+<span class="lineNum">      58 </span>            :   targetdist_grid_pntr_(NULL),
+<span class="lineNum">      59 </span>            :   log_targetdist_grid_pntr_(NULL),
+<span class="lineNum">      60 </span>            :   targetdist_modifer_pntrs_(0),
+<span class="lineNum">      61 </span>            :   action_pntr_(NULL),
+<span class="lineNum">      62 </span>            :   vesbias_pntr_(NULL),
+<span class="lineNum">      63 </span>            :   needs_bias_grid_(false),
+<span class="lineNum">      64 </span>            :   needs_bias_withoutcutoff_grid_(false),
+<span class="lineNum">      65 </span>            :   needs_fes_grid_(false),
+<span class="lineNum">      66 </span>            :   bias_grid_pntr_(NULL),
+<span class="lineNum">      67 </span>            :   bias_withoutcutoff_grid_pntr_(NULL),
+<span class="lineNum">      68 </span>            :   fes_grid_pntr_(NULL),
+<span class="lineNum">      69 </span>            :   static_grid_calculated(false),
+<span class="lineNum">      70 </span>            :   allow_bias_cutoff_(true),
+<span class="lineNum">      71 </span><span class="lineCov">        342 :   bias_cutoff_active_(false)</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span>            :   //
+<span class="lineNum">      74 </span><span class="lineCov">        684 :   if(keywords.exists(&quot;WELLTEMPERED_FACTOR&quot;)) {</span>
+<span class="lineNum">      75 </span><span class="lineCov">        253 :     double welltempered_factor=0.0;</span>
+<span class="lineNum">      76 </span><span class="lineCov">        506 :     parse(&quot;WELLTEMPERED_FACTOR&quot;,welltempered_factor);</span>
+<span class="lineNum">      77 </span>            :     //
+<span class="lineNum">      78 </span><span class="lineCov">        253 :     if(welltempered_factor&gt;0.0) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">         12 :       TargetDistModifer* pntr = new WellTemperedModifer(welltempered_factor);</span>
+<span class="lineNum">      80 </span><span class="lineCov">          6 :       targetdist_modifer_pntrs_.push_back(pntr);</span>
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span><span class="lineCov">        247 :     else if(welltempered_factor&lt;0.0) {</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: negative value in WELLTEMPERED_FACTOR does not make sense&quot;);</span>
+<span class="lineNum">      84 </span>            :     }
+<span class="lineNum">      85 </span>            :   }
+<span class="lineNum">      86 </span>            :   //
+<span class="lineNum">      87 </span><span class="lineCov">        684 :   if(keywords.exists(&quot;SHIFT_TO_ZERO&quot;)) {</span>
+<span class="lineNum">      88 </span><span class="lineCov">        482 :     parseFlag(&quot;SHIFT_TO_ZERO&quot;,shift_targetdist_to_zero_);</span>
+<span class="lineNum">      89 </span><span class="lineCov">        241 :     if(shift_targetdist_to_zero_) {</span>
+<span class="lineNum">      90 </span><span class="lineCov">          3 :       if(bias_cutoff_active_) {plumed_merror(getName()+&quot;: using SHIFT_TO_ZERO with bias cutoff is not allowed.&quot;);}</span>
+<span class="lineNum">      91 </span><span class="lineCov">          3 :       check_nonnegative_=false;</span>
+<span class="lineNum">      92 </span>            :     }
+<span class="lineNum">      93 </span>            :   }
+<span class="lineNum">      94 </span>            :   //
+<span class="lineNum">      95 </span><span class="lineCov">        684 :   if(keywords.exists(&quot;NORMALIZE&quot;)) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">        215 :     bool force_normalization=false;</span>
+<span class="lineNum">      97 </span><span class="lineCov">        430 :     parseFlag(&quot;NORMALIZE&quot;,force_normalization);</span>
+<span class="lineNum">      98 </span><span class="lineCov">        215 :     if(force_normalization) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">          3 :       if(shift_targetdist_to_zero_) {plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: using NORMALIZE with SHIFT_TO_ZERO is not needed, the target distribution will be automatically normalized.&quot;);}</span>
+<span class="lineNum">     100 </span>            :       setForcedNormalization();
+<span class="lineNum">     101 </span>            :     }
+<span class="lineNum">     102 </span>            :   }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">        342 : }</span>
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">        684 : TargetDistribution::~TargetDistribution() {</span>
+<span class="lineNum">     108 </span><span class="lineCov">        342 :   if(targetdist_grid_pntr_!=NULL) {</span>
+<span class="lineNum">     109 </span><span class="lineCov">        342 :     delete targetdist_grid_pntr_;</span>
+<span class="lineNum">     110 </span>            :   }
+<span class="lineNum">     111 </span><span class="lineCov">        342 :   if(log_targetdist_grid_pntr_!=NULL) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">        342 :     delete log_targetdist_grid_pntr_;</span>
+<span class="lineNum">     113 </span>            :   }
+<span class="lineNum">     114 </span><span class="lineCov">        702 :   for(unsigned int i=0; i&lt;targetdist_modifer_pntrs_.size(); i++) {</span>
+<span class="lineNum">     115 </span><span class="lineCov">          6 :     delete targetdist_modifer_pntrs_[i];</span>
+<span class="lineNum">     116 </span>            :   }
+<span class="lineNum">     117 </span><span class="lineCov">        342 : }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">        352 : double TargetDistribution::getBeta() const {</span>
+<span class="lineNum">     121 </span><span class="lineCov">        352 :   plumed_massert(vesbias_pntr_!=NULL,&quot;The VesBias has to be linked to use TargetDistribution::getBeta()&quot;);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        352 :   return vesbias_pntr_-&gt;getBeta();</span>
+<span class="lineNum">     123 </span>            : }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">        355 : void TargetDistribution::setDimension(const unsigned int dimension) {</span>
+<span class="lineNum">     127 </span><span class="lineCov">        355 :   plumed_massert(dimension_==0,&quot;setDimension: the dimension of the target distribution has already been set&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">        355 :   dimension_=dimension;</span>
+<span class="lineNum">     129 </span><span class="lineCov">        355 : }</span>
+<a name="130"><span class="lineNum">     130 </span>            : </a>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineCov">         44 : void TargetDistribution::linkVesBias(VesBias* vesbias_pntr_in) {</span>
+<span class="lineNum">     133 </span><span class="lineCov">         44 :   vesbias_pntr_ = vesbias_pntr_in;</span>
+<span class="lineNum">     134 </span><span class="lineCov">         44 :   action_pntr_ = static_cast&lt;Action*&gt;(vesbias_pntr_in);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         44 : }</span>
+<a name="136"><span class="lineNum">     136 </span>            : </a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 : void TargetDistribution::linkAction(Action* action_pntr_in) {</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :   action_pntr_ = action_pntr_in;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 : }</span>
+<a name="141"><span class="lineNum">     141 </span>            : </a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : void TargetDistribution::linkBiasGrid(Grid* bias_grid_pntr_in) {</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :   bias_grid_pntr_ = bias_grid_pntr_in;</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 : }</span>
+<a name="146"><span class="lineNum">     146 </span>            : </a>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">          3 : void TargetDistribution::linkBiasWithoutCutoffGrid(Grid* bias_withoutcutoff_grid_pntr_in) {</span>
+<span class="lineNum">     149 </span><span class="lineCov">          3 :   bias_withoutcutoff_grid_pntr_ = bias_withoutcutoff_grid_pntr_in;</span>
+<span class="lineNum">     150 </span><span class="lineCov">          3 : }</span>
+<a name="151"><span class="lineNum">     151 </span>            : </a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">         35 : void TargetDistribution::linkFesGrid(Grid* fes_grid_pntr_in) {</span>
+<span class="lineNum">     154 </span><span class="lineCov">         35 :   fes_grid_pntr_ = fes_grid_pntr_in;</span>
+<span class="lineNum">     155 </span><span class="lineCov">         35 : }</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">          3 : void TargetDistribution::setupBiasCutoff() {</span>
+<span class="lineNum">     159 </span><span class="lineCov">          3 :   if(!allow_bias_cutoff_) {</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: this target distribution does not support a bias cutoff&quot;);</span>
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span><span class="lineCov">          3 :   if(targetdist_modifer_pntrs_.size()&gt;0) {</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: using a bias cutoff with a target distribution modifer like WELLTEMPERED_FACTOR is not allowed&quot;);</span>
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span><span class="lineCov">          3 :   bias_cutoff_active_=true;</span>
+<span class="lineNum">     166 </span>            :   setBiasWithoutCutoffGridNeeded();
+<span class="lineNum">     167 </span>            :   setDynamic();
+<span class="lineNum">     168 </span>            :   // as the p(s) includes the derivative factor so normalization
+<span class="lineNum">     169 </span>            :   // check can be misleading
+<span class="lineNum">     170 </span><span class="lineCov">          3 :   check_normalization_=false;</span>
+<span class="lineNum">     171 </span><span class="lineCov">          3 :   force_normalization_=false;</span>
+<span class="lineNum">     172 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">        342 : void TargetDistribution::setupGrids(const std::vector&lt;Value*&gt;&amp; arguments, const std::vector&lt;std::string&gt;&amp; min, const std::vector&lt;std::string&gt;&amp; max, const std::vector&lt;unsigned int&gt;&amp; nbins) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">        342 :   if(getDimension()==0) {</span>
+<span class="lineNum">     177 </span><span class="lineCov">         73 :     setDimension(arguments.size());</span>
+<span class="lineNum">     178 </span>            :   }
+<span class="lineNum">     179 </span>            :   unsigned int dimension = getDimension();
+<span class="lineNum">     180 </span><span class="lineCov">        342 :   plumed_massert(arguments.size()==dimension,&quot;TargetDistribution::setupGrids: mismatch between number of values given for grid parameters&quot;);</span>
+<span class="lineNum">     181 </span><span class="lineCov">        342 :   plumed_massert(min.size()==dimension,&quot;TargetDistribution::setupGrids: mismatch between number of values given for grid parameters&quot;);</span>
+<span class="lineNum">     182 </span><span class="lineCov">        342 :   plumed_massert(max.size()==dimension,&quot;TargetDistribution::setupGrids: mismatch between number of values given for grid parameters&quot;);</span>
+<span class="lineNum">     183 </span><span class="lineCov">        342 :   plumed_massert(nbins.size()==dimension,&quot;TargetDistribution::setupGrids: mismatch between number of values given for grid parameters&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineCov">        342 :   grid_args_=arguments;</span>
+<span class="lineNum">     185 </span><span class="lineCov">        684 :   targetdist_grid_pntr_ =     new Grid(&quot;targetdist&quot;,arguments,min,max,nbins,false,false);</span>
+<span class="lineNum">     186 </span><span class="lineCov">        684 :   log_targetdist_grid_pntr_ = new Grid(&quot;log_targetdist&quot;,arguments,min,max,nbins,false,false);</span>
+<span class="lineNum">     187 </span><span class="lineCov">        342 :   setupAdditionalGrids(arguments,min,max,nbins);</span>
+<span class="lineNum">     188 </span><span class="lineCov">        342 : }</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">        308 : void TargetDistribution::calculateStaticDistributionGrid() {</span>
+<span class="lineNum">     192 </span><span class="lineCov">        308 :   if(static_grid_calculated &amp;&amp; !bias_cutoff_active_) {return;}</span>
+<span class="lineNum">     193 </span>            :   // plumed_massert(isStatic(),&quot;this should only be used for static distributions&quot;);
+<span class="lineNum">     194 </span><span class="lineCov">        288 :   plumed_massert(targetdist_grid_pntr_!=NULL,&quot;the grids have not been setup using setupGrids&quot;);</span>
+<span class="lineNum">     195 </span><span class="lineCov">        288 :   plumed_massert(log_targetdist_grid_pntr_!=NULL,&quot;the grids have not been setup using setupGrids&quot;);</span>
+<span class="lineNum">     196 </span><span class="lineCov">     899422 :   for(Grid::index_t l=0; l&lt;targetdist_grid_pntr_-&gt;getSize(); l++)</span>
+<span class="lineNum">     197 </span>            :   {
+<span class="lineNum">     198 </span><span class="lineCov">     449567 :     std::vector&lt;double&gt; argument = targetdist_grid_pntr_-&gt;getPoint(l);</span>
+<span class="lineNum">     199 </span><span class="lineCov">     449567 :     double value = getValue(argument);</span>
+<span class="lineNum">     200 </span><span class="lineCov">     449567 :     targetdist_grid_pntr_-&gt;setValue(l,value);</span>
+<span class="lineNum">     201 </span><span class="lineCov">     449567 :     log_targetdist_grid_pntr_-&gt;setValue(l,-std::log(value));</span>
+<span class="lineNum">     202 </span>            :   }
+<span class="lineNum">     203 </span><span class="lineCov">        288 :   log_targetdist_grid_pntr_-&gt;setMinToZero();</span>
+<span class="lineNum">     204 </span><span class="lineCov">        288 :   static_grid_calculated = true;</span>
+<span class="lineNum">     205 </span>            : }
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">        812 : double TargetDistribution::integrateGrid(const Grid* grid_pntr) {</span>
+<span class="lineNum">     209 </span><span class="lineCov">       2436 :   std::vector&lt;double&gt; integration_weights = GridIntegrationWeights::getIntegrationWeights(grid_pntr);</span>
+<span class="lineNum">     210 </span>            :   double sum = 0.0;
+<span class="lineNum">     211 </span><span class="lineCov">    5053712 :   for(Grid::index_t l=0; l&lt;grid_pntr-&gt;getSize(); l++) {</span>
+<span class="lineNum">     212 </span><span class="lineCov">    2526450 :     sum += integration_weights[l]*grid_pntr-&gt;getValue(l);</span>
+<span class="lineNum">     213 </span>            :   }
+<span class="lineNum">     214 </span><span class="lineCov">        812 :   return sum;</span>
+<span class="lineNum">     215 </span>            : }
+<a name="216"><span class="lineNum">     216 </span>            : </a>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">         78 : double TargetDistribution::normalizeGrid(Grid* grid_pntr) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">         78 :   double normalization = TargetDistribution::integrateGrid(grid_pntr);</span>
+<span class="lineNum">     220 </span><span class="lineCov">         78 :   grid_pntr-&gt;scaleAllValuesAndDerivatives(1.0/normalization);</span>
+<span class="lineNum">     221 </span><span class="lineCov">         78 :   return normalization;</span>
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">         28 : Grid TargetDistribution::getMarginalDistributionGrid(Grid* grid_pntr, const std::vector&lt;std::string&gt;&amp; args) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">         28 :   plumed_massert(grid_pntr-&gt;getDimension()&gt;1,&quot;doesn't make sense calculating the marginal distribution for a one-dimensional distribution&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">         28 :   plumed_massert(args.size()&lt;grid_pntr-&gt;getDimension(),&quot;the number of arguments for the marginal distribution should be less than the dimension of the full distribution&quot;);</span>
+<span class="lineNum">     228 </span>            :   //
+<span class="lineNum">     229 </span><span class="lineCov">         56 :   std::vector&lt;std::string&gt; argnames = grid_pntr-&gt;getArgNames();</span>
+<span class="lineNum">     230 </span><span class="lineCov">         28 :   std::vector&lt;unsigned int&gt; args_index(0);</span>
+<span class="lineNum">     231 </span><span class="lineCov">        168 :   for(unsigned int i=0; i&lt;argnames.size(); i++) {</span>
+<span class="lineNum">     232 </span><span class="lineCov">        280 :     for(unsigned int l=0; l&lt;args.size(); l++) {</span>
+<span class="lineNum">     233 </span><span class="lineCov">        112 :       if(argnames[i]==args[l]) {args_index.push_back(i);}</span>
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span>            :   }
+<span class="lineNum">     236 </span><span class="lineCov">         28 :   plumed_massert(args.size()==args_index.size(),&quot;getMarginalDistributionGrid: problem with the arguments of the marginal&quot;);</span>
+<span class="lineNum">     237 </span>            :   //
+<span class="lineNum">     238 </span><span class="lineCov">         28 :   MarginalWeight* Pw = new MarginalWeight();</span>
+<span class="lineNum">     239 </span><span class="lineCov">         28 :   Grid proj_grid = grid_pntr-&gt;project(args,Pw);</span>
+<span class="lineNum">     240 </span><span class="lineCov">         28 :   delete Pw;</span>
+<span class="lineNum">     241 </span>            :   //
+<span class="lineNum">     242 </span>            :   // scale with the bin volume used for the integral such that the
+<span class="lineNum">     243 </span>            :   // marginals are proberly normalized to 1.0
+<span class="lineNum">     244 </span><span class="lineCov">         28 :   double intVol = grid_pntr-&gt;getBinVolume();</span>
+<span class="lineNum">     245 </span><span class="lineCov">        140 :   for(unsigned int l=0; l&lt;args_index.size(); l++) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">         84 :     intVol/=grid_pntr-&gt;getDx()[args_index[l]];</span>
+<span class="lineNum">     247 </span>            :   }
+<span class="lineNum">     248 </span><span class="lineCov">         28 :   proj_grid.scaleAllValuesAndDerivatives(intVol);</span>
+<span class="lineNum">     249 </span>            :   //
+<span class="lineNum">     250 </span><span class="lineCov">         28 :   return proj_grid;</span>
+<span class="lineNum">     251 </span>            : }
+<a name="252"><span class="lineNum">     252 </span>            : </a>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span><span class="lineCov">          8 : Grid TargetDistribution::getMarginal(const std::vector&lt;std::string&gt;&amp; args) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">          8 :   return TargetDistribution::getMarginalDistributionGrid(targetdist_grid_pntr_,args);</span>
+<span class="lineNum">     256 </span>            : }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineCov">        713 : void TargetDistribution::updateTargetDist() {</span>
+<span class="lineNum">     260 </span>            :   //
+<span class="lineNum">     261 </span><span class="lineCov">        713 :   updateGrid();</span>
+<span class="lineNum">     262 </span>            :   //
+<span class="lineNum">     263 </span><span class="lineCov">       1444 :   for(unsigned int i=0; i&lt;targetdist_modifer_pntrs_.size(); i++) {</span>
+<span class="lineNum">     264 </span><span class="lineCov">          6 :     applyTargetDistModiferToGrid(targetdist_modifer_pntrs_[i]);</span>
+<span class="lineNum">     265 </span>            :   }
+<span class="lineNum">     266 </span>            :   //
+<span class="lineNum">     267 </span><span class="lineCov">        713 :   if(bias_cutoff_active_) {updateBiasCutoffForTargetDistGrid();}</span>
+<span class="lineNum">     268 </span>            :   //
+<span class="lineNum">     269 </span><span class="lineCov">        713 :   if(shift_targetdist_to_zero_ &amp;&amp; !(bias_cutoff_active_)) {setMinimumOfTargetDistGridToZero();}</span>
+<span class="lineNum">     270 </span><span class="lineCov">        713 :   if(force_normalization_ &amp;&amp; !(bias_cutoff_active_) ) {normalizeTargetDistGrid();}</span>
+<span class="lineNum">     271 </span>            :   //
+<span class="lineNum">     272 </span>            :   // if(check_normalization_ &amp;&amp; !force_normalization_ &amp;&amp; !shift_targetdist_to_zero_){
+<span class="lineNum">     273 </span><span class="lineCov">        713 :   if(check_normalization_ &amp;&amp; !(bias_cutoff_active_)) {</span>
+<span class="lineNum">     274 </span><span class="lineCov">        614 :     double normalization = integrateGrid(targetdist_grid_pntr_);</span>
+<span class="lineNum">     275 </span>            :     const double normalization_thrshold = 0.1;
+<span class="lineNum">     276 </span><span class="lineCov">        614 :     if(normalization &lt; 1.0-normalization_thrshold || normalization &gt; 1.0+normalization_thrshold) {</span>
+<span class="lineNum">     277 </span><span class="lineCov">          3 :       std::string norm_str; Tools::convert(normalization,norm_str);</span>
+<span class="lineNum">     278 </span><span class="lineCov">          6 :       std::string msg = &quot;the target distribution grid is not proberly normalized, integrating over the grid gives: &quot; + norm_str + &quot; - You can avoid this problem by using the NORMALIZE keyword&quot;;</span>
+<span class="lineNum">     279 </span><span class="lineCov">          3 :       warning(msg);</span>
+<span class="lineNum">     280 </span>            :     }
+<span class="lineNum">     281 </span>            :   }
+<span class="lineNum">     282 </span>            :   //
+<span class="lineNum">     283 </span><span class="lineCov">        713 :   if(check_nonnegative_) {</span>
+<span class="lineNum">     284 </span>            :     const double nonnegative_thrshold = -0.02;
+<span class="lineNum">     285 </span><span class="lineCov">        710 :     double grid_min_value = targetdist_grid_pntr_-&gt;getMinValue();</span>
+<span class="lineNum">     286 </span><span class="lineCov">        710 :     if(grid_min_value&lt;nonnegative_thrshold) {</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :       std::string grid_min_value_str; Tools::convert(grid_min_value,grid_min_value_str);</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :       std::string msg = &quot;the target distribution grid has negative values, the lowest value is: &quot; + grid_min_value_str + &quot; - You can avoid this problem by using the SHIFT_TO_ZERO keyword&quot;;</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :       warning(msg);</span>
+<span class="lineNum">     290 </span>            :     }
+<span class="lineNum">     291 </span>            :   }
+<span class="lineNum">     292 </span>            :   //
+<span class="lineNum">     293 </span><span class="lineCov">        713 :   if(check_nan_inf_) {checkNanAndInf();}</span>
+<span class="lineNum">     294 </span>            :   //
+<span class="lineNum">     295 </span><span class="lineCov">        713 : }</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span><span class="lineCov">         24 : void TargetDistribution::updateBiasCutoffForTargetDistGrid() {</span>
+<span class="lineNum">     299 </span><span class="lineCov">         24 :   plumed_massert(vesbias_pntr_!=NULL,&quot;The VesBias has to be linked to use updateBiasCutoffForTargetDistGrid()&quot;);</span>
+<span class="lineNum">     300 </span><span class="lineCov">         24 :   plumed_massert(vesbias_pntr_-&gt;biasCutoffActive(),&quot;updateBiasCutoffForTargetDistGrid() should only be used if the bias cutoff is active&quot;);</span>
+<span class="lineNum">     301 </span>            :   // plumed_massert(targetdist_grid_pntr_!=NULL,&quot;the grids have not been setup using setupGrids&quot;);
+<span class="lineNum">     302 </span>            :   // plumed_massert(log_targetdist_grid_pntr_!=NULL,&quot;the grids have not been setup using setupGrids&quot;);
+<span class="lineNum">     303 </span><span class="lineCov">         24 :   plumed_massert(getBiasWithoutCutoffGridPntr()!=NULL,&quot;the bias without cutoff grid has to be linked&quot;);</span>
+<span class="lineNum">     304 </span>            :   //
+<span class="lineNum">     305 </span><span class="lineCov">         72 :   std::vector&lt;double&gt; integration_weights = GridIntegrationWeights::getIntegrationWeights(targetdist_grid_pntr_);</span>
+<span class="lineNum">     306 </span>            :   double norm = 0.0;
+<span class="lineNum">     307 </span><span class="lineCov">       5224 :   for(Grid::index_t l=0; l&lt;targetdist_grid_pntr_-&gt;getSize(); l++)</span>
+<span class="lineNum">     308 </span>            :   {
+<span class="lineNum">     309 </span><span class="lineCov">       2600 :     double value = targetdist_grid_pntr_-&gt;getValue(l);</span>
+<span class="lineNum">     310 </span><span class="lineCov">       2600 :     double bias = getBiasWithoutCutoffGridPntr()-&gt;getValue(l);</span>
+<span class="lineNum">     311 </span><span class="lineCov">       2600 :     double deriv_factor_swf = 0.0;</span>
+<span class="lineNum">     312 </span><span class="lineCov">       2600 :     double swf = vesbias_pntr_-&gt;getBiasCutoffSwitchingFunction(bias,deriv_factor_swf);</span>
+<span class="lineNum">     313 </span>            :     // this comes from the p(s)
+<span class="lineNum">     314 </span><span class="lineCov">       2600 :     value *= swf;</span>
+<span class="lineNum">     315 </span><span class="lineCov">       2600 :     norm += integration_weights[l]*value;</span>
+<span class="lineNum">     316 </span>            :     // this comes from the derivative of V(s)
+<span class="lineNum">     317 </span><span class="lineCov">       2600 :     value *= deriv_factor_swf;</span>
+<span class="lineNum">     318 </span><span class="lineCov">       2600 :     targetdist_grid_pntr_-&gt;setValue(l,value);</span>
+<span class="lineNum">     319 </span>            :     // double log_value = log_targetdist_grid_pntr_-&gt;getValue(l) - std::log(swf);
+<span class="lineNum">     320 </span>            :     // log_targetdist_grid_pntr_-&gt;setValue(l,log_value);
+<span class="lineNum">     321 </span>            :   }
+<span class="lineNum">     322 </span><span class="lineCov">         24 :   targetdist_grid_pntr_-&gt;scaleAllValuesAndDerivatives(1.0/norm);</span>
+<span class="lineNum">     323 </span>            :   // log_targetdist_grid_pntr_-&gt;setMinToZero();
+<span class="lineNum">     324 </span><span class="lineCov">         24 : }</span>
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span><span class="lineCov">          6 : void TargetDistribution::applyTargetDistModiferToGrid(TargetDistModifer* modifer_pntr) {</span>
+<span class="lineNum">     327 </span>            :   // plumed_massert(targetdist_grid_pntr_!=NULL,&quot;the grids have not been setup using setupGrids&quot;);
+<span class="lineNum">     328 </span>            :   // plumed_massert(log_targetdist_grid_pntr_!=NULL,&quot;the grids have not been setup using setupGrids&quot;);
+<span class="lineNum">     329 </span>            :   //
+<span class="lineNum">     330 </span><span class="lineCov">         18 :   std::vector&lt;double&gt; integration_weights = GridIntegrationWeights::getIntegrationWeights(targetdist_grid_pntr_);</span>
+<span class="lineNum">     331 </span>            :   double norm = 0.0;
+<span class="lineNum">     332 </span><span class="lineCov">      42418 :   for(Grid::index_t l=0; l&lt;targetdist_grid_pntr_-&gt;getSize(); l++)</span>
+<span class="lineNum">     333 </span>            :   {
+<span class="lineNum">     334 </span><span class="lineCov">      21206 :     double value = targetdist_grid_pntr_-&gt;getValue(l);</span>
+<span class="lineNum">     335 </span><span class="lineCov">      21206 :     std::vector&lt;double&gt; cv_values = targetdist_grid_pntr_-&gt;getPoint(l);</span>
+<span class="lineNum">     336 </span><span class="lineCov">      21206 :     value = modifer_pntr-&gt;getModifedTargetDistValue(value,cv_values);</span>
+<span class="lineNum">     337 </span><span class="lineCov">      21206 :     norm += integration_weights[l]*value;</span>
+<span class="lineNum">     338 </span><span class="lineCov">      21206 :     targetdist_grid_pntr_-&gt;setValue(l,value);</span>
+<span class="lineNum">     339 </span><span class="lineCov">      21206 :     log_targetdist_grid_pntr_-&gt;setValue(l,-std::log(value));</span>
+<span class="lineNum">     340 </span>            :   }
+<span class="lineNum">     341 </span><span class="lineCov">          6 :   targetdist_grid_pntr_-&gt;scaleAllValuesAndDerivatives(1.0/norm);</span>
+<span class="lineNum">     342 </span><span class="lineCov">          6 :   log_targetdist_grid_pntr_-&gt;setMinToZero();</span>
+<span class="lineNum">     343 </span><span class="lineCov">          6 : }</span>
+<a name="344"><span class="lineNum">     344 </span>            : </a>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">         11 : void TargetDistribution::updateLogTargetDistGrid() {</span>
+<span class="lineNum">     347 </span><span class="lineCov">      22817 :   for(Grid::index_t l=0; l&lt;targetdist_grid_pntr_-&gt;getSize(); l++)</span>
+<span class="lineNum">     348 </span>            :   {
+<span class="lineNum">     349 </span><span class="lineCov">      11403 :     log_targetdist_grid_pntr_-&gt;setValue(l,-std::log(targetdist_grid_pntr_-&gt;getValue(l)));</span>
+<span class="lineNum">     350 </span>            :   }
+<span class="lineNum">     351 </span><span class="lineCov">         11 :   log_targetdist_grid_pntr_-&gt;setMinToZero();</span>
+<span class="lineNum">     352 </span><span class="lineCov">         11 : }</span>
+<a name="353"><span class="lineNum">     353 </span>            : </a>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span><span class="lineCov">          3 : void TargetDistribution::setMinimumOfTargetDistGridToZero() {</span>
+<span class="lineNum">     356 </span><span class="lineCov">          3 :   targetDistGrid().setMinToZero();</span>
+<span class="lineNum">     357 </span><span class="lineCov">          3 :   normalizeTargetDistGrid();</span>
+<span class="lineNum">     358 </span><span class="lineCov">          3 :   updateLogTargetDistGrid();</span>
+<span class="lineNum">     359 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span><span class="lineCov">          8 : void TargetDistribution::readInRestartTargetDistGrid(const std::string&amp; grid_fname) {</span>
+<span class="lineNum">     363 </span><span class="lineCov">          8 :   plumed_massert(isDynamic(),&quot;this should only be used for dynamically updated target distributions!&quot;);</span>
+<span class="lineNum">     364 </span><span class="lineCov">         16 :   IFile gridfile;</span>
+<span class="lineNum">     365 </span><span class="lineCov">          8 :   if(!gridfile.FileExist(grid_fname)) {</span>
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: problem with reading previous target distribution when restarting, cannot find file &quot; + grid_fname);</span>
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span><span class="lineCov">          8 :   gridfile.open(grid_fname);</span>
+<span class="lineNum">     369 </span><span class="lineCov">         16 :   Grid* restart_grid = Grid::create(&quot;targetdist&quot;,grid_args_,gridfile,false,false,false);</span>
+<span class="lineNum">     370 </span><span class="lineCov">          8 :   if(restart_grid-&gt;getSize()!=targetdist_grid_pntr_-&gt;getSize()) {</span>
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: problem with reading previous target distribution when restarting, the grid is not of the correct size!&quot;);</span>
+<span class="lineNum">     372 </span>            :   }
+<span class="lineNum">     373 </span><span class="lineCov">          8 :   VesTools::copyGridValues(restart_grid,targetdist_grid_pntr_);</span>
+<span class="lineNum">     374 </span><span class="lineCov">          8 :   updateLogTargetDistGrid();</span>
+<span class="lineNum">     375 </span><span class="lineCov">          8 :   delete restart_grid;</span>
+<a name="376"><span class="lineNum">     376 </span><span class="lineCov">          8 : }</span></a>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineCov">          1 : void TargetDistribution::clearLogTargetDistGrid() {</span>
+<span class="lineNum">     379 </span><span class="lineCov">          1 :   log_targetdist_grid_pntr_-&gt;clear();</span>
+<span class="lineNum">     380 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 : void TargetDistribution::checkNanAndInf() {</span>
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :   for(Grid::index_t l=0; l&lt;targetdist_grid_pntr_-&gt;getSize(); l++)</span>
+<span class="lineNum">     385 </span>            :   {
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :     double value = targetdist_grid_pntr_-&gt;getValue(l);</span>
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :     if(std::isnan(value) || std::isinf(value)) {</span>
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :       std::string vs; Tools::convert(value,vs);</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :       std::vector&lt;double&gt; p = targetdist_grid_pntr_-&gt;getPoint(l);</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :       std::string ps; Tools::convert(p[0],ps);</span>
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :       ps = &quot;(&quot; + ps;</span>
+<span class="lineNum">     392 </span><span class="lineNoCov">          0 :       for(unsigned int k=1; k&lt;p.size(); k++) {</span>
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :         std::string t1; Tools::convert(p[k],t1);</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :         ps = ps + &quot;,&quot; + t1;</span>
+<span class="lineNum">     395 </span>            :       }
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :       ps = ps + &quot;)&quot;;</span>
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: problem with target distribution, the value at &quot; + ps + &quot; is &quot; + vs);</span>
+<span class="lineNum">     398 </span>            :     }
+<span class="lineNum">     399 </span>            :   }
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span>            : }
+<span class="lineNum">     403 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

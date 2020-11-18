@@ -1,0 +1,345 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - function/Ensemble.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">function</a> - Ensemble.cpp<span style="font-size: 80%;"> (source / <a href="Ensemble.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntry">125</td>
+            <td class="headerCovTableEntryLo">61.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Function.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace function {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC FUNCTION ENSEMBLE
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Calculates the replica averaging of a collective variable over multiple replicas.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : Each collective variable is averaged separately and stored in a component labelled &lt;em&gt;label&lt;/em&gt;.cvlabel.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : \par Examples
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : The following input tells plumed to calculate the distance between atoms 3 and 5
+<span class="lineNum">      41 </span>            : and the average it over the available replicas.
+<span class="lineNum">      42 </span>            : \plumedfile
+<span class="lineNum">      43 </span>            : dist: DISTANCE ATOMS=3,5
+<span class="lineNum">      44 </span>            : ens: ENSEMBLE ARG=dist
+<span class="lineNum">      45 </span>            : PRINT ARG=dist,ens.dist
+<span class="lineNum">      46 </span>            : \endplumedfile
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : */
+<span class="lineNum">      49 </span>            : //+ENDPLUMEDOC
+<a name="50"><span class="lineNum">      50 </span>            : </a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">         54 : class Ensemble :</span>
+<span class="lineNum">      53 </span>            :   public Function
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span>            :   unsigned ens_dim;
+<span class="lineNum">      56 </span>            :   unsigned my_repl;
+<span class="lineNum">      57 </span>            :   unsigned narg;
+<span class="lineNum">      58 </span>            :   bool     master;
+<span class="lineNum">      59 </span>            :   bool     do_reweight;
+<span class="lineNum">      60 </span>            :   bool     do_moments;
+<span class="lineNum">      61 </span>            :   bool     do_central;
+<span class="lineNum">      62 </span>            :   bool     do_powers;
+<span class="lineNum">      63 </span>            :   double   kbt;
+<span class="lineNum">      64 </span>            :   double   moment;
+<span class="lineNum">      65 </span>            :   double   power;
+<span class="lineNum">      66 </span>            : public:
+<span class="lineNum">      67 </span>            :   explicit Ensemble(const ActionOptions&amp;);
+<span class="lineNum">      68 </span>            :   void     calculate();
+<span class="lineNum">      69 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      70 </span>            : };
+<a name="71"><span class="lineNum">      71 </span>            : </a>
+<span class="lineNum">      72 </span>            : 
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">       6479 : PLUMED_REGISTER_ACTION(Ensemble,&quot;ENSEMBLE&quot;)</span></a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">         28 : void Ensemble::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      76 </span><span class="lineCov">         28 :   Function::registerKeywords(keys);</span>
+<span class="lineNum">      77 </span><span class="lineCov">         56 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">      78 </span><span class="lineCov">         84 :   keys.addFlag(&quot;REWEIGHT&quot;,false,&quot;simple REWEIGHT using the latest ARG as energy&quot;);</span>
+<span class="lineNum">      79 </span><span class="lineCov">         84 :   keys.addFlag(&quot;CENTRAL&quot;,false,&quot;calculate a central moment instead of a standard moment&quot;);</span>
+<span class="lineNum">      80 </span><span class="lineCov">        112 :   keys.add(&quot;optional&quot;,&quot;TEMP&quot;,&quot;the system temperature - this is only needed if you are reweighting&quot;);</span>
+<span class="lineNum">      81 </span><span class="lineCov">        112 :   keys.add(&quot;optional&quot;,&quot;MOMENT&quot;,&quot;the moment you want to calculate in alternative to the mean or the variance&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineCov">        112 :   keys.add(&quot;optional&quot;,&quot;POWER&quot;,&quot;the power of the mean (and moment)&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">         28 :   ActionWithValue::useCustomisableComponents(keys);</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">         28 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         27 : Ensemble::Ensemble(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      87 </span>            :   Action(ao),
+<span class="lineNum">      88 </span>            :   Function(ao),
+<span class="lineNum">      89 </span>            :   do_reweight(false),
+<span class="lineNum">      90 </span>            :   do_moments(false),
+<span class="lineNum">      91 </span>            :   do_central(false),
+<span class="lineNum">      92 </span>            :   do_powers(false),
+<span class="lineNum">      93 </span>            :   kbt(-1.0),
+<span class="lineNum">      94 </span>            :   moment(0),
+<span class="lineNum">      95 </span><span class="lineCov">         27 :   power(0)</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineCov">         54 :   parseFlag(&quot;REWEIGHT&quot;, do_reweight);</span>
+<span class="lineNum">      98 </span><span class="lineCov">         27 :   double temp=0.0;</span>
+<span class="lineNum">      99 </span><span class="lineCov">         54 :   parse(&quot;TEMP&quot;,temp);</span>
+<span class="lineNum">     100 </span><span class="lineCov">         27 :   if(do_reweight) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">         24 :     if(temp&gt;0.0) kbt=plumed.getAtoms().getKBoltzmann()*temp;</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     else kbt=plumed.getAtoms().getKbT();</span>
+<span class="lineNum">     103 </span><span class="lineCov">         12 :     if(kbt==0.0) error(&quot;Unless the MD engine passes the temperature to plumed, with REWEIGHT you must specify TEMP&quot;);</span>
+<span class="lineNum">     104 </span>            :   }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">         54 :   parse(&quot;MOMENT&quot;,moment);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         27 :   if(moment==1) error(&quot;MOMENT can be any number but for 0 and 1&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         27 :   if(moment!=0) do_moments=true;</span>
+<span class="lineNum">     109 </span><span class="lineCov">         54 :   parseFlag(&quot;CENTRAL&quot;, do_central);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         27 :   if(!do_moments&amp;&amp;do_central) error(&quot;To calculate a CENTRAL moment you need to define for which MOMENT&quot;);</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">         54 :   parse(&quot;POWER&quot;,power);</span>
+<span class="lineNum">     113 </span><span class="lineCov">         27 :   if(power==1) error(&quot;POWER can be any number but for 0 and 1&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">         27 :   if(power!=0) do_powers=true;</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         27 :   checkRead();</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">         27 :   master = (comm.Get_rank()==0);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         27 :   ens_dim=0;</span>
+<span class="lineNum">     120 </span><span class="lineCov">         27 :   my_repl=0;</span>
+<span class="lineNum">     121 </span><span class="lineCov">         27 :   if(master) {</span>
+<span class="lineNum">     122 </span><span class="lineCov">         17 :     ens_dim=multi_sim_comm.Get_size();</span>
+<span class="lineNum">     123 </span><span class="lineCov">         17 :     my_repl=multi_sim_comm.Get_rank();</span>
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span><span class="lineCov">         27 :   comm.Bcast(ens_dim,0);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         27 :   comm.Bcast(my_repl,0);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         27 :   if(ens_dim&lt;2) log.printf(&quot;WARNING: ENSEMBLE with one replica is not doing any averaging!\n&quot;);</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :   // prepare output components, the number depending on reweighing or not
+<span class="lineNum">     130 </span><span class="lineCov">         27 :   narg = getNumberOfArguments();</span>
+<span class="lineNum">     131 </span><span class="lineCov">         27 :   if(do_reweight) narg--;</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :   // these are the averages
+<span class="lineNum">     134 </span><span class="lineCov">       6061 :   for(unsigned i=0; i&lt;narg; i++) {</span>
+<span class="lineNum">     135 </span>            :     std::string s=getPntrToArgument(i)-&gt;getName();
+<span class="lineNum">     136 </span><span class="lineCov">       3017 :     addComponentWithDerivatives(s);</span>
+<span class="lineNum">     137 </span><span class="lineCov">       3017 :     getPntrToComponent(i)-&gt;setNotPeriodic();</span>
+<span class="lineNum">     138 </span>            :   }
+<span class="lineNum">     139 </span>            :   // these are the moments
+<span class="lineNum">     140 </span><span class="lineCov">         27 :   if(do_moments) {</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;narg; i++) {</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :       std::string s=getPntrToArgument(i)-&gt;getName()+&quot;_m&quot;;</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :       addComponentWithDerivatives(s);</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :       getPntrToComponent(i+narg)-&gt;setNotPeriodic();</span>
+<span class="lineNum">     145 </span>            :     }
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">         27 :   log.printf(&quot;  averaging over %u replicas.\n&quot;, ens_dim);</span>
+<span class="lineNum">     149 </span><span class="lineCov">         27 :   if(do_reweight) log.printf(&quot;  doing simple REWEIGHT using the latest ARGUMENT as energy.\n&quot;);</span>
+<span class="lineNum">     150 </span><span class="lineCov">         27 :   if(do_moments&amp;&amp;!do_central)  log.printf(&quot;  calculating also the %lf standard moment\n&quot;, moment);</span>
+<span class="lineNum">     151 </span><span class="lineCov">         27 :   if(do_moments&amp;&amp;do_central)   log.printf(&quot;  calculating also the %lf central moment\n&quot;, moment);</span>
+<span class="lineNum">     152 </span><span class="lineCov">         27 :   if(do_powers)                log.printf(&quot;  calculating the %lf power of the mean (and moment)\n&quot;, power);</span>
+<a name="153"><span class="lineNum">     153 </span><span class="lineCov">         27 : }</span></a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">        125 : void Ensemble::calculate() {</span>
+<span class="lineNum">     156 </span>            :   double norm = 0.0;
+<span class="lineNum">     157 </span><span class="lineCov">        125 :   double fact = 0.0;</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   // calculate the weights either from BIAS
+<span class="lineNum">     160 </span><span class="lineCov">        125 :   if(do_reweight) {</span>
+<span class="lineNum">     161 </span>            :     vector&lt;double&gt; bias;
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     bias.resize(ens_dim);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     if(master) {</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :       bias[my_repl] = getArgument(narg);</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :       if(ens_dim&gt;1) multi_sim_comm.Sum(&amp;bias[0], ens_dim);</span>
+<span class="lineNum">     166 </span>            :     }
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     comm.Sum(&amp;bias[0], ens_dim);</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     const double maxbias = *(std::max_element(bias.begin(), bias.end()));</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;ens_dim; ++i) {</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :       bias[i] = exp((bias[i]-maxbias)/kbt);</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :       norm += bias[i];</span>
+<span class="lineNum">     172 </span>            :     }
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :     fact = bias[my_repl]/norm;</span>
+<span class="lineNum">     174 </span>            :     // or arithmetic ones
+<span class="lineNum">     175 </span>            :   } else {
+<span class="lineNum">     176 </span><span class="lineCov">        125 :     norm = static_cast&lt;double&gt;(ens_dim);</span>
+<span class="lineNum">     177 </span><span class="lineCov">        125 :     fact = 1.0/norm;</span>
+<span class="lineNum">     178 </span>            :   }
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">        125 :   const double fact_kbt = fact/kbt;</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">        125 :   vector&lt;double&gt; mean(narg);</span>
+<span class="lineNum">     183 </span><span class="lineCov">        125 :   vector&lt;double&gt; dmean(narg,fact);</span>
+<span class="lineNum">     184 </span>            :   // calculate the mean
+<span class="lineNum">     185 </span><span class="lineCov">        125 :   if(master) {</span>
+<span class="lineNum">     186 </span><span class="lineCov">       6120 :     for(unsigned i=0; i&lt;narg; ++i) mean[i] = fact*getArgument(i);</span>
+<span class="lineNum">     187 </span><span class="lineCov">        197 :     if(ens_dim&gt;1) multi_sim_comm.Sum(&amp;mean[0], narg);</span>
+<span class="lineNum">     188 </span>            :   }
+<span class="lineNum">     189 </span><span class="lineCov">        250 :   comm.Sum(&amp;mean[0], narg);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :   vector&lt;double&gt; v_moment, dv_moment;
+<span class="lineNum">     192 </span>            :   // calculate other moments
+<span class="lineNum">     193 </span><span class="lineCov">        125 :   if(do_moments) {</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :     v_moment.resize(narg);</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     dv_moment.resize(narg);</span>
+<span class="lineNum">     196 </span>            :     // standard moment
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :     if(!do_central) {</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :       if(master) {</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :           const double tmp = fact*pow(getArgument(i),moment-1);</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :           v_moment[i]      = tmp*getArgument(i);</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :           dv_moment[i]     = moment*tmp;</span>
+<span class="lineNum">     203 </span>            :         }
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :         if(ens_dim&gt;1) multi_sim_comm.Sum(&amp;v_moment[0], narg);</span>
+<span class="lineNum">     205 </span>            :       } else {
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :           const double tmp = fact*pow(getArgument(i),moment-1);</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :           dv_moment[i]     = moment*tmp;</span>
+<span class="lineNum">     209 </span>            :         }
+<span class="lineNum">     210 </span>            :       }
+<span class="lineNum">     211 </span>            :       // central moment
+<span class="lineNum">     212 </span>            :     } else {
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :       if(master) {</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :           const double tmp = pow(getArgument(i)-mean[i],moment-1);</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :           v_moment[i]      = fact*tmp*(getArgument(i)-mean[i]);</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :           dv_moment[i]     = moment*tmp*(fact-fact/norm);</span>
+<span class="lineNum">     218 </span>            :         }
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :         if(ens_dim&gt;1) multi_sim_comm.Sum(&amp;v_moment[0], narg);</span>
+<span class="lineNum">     220 </span>            :       } else {
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :           const double tmp = pow(getArgument(i)-mean[i],moment-1);</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :           dv_moment[i]     = moment*tmp*(fact-fact/norm);</span>
+<span class="lineNum">     224 </span>            :         }
+<span class="lineNum">     225 </span>            :       }
+<span class="lineNum">     226 </span>            :     }
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :     comm.Sum(&amp;v_moment[0], narg);</span>
+<span class="lineNum">     228 </span>            :   }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :   // calculate powers of moments
+<span class="lineNum">     231 </span><span class="lineCov">        125 :   if(do_powers) {</span>
+<span class="lineNum">     232 </span><span class="lineCov">        120 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     233 </span><span class="lineCov">         96 :       const double tmp1 = pow(mean[i],power-1);</span>
+<span class="lineNum">     234 </span><span class="lineCov">         48 :       mean[i]          *= tmp1;</span>
+<span class="lineNum">     235 </span><span class="lineCov">         48 :       dmean[i]         *= power*tmp1;</span>
+<span class="lineNum">     236 </span><span class="lineCov">         48 :       if(do_moments) {</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :         const double tmp2 = pow(v_moment[i],power-1);</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :         v_moment[i]      *= tmp2;</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :         dv_moment[i]     *= power*tmp2;</span>
+<span class="lineNum">     240 </span>            :       }
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span>            :   }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            :   // set components
+<span class="lineNum">     245 </span><span class="lineCov">       6591 :   for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     246 </span>            :     // set mean
+<span class="lineNum">     247 </span><span class="lineCov">       3233 :     Value* v=getPntrToComponent(i);</span>
+<span class="lineNum">     248 </span><span class="lineCov">       6466 :     v-&gt;set(mean[i]);</span>
+<span class="lineNum">     249 </span><span class="lineCov">       3233 :     setDerivative(v, i, dmean[i]);</span>
+<span class="lineNum">     250 </span><span class="lineCov">       3233 :     if(do_reweight) {</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :       const double w_tmp = fact_kbt*(getArgument(i) - mean[i]);</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :       setDerivative(v, narg, w_tmp);</span>
+<span class="lineNum">     253 </span>            :     }
+<span class="lineNum">     254 </span><span class="lineCov">       3233 :     if(do_moments) {</span>
+<span class="lineNum">     255 </span>            :       // set moments
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :       Value* u=getPntrToComponent(i+narg);</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :       u-&gt;set(v_moment[i]);</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :       setDerivative(u, i, dv_moment[i]);</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :       if(do_reweight) {</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :         const double w_tmp = fact_kbt*(pow(getArgument(i),moment) - v_moment[i]);</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :         setDerivative(u, narg, w_tmp);</span>
+<span class="lineNum">     262 </span>            :       }
+<span class="lineNum">     263 </span>            :     }
+<span class="lineNum">     264 </span>            :   }
+<span class="lineNum">     265 </span><span class="lineCov">        125 : }</span>
+<a name="266"><span class="lineNum">     266 </span>            : </a>
+<span class="lineNum">     267 </span>            : }
+<span class="lineNum">     268 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

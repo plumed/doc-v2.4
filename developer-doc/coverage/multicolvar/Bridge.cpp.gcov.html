@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/Bridge.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - Bridge.cpp<span style="font-size: 80%;"> (source / <a href="Bridge.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">55</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace multicolvar {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC MCOLVAR BRIDGE
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Calculate the number of atoms that bridge two parts of a structure
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : This quantity calculates:
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \f[
+<span class="lineNum">      42 </span>            :  f(x) = \sum_{ijk} s_A(r_{ij})s_B(r_{ik})
+<span class="lineNum">      43 </span>            : \f]
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : where the sum over \f$i\f$ is over all the ``bridging atoms&quot; and
+<span class="lineNum">      46 </span>            : \f$s_A\f$ and \f$s_B\f$ are \ref switchingfunction.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \par Examples
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : The following example instructs plumed to calculate the number of water molecules
+<span class="lineNum">      51 </span>            : that are bridging betweeen atoms 1-10 and atoms 11-20 and to print the value
+<span class="lineNum">      52 </span>            : to a file
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : \plumedfile
+<span class="lineNum">      55 </span>            : BRIDGE BRIDGING_ATOMS=100-200 GROUPA=1-10 GROUPB=11-20 LABEL=w1
+<span class="lineNum">      56 </span>            : PRINT ARG=a1.mean FILE=colvar
+<span class="lineNum">      57 </span>            : \endplumedfile
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : */
+<a name="60"><span class="lineNum">      60 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">         18 : class Bridge : public MultiColvarBase {</span>
+<span class="lineNum">      63 </span>            : private:
+<span class="lineNum">      64 </span>            :   Vector dij, dik;
+<span class="lineNum">      65 </span>            :   SwitchingFunction sf1;
+<span class="lineNum">      66 </span>            :   SwitchingFunction sf2;
+<span class="lineNum">      67 </span>            : public:
+<span class="lineNum">      68 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      69 </span>            :   explicit Bridge(const ActionOptions&amp;);
+<a name="70"><span class="lineNum">      70 </span>            : // active methods:</a>
+<span class="lineNum">      71 </span>            :   virtual double compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<a name="73"><span class="lineNum">      73 </span>            : };</a>
+<span class="lineNum">      74 </span>            : 
+<a name="75"><span class="lineNum">      75 </span><span class="lineCov">       6461 : PLUMED_REGISTER_ACTION(Bridge,&quot;BRIDGE&quot;)</span></a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">         10 : void Bridge::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      78 </span><span class="lineCov">         10 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">      79 </span><span class="lineCov">         40 :   keys.add(&quot;atoms-2&quot;,&quot;BRIDGING_ATOMS&quot;,&quot;The list of atoms that can form the bridge between the two interesting parts &quot;</span>
+<span class="lineNum">      80 </span>            :            &quot;of the structure.&quot;);
+<span class="lineNum">      81 </span><span class="lineCov">         40 :   keys.add(&quot;atoms-2&quot;,&quot;GROUPA&quot;,&quot;The list of atoms that are in the first interesting part of the structure&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineCov">         40 :   keys.add(&quot;atoms-2&quot;,&quot;GROUPB&quot;,&quot;The list of atoms that are in the second interesting part of the structure&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">         40 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;The parameters of the two \\ref switchingfunction in the above formula&quot;);</span>
+<span class="lineNum">      84 </span><span class="lineCov">         40 :   keys.add(&quot;optional&quot;,&quot;SWITCHA&quot;,&quot;The \\ref switchingfunction on the distance between bridging atoms and the atoms in &quot;</span>
+<span class="lineNum">      85 </span>            :            &quot;group A&quot;);
+<span class="lineNum">      86 </span><span class="lineCov">         40 :   keys.add(&quot;optional&quot;,&quot;SWITCHB&quot;,&quot;The \\ref switchingfunction on the distance between the bridging atoms and the atoms in &quot;</span>
+<span class="lineNum">      87 </span>            :            &quot;group B&quot;);
+<a name="88"><span class="lineNum">      88 </span><span class="lineCov">         10 : }</span></a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">          9 : Bridge::Bridge(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      91 </span>            :   Action(ao),
+<span class="lineNum">      92 </span><span class="lineCov">          9 :   MultiColvarBase(ao)</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span>            :   // Read in the atoms
+<span class="lineNum">      95 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">      96 </span><span class="lineCov">         36 :   readThreeGroups(&quot;GROUPA&quot;,&quot;GROUPB&quot;,&quot;BRIDGING_ATOMS&quot;,false,true,all_atoms);</span>
+<span class="lineNum">      97 </span>            :   // Setup the multicolvar base
+<span class="lineNum">      98 </span><span class="lineCov">          9 :   setupMultiColvarBase( all_atoms );</span>
+<span class="lineNum">      99 </span>            :   // Setup Central atom atoms
+<span class="lineNum">     100 </span><span class="lineCov">          9 :   std::vector&lt;bool&gt; catom_ind(3, false); catom_ind[0]=true;</span>
+<span class="lineNum">     101 </span><span class="lineCov">          9 :   setAtomsForCentralAtom( catom_ind );</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">         18 :   std::string sfinput,errors; parse(&quot;SWITCH&quot;,sfinput);</span>
+<span class="lineNum">     104 </span><span class="lineCov">          9 :   if( sfinput.length()&gt;0 ) {</span>
+<span class="lineNum">     105 </span><span class="lineCov">          9 :     sf1.set(sfinput,errors);</span>
+<span class="lineNum">     106 </span><span class="lineCov">          9 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     107 </span><span class="lineCov">          9 :     sf2.set(sfinput,errors);</span>
+<span class="lineNum">     108 </span><span class="lineCov">          9 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     109 </span>            :   } else {
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :     parse(&quot;SWITCHA&quot;,sfinput);</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :     if(sfinput.length()&gt;0) {</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :       weightHasDerivatives=true;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :       sf1.set(sfinput,errors);</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :       if( errors.length()!=0 ) error(&quot;problem reading SWITCHA keyword : &quot; + errors );</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :       sfinput.clear(); parse(&quot;SWITCHB&quot;,sfinput);</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :       if(sfinput.length()==0) error(&quot;found SWITCHA keyword without SWITCHB&quot;);</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :       sf2.set(sfinput,errors);</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :       if( errors.length()!=0 ) error(&quot;problem reading SWITCHB keyword : &quot; + errors );</span>
+<span class="lineNum">     119 </span>            :     } else {
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :       error(&quot;missing definition of switching functions&quot;);</span>
+<span class="lineNum">     121 </span>            :     }
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineCov">         27 :   log.printf(&quot;  distance between bridging atoms and atoms in GROUPA must be less than %s\n&quot;,sf1.description().c_str());</span>
+<span class="lineNum">     124 </span><span class="lineCov">         27 :   log.printf(&quot;  distance between bridging atoms and atoms in GROUPB must be less than %s\n&quot;,sf2.description().c_str());</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   // Setup link cells
+<span class="lineNum">     127 </span><span class="lineCov">          9 :   setLinkCellCutoff( sf1.get_dmax() + sf2.get_dmax() );</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :   // And setup the ActionWithVessel
+<span class="lineNum">     130 </span><span class="lineCov">          9 :   if( getNumberOfVessels()!=0 ) error(&quot;should not have vessels for this action&quot;);</span>
+<span class="lineNum">     131 </span>            :   std::string fake_input;
+<span class="lineNum">     132 </span><span class="lineCov">         18 :   addVessel( &quot;SUM&quot;, fake_input, -1 );  // -1 here means that this value will be named getLabel()</span>
+<span class="lineNum">     133 </span><span class="lineCov">          9 :   readVesselKeywords();</span>
+<span class="lineNum">     134 </span>            :   // And check everything has been read in correctly
+<span class="lineNum">     135 </span><span class="lineCov">          9 :   checkRead();</span>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          9 : }</span></a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">      50537 : double Bridge::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     139 </span>            :   double tot=0;
+<span class="lineNum">     140 </span><span class="lineCov">    1142718 :   for(unsigned i=2; i&lt;myatoms.getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">     141 </span><span class="lineCov">    1041644 :     Vector dij=getSeparation( myatoms.getPosition(i), myatoms.getPosition(0) );</span>
+<span class="lineNum">     142 </span><span class="lineCov">     520822 :     double dw1, w1=sf1.calculateSqr( dij.modulo2(), dw1 );</span>
+<span class="lineNum">     143 </span><span class="lineCov">     520822 :     Vector dik=getSeparation( myatoms.getPosition(i), myatoms.getPosition(1) );</span>
+<span class="lineNum">     144 </span><span class="lineCov">     520822 :     double dw2, w2=sf2.calculateSqr( dik.modulo2(), dw2 );</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">     520822 :     tot += w1*w2;</span>
+<span class="lineNum">     147 </span>            :     // And finish the calculation
+<span class="lineNum">     148 </span><span class="lineCov">     520822 :     addAtomDerivatives( 1, 0,  w2*dw1*dij, myatoms );</span>
+<span class="lineNum">     149 </span><span class="lineCov">     520822 :     addAtomDerivatives( 1, 1,  w1*dw2*dik, myatoms );</span>
+<span class="lineNum">     150 </span><span class="lineCov">     520822 :     addAtomDerivatives( 1, i, -w1*dw2*dik-w2*dw1*dij, myatoms );</span>
+<span class="lineNum">     151 </span><span class="lineCov">     520822 :     myatoms.addBoxDerivatives( 1, w1*(-dw2)*Tensor(dik,dik)+w2*(-dw1)*Tensor(dij,dij) );</span>
+<span class="lineNum">     152 </span>            :   }
+<span class="lineNum">     153 </span><span class="lineCov">      50537 :   return tot;</span>
+<span class="lineNum">     154 </span>            : }
+<a name="155"><span class="lineNum">     155 </span>            : </a>
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

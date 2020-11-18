@@ -1,0 +1,666 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/Atoms.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - Atoms.cpp<span style="font-size: 80%;"> (source / <a href="Atoms.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">335</td>
+            <td class="headerCovTableEntry">362</td>
+            <td class="headerCovTableEntryHi">92.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntry">53</td>
+            <td class="headerCovTableEntryHi">90.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Atoms.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionAtomistic.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;MDAtoms.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      28 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      29 </span>            : #include &lt;string&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /// We assume that charges and masses are constant along the simulation
+<span class="lineNum">      37 </span>            : /// Set this to false if you want to revert to the original (expensive) behavior
+<span class="lineNum">      38 </span>            : static const bool shareMassAndChargeOnlyAtFirstStep=true;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : class PlumedMain;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">       2233 : Atoms::Atoms(PlumedMain&amp;plumed):</span>
+<span class="lineNum">      43 </span>            :   natoms(0),
+<span class="lineNum">      44 </span><span class="lineCov">       2233 :   pbc(*new Pbc),</span>
+<span class="lineNum">      45 </span>            :   md_energy(0.0),
+<span class="lineNum">      46 </span>            :   energy(0.0),
+<span class="lineNum">      47 </span>            :   dataCanBeSet(false),
+<span class="lineNum">      48 </span>            :   collectEnergy(false),
+<span class="lineNum">      49 </span>            :   energyHasBeenSet(false),
+<span class="lineNum">      50 </span>            :   positionsHaveBeenSet(0),
+<span class="lineNum">      51 </span>            :   massesHaveBeenSet(false),
+<span class="lineNum">      52 </span>            :   chargesHaveBeenSet(false),
+<span class="lineNum">      53 </span>            :   boxHasBeenSet(false),
+<span class="lineNum">      54 </span>            :   forcesHaveBeenSet(0),
+<span class="lineNum">      55 </span>            :   virialHasBeenSet(false),
+<span class="lineNum">      56 </span>            :   massAndChargeOK(false),
+<span class="lineNum">      57 </span>            :   shuffledAtoms(0),
+<span class="lineNum">      58 </span>            :   plumed(plumed),
+<span class="lineNum">      59 </span>            :   naturalUnits(false),
+<span class="lineNum">      60 </span>            :   MDnaturalUnits(false),
+<span class="lineNum">      61 </span>            :   timestep(0.0),
+<span class="lineNum">      62 </span>            :   forceOnEnergy(0.0),
+<span class="lineNum">      63 </span>            :   zeroallforces(false),
+<span class="lineNum">      64 </span>            :   kbT(0.0),
+<span class="lineNum">      65 </span>            :   asyncSent(false),
+<span class="lineNum">      66 </span>            :   atomsNeeded(false),
+<span class="lineNum">      67 </span><span class="lineCov">      11165 :   ddStep(0)</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span><span class="lineCov">       2233 :   mdatoms=MDAtomsBase::create(sizeof(double));</span>
+<span class="lineNum">      70 </span><span class="lineCov">       2233 : }</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">       8932 : Atoms::~Atoms() {</span>
+<span class="lineNum">      73 </span><span class="lineCov">       2233 :   if(actions.size()&gt;0) {</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :     std::cerr&lt;&lt;&quot;WARNING: there is some inconsistency in action added to atoms, as some of them were not properly destroyed. This might indicate an internal bug!!\n&quot;;</span>
+<span class="lineNum">      75 </span>            :   }
+<span class="lineNum">      76 </span><span class="lineCov">       2233 :   delete mdatoms;</span>
+<span class="lineNum">      77 </span><span class="lineCov">       2233 :   delete &amp;pbc;</span>
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">       2233 : }</span></a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">      31332 : void Atoms::startStep() {</span>
+<span class="lineNum">      81 </span><span class="lineCov">      31332 :   collectEnergy=false; energyHasBeenSet=false; positionsHaveBeenSet=0;</span>
+<span class="lineNum">      82 </span><span class="lineCov">      31332 :   massesHaveBeenSet=false; chargesHaveBeenSet=false; boxHasBeenSet=false;</span>
+<span class="lineNum">      83 </span><span class="lineCov">      31332 :   forcesHaveBeenSet=0; virialHasBeenSet=false; dataCanBeSet=true;</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">      31332 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">      26838 : void Atoms::setBox(void*p) {</span>
+<span class="lineNum">      87 </span><span class="lineCov">      26838 :   mdatoms-&gt;setBox(p);</span>
+<span class="lineNum">      88 </span><span class="lineCov">      26838 :   Tensor b; mdatoms-&gt;getBox(b); boxHasBeenSet=true;</span>
+<span class="lineNum">      89 </span><span class="lineCov">      26838 : }</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">      30656 : void Atoms::setPositions(void*p) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">      30656 :   plumed_massert( dataCanBeSet,&quot;setPositions must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">      30673 :   plumed_massert( p || gatindex.size()==0, &quot;NULL position pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">      30656 :   mdatoms-&gt;setp(p); positionsHaveBeenSet=3;</span>
+<span class="lineNum">      95 </span><span class="lineCov">      30656 : }</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">      30659 : void Atoms::setMasses(void*p) {</span>
+<span class="lineNum">      98 </span><span class="lineCov">      30668 :   plumed_massert( dataCanBeSet,&quot;setMasses must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">      99 </span><span class="lineCov">      30673 :   plumed_massert( p || gatindex.size()==0, &quot;NULL mass pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">     100 </span><span class="lineCov">      30656 :   mdatoms-&gt;setm(p); massesHaveBeenSet=true;</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">      30656 : }</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">      24595 : void Atoms::setCharges(void*p) {</span>
+<span class="lineNum">     105 </span><span class="lineCov">      24595 :   plumed_massert( dataCanBeSet, &quot;setCharges must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">     106 </span><span class="lineCov">      24612 :   plumed_massert( p || gatindex.size()==0, &quot;NULL charges pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">      24595 :   mdatoms-&gt;setc(p); chargesHaveBeenSet=true;</span>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">      24595 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">      24658 : void Atoms::setVirial(void*p) {</span>
+<span class="lineNum">     111 </span><span class="lineCov">      24658 :   plumed_massert( dataCanBeSet,&quot;setVirial must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">      24658 :   mdatoms-&gt;setVirial(p); virialHasBeenSet=true;</span>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">      24658 : }</span></a>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">       5988 : void Atoms::setEnergy(void*p) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">       5988 :   plumed_massert( dataCanBeSet,&quot;setEnergy must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">     117 </span><span class="lineCov">       5988 :   MD2double(p,md_energy);</span>
+<span class="lineNum">     118 </span><span class="lineCov">       5988 :   md_energy*=MDUnits.getEnergy()/units.getEnergy();</span>
+<span class="lineNum">     119 </span><span class="lineCov">       5988 :   energyHasBeenSet=true;</span>
+<span class="lineNum">     120 </span><span class="lineCov">       5988 : }</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">      30656 : void Atoms::setForces(void*p) {</span>
+<span class="lineNum">     123 </span><span class="lineCov">      30656 :   plumed_massert( dataCanBeSet,&quot;setForces must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">     124 </span><span class="lineCov">      30673 :   plumed_massert( p || gatindex.size()==0, &quot;NULL force pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">      30656 :   forcesHaveBeenSet=3;</span>
+<span class="lineNum">     126 </span><span class="lineCov">      30656 :   mdatoms-&gt;setf(p);</span>
+<span class="lineNum">     127 </span><span class="lineCov">      30656 : }</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 : void Atoms::setPositions(void*p,int i) {</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :   plumed_massert( dataCanBeSet,&quot;setPositions must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :   plumed_massert( p || gatindex.size()==0, &quot;NULL positions pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   mdatoms-&gt;setp(p,i); positionsHaveBeenSet++;</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 : void Atoms::setForces(void*p,int i) {</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :   plumed_massert( dataCanBeSet,&quot;setForces must be called after setStep in MD code interface&quot;);</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :   plumed_massert( p || gatindex.size()==0, &quot;NULL force pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :   mdatoms-&gt;setf(p,i); forcesHaveBeenSet++;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">      29178 : void Atoms::share() {</span>
+<span class="lineNum">     142 </span>            : // At first step I scatter all the atoms so as to store their mass and charge
+<span class="lineNum">     143 </span>            : // Notice that this works with the assumption that charges and masses are
+<span class="lineNum">     144 </span>            : // not changing during the simulation!
+<span class="lineNum">     145 </span><span class="lineCov">      29178 :   if(!massAndChargeOK &amp;&amp; shareMassAndChargeOnlyAtFirstStep) {</span>
+<span class="lineNum">     146 </span><span class="lineCov">        559 :     shareAll();</span>
+<span class="lineNum">     147 </span><span class="lineCov">        559 :     return;</span>
+<span class="lineNum">     148 </span>            :   }
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">      28619 :   if(!(int(gatindex.size())==natoms &amp;&amp; shuffledAtoms==0)) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">      54210 :     for(unsigned i=0; i&lt;actions.size(); i++) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">      33652 :       if(actions[i]-&gt;isActive()) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">      10120 :         if(!actions[i]-&gt;getUnique().empty()) {</span>
+<span class="lineNum">     154 </span><span class="lineCov">       9972 :           atomsNeeded=true;</span>
+<span class="lineNum">     155 </span>            :           // unique are the local atoms
+<span class="lineNum">     156 </span><span class="lineCov">       9972 :           unique.insert(actions[i]-&gt;getUniqueLocal().begin(),actions[i]-&gt;getUniqueLocal().end());</span>
+<span class="lineNum">     157 </span>            :         }
+<span class="lineNum">     158 </span>            :       }
+<span class="lineNum">     159 </span>            :     }
+<span class="lineNum">     160 </span>            :   } else {
+<span class="lineNum">     161 </span><span class="lineCov">     334018 :     for(unsigned i=0; i&lt;actions.size(); i++) {</span>
+<span class="lineNum">     162 </span><span class="lineCov">     187008 :       if(actions[i]-&gt;isActive()) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">      80179 :         if(!actions[i]-&gt;getUnique().empty()) {</span>
+<span class="lineNum">     164 </span><span class="lineCov">      71973 :           atomsNeeded=true;</span>
+<span class="lineNum">     165 </span>            :         }
+<span class="lineNum">     166 </span>            :       }
+<span class="lineNum">     167 </span>            :     }
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :   }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">      28619 :   share(unique);</span>
+<span class="lineNum">     172 </span>            : }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">        643 : void Atoms::shareAll() {</span>
+<span class="lineNum">     175 </span><span class="lineCov">        643 :   unique.clear();</span>
+<span class="lineNum">     176 </span>            :   // keep in unique only those atoms that are local
+<span class="lineNum">     177 </span><span class="lineCov">        643 :   if(dd &amp;&amp; shuffledAtoms&gt;0) {</span>
+<span class="lineNum">     178 </span><span class="lineCov">      31655 :     for(int i=0; i&lt;natoms; i++) if(g2l[i]&gt;=0) unique.insert(AtomNumber::index(i));</span>
+<span class="lineNum">     179 </span>            :   } else {
+<span class="lineNum">     180 </span><span class="lineCov">     691501 :     for(int i=0; i&lt;natoms; i++) unique.insert(AtomNumber::index(i));</span>
+<span class="lineNum">     181 </span>            :   }
+<span class="lineNum">     182 </span><span class="lineCov">        643 :   atomsNeeded=true;</span>
+<span class="lineNum">     183 </span><span class="lineCov">        643 :   share(unique);</span>
+<span class="lineNum">     184 </span><span class="lineCov">        643 : }</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">      29262 : void Atoms::share(const std::set&lt;AtomNumber&gt;&amp; unique) {</span>
+<span class="lineNum">     187 </span><span class="lineCov">      29262 :   plumed_assert( positionsHaveBeenSet==3 &amp;&amp; massesHaveBeenSet );</span>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">      29262 :   virial.zero();</span>
+<span class="lineNum">     190 </span><span class="lineCov">      58428 :   if(zeroallforces || int(gatindex.size())==natoms) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">    4663864 :     for(int i=0; i&lt;natoms; i++) forces[i].zero();</span>
+<span class="lineNum">     192 </span>            :   } else {
+<span class="lineNum">     193 </span><span class="lineCov">      60732 :     for(const auto &amp; p : unique) forces[p.index()].zero();</span>
+<span class="lineNum">     194 </span>            :   }
+<span class="lineNum">     195 </span><span class="lineCov">      67544 :   for(unsigned i=getNatoms(); i&lt;positions.size(); i++) forces[i].zero(); // virtual atoms</span>
+<span class="lineNum">     196 </span><span class="lineCov">      29262 :   forceOnEnergy=0.0;</span>
+<span class="lineNum">     197 </span><span class="lineCov">      29262 :   mdatoms-&gt;getBox(box);</span>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">      29262 :   if(!atomsNeeded) return;</span>
+<span class="lineNum">     200 </span><span class="lineCov">      28605 :   atomsNeeded=false;</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">      28605 :   if(int(gatindex.size())==natoms &amp;&amp; shuffledAtoms==0) {</span>
+<span class="lineNum">     203 </span>            : // faster version, which retrieves all atoms
+<span class="lineNum">     204 </span><span class="lineCov">      26595 :     mdatoms-&gt;getPositions(0,natoms,positions);</span>
+<span class="lineNum">     205 </span>            :   } else {
+<span class="lineNum">     206 </span><span class="lineCov">       2010 :     uniq_index.clear();</span>
+<span class="lineNum">     207 </span><span class="lineCov">       2010 :     uniq_index.reserve(unique.size());</span>
+<span class="lineNum">     208 </span><span class="lineCov">       2010 :     if(shuffledAtoms&gt;0) {</span>
+<span class="lineNum">     209 </span><span class="lineCov">      88398 :       for(const auto &amp; p : unique) uniq_index.push_back(g2l[p.index()]);</span>
+<span class="lineNum">     210 </span>            :     }
+<span class="lineNum">     211 </span><span class="lineCov">       2010 :     mdatoms-&gt;getPositions(unique,uniq_index,positions);</span>
+<span class="lineNum">     212 </span>            :   }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            : // how many double per atom should be scattered:
+<span class="lineNum">     216 </span>            :   int ndata=3;
+<span class="lineNum">     217 </span><span class="lineCov">      28605 :   if(!massAndChargeOK) {</span>
+<span class="lineNum">     218 </span>            :     ndata=5;
+<span class="lineNum">     219 </span><span class="lineCov">       1118 :     masses.assign(masses.size(),NAN);</span>
+<span class="lineNum">     220 </span><span class="lineCov">       1118 :     charges.assign(charges.size(),NAN);</span>
+<span class="lineNum">     221 </span><span class="lineCov">        559 :     mdatoms-&gt;getCharges(gatindex,charges);</span>
+<span class="lineNum">     222 </span><span class="lineCov">        559 :     mdatoms-&gt;getMasses(gatindex,masses);</span>
+<span class="lineNum">     223 </span>            :   }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">      28605 :   if(dd &amp;&amp; shuffledAtoms&gt;0) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">       2008 :     if(dd.async) {</span>
+<span class="lineNum">     227 </span><span class="lineCov">      25312 :       for(unsigned i=0; i&lt;dd.mpi_request_positions.size(); i++) dd.mpi_request_positions[i].wait();</span>
+<span class="lineNum">     228 </span><span class="lineCov">      25312 :       for(unsigned i=0; i&lt;dd.mpi_request_index.size(); i++)     dd.mpi_request_index[i].wait();</span>
+<span class="lineNum">     229 </span>            :     }
+<span class="lineNum">     230 </span><span class="lineCov">       2008 :     int count=0;</span>
+<span class="lineNum">     231 </span><span class="lineCov">      23601 :     for(const auto &amp; p : unique) {</span>
+<span class="lineNum">     232 </span><span class="lineCov">      43186 :       dd.indexToBeSent[count]=p.index();</span>
+<span class="lineNum">     233 </span><span class="lineCov">      64779 :       dd.positionsToBeSent[ndata*count+0]=positions[p.index()][0];</span>
+<span class="lineNum">     234 </span><span class="lineCov">      64779 :       dd.positionsToBeSent[ndata*count+1]=positions[p.index()][1];</span>
+<span class="lineNum">     235 </span><span class="lineCov">      64779 :       dd.positionsToBeSent[ndata*count+2]=positions[p.index()][2];</span>
+<span class="lineNum">     236 </span><span class="lineCov">      21593 :       if(!massAndChargeOK) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">       5739 :         dd.positionsToBeSent[ndata*count+3]=masses[p.index()];</span>
+<span class="lineNum">     238 </span><span class="lineCov">       5739 :         dd.positionsToBeSent[ndata*count+4]=charges[p.index()];</span>
+<span class="lineNum">     239 </span>            :       }
+<span class="lineNum">     240 </span><span class="lineCov">      21593 :       count++;</span>
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span><span class="lineCov">       2008 :     if(dd.async) {</span>
+<span class="lineNum">     243 </span><span class="lineCov">       1988 :       asyncSent=true;</span>
+<span class="lineNum">     244 </span><span class="lineCov">       1988 :       dd.mpi_request_positions.resize(dd.Get_size());</span>
+<span class="lineNum">     245 </span><span class="lineCov">       1988 :       dd.mpi_request_index.resize(dd.Get_size());</span>
+<span class="lineNum">     246 </span><span class="lineCov">      16548 :       for(int i=0; i&lt;dd.Get_size(); i++) {</span>
+<span class="lineNum">     247 </span><span class="lineCov">      21840 :         dd.mpi_request_index[i]=dd.Isend(&amp;dd.indexToBeSent[0],count,i,666);</span>
+<span class="lineNum">     248 </span><span class="lineCov">      14560 :         dd.mpi_request_positions[i]=dd.Isend(&amp;dd.positionsToBeSent[0],ndata*count,i,667);</span>
+<span class="lineNum">     249 </span>            :       }
+<span class="lineNum">     250 </span>            :     } else {
+<span class="lineNum">     251 </span><span class="lineCov">         20 :       const int n=(dd.Get_size());</span>
+<span class="lineNum">     252 </span><span class="lineCov">         20 :       vector&lt;int&gt; counts(n);</span>
+<span class="lineNum">     253 </span><span class="lineCov">         20 :       vector&lt;int&gt; displ(n);</span>
+<span class="lineNum">     254 </span><span class="lineCov">         20 :       vector&lt;int&gt; counts5(n);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         20 :       vector&lt;int&gt; displ5(n);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         20 :       dd.Allgather(count,counts);</span>
+<span class="lineNum">     257 </span><span class="lineCov">         20 :       displ[0]=0;</span>
+<span class="lineNum">     258 </span><span class="lineCov">        260 :       for(int i=1; i&lt;n; ++i) displ[i]=displ[i-1]+counts[i-1];</span>
+<span class="lineNum">     259 </span><span class="lineCov">        260 :       for(int i=0; i&lt;n; ++i) counts5[i]=counts[i]*ndata;</span>
+<span class="lineNum">     260 </span><span class="lineCov">        260 :       for(int i=0; i&lt;n; ++i) displ5[i]=displ[i]*ndata;</span>
+<span class="lineNum">     261 </span><span class="lineCov">         40 :       dd.Allgatherv(&amp;dd.indexToBeSent[0],count,&amp;dd.indexToBeReceived[0],&amp;counts[0],&amp;displ[0]);</span>
+<span class="lineNum">     262 </span><span class="lineCov">         40 :       dd.Allgatherv(&amp;dd.positionsToBeSent[0],ndata*count,&amp;dd.positionsToBeReceived[0],&amp;counts5[0],&amp;displ5[0]);</span>
+<span class="lineNum">     263 </span><span class="lineCov">         60 :       int tot=displ[n-1]+counts[n-1];</span>
+<span class="lineNum">     264 </span><span class="lineCov">       3220 :       for(int i=0; i&lt;tot; i++) {</span>
+<span class="lineNum">     265 </span><span class="lineCov">       6400 :         positions[dd.indexToBeReceived[i]][0]=dd.positionsToBeReceived[ndata*i+0];</span>
+<span class="lineNum">     266 </span><span class="lineCov">       4800 :         positions[dd.indexToBeReceived[i]][1]=dd.positionsToBeReceived[ndata*i+1];</span>
+<span class="lineNum">     267 </span><span class="lineCov">       4800 :         positions[dd.indexToBeReceived[i]][2]=dd.positionsToBeReceived[ndata*i+2];</span>
+<span class="lineNum">     268 </span><span class="lineCov">       1600 :         if(!massAndChargeOK) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">       1296 :           masses[dd.indexToBeReceived[i]]      =dd.positionsToBeReceived[ndata*i+3];</span>
+<span class="lineNum">     270 </span><span class="lineCov">       1296 :           charges[dd.indexToBeReceived[i]]     =dd.positionsToBeReceived[ndata*i+4];</span>
+<span class="lineNum">     271 </span>            :         }
+<span class="lineNum">     272 </span>            :       }
+<span class="lineNum">     273 </span>            :     }
+<span class="lineNum">     274 </span>            :   }
+<span class="lineNum">     275 </span>            : }
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">      29262 : void Atoms::wait() {</span>
+<span class="lineNum">     278 </span><span class="lineCov">      29262 :   dataCanBeSet=false; // Everything should be set by this stage</span>
+<span class="lineNum">     279 </span>            : // How many double per atom should be scattered
+<span class="lineNum">     280 </span>            :   int ndata=3;
+<span class="lineNum">     281 </span><span class="lineCov">      29262 :   if(!massAndChargeOK)ndata=5;</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineCov">      29262 :   if(dd) {</span>
+<span class="lineNum">     284 </span><span class="lineCov">      14833 :     dd.Bcast(box,0);</span>
+<span class="lineNum">     285 </span>            :   }
+<span class="lineNum">     286 </span><span class="lineCov">      29262 :   pbc.setBox(box);</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">      29262 :   if(collectEnergy) energy=md_energy;</span>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineCov">      29262 :   if(dd &amp;&amp; shuffledAtoms&gt;0) {</span>
+<span class="lineNum">     291 </span>            : // receive toBeReceived
+<span class="lineNum">     292 </span><span class="lineCov">       2008 :     if(asyncSent) {</span>
+<span class="lineNum">     293 </span>            :       Communicator::Status status;
+<span class="lineNum">     294 </span>            :       int count=0;
+<span class="lineNum">     295 </span><span class="lineCov">      16548 :       for(int i=0; i&lt;dd.Get_size(); i++) {</span>
+<span class="lineNum">     296 </span><span class="lineCov">      14560 :         dd.Recv(&amp;dd.indexToBeReceived[count],dd.indexToBeReceived.size()-count,i,666,status);</span>
+<span class="lineNum">     297 </span>            :         int c=status.Get_count&lt;int&gt;();
+<span class="lineNum">     298 </span><span class="lineCov">      14560 :         dd.Recv(&amp;dd.positionsToBeReceived[ndata*count],dd.positionsToBeReceived.size()-ndata*count,i,667);</span>
+<span class="lineNum">     299 </span><span class="lineCov">       7280 :         count+=c;</span>
+<span class="lineNum">     300 </span>            :       }
+<span class="lineNum">     301 </span><span class="lineCov">     103848 :       for(int i=0; i&lt;count; i++) {</span>
+<span class="lineNum">     302 </span><span class="lineCov">     203720 :         positions[dd.indexToBeReceived[i]][0]=dd.positionsToBeReceived[ndata*i+0];</span>
+<span class="lineNum">     303 </span><span class="lineCov">     152790 :         positions[dd.indexToBeReceived[i]][1]=dd.positionsToBeReceived[ndata*i+1];</span>
+<span class="lineNum">     304 </span><span class="lineCov">     152790 :         positions[dd.indexToBeReceived[i]][2]=dd.positionsToBeReceived[ndata*i+2];</span>
+<span class="lineNum">     305 </span><span class="lineCov">      50930 :         if(!massAndChargeOK) {</span>
+<span class="lineNum">     306 </span><span class="lineCov">      13806 :           masses[dd.indexToBeReceived[i]]      =dd.positionsToBeReceived[ndata*i+3];</span>
+<span class="lineNum">     307 </span><span class="lineCov">      13806 :           charges[dd.indexToBeReceived[i]]     =dd.positionsToBeReceived[ndata*i+4];</span>
+<span class="lineNum">     308 </span>            :         }
+<span class="lineNum">     309 </span>            :       }
+<span class="lineNum">     310 </span><span class="lineCov">       1988 :       asyncSent=false;</span>
+<span class="lineNum">     311 </span>            :     }
+<span class="lineNum">     312 </span><span class="lineCov">       2008 :     if(collectEnergy) dd.Sum(energy);</span>
+<span class="lineNum">     313 </span>            :   }
+<span class="lineNum">     314 </span>            : // I take note that masses and charges have been set once for all
+<span class="lineNum">     315 </span>            : // at the beginning of the simulation.
+<span class="lineNum">     316 </span><span class="lineCov">      29262 :   if(shareMassAndChargeOnlyAtFirstStep) massAndChargeOK=true;</span>
+<span class="lineNum">     317 </span><span class="lineCov">      29262 : }</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span><span class="lineCov">      29178 : void Atoms::updateForces() {</span>
+<span class="lineNum">     320 </span><span class="lineCov">      29178 :   plumed_assert( forcesHaveBeenSet==3 );</span>
+<span class="lineNum">     321 </span><span class="lineCov">      29178 :   if(forceOnEnergy*forceOnEnergy&gt;epsilon) {</span>
+<span class="lineNum">     322 </span><span class="lineCov">         50 :     double alpha=1.0-forceOnEnergy;</span>
+<span class="lineNum">     323 </span><span class="lineCov">         50 :     mdatoms-&gt;rescaleForces(gatindex,alpha);</span>
+<span class="lineNum">     324 </span><span class="lineCov">         50 :     mdatoms-&gt;updateForces(gatindex,forces);</span>
+<span class="lineNum">     325 </span>            :   } else {
+<span class="lineNum">     326 </span><span class="lineCov">      29128 :     if(int(gatindex.size())==natoms &amp;&amp; shuffledAtoms==0) mdatoms-&gt;updateForces(gatindex,forces);</span>
+<span class="lineNum">     327 </span><span class="lineCov">       1926 :     else mdatoms-&gt;updateForces(unique,uniq_index,forces);</span>
+<span class="lineNum">     328 </span>            :   }
+<span class="lineNum">     329 </span><span class="lineCov">      29178 :   if( !plumed.novirial &amp;&amp; dd.Get_rank()==0 ) {</span>
+<span class="lineNum">     330 </span><span class="lineCov">      19076 :     plumed_assert( virialHasBeenSet );</span>
+<span class="lineNum">     331 </span><span class="lineCov">      19076 :     mdatoms-&gt;updateVirial(virial);</span>
+<span class="lineNum">     332 </span>            :   }
+<span class="lineNum">     333 </span><span class="lineCov">      29178 : }</span>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineCov">        635 : void Atoms::setNatoms(int n) {</span>
+<span class="lineNum">     336 </span><span class="lineCov">        635 :   natoms=n;</span>
+<span class="lineNum">     337 </span><span class="lineCov">        635 :   positions.resize(n);</span>
+<span class="lineNum">     338 </span><span class="lineCov">        635 :   forces.resize(n);</span>
+<span class="lineNum">     339 </span><span class="lineCov">        635 :   masses.resize(n);</span>
+<span class="lineNum">     340 </span><span class="lineCov">        635 :   charges.resize(n);</span>
+<span class="lineNum">     341 </span><span class="lineCov">        635 :   gatindex.resize(n);</span>
+<span class="lineNum">     342 </span><span class="lineCov">    1053331 :   for(unsigned i=0; i&lt;gatindex.size(); i++) gatindex[i]=i;</span>
+<span class="lineNum">     343 </span><span class="lineCov">        635 : }</span>
+<a name="344"><span class="lineNum">     344 </span>            : </a>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">       2310 : void Atoms::add(ActionAtomistic*a) {</span>
+<span class="lineNum">     347 </span><span class="lineCov">       2310 :   actions.push_back(a);</span>
+<span class="lineNum">     348 </span><span class="lineCov">       2310 : }</span>
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineCov">       2310 : void Atoms::remove(ActionAtomistic*a) {</span>
+<span class="lineNum">     351 </span><span class="lineCov">       2310 :   auto f=find(actions.begin(),actions.end(),a);</span>
+<span class="lineNum">     352 </span><span class="lineCov">       2310 :   plumed_massert(f!=actions.end(),&quot;cannot remove an action registered to atoms&quot;);</span>
+<span class="lineNum">     353 </span><span class="lineCov">       2310 :   actions.erase(f);</span>
+<span class="lineNum">     354 </span><span class="lineCov">       2310 : }</span>
+<a name="355"><span class="lineNum">     355 </span>            : </a>
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span><span class="lineCov">        245 : void Atoms::DomainDecomposition::enable(Communicator&amp; c) {</span>
+<span class="lineNum">     358 </span><span class="lineCov">        245 :   on=true;</span>
+<span class="lineNum">     359 </span><span class="lineCov">        245 :   Set_comm(c.Get_comm());</span>
+<span class="lineNum">     360 </span><span class="lineCov">        245 :   async=Get_size()&lt;10;</span>
+<span class="lineNum">     361 </span><span class="lineCov">        245 :   if(std::getenv(&quot;PLUMED_ASYNC_SHARE&quot;)) {</span>
+<span class="lineNum">     362 </span><span class="lineCov">          4 :     std::string s(std::getenv(&quot;PLUMED_ASYNC_SHARE&quot;));</span>
+<span class="lineNum">     363 </span><span class="lineCov">          4 :     if(s==&quot;yes&quot;) async=true;</span>
+<span class="lineNum">     364 </span><span class="lineCov">          4 :     else if(s==&quot;no&quot;) async=false;</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :     else plumed_merror(&quot;PLUMED_ASYNC_SHARE variable is set to &quot; + s + &quot;; should be yes or no&quot;);</span>
+<span class="lineNum">     366 </span>            :   }
+<a name="367"><span class="lineNum">     367 </span><span class="lineCov">        245 : }</span></a>
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span><span class="lineCov">       1301 : void Atoms::setAtomsNlocal(int n) {</span>
+<span class="lineNum">     370 </span><span class="lineCov">       1301 :   gatindex.resize(n);</span>
+<span class="lineNum">     371 </span><span class="lineCov">       1301 :   g2l.resize(natoms,-1);</span>
+<span class="lineNum">     372 </span><span class="lineCov">       1301 :   if(dd) {</span>
+<span class="lineNum">     373 </span>            : // Since these vectors are sent with MPI by using e.g.
+<span class="lineNum">     374 </span>            : // &amp;dd.positionsToBeSent[0]
+<span class="lineNum">     375 </span>            : // we make sure they are non-zero-sized so as to
+<span class="lineNum">     376 </span>            : // avoid errors when doing boundary check
+<span class="lineNum">     377 </span><span class="lineCov">       1291 :     if(n==0) n++;</span>
+<span class="lineNum">     378 </span><span class="lineCov">       1291 :     dd.positionsToBeSent.resize(n*5,0.0);</span>
+<span class="lineNum">     379 </span><span class="lineCov">       1291 :     dd.positionsToBeReceived.resize(natoms*5,0.0);</span>
+<span class="lineNum">     380 </span><span class="lineCov">       1291 :     dd.indexToBeSent.resize(n,0);</span>
+<span class="lineNum">     381 </span><span class="lineCov">       1291 :     dd.indexToBeReceived.resize(natoms,0);</span>
+<span class="lineNum">     382 </span>            :   }
+<span class="lineNum">     383 </span><span class="lineCov">       1301 : }</span>
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineCov">        920 : void Atoms::setAtomsGatindex(int*g,bool fortran) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">        925 :   plumed_massert( g || gatindex.size()==0, &quot;NULL gatindex pointer with non-zero local atoms&quot;);</span>
+<span class="lineNum">     387 </span><span class="lineCov">       1840 :   ddStep=plumed.getStep();</span>
+<span class="lineNum">     388 </span><span class="lineCov">        920 :   if(fortran) {</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;gatindex.size(); i++) gatindex[i]=g[i]-1;</span>
+<span class="lineNum">     390 </span>            :   } else {
+<span class="lineNum">     391 </span><span class="lineCov">      54421 :     for(unsigned i=0; i&lt;gatindex.size(); i++) gatindex[i]=g[i];</span>
+<span class="lineNum">     392 </span>            :   }
+<span class="lineNum">     393 </span><span class="lineCov">     147706 :   for(unsigned i=0; i&lt;g2l.size(); i++) g2l[i]=-1;</span>
+<span class="lineNum">     394 </span><span class="lineCov">        920 :   if( gatindex.size()==natoms ) {</span>
+<span class="lineNum">     395 </span><span class="lineCov">          3 :     shuffledAtoms=0;</span>
+<span class="lineNum">     396 </span><span class="lineCov">        603 :     for(unsigned i=0; i&lt;gatindex.size(); i++) {</span>
+<span class="lineNum">     397 </span><span class="lineCov">        300 :       if( gatindex[i]!=i ) { shuffledAtoms=1; break; }</span>
+<span class="lineNum">     398 </span>            :     }
+<span class="lineNum">     399 </span>            :   } else {
+<span class="lineNum">     400 </span><span class="lineCov">        917 :     shuffledAtoms=1;</span>
+<span class="lineNum">     401 </span>            :   }
+<span class="lineNum">     402 </span><span class="lineCov">        920 :   if(dd) {</span>
+<span class="lineNum">     403 </span><span class="lineCov">        910 :     dd.Sum(shuffledAtoms);</span>
+<span class="lineNum">     404 </span>            :   }
+<span class="lineNum">     405 </span><span class="lineCov">      71948 :   for(unsigned i=0; i&lt;gatindex.size(); i++) g2l[gatindex[i]]=i;</span>
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span><span class="lineCov">      29308 :   for(unsigned i=0; i&lt;actions.size(); i++) {</span>
+<span class="lineNum">     408 </span>            :     // keep in unique only those atoms that are local
+<span class="lineNum">     409 </span><span class="lineCov">       9156 :     actions[i]-&gt;updateUniqueLocal();</span>
+<span class="lineNum">     410 </span>            :   }
+<span class="lineNum">     411 </span>            :   unique.clear();
+<span class="lineNum">     412 </span><span class="lineCov">        920 : }</span>
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span><span class="lineCov">        381 : void Atoms::setAtomsContiguous(int start) {</span>
+<span class="lineNum">     415 </span><span class="lineCov">        762 :   ddStep=plumed.getStep();</span>
+<span class="lineNum">     416 </span><span class="lineCov">     315087 :   for(unsigned i=0; i&lt;gatindex.size(); i++) gatindex[i]=start+i;</span>
+<span class="lineNum">     417 </span><span class="lineCov">     348135 :   for(unsigned i=0; i&lt;g2l.size(); i++) g2l[i]=-1;</span>
+<span class="lineNum">     418 </span><span class="lineCov">     419862 :   for(unsigned i=0; i&lt;gatindex.size(); i++) g2l[gatindex[i]]=i;</span>
+<span class="lineNum">     419 </span><span class="lineCov">        381 :   if(gatindex.size()&lt;natoms) shuffledAtoms=1;</span>
+<span class="lineNum">     420 </span><span class="lineCov">       1458 :   for(unsigned i=0; i&lt;actions.size(); i++) {</span>
+<span class="lineNum">     421 </span>            :     // keep in unique only those atoms that are local
+<span class="lineNum">     422 </span><span class="lineCov">        232 :     actions[i]-&gt;updateUniqueLocal();</span>
+<span class="lineNum">     423 </span>            :   }
+<span class="lineNum">     424 </span>            :   unique.clear();
+<a name="425"><span class="lineNum">     425 </span><span class="lineCov">        381 : }</span></a>
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span><span class="lineCov">        556 : void Atoms::setRealPrecision(int p) {</span>
+<span class="lineNum">     428 </span><span class="lineCov">        556 :   MDAtomsBase *x=MDAtomsBase::create(p);</span>
+<span class="lineNum">     429 </span><span class="lineCov">        555 :   delete mdatoms;</span>
+<span class="lineNum">     430 </span><span class="lineCov">        555 :   mdatoms=x;</span>
+<a name="431"><span class="lineNum">     431 </span><span class="lineCov">        555 : }</span></a>
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineCov">        635 : int Atoms::getRealPrecision()const {</span>
+<span class="lineNum">     434 </span><span class="lineCov">        635 :   return mdatoms-&gt;getRealPrecision();</span>
+<a name="435"><span class="lineNum">     435 </span>            : }</a>
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span><span class="lineCov">       8160 : void Atoms::MD2double(const void*m,double&amp;d)const {</span>
+<a name="438"><span class="lineNum">     438 </span><span class="lineCov">       8160 :   plumed_assert(mdatoms); mdatoms-&gt;MD2double(m,d);</span></a>
+<span class="lineNum">     439 </span><span class="lineCov">       8160 : }</span>
+<span class="lineNum">     440 </span><span class="lineCov">        401 : void Atoms::double2MD(const double&amp;d,void*m)const {</span>
+<span class="lineNum">     441 </span><span class="lineCov">        401 :   plumed_assert(mdatoms); mdatoms-&gt;double2MD(d,m);</span>
+<a name="442"><span class="lineNum">     442 </span><span class="lineCov">        401 : }</span></a>
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span><span class="lineCov">        648 : void Atoms::updateUnits() {</span>
+<span class="lineNum">     445 </span><span class="lineCov">        648 :   mdatoms-&gt;setUnits(units,MDUnits);</span>
+<a name="446"><span class="lineNum">     446 </span><span class="lineCov">        648 : }</span></a>
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span><span class="lineCov">        556 : void Atoms::setTimeStep(void*p) {</span>
+<span class="lineNum">     449 </span><span class="lineCov">        556 :   MD2double(p,timestep);</span>
+<a name="450"><span class="lineNum">     450 </span><span class="lineCov">        556 : }</span></a>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineCov">     937597 : double Atoms::getTimeStep()const {</span>
+<span class="lineNum">     453 </span><span class="lineCov">     937597 :   return timestep/units.getTime()*MDUnits.getTime();</span>
+<a name="454"><span class="lineNum">     454 </span>            : }</a>
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span><span class="lineCov">         43 : void Atoms::setKbT(void*p) {</span>
+<span class="lineNum">     457 </span><span class="lineCov">         43 :   MD2double(p,kbT);</span>
+<a name="458"><span class="lineNum">     458 </span><span class="lineCov">         43 : }</span></a>
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineCov">        809 : double Atoms::getKbT()const {</span>
+<span class="lineNum">     461 </span><span class="lineCov">        809 :   return kbT/units.getEnergy()*MDUnits.getEnergy();</span>
+<span class="lineNum">     462 </span>            : }
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span><span class="lineCov">         15 : void Atoms::createFullList(int*n) {</span>
+<span class="lineNum">     466 </span><span class="lineCov">         15 :   if(!massAndChargeOK &amp;&amp; shareMassAndChargeOnlyAtFirstStep) {</span>
+<span class="lineNum">     467 </span><span class="lineCov">          1 :     *n=natoms;</span>
+<span class="lineNum">     468 </span><span class="lineCov">          1 :     fullList.resize(natoms);</span>
+<span class="lineNum">     469 </span><span class="lineCov">        201 :     for(unsigned i=0; i&lt;natoms; i++) fullList[i]=i;</span>
+<span class="lineNum">     470 </span>            :   } else {
+<span class="lineNum">     471 </span>            : // We update here the unique list defined at Atoms::unique.
+<span class="lineNum">     472 </span>            : // This is not very clear, and probably should be coded differently.
+<span class="lineNum">     473 </span>            : // Hopefully this fix the longstanding issue with NAMD.
+<span class="lineNum">     474 </span>            :     unique.clear();
+<span class="lineNum">     475 </span><span class="lineCov">        139 :     for(unsigned i=0; i&lt;actions.size(); i++) {</span>
+<span class="lineNum">     476 </span><span class="lineCov">         74 :       if(actions[i]-&gt;isActive()) {</span>
+<span class="lineNum">     477 </span><span class="lineCov">         15 :         if(!actions[i]-&gt;getUnique().empty()) {</span>
+<span class="lineNum">     478 </span><span class="lineCov">         15 :           atomsNeeded=true;</span>
+<span class="lineNum">     479 </span>            :           // unique are the local atoms
+<span class="lineNum">     480 </span><span class="lineCov">         15 :           unique.insert(actions[i]-&gt;getUnique().begin(),actions[i]-&gt;getUnique().end());</span>
+<span class="lineNum">     481 </span>            :         }
+<span class="lineNum">     482 </span>            :       }
+<span class="lineNum">     483 </span>            :     }
+<span class="lineNum">     484 </span><span class="lineCov">         14 :     fullList.resize(0);</span>
+<span class="lineNum">     485 </span><span class="lineCov">         14 :     fullList.reserve(unique.size());</span>
+<span class="lineNum">     486 </span><span class="lineCov">        656 :     for(const auto &amp; p : unique) fullList.push_back(p.index());</span>
+<span class="lineNum">     487 </span><span class="lineCov">         14 :     *n=fullList.size();</span>
+<span class="lineNum">     488 </span>            :   }
+<span class="lineNum">     489 </span><span class="lineCov">         15 : }</span>
+<span class="lineNum">     490 </span>            : 
+<span class="lineNum">     491 </span><span class="lineCov">         15 : void Atoms::getFullList(int**x) {</span>
+<span class="lineNum">     492 </span><span class="lineCov">         15 :   if(!fullList.empty()) *x=&amp;fullList[0];</span>
+<span class="lineNum">     493 </span><span class="lineCov">          6 :   else *x=NULL;</span>
+<a name="494"><span class="lineNum">     494 </span><span class="lineCov">         15 : }</span></a>
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span><span class="lineCov">         15 : void Atoms::clearFullList() {</span>
+<span class="lineNum">     497 </span><span class="lineCov">         15 :   fullList.resize(0);</span>
+<a name="498"><span class="lineNum">     498 </span><span class="lineCov">         15 : }</span></a>
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span><span class="lineCov">        635 : void Atoms::init() {</span>
+<span class="lineNum">     501 </span>            : // Default: set domain decomposition to NO-decomposition, waiting for
+<span class="lineNum">     502 </span>            : // further instruction
+<span class="lineNum">     503 </span><span class="lineCov">        635 :   if(dd) {</span>
+<span class="lineNum">     504 </span><span class="lineCov">        245 :     setAtomsNlocal(natoms);</span>
+<span class="lineNum">     505 </span><span class="lineCov">        245 :     setAtomsContiguous(0);</span>
+<span class="lineNum">     506 </span>            :   }
+<a name="507"><span class="lineNum">     507 </span><span class="lineCov">        635 : }</span></a>
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span><span class="lineCov">        245 : void Atoms::setDomainDecomposition(Communicator&amp; comm) {</span>
+<span class="lineNum">     510 </span><span class="lineCov">        245 :   dd.enable(comm);</span>
+<a name="511"><span class="lineNum">     511 </span><span class="lineCov">        245 : }</span></a>
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span><span class="lineCov">        290 : void Atoms::resizeVectors(unsigned n) {</span>
+<span class="lineNum">     514 </span><span class="lineCov">        290 :   positions.resize(n);</span>
+<span class="lineNum">     515 </span><span class="lineCov">        290 :   forces.resize(n);</span>
+<span class="lineNum">     516 </span><span class="lineCov">        290 :   masses.resize(n);</span>
+<span class="lineNum">     517 </span><span class="lineCov">        290 :   charges.resize(n);</span>
+<span class="lineNum">     518 </span><span class="lineCov">        290 : }</span>
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span><span class="lineCov">        145 : AtomNumber Atoms::addVirtualAtom(ActionWithVirtualAtom*a) {</span>
+<span class="lineNum">     521 </span><span class="lineCov">        145 :   unsigned n=positions.size();</span>
+<span class="lineNum">     522 </span><span class="lineCov">        145 :   resizeVectors(n+1);</span>
+<span class="lineNum">     523 </span><span class="lineCov">        145 :   virtualAtomsActions.push_back(a);</span>
+<span class="lineNum">     524 </span><span class="lineCov">        145 :   return AtomNumber::index(n);</span>
+<span class="lineNum">     525 </span>            : }
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span><span class="lineCov">        145 : void Atoms::removeVirtualAtom(ActionWithVirtualAtom*a) {</span>
+<span class="lineNum">     528 </span><span class="lineCov">        145 :   unsigned n=positions.size();</span>
+<span class="lineNum">     529 </span><span class="lineCov">        290 :   plumed_massert(a==virtualAtomsActions[virtualAtomsActions.size()-1],&quot;virtual atoms should be destroyed in reverse creation order&quot;);</span>
+<span class="lineNum">     530 </span><span class="lineCov">        145 :   resizeVectors(n-1);</span>
+<span class="lineNum">     531 </span>            :   virtualAtomsActions.pop_back();
+<a name="532"><span class="lineNum">     532 </span><span class="lineCov">        145 : }</span></a>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span><span class="lineCov">         87 : void Atoms::insertGroup(const std::string&amp;name,const std::vector&lt;AtomNumber&gt;&amp;a) {</span>
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :   plumed_massert(groups.count(name)==0,&quot;group named &quot;+name+&quot; already exists&quot;);</span>
+<span class="lineNum">     536 </span><span class="lineCov">         87 :   groups[name]=a;</span>
+<a name="537"><span class="lineNum">     537 </span><span class="lineCov">         87 : }</span></a>
+<span class="lineNum">     538 </span>            : 
+<span class="lineNum">     539 </span><span class="lineCov">         87 : void Atoms::removeGroup(const std::string&amp;name) {</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :   plumed_massert(groups.count(name)==1,&quot;cannot remove group named &quot;+name);</span>
+<span class="lineNum">     541 </span>            :   groups.erase(name);
+<span class="lineNum">     542 </span><span class="lineCov">         87 : }</span>
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span><span class="lineCov">         84 : void Atoms::writeBinary(std::ostream&amp;o)const {</span>
+<span class="lineNum">     545 </span><span class="lineCov">        168 :   o.write(reinterpret_cast&lt;const char*&gt;(&amp;positions[0][0]),natoms*3*sizeof(double));</span>
+<span class="lineNum">     546 </span><span class="lineCov">         84 :   o.write(reinterpret_cast&lt;const char*&gt;(&amp;box(0,0)),9*sizeof(double));</span>
+<span class="lineNum">     547 </span><span class="lineCov">         84 :   o.write(reinterpret_cast&lt;const char*&gt;(&amp;energy),sizeof(double));</span>
+<span class="lineNum">     548 </span><span class="lineCov">         84 : }</span>
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span><span class="lineCov">         84 : void Atoms::readBinary(std::istream&amp;i) {</span>
+<span class="lineNum">     551 </span><span class="lineCov">        168 :   i.read(reinterpret_cast&lt;char*&gt;(&amp;positions[0][0]),natoms*3*sizeof(double));</span>
+<span class="lineNum">     552 </span><span class="lineCov">         84 :   i.read(reinterpret_cast&lt;char*&gt;(&amp;box(0,0)),9*sizeof(double));</span>
+<span class="lineNum">     553 </span><span class="lineCov">         84 :   i.read(reinterpret_cast&lt;char*&gt;(&amp;energy),sizeof(double));</span>
+<span class="lineNum">     554 </span><span class="lineCov">         84 :   pbc.setBox(box);</span>
+<a name="555"><span class="lineNum">     555 </span><span class="lineCov">         84 : }</span></a>
+<span class="lineNum">     556 </span>            : 
+<span class="lineNum">     557 </span><span class="lineCov">        315 : double Atoms::getKBoltzmann()const {</span>
+<span class="lineNum">     558 </span><span class="lineCov">        315 :   if(naturalUnits || MDnaturalUnits) return 1.0;</span>
+<span class="lineNum">     559 </span><span class="lineCov">        308 :   else return kBoltzmann/units.getEnergy();</span>
+<a name="560"><span class="lineNum">     560 </span>            : }</a>
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 : double Atoms::getMDKBoltzmann()const {</span>
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 :   if(naturalUnits || MDnaturalUnits) return 1.0;</span>
+<span class="lineNum">     564 </span><span class="lineNoCov">          0 :   else return kBoltzmann/MDUnits.getEnergy();</span>
+<span class="lineNum">     565 </span>            : }
+<span class="lineNum">     566 </span>            : 
+<span class="lineNum">     567 </span><span class="lineNoCov">          0 : void Atoms::getLocalMasses(std::vector&lt;double&gt;&amp; localMasses) {</span>
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 :   localMasses.resize(gatindex.size());</span>
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;gatindex.size(); i++) localMasses[i] = masses[gatindex[i]];</span>
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span><span class="lineCov">        450 : void Atoms::getLocalPositions(std::vector&lt;Vector&gt;&amp; localPositions) {</span>
+<span class="lineNum">     573 </span><span class="lineCov">        450 :   localPositions.resize(gatindex.size());</span>
+<span class="lineNum">     574 </span><span class="lineCov">        450 :   mdatoms-&gt;getLocalPositions(localPositions);</span>
+<span class="lineNum">     575 </span><span class="lineCov">        450 : }</span>
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span><span class="lineCov">        450 : void Atoms::getLocalForces(std::vector&lt;Vector&gt;&amp; localForces) {</span>
+<span class="lineNum">     578 </span><span class="lineCov">        450 :   localForces.resize(gatindex.size());</span>
+<span class="lineNum">     579 </span><span class="lineCov">      65700 :   for(unsigned i=0; i&lt;gatindex.size(); i++) localForces[i] = forces[gatindex[i]];</span>
+<span class="lineNum">     580 </span><span class="lineCov">        450 : }</span>
+<span class="lineNum">     581 </span>            : 
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 : void Atoms::getLocalMDForces(std::vector&lt;Vector&gt;&amp; localForces) {</span>
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :   localForces.resize(gatindex.size());</span>
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;gatindex.size(); i++) {</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :     localForces[i] = mdatoms-&gt;getMDforces(i);</span>
+<span class="lineNum">     586 </span>            :   }
+<a name="587"><span class="lineNum">     587 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

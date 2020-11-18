@@ -1,0 +1,272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/AdjacencyMatrixBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - AdjacencyMatrixBase.cpp<span style="font-size: 80%;"> (source / <a href="AdjacencyMatrixBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntry">99</td>
+            <td class="headerCovTableEntryMed">84.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryMed">84.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;AdjacencyMatrixBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;multicolvar/BridgedMultiColvarFunction.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;multicolvar/AtomValuePack.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;multicolvar/CatomPack.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace adjmat {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">         26 : void AdjacencyMatrixBase::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      33 </span><span class="lineCov">         26 :   multicolvar::MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">      34 </span><span class="lineCov">         78 :   keys.remove(&quot;LOWMEM&quot;); keys.use(&quot;HIGHMEM&quot;);</span>
+<span class="lineNum">      35 </span><span class="lineCov">         26 : }</span>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineCov">         21 : AdjacencyMatrixBase::AdjacencyMatrixBase(const ActionOptions&amp; ao):</span>
+<span class="lineNum">      38 </span>            :   Action(ao),
+<span class="lineNum">      39 </span>            :   MultiColvarBase(ao),
+<span class="lineNum">      40 </span>            :   connect_id(0),
+<span class="lineNum">      41 </span>            :   no_third_dim_accum(true),
+<span class="lineNum">      42 </span><span class="lineCov">         21 :   mat(NULL)</span>
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span><span class="lineCov">         63 :   log&lt;&lt;&quot;  Bibliography &quot;&lt;&lt;plumed.cite(&quot;Tribello, Giberti, Sosso, Salvalaglio and Parrinello, J. Chem. Theory Comput. 13, 1317 (2017)&quot;)&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">      45 </span><span class="lineCov">         21 : }</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">         44 : void AdjacencyMatrixBase::parseConnectionDescriptions( const std::string&amp; key, const bool&amp; multiple, const unsigned&amp; nrow_t ) {</span>
+<span class="lineNum">      48 </span><span class="lineCov">         44 :   if( getNumberOfNodeTypes()==1 || (getNumberOfNodeTypes()==2 &amp;&amp; nrow_t==1) ) {</span>
+<span class="lineNum">      49 </span><span class="lineCov">         43 :     std::vector&lt;std::string&gt; sw;</span>
+<span class="lineNum">      50 </span><span class="lineCov">         43 :     if( !multiple ) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">         84 :       sw.resize(1); parse(key,sw[0]);</span>
+<span class="lineNum">      52 </span><span class="lineCov">         42 :       if(sw[0].length()==0) error(&quot;could not find &quot; + key + &quot; keyword&quot;);</span>
+<span class="lineNum">      53 </span>            :     } else {
+<span class="lineNum">      54 </span>            :       std::string input;
+<span class="lineNum">      55 </span><span class="lineCov">          2 :       for(int i=1;; i++) {</span>
+<span class="lineNum">      56 </span><span class="lineCov">          5 :         if( !parseNumbered(key, i, input ) ) break;</span>
+<span class="lineNum">      57 </span><span class="lineCov">          2 :         sw.push_back( input );</span>
+<span class="lineNum">      58 </span>            :       }
+<span class="lineNum">      59 </span>            :     }
+<span class="lineNum">      60 </span><span class="lineCov">         43 :     setupConnector( connect_id, 0, 0, sw );</span>
+<span class="lineNum">      61 </span>            :   } else {
+<span class="lineNum">      62 </span><span class="lineCov">          1 :     if( multiple ) error(&quot;keyword &quot; + key + &quot; does not work with multiple input strings&quot;);</span>
+<span class="lineNum">      63 </span>            :     unsigned nr, nc;
+<span class="lineNum">      64 </span><span class="lineCov">          1 :     if( nrow_t==0 ) {</span>
+<span class="lineNum">      65 </span><span class="lineCov">          1 :       nr=nc=getNumberOfNodeTypes();</span>
+<span class="lineNum">      66 </span>            :     } else {
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :       nr=nrow_t; nc = getNumberOfNodeTypes() - nr;</span>
+<span class="lineNum">      68 </span>            :     }
+<span class="lineNum">      69 </span><span class="lineCov">          3 :     for(unsigned i=0; i&lt;nr; ++i) {</span>
+<span class="lineNum">      70 </span>            :       // Retrieve the base number
+<span class="lineNum">      71 </span>            :       unsigned ibase;
+<span class="lineNum">      72 </span><span class="lineCov">          2 :       if( nc&lt;10 ) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">          2 :         ibase=(i+1)*10;</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :       } else if ( nc&lt;100 ) {</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         ibase=(i+1)*100;</span>
+<span class="lineNum">      76 </span>            :       } else {
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :         error(&quot;wow this is an error I never would have expected&quot;);</span>
+<span class="lineNum">      78 </span>            :       }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          5 :       for(unsigned j=i; j&lt;nc; ++j) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">          9 :         std::vector&lt;std::string&gt; sw(1); parseNumbered(key,ibase+j+1,sw[0]);</span>
+<span class="lineNum">      82 </span><span class="lineCov">          3 :         if(sw[0].length()==0) {</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :           std::string num; Tools::convert(ibase+j+1,num);</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :           error(&quot;could not find &quot; + key + num + &quot; keyword. Need one &quot; + key + &quot; keyword for each distinct base-multicolvar-pair type&quot;);</span>
+<span class="lineNum">      85 </span>            :         }
+<span class="lineNum">      86 </span><span class="lineCov">          3 :         setupConnector( connect_id, i, j, sw );</span>
+<span class="lineNum">      87 </span>            :       }
+<span class="lineNum">      88 </span>            :     }
+<span class="lineNum">      89 </span>            :   }
+<span class="lineNum">      90 </span><span class="lineCov">         44 :   connect_id++;</span>
+<span class="lineNum">      91 </span><span class="lineCov">         44 : }</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">       5807 : unsigned AdjacencyMatrixBase::getSizeOfInputVectors() const {</span>
+<span class="lineNum">      94 </span><span class="lineCov">       5807 :   if( mybasemulticolvars.size()==0 ) return 2;</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">       5807 :   unsigned nq = mybasemulticolvars[0]-&gt;getNumberOfQuantities();</span>
+<span class="lineNum">      97 </span><span class="lineCov">      11614 :   for(unsigned i=1; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     if( mybasemulticolvars[i]-&gt;getNumberOfQuantities()!=nq ) error(&quot;mismatch between vectors in base colvars&quot;);</span>
+<span class="lineNum">      99 </span>            :   }
+<span class="lineNum">     100 </span>            :   return nq;
+<a name="101"><span class="lineNum">     101 </span>            : }</a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">        130 : unsigned AdjacencyMatrixBase::getNumberOfNodeTypes() const {</span>
+<span class="lineNum">     104 </span><span class="lineCov">        130 :   unsigned size=mybasemulticolvars.size();</span>
+<span class="lineNum">     105 </span><span class="lineCov">        130 :   if( size==0 ) return 1;</span>
+<span class="lineNum">     106 </span><span class="lineCov">         18 :   return size;</span>
+<span class="lineNum">     107 </span>            : }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">         22 : void AdjacencyMatrixBase::retrieveTypeDimensions( unsigned&amp; nrows, unsigned&amp; ncols, unsigned&amp; ntype ) const {</span>
+<span class="lineNum">     110 </span><span class="lineCov">         22 :   bool allsame=(ablocks[0].size()==ablocks[1].size());</span>
+<span class="lineNum">     111 </span><span class="lineCov">         22 :   if( allsame ) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">      13745 :     for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     113 </span><span class="lineCov">      13724 :       if( ablocks[0][i]!=ablocks[1][i] ) allsame=false;</span>
+<span class="lineNum">     114 </span>            :     }
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">         22 :   if( allsame ) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">         63 :     std::vector&lt;unsigned&gt; types(1); types[0]=atom_lab[ablocks[0][0]].first;</span>
+<span class="lineNum">     119 </span><span class="lineCov">      20565 :     for(unsigned i=1; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     120 </span>            :       bool found = false;
+<span class="lineNum">     121 </span><span class="lineCov">      13703 :       for(unsigned j=0; j&lt;types.size(); ++j) {</span>
+<span class="lineNum">     122 </span><span class="lineCov">      20541 :         if( atom_lab[ablocks[0][i]].first==types[j] ) { found=true; break; }</span>
+<span class="lineNum">     123 </span>            :       }
+<span class="lineNum">     124 </span><span class="lineCov">       6843 :       if( !found ) types.push_back( atom_lab[ablocks[0][i]].first );</span>
+<span class="lineNum">     125 </span>            :     }
+<span class="lineNum">     126 </span><span class="lineCov">         42 :     ntype=0; nrows=ncols=types.size();</span>
+<span class="lineNum">     127 </span>            :   } else {
+<span class="lineNum">     128 </span><span class="lineCov">          3 :     std::vector&lt;unsigned&gt; types(1); types[0]=atom_lab[ablocks[0][0]].first;</span>
+<span class="lineNum">     129 </span><span class="lineCov">         14 :     for(unsigned i=1; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     130 </span>            :       bool found = false;
+<span class="lineNum">     131 </span><span class="lineCov">          8 :       for(unsigned j=0; j&lt;types.size(); ++j) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">         12 :         if( atom_lab[ablocks[0][i]].first==types[j] ) { found=true; break; }</span>
+<span class="lineNum">     133 </span>            :       }
+<span class="lineNum">     134 </span><span class="lineCov">          4 :       if( !found ) types.push_back( atom_lab[ablocks[0][i]].first );</span>
+<span class="lineNum">     135 </span>            :     }
+<span class="lineNum">     136 </span><span class="lineCov">          1 :     nrows=ntype=types.size();</span>
+<span class="lineNum">     137 </span><span class="lineCov">         32 :     for(unsigned i=0; i&lt;ablocks[1].size(); ++i) {</span>
+<span class="lineNum">     138 </span>            :       bool found = false;
+<span class="lineNum">     139 </span><span class="lineCov">         20 :       for(unsigned j=0; j&lt;types.size(); ++j) {</span>
+<span class="lineNum">     140 </span><span class="lineCov">         30 :         if( atom_lab[ablocks[1][i]].first==types[j] ) { found=true; break; }</span>
+<span class="lineNum">     141 </span>            :       }
+<span class="lineNum">     142 </span><span class="lineCov">         10 :       if( !found ) types.push_back( atom_lab[ablocks[1][i]].first );</span>
+<span class="lineNum">     143 </span>            :     }
+<span class="lineNum">     144 </span><span class="lineCov">          3 :     if( types.size()==nrows ) { ntype=0; ncols=1; plumed_assert( types.size()==1 &amp;&amp; atom_lab[ablocks[0][0]].first==0 ); }</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :     else ncols = types.size() - ntype;</span>
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span><span class="lineCov">         22 : }</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         21 : void AdjacencyMatrixBase::finishMatrixSetup( const bool&amp; symmetric, const std::vector&lt;AtomNumber&gt;&amp; all_atoms ) {</span>
+<span class="lineNum">     150 </span>            :   std::string param;
+<span class="lineNum">     151 </span><span class="lineCov">         40 :   if( symmetric &amp;&amp; ablocks[0].size()==ablocks[1].size() ) param=&quot;SYMMETRIC&quot;;</span>
+<span class="lineNum">     152 </span><span class="lineCov">         21 :   if( !symmetric ) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">          2 :     bool usehbonds=( ablocks[0].size()==ablocks[1].size() );</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :     if( usehbonds ) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">        136 :       for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     156 </span><span class="lineCov">        134 :         if( ablocks[0][i]!=ablocks[1][i] ) { usehbonds = false; break; }</span>
+<span class="lineNum">     157 </span>            :       }
+<span class="lineNum">     158 </span><span class="lineCov">          2 :       if( usehbonds ) param=&quot;HBONDS&quot;;</span>
+<span class="lineNum">     159 </span>            :     }
+<span class="lineNum">     160 </span>            :   }
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">         84 :   vesselbase::VesselOptions da(&quot;&quot;,&quot;&quot;,0,param,this);</span>
+<span class="lineNum">     163 </span><span class="lineCov">         42 :   Keywords keys; AdjacencyMatrixVessel::registerKeywords( keys );</span>
+<span class="lineNum">     164 </span><span class="lineCov">         42 :   vesselbase::VesselOptions da2(da,keys); mat = new AdjacencyMatrixVessel(da2); addVessel( mat );</span>
+<span class="lineNum">     165 </span><span class="lineCov">         21 :   setupMultiColvarBase( all_atoms );</span>
+<span class="lineNum">     166 </span><span class="lineCov">         21 : }</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">         13 : void AdjacencyMatrixBase::readMaxTwoSpeciesMatrix( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, const bool&amp; symmetric ) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">         13 :   std::vector&lt;AtomNumber&gt; all_atoms; readTwoGroups( key0, key1, key2, all_atoms );</span>
+<span class="lineNum">     170 </span><span class="lineCov">         13 :   finishMatrixSetup( symmetric, all_atoms );</span>
+<span class="lineNum">     171 </span><span class="lineCov">         13 : }</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineCov">          8 : void AdjacencyMatrixBase::readMaxThreeSpeciesMatrix( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, const std::string&amp; keym, const bool&amp; symmetric ) {</span>
+<span class="lineNum">     174 </span><span class="lineCov">          8 :   std::vector&lt;AtomNumber&gt; all_atoms; readGroupKeywords( key0, key1, key2, keym, true, symmetric, all_atoms );</span>
+<span class="lineNum">     175 </span><span class="lineCov">          8 :   finishMatrixSetup( symmetric, all_atoms );</span>
+<span class="lineNum">     176 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : // Maybe put this back GAT to check that it is returning an atom number that is one of the nodes
+<span class="lineNum">     179 </span>            : // and not a hydrogen if we are doing HBPAMM
+<span class="lineNum">     180 </span>            : // AtomNumber AdjacencyMatrixBase::getAbsoluteIndexOfCentralAtom(const unsigned&amp; i) const {
+<span class="lineNum">     181 </span>            : //   plumed_dbg_assert( i&lt;myinputdata.getFullNumberOfBaseTasks() );
+<span class="lineNum">     182 </span>            : //   return myinputdata.getAtomicIndex( i );
+<span class="lineNum">     183 </span>            : // }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 : void AdjacencyMatrixBase::recalculateMatrixElement( const unsigned&amp; myelem, MultiValue&amp; myvals ) {</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; myatoms; decodeIndexToAtoms( getTaskCode( myelem ), myatoms );</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   unsigned i=myatoms[0], j=myatoms[1];</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :   for(unsigned k=bookeeping(i,j).first; k&lt;bookeeping(i,j).second; ++k) {</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :     if( !taskIsCurrentlyActive(k) ) continue;</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :     performTask( k, getTaskCode(k), myvals );  // This may not accumulate as we would like  GAT</span>
+<span class="lineNum">     191 </span>            :   }
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 : }</span>
+<a name="193"><span class="lineNum">     193 </span>            : </a>
+<span class="lineNum">     194 </span>            : }
+<span class="lineNum">     195 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

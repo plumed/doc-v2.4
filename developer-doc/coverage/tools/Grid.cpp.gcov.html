@@ -1,0 +1,1215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/Grid.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - Grid.cpp<span style="font-size: 80%;"> (source / <a href="Grid.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">421</td>
+            <td class="headerCovTableEntry">605</td>
+            <td class="headerCovTableEntryLo">69.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">53</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntryLo">68.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;Grid.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;File.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;KernelFunctions.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;RootFindingBase.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;Communicator.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      33 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      34 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      35 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      36 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      37 </span>            : #include &lt;cfloat&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : using namespace std;
+<span class="lineNum">      40 </span>            : namespace PLMD {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">       1102 : Grid::Grid(const std::string&amp; funcl, const std::vector&lt;Value*&gt; &amp; args, const vector&lt;std::string&gt; &amp; gmin,</span>
+<span class="lineNum">      43 </span><span class="lineCov">       5510 :            const vector&lt;std::string&gt; &amp; gmax, const vector&lt;unsigned&gt; &amp; nbin, bool dospline, bool usederiv, bool doclear) {</span>
+<span class="lineNum">      44 </span>            : // various checks
+<span class="lineNum">      45 </span><span class="lineCov">       1102 :   plumed_massert(args.size()==gmin.size(),&quot;grid min dimensions in input do not match number of arguments&quot;);</span>
+<span class="lineNum">      46 </span><span class="lineCov">       1102 :   plumed_massert(args.size()==nbin.size(),&quot;number of bins on input do not match number of arguments&quot;);</span>
+<span class="lineNum">      47 </span><span class="lineCov">       1102 :   plumed_massert(args.size()==gmax.size(),&quot;grid max dimensions in input do not match number of arguments&quot;);</span>
+<span class="lineNum">      48 </span><span class="lineCov">       1102 :   unsigned dim=gmax.size();</span>
+<span class="lineNum">      49 </span><span class="lineCov">       1102 :   std::vector&lt;std::string&gt; names;</span>
+<span class="lineNum">      50 </span>            :   std::vector&lt;bool&gt; isperiodic;
+<span class="lineNum">      51 </span><span class="lineCov">       1102 :   std::vector&lt;string&gt; pmin,pmax;</span>
+<span class="lineNum">      52 </span><span class="lineCov">       1102 :   names.resize( dim );</span>
+<span class="lineNum">      53 </span><span class="lineCov">       1102 :   isperiodic.resize( dim );</span>
+<span class="lineNum">      54 </span><span class="lineCov">       1102 :   pmin.resize( dim );</span>
+<span class="lineNum">      55 </span><span class="lineCov">       1102 :   pmax.resize( dim );</span>
+<span class="lineNum">      56 </span><span class="lineCov">       3886 :   for(unsigned int i=0; i&lt;dim; ++i) {</span>
+<span class="lineNum">      57 </span><span class="lineCov">       2784 :     names[i]=args[i]-&gt;getName();</span>
+<span class="lineNum">      58 </span><span class="lineCov">       1392 :     if( args[i]-&gt;isPeriodic() ) {</span>
+<span class="lineNum">      59 </span>            :       isperiodic[i]=true;
+<span class="lineNum">      60 </span><span class="lineCov">        914 :       args[i]-&gt;getDomain( pmin[i], pmax[i] );</span>
+<span class="lineNum">      61 </span>            :     } else {
+<span class="lineNum">      62 </span>            :       isperiodic[i]=false;
+<span class="lineNum">      63 </span>            :       pmin[i]=&quot;0.&quot;;
+<span class="lineNum">      64 </span>            :       pmax[i]=&quot;0.&quot;;
+<span class="lineNum">      65 </span>            :     }
+<span class="lineNum">      66 </span>            :   }
+<span class="lineNum">      67 </span>            : // this is a value-independent initializator
+<span class="lineNum">      68 </span><span class="lineCov">       1102 :   Init(funcl,names,gmin,gmax,nbin,dospline,usederiv,doclear,isperiodic,pmin,pmax);</span>
+<span class="lineNum">      69 </span><span class="lineCov">       1102 : }</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">         66 : Grid::Grid(const std::string&amp; funcl, const std::vector&lt;string&gt; &amp;names, const std::vector&lt;std::string&gt; &amp; gmin,</span>
+<span class="lineNum">      72 </span><span class="lineCov">        330 :            const vector&lt;std::string&gt; &amp; gmax, const std::vector&lt;unsigned&gt; &amp; nbin, bool dospline, bool usederiv, bool doclear, const std::vector&lt;bool&gt; &amp;isperiodic, const std::vector&lt;std::string&gt; &amp;pmin, const std::vector&lt;std::string&gt; &amp;pmax ) {</span>
+<span class="lineNum">      73 </span>            : // this calls the initializator
+<span class="lineNum">      74 </span><span class="lineCov">         66 :   Init(funcl,names,gmin,gmax,nbin,dospline,usederiv,doclear,isperiodic,pmin,pmax);</span>
+<span class="lineNum">      75 </span><span class="lineCov">         66 : }</span>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">       1168 : void Grid::Init(const std::string&amp; funcl, const std::vector&lt;std::string&gt; &amp;names, const vector&lt;std::string&gt; &amp; gmin,</span>
+<span class="lineNum">      78 </span>            :                 const std::vector&lt;std::string&gt; &amp; gmax, const std::vector&lt;unsigned&gt; &amp; nbin, bool dospline, bool usederiv, bool doclear,
+<span class="lineNum">      79 </span>            :                 const std::vector&lt;bool&gt; &amp;isperiodic, const std::vector&lt;std::string&gt; &amp;pmin, const std::vector&lt;std::string&gt; &amp;pmax ) {
+<span class="lineNum">      80 </span><span class="lineCov">       1168 :   contour_location=0.0; fmt_=&quot;%14.9f&quot;;</span>
+<span class="lineNum">      81 </span>            : // various checks
+<span class="lineNum">      82 </span><span class="lineCov">       1168 :   plumed_massert(names.size()==gmin.size(),&quot;grid dimensions in input do not match number of arguments&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">       1168 :   plumed_massert(names.size()==nbin.size(),&quot;grid dimensions in input do not match number of arguments&quot;);</span>
+<span class="lineNum">      84 </span><span class="lineCov">       1168 :   plumed_massert(names.size()==gmax.size(),&quot;grid dimensions in input do not match number of arguments&quot;);</span>
+<span class="lineNum">      85 </span><span class="lineCov">       1168 :   dimension_=gmax.size();</span>
+<span class="lineNum">      86 </span><span class="lineCov">       1168 :   str_min_=gmin; str_max_=gmax;</span>
+<span class="lineNum">      87 </span><span class="lineCov">       1168 :   argnames.resize( dimension_ );</span>
+<span class="lineNum">      88 </span><span class="lineCov">       1168 :   min_.resize( dimension_ );</span>
+<span class="lineNum">      89 </span><span class="lineCov">       1168 :   max_.resize( dimension_ );</span>
+<span class="lineNum">      90 </span><span class="lineCov">       1168 :   pbc_.resize( dimension_ );</span>
+<span class="lineNum">      91 </span><span class="lineCov">       4084 :   for(unsigned int i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">       1458 :     argnames[i]=names[i];</span>
+<span class="lineNum">      93 </span><span class="lineCov">       1458 :     if( isperiodic[i] ) {</span>
+<span class="lineNum">      94 </span>            :       pbc_[i]=true;
+<span class="lineNum">      95 </span>            :       str_min_[i]=pmin[i];
+<span class="lineNum">      96 </span>            :       str_max_[i]=pmax[i];
+<span class="lineNum">      97 </span>            :     } else {
+<span class="lineNum">      98 </span>            :       pbc_[i]=false;
+<span class="lineNum">      99 </span>            :     }
+<span class="lineNum">     100 </span><span class="lineCov">       1458 :     Tools::convert(str_min_[i],min_[i]);</span>
+<span class="lineNum">     101 </span><span class="lineCov">       1458 :     Tools::convert(str_max_[i],max_[i]);</span>
+<span class="lineNum">     102 </span><span class="lineCov">       1458 :     funcname=funcl;</span>
+<span class="lineNum">     103 </span><span class="lineCov">       2916 :     plumed_massert(max_[i]&gt;min_[i],&quot;maximum in grid must be larger than minimum&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">       1458 :     plumed_massert(nbin[i]&gt;0,&quot;number of grid points must be greater than zero&quot;);</span>
+<span class="lineNum">     105 </span>            :   }
+<span class="lineNum">     106 </span><span class="lineCov">       1168 :   nbin_=nbin;</span>
+<span class="lineNum">     107 </span><span class="lineCov">       1168 :   dospline_=dospline;</span>
+<span class="lineNum">     108 </span><span class="lineCov">       1168 :   usederiv_=usederiv;</span>
+<span class="lineNum">     109 </span><span class="lineCov">       1168 :   if(dospline_) plumed_assert(dospline_==usederiv_);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       1168 :   maxsize_=1;</span>
+<span class="lineNum">     111 </span><span class="lineCov">       4084 :   for(unsigned int i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">       7290 :     dx_.push_back( (max_[i]-min_[i])/static_cast&lt;double&gt;( nbin_[i] ) );</span>
+<span class="lineNum">     113 </span><span class="lineCov">       4269 :     if( !pbc_[i] ) { max_[i] += dx_[i]; nbin_[i] += 1; }</span>
+<span class="lineNum">     114 </span><span class="lineCov">       1458 :     maxsize_*=nbin_[i];</span>
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span><span class="lineCov">       1168 :   if(doclear) clear();</span>
+<span class="lineNum">     117 </span><span class="lineCov">       1168 : }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">       1157 : void Grid::clear() {</span>
+<span class="lineNum">     120 </span><span class="lineCov">       1157 :   grid_.resize(maxsize_);</span>
+<span class="lineNum">     121 </span><span class="lineCov">       1157 :   if(usederiv_) der_.resize(maxsize_);</span>
+<span class="lineNum">     122 </span><span class="lineCov">    5396383 :   for(index_t i=0; i&lt;maxsize_; ++i) {</span>
+<span class="lineNum">     123 </span><span class="lineCov">    2697613 :     grid_[i]=0.0;</span>
+<span class="lineNum">     124 </span><span class="lineCov">    2697613 :     if(usederiv_) {</span>
+<span class="lineNum">     125 </span><span class="lineCov">     568867 :       (der_[i]).resize(dimension_);</span>
+<span class="lineNum">     126 </span><span class="lineCov">    2825727 :       for(unsigned int j=0; j&lt;dimension_; ++j) der_[i][j]=0.0;</span>
+<span class="lineNum">     127 </span>            :     }
+<span class="lineNum">     128 </span>            :   }
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">       1157 : }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">      96710 : vector&lt;std::string&gt; Grid::getMin() const {</span>
+<span class="lineNum">     132 </span><span class="lineCov">      96710 :   return str_min_;</span>
+<a name="133"><span class="lineNum">     133 </span>            : }</a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">        513 : vector&lt;std::string&gt; Grid::getMax() const {</span>
+<span class="lineNum">     136 </span><span class="lineCov">        513 :   return str_max_;</span>
+<a name="137"><span class="lineNum">     137 </span>            : }</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">    7270717 : vector&lt;double&gt; Grid::getDx() const {</span>
+<span class="lineNum">     140 </span><span class="lineCov">    7270717 :   return dx_;</span>
+<span class="lineNum">     141 </span>            : }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">         28 : double Grid::getBinVolume() const {</span>
+<span class="lineNum">     144 </span>            :   double vol=1.;
+<span class="lineNum">     145 </span><span class="lineCov">        224 :   for(unsigned i=0; i&lt;dx_.size(); ++i) vol*=dx_[i];</span>
+<span class="lineNum">     146 </span><span class="lineCov">         28 :   return vol;</span>
+<a name="147"><span class="lineNum">     147 </span>            : }</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">       1933 : vector&lt;bool&gt; Grid::getIsPeriodic() const {</span>
+<span class="lineNum">     150 </span><span class="lineCov">       1933 :   return pbc_;</span>
+<a name="151"><span class="lineNum">     151 </span>            : }</a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">     690334 : vector&lt;unsigned&gt; Grid::getNbin() const {</span>
+<span class="lineNum">     154 </span><span class="lineCov">     690334 :   return nbin_;</span>
+<a name="155"><span class="lineNum">     155 </span>            : }</a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">       7194 : vector&lt;string&gt; Grid::getArgNames() const {</span>
+<span class="lineNum">     158 </span><span class="lineCov">       7194 :   return argnames;</span>
+<span class="lineNum">     159 </span>            : }
+<a name="160"><span class="lineNum">     160 </span>            : </a>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">   16449094 : Grid::index_t Grid::getSize() const {</span>
+<span class="lineNum">     163 </span><span class="lineCov">   16449094 :   return maxsize_;</span>
+<a name="164"><span class="lineNum">     164 </span>            : }</a>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">   15184774 : unsigned Grid::getDimension() const {</span>
+<span class="lineNum">     167 </span><span class="lineCov">   15184774 :   return dimension_;</span>
+<span class="lineNum">     168 </span>            : }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : // we are flattening arrays using a column-major order
+<span class="lineNum">     171 </span><span class="lineCov">    5810807 : Grid::index_t Grid::getIndex(const vector&lt;unsigned&gt; &amp; indices) const {</span>
+<span class="lineNum">     172 </span>            :   plumed_dbg_assert(indices.size()==dimension_);
+<span class="lineNum">     173 </span><span class="lineCov">   29028899 :   for(unsigned int i=0; i&lt;dimension_; i++)</span>
+<span class="lineNum">     174 </span><span class="lineCov">   34827138 :     if(indices[i]&gt;=nbin_[i]) {</span>
+<span class="lineNum">     175 </span>            :       std::string is;
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :       Tools::convert(i,is);</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :       std::string msg=&quot;ERROR: the system is looking for a value outside the grid along the &quot; + is + &quot; (&quot;+getArgNames()[i]+&quot;)&quot;;</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :       plumed_merror(msg+&quot; index!&quot;);</span>
+<span class="lineNum">     179 </span>            :     }
+<span class="lineNum">     180 </span><span class="lineCov">   11621614 :   index_t index=indices[dimension_-1];</span>
+<span class="lineNum">     181 </span><span class="lineCov">   17407285 :   for(unsigned int i=dimension_-1; i&gt;0; --i) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">   17394717 :     index=index*nbin_[i-1]+indices[i-1];</span>
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span><span class="lineCov">    5810807 :   return index;</span>
+<span class="lineNum">     185 </span>            : }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">      94405 : Grid::index_t Grid::getIndex(const vector&lt;double&gt; &amp; x) const {</span>
+<span class="lineNum">     188 </span>            :   plumed_dbg_assert(x.size()==dimension_);
+<span class="lineNum">     189 </span><span class="lineCov">     188810 :   return getIndex(getIndices(x));</span>
+<span class="lineNum">     190 </span>            : }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            : // we are flattening arrays using a column-major order
+<span class="lineNum">     193 </span><span class="lineCov">   17990119 : vector&lt;unsigned&gt; Grid::getIndices(index_t index) const {</span>
+<span class="lineNum">     194 </span><span class="lineCov">   17990119 :   vector&lt;unsigned&gt; indices(dimension_);</span>
+<span class="lineNum">     195 </span>            :   index_t kk=index;
+<span class="lineNum">     196 </span><span class="lineCov">   35980238 :   indices[0]=(index%nbin_[0]);</span>
+<span class="lineNum">     197 </span><span class="lineCov">   17990119 :   for(unsigned int i=1; i&lt;dimension_-1; ++i) {</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :     kk=(kk-indices[i-1])/nbin_[i-1];</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :     indices[i]=(kk%nbin_[i]);</span>
+<span class="lineNum">     200 </span>            :   }
+<span class="lineNum">     201 </span><span class="lineCov">   17990119 :   if(dimension_&gt;=2) {</span>
+<span class="lineNum">     202 </span><span class="lineCov">   69601132 :     indices[dimension_-1]=((kk-indices[dimension_-2])/nbin_[dimension_-2]);</span>
+<span class="lineNum">     203 </span>            :   }
+<span class="lineNum">     204 </span><span class="lineCov">   17990119 :   return indices;</span>
+<span class="lineNum">     205 </span>            : }
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineCov">    1904931 : vector&lt;unsigned&gt; Grid::getIndices(const vector&lt;double&gt; &amp; x) const {</span>
+<span class="lineNum">     208 </span>            :   plumed_dbg_assert(x.size()==dimension_);
+<span class="lineNum">     209 </span>            :   vector&lt;unsigned&gt; indices;
+<span class="lineNum">     210 </span><span class="lineCov">    9511767 :   for(unsigned int i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     211 </span><span class="lineCov">   19017090 :     indices.push_back(unsigned(floor((x[i]-min_[i])/dx_[i])));</span>
+<span class="lineNum">     212 </span>            :   }
+<span class="lineNum">     213 </span><span class="lineCov">    1904931 :   return indices;</span>
+<span class="lineNum">     214 </span>            : }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">    6813565 : vector&lt;double&gt; Grid::getPoint(const vector&lt;unsigned&gt; &amp; indices) const {</span>
+<span class="lineNum">     217 </span>            :   plumed_dbg_assert(indices.size()==dimension_);
+<span class="lineNum">     218 </span>            :   vector&lt;double&gt; x;
+<span class="lineNum">     219 </span><span class="lineCov">   33360957 :   for(unsigned int i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     220 </span><span class="lineCov">   66368480 :     x.push_back(min_[i]+(double)(indices[i])*dx_[i]);</span>
+<span class="lineNum">     221 </span>            :   }
+<span class="lineNum">     222 </span><span class="lineCov">    6813565 :   return x;</span>
+<span class="lineNum">     223 </span>            : }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">    5717855 : vector&lt;double&gt; Grid::getPoint(index_t index) const {</span>
+<span class="lineNum">     226 </span>            :   plumed_dbg_assert(index&lt;maxsize_);
+<span class="lineNum">     227 </span><span class="lineCov">   11435710 :   return getPoint(getIndices(index));</span>
+<span class="lineNum">     228 </span>            : }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">     903316 : vector&lt;double&gt; Grid::getPoint(const vector&lt;double&gt; &amp; x) const {</span>
+<span class="lineNum">     231 </span>            :   plumed_dbg_assert(x.size()==dimension_);
+<span class="lineNum">     232 </span><span class="lineCov">    1806632 :   return getPoint(getIndices(x));</span>
+<span class="lineNum">     233 </span>            : }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span><span class="lineCov">    1101020 : void Grid::getPoint(index_t index,std::vector&lt;double&gt; &amp; point) const {</span>
+<span class="lineNum">     236 </span>            :   plumed_dbg_assert(index&lt;maxsize_);
+<span class="lineNum">     237 </span><span class="lineCov">    2202040 :   getPoint(getIndices(index),point);</span>
+<span class="lineNum">     238 </span><span class="lineCov">    1101020 : }</span>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">    1101020 : void Grid::getPoint(const std::vector&lt;unsigned&gt; &amp; indices,std::vector&lt;double&gt; &amp; point) const {</span>
+<span class="lineNum">     241 </span>            :   plumed_dbg_assert(indices.size()==dimension_);
+<span class="lineNum">     242 </span>            :   plumed_dbg_assert(point.size()==dimension_);
+<span class="lineNum">     243 </span><span class="lineCov">    5499916 :   for(unsigned int i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">   10997240 :     point[i]=(min_[i]+(double)(indices[i])*dx_[i]);</span>
+<span class="lineNum">     245 </span>            :   }
+<span class="lineNum">     246 </span><span class="lineCov">    1101020 : }</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 : void Grid::getPoint(const std::vector&lt;double&gt; &amp; x,std::vector&lt;double&gt; &amp; point) const {</span>
+<span class="lineNum">     249 </span>            :   plumed_dbg_assert(x.size()==dimension_);
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :   getPoint(getIndices(x),point);</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineCov">      23046 : vector&lt;Grid::index_t&gt; Grid::getNeighbors</span>
+<span class="lineNum">     254 </span>            : (const vector&lt;unsigned&gt; &amp;indices,const vector&lt;unsigned&gt; &amp;nneigh)const {
+<span class="lineNum">     255 </span>            :   plumed_dbg_assert(indices.size()==dimension_ &amp;&amp; nneigh.size()==dimension_);
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :   vector&lt;index_t&gt; neighbors;
+<span class="lineNum">     258 </span><span class="lineCov">      23046 :   vector&lt;unsigned&gt; small_bin(dimension_);</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :   unsigned small_nbin=1;
+<span class="lineNum">     261 </span><span class="lineCov">     114830 :   for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     262 </span><span class="lineCov">     137676 :     small_bin[j]=(2*nneigh[j]+1);</span>
+<span class="lineNum">     263 </span><span class="lineCov">      45892 :     small_nbin*=small_bin[j];</span>
+<span class="lineNum">     264 </span>            :   }
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineCov">      23046 :   vector&lt;unsigned&gt; small_indices(dimension_);</span>
+<span class="lineNum">     267 </span>            :   vector&lt;unsigned&gt; tmp_indices;
+<span class="lineNum">     268 </span><span class="lineCov">    2492454 :   for(unsigned index=0; index&lt;small_nbin; ++index) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">    1234704 :     tmp_indices.resize(dimension_);</span>
+<span class="lineNum">     270 </span>            :     unsigned kk=index;
+<span class="lineNum">     271 </span><span class="lineCov">    2469408 :     small_indices[0]=(index%small_bin[0]);</span>
+<span class="lineNum">     272 </span><span class="lineCov">    1234704 :     for(unsigned i=1; i&lt;dimension_-1; ++i) {</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :       kk=(kk-small_indices[i-1])/small_bin[i-1];</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :       small_indices[i]=(kk%small_bin[i]);</span>
+<span class="lineNum">     275 </span>            :     }
+<span class="lineNum">     276 </span><span class="lineCov">    1234704 :     if(dimension_&gt;=2) {</span>
+<span class="lineNum">     277 </span><span class="lineCov">    4927600 :       small_indices[dimension_-1]=((kk-small_indices[dimension_-2])/small_bin[dimension_-2]);</span>
+<span class="lineNum">     278 </span>            :     }
+<span class="lineNum">     279 </span>            :     unsigned ll=0;
+<span class="lineNum">     280 </span><span class="lineCov">    6167912 :     for(unsigned i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">    9866416 :       int i0=small_indices[i]-nneigh[i]+indices[i];</span>
+<span class="lineNum">     282 </span><span class="lineCov">    2466604 :       if(!pbc_[i] &amp;&amp; i0&lt;0)         continue;</span>
+<span class="lineNum">     283 </span><span class="lineCov">    2580690 :       if(!pbc_[i] &amp;&amp; i0&gt;=static_cast&lt;int&gt;(nbin_[i])) continue;</span>
+<span class="lineNum">     284 </span><span class="lineCov">    4822879 :       if( pbc_[i] &amp;&amp; i0&lt;0)         i0=nbin_[i]-(-i0)%nbin_[i];</span>
+<span class="lineNum">     285 </span><span class="lineCov">    4816932 :       if( pbc_[i] &amp;&amp; i0&gt;=static_cast&lt;int&gt;(nbin_[i])) i0%=nbin_[i];</span>
+<span class="lineNum">     286 </span><span class="lineCov">    4929516 :       tmp_indices[ll]=static_cast&lt;unsigned&gt;(i0);</span>
+<span class="lineNum">     287 </span><span class="lineCov">    2464758 :       ll++;</span>
+<span class="lineNum">     288 </span>            :     }
+<span class="lineNum">     289 </span><span class="lineCov">    1234704 :     tmp_indices.resize(ll);</span>
+<span class="lineNum">     290 </span><span class="lineCov">    2467562 :     if(tmp_indices.size()==dimension_) {neighbors.push_back(getIndex(tmp_indices));}</span>
+<span class="lineNum">     291 </span>            :   }
+<span class="lineNum">     292 </span><span class="lineCov">      23046 :   return neighbors;</span>
+<span class="lineNum">     293 </span>            : }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">       3894 : vector&lt;Grid::index_t&gt; Grid::getNeighbors</span>
+<span class="lineNum">     296 </span>            : (const vector&lt;double&gt; &amp; x,const vector&lt;unsigned&gt; &amp; nneigh)const {
+<span class="lineNum">     297 </span>            :   plumed_dbg_assert(x.size()==dimension_ &amp;&amp; nneigh.size()==dimension_);
+<span class="lineNum">     298 </span><span class="lineCov">       7788 :   return getNeighbors(getIndices(x),nneigh);</span>
+<span class="lineNum">     299 </span>            : }
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineCov">      19152 : vector&lt;Grid::index_t&gt; Grid::getNeighbors</span>
+<span class="lineNum">     302 </span>            : (index_t index,const vector&lt;unsigned&gt; &amp; nneigh)const {
+<span class="lineNum">     303 </span>            :   plumed_dbg_assert(index&lt;maxsize_ &amp;&amp; nneigh.size()==dimension_);
+<span class="lineNum">     304 </span><span class="lineCov">      38304 :   return getNeighbors(getIndices(index),nneigh);</span>
+<span class="lineNum">     305 </span>            : }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">     903316 : vector&lt;Grid::index_t&gt; Grid::getSplineNeighbors(const vector&lt;unsigned&gt; &amp; indices)const {</span>
+<span class="lineNum">     308 </span>            :   plumed_dbg_assert(indices.size()==dimension_);
+<span class="lineNum">     309 </span>            :   vector&lt;index_t&gt; neighbors;
+<span class="lineNum">     310 </span><span class="lineCov">    1806632 :   unsigned nneigh=unsigned(pow(2.0,int(dimension_)));</span>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">    8122584 :   for(unsigned int i=0; i&lt;nneigh; ++i) {</span>
+<span class="lineNum">     313 </span>            :     unsigned tmp=i;
+<span class="lineNum">     314 </span>            :     vector&lt;unsigned&gt; nindices;
+<span class="lineNum">     315 </span><span class="lineCov">   18040910 :     for(unsigned int j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     316 </span><span class="lineCov">   14431276 :       unsigned i0=tmp%2+indices[j];</span>
+<span class="lineNum">     317 </span><span class="lineCov">    7215638 :       tmp/=2;</span>
+<span class="lineNum">     318 </span><span class="lineCov">    7226072 :       if(!pbc_[j] &amp;&amp; i0==nbin_[j]) continue;</span>
+<span class="lineNum">     319 </span><span class="lineCov">   14420836 :       if( pbc_[j] &amp;&amp; i0==nbin_[j]) i0=0;</span>
+<span class="lineNum">     320 </span><span class="lineCov">    7215632 :       nindices.push_back(i0);</span>
+<span class="lineNum">     321 </span>            :     }
+<span class="lineNum">     322 </span><span class="lineCov">    7219262 :     if(nindices.size()==dimension_) neighbors.push_back(getIndex(nindices));</span>
+<span class="lineNum">     323 </span>            :   }
+<span class="lineNum">     324 </span><span class="lineCov">     903316 :   return neighbors;</span>
+<span class="lineNum">     325 </span>            : }
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineCov">       9576 : vector&lt;Grid::index_t&gt; Grid::getNearestNeighbors(const index_t index) const {</span>
+<span class="lineNum">     328 </span>            :   vector&lt;index_t&gt; nearest_neighs = vector&lt;index_t&gt;();
+<span class="lineNum">     329 </span><span class="lineCov">      47880 :   for (unsigned i = 0; i &lt; dimension_; i++) {</span>
+<span class="lineNum">     330 </span><span class="lineCov">      19152 :     vector&lt;unsigned&gt; neighsneeded = vector&lt;unsigned&gt;(dimension_, 0);</span>
+<span class="lineNum">     331 </span><span class="lineCov">      38304 :     neighsneeded[i] = 1;</span>
+<span class="lineNum">     332 </span><span class="lineCov">      19152 :     vector&lt;index_t&gt; singledim_nearest_neighs = getNeighbors(index, neighsneeded);</span>
+<span class="lineNum">     333 </span><span class="lineCov">     205770 :     for (unsigned j = 0; j &lt; singledim_nearest_neighs.size(); j++) {</span>
+<span class="lineNum">     334 </span><span class="lineCov">      55822 :       index_t neigh = singledim_nearest_neighs[j];</span>
+<span class="lineNum">     335 </span><span class="lineCov">      55822 :       if (neigh != index) {</span>
+<span class="lineNum">     336 </span><span class="lineCov">      36670 :         nearest_neighs.push_back(neigh);</span>
+<span class="lineNum">     337 </span>            :       }
+<span class="lineNum">     338 </span>            :     }
+<span class="lineNum">     339 </span>            :   }
+<span class="lineNum">     340 </span><span class="lineCov">       9576 :   return nearest_neighs;</span>
+<a name="341"><span class="lineNum">     341 </span>            : }</a>
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 : vector&lt;Grid::index_t&gt; Grid::getNearestNeighbors(const vector&lt;unsigned&gt; &amp;indices) const {</span>
+<span class="lineNum">     344 </span>            :   plumed_dbg_assert(indices.size() == dimension_);
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :   return getNearestNeighbors(getIndex(indices));</span>
+<span class="lineNum">     346 </span>            : }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 : void Grid::addKernel( const KernelFunctions&amp; kernel ) {</span>
+<span class="lineNum">     350 </span>            :   plumed_dbg_assert( kernel.ndim()==dimension_ );
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; nneighb=kernel.getSupport( dx_ );</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :   std::vector&lt;index_t&gt; neighbors=getNeighbors( kernel.getCenter(), nneighb );</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :   std::vector&lt;double&gt; xx( dimension_ ); std::vector&lt;Value*&gt; vv( dimension_ );</span>
+<span class="lineNum">     354 </span>            :   std::string str_min, str_max;
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :     vv[i]=new Value();</span>
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :     if( pbc_[i] ) {</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :       Tools::convert(min_[i],str_min);</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :       Tools::convert(max_[i],str_max);</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :       vv[i]-&gt;setDomain( str_min, str_max );</span>
+<span class="lineNum">     361 </span>            :     } else {
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :       vv[i]-&gt;setNotPeriodic();</span>
+<span class="lineNum">     363 </span>            :     }
+<span class="lineNum">     364 </span>            :   }
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :   std::vector&lt;double&gt; der( dimension_ );</span>
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;neighbors.size(); ++i) {</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :     index_t ineigh=neighbors[i];</span>
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :     getPoint( ineigh, xx );</span>
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;dimension_; ++j) vv[j]-&gt;set(xx[j]);</span>
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :     double newval = kernel.evaluate( vv, der, usederiv_ );</span>
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :     if( usederiv_ ) addValueAndDerivatives( ineigh, newval, der );</span>
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :     else addValue( ineigh, newval );</span>
+<span class="lineNum">     374 </span>            :   }
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;dimension_; ++i) delete vv[i];</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span><span class="lineCov">   11458578 : double Grid::getValue(index_t index) const {</span>
+<span class="lineNum">     380 </span>            :   plumed_dbg_assert(index&lt;maxsize_);
+<span class="lineNum">     381 </span><span class="lineCov">   11458578 :   return grid_[index];</span>
+<span class="lineNum">     382 </span>            : }
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span><span class="lineCov">        770 : double Grid::getMinValue() const {</span>
+<span class="lineNum">     385 </span>            :   double minval;
+<span class="lineNum">     386 </span>            :   minval=DBL_MAX;
+<span class="lineNum">     387 </span><span class="lineCov">    4365888 :   for(index_t i=0; i&lt;grid_.size(); ++i) {</span>
+<span class="lineNum">     388 </span><span class="lineCov">    2182559 :     if(grid_[i]&lt;minval)minval=grid_[i];</span>
+<span class="lineNum">     389 </span>            :   }
+<span class="lineNum">     390 </span><span class="lineCov">        770 :   return minval;</span>
+<span class="lineNum">     391 </span>            : }
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span><span class="lineCov">        494 : double Grid::getMaxValue() const {</span>
+<span class="lineNum">     394 </span>            :   double maxval;
+<span class="lineNum">     395 </span>            :   maxval=DBL_MIN;
+<span class="lineNum">     396 </span><span class="lineCov">    2924486 :   for(index_t i=0; i&lt;grid_.size(); ++i) {</span>
+<span class="lineNum">     397 </span><span class="lineCov">    1461996 :     if(grid_[i]&gt;maxval)maxval=grid_[i];</span>
+<span class="lineNum">     398 </span>            :   }
+<span class="lineNum">     399 </span><span class="lineCov">        494 :   return maxval;</span>
+<span class="lineNum">     400 </span>            : }
+<a name="401"><span class="lineNum">     401 </span>            : </a>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineCov">     873916 : double Grid::getValue(const vector&lt;unsigned&gt; &amp; indices) const {</span>
+<span class="lineNum">     404 </span><span class="lineCov">     873916 :   return getValue(getIndex(indices));</span>
+<span class="lineNum">     405 </span>            : }
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span><span class="lineCov">       2264 : double Grid::getValue(const vector&lt;double&gt; &amp; x) const {</span>
+<span class="lineNum">     408 </span><span class="lineCov">       2264 :   if(!dospline_) {</span>
+<span class="lineNum">     409 </span><span class="lineCov">         18 :     return getValue(getIndex(x));</span>
+<span class="lineNum">     410 </span>            :   } else {
+<span class="lineNum">     411 </span><span class="lineCov">       2246 :     vector&lt;double&gt; der(dimension_);</span>
+<span class="lineNum">     412 </span><span class="lineCov">       2246 :     return getValueAndDerivatives(x,der);</span>
+<span class="lineNum">     413 </span>            :   }
+<span class="lineNum">     414 </span>            : }
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span><span class="lineCov">    4146302 : double Grid::getValueAndDerivatives</span>
+<span class="lineNum">     417 </span>            : (index_t index, vector&lt;double&gt;&amp; der) const {
+<span class="lineNum">     418 </span>            :   plumed_dbg_assert(index&lt;maxsize_ &amp;&amp; usederiv_ &amp;&amp; der.size()==dimension_);
+<span class="lineNum">     419 </span><span class="lineCov">    4146302 :   der=der_[index];</span>
+<span class="lineNum">     420 </span><span class="lineCov">    4146302 :   return grid_[index];</span>
+<a name="421"><span class="lineNum">     421 </span>            : }</a>
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 : double Grid::getValueAndDerivatives</span>
+<span class="lineNum">     424 </span>            : (const vector&lt;unsigned&gt; &amp; indices, vector&lt;double&gt;&amp; der) const {
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :   return getValueAndDerivatives(getIndex(indices),der);</span>
+<span class="lineNum">     426 </span>            : }
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineCov">     903316 : double Grid::getValueAndDerivatives</span>
+<span class="lineNum">     429 </span>            : (const vector&lt;double&gt; &amp; x, vector&lt;double&gt;&amp; der) const {
+<span class="lineNum">     430 </span>            :   plumed_dbg_assert(der.size()==dimension_ &amp;&amp; usederiv_);
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span><span class="lineCov">     903316 :   if(dospline_) {</span>
+<span class="lineNum">     433 </span>            :     double X,X2,X3,value;
+<span class="lineNum">     434 </span><span class="lineCov">     903316 :     vector&lt;double&gt; fd(dimension_);</span>
+<span class="lineNum">     435 </span><span class="lineCov">     903316 :     vector&lt;double&gt; C(dimension_);</span>
+<span class="lineNum">     436 </span><span class="lineCov">     903316 :     vector&lt;double&gt; D(dimension_);</span>
+<span class="lineNum">     437 </span><span class="lineCov">     903316 :     vector&lt;double&gt; dder(dimension_);</span>
+<span class="lineNum">     438 </span>            : // reset
+<span class="lineNum">     439 </span>            :     value=0.0;
+<span class="lineNum">     440 </span><span class="lineCov">    4512950 :     for(unsigned int i=0; i&lt;dimension_; ++i) der[i]=0.0;</span>
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span><span class="lineCov">     903316 :     vector&lt;unsigned&gt; indices=getIndices(x);</span>
+<span class="lineNum">     443 </span><span class="lineCov">     903316 :     vector&lt;index_t&gt; neigh=getSplineNeighbors(indices);</span>
+<span class="lineNum">     444 </span><span class="lineCov">     903316 :     vector&lt;double&gt;   xfloor=getPoint(x);</span>
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span>            : // loop over neighbors
+<span class="lineNum">     447 </span><span class="lineCov">   12635516 :     for(unsigned int ipoint=0; ipoint&lt;neigh.size(); ++ipoint) {</span>
+<span class="lineNum">     448 </span><span class="lineCov">    7219256 :       double grid=getValueAndDerivatives(neigh[ipoint],dder);</span>
+<span class="lineNum">     449 </span><span class="lineCov">    3609628 :       vector&lt;unsigned&gt; nindices=getIndices(neigh[ipoint]);</span>
+<span class="lineNum">     450 </span>            :       double ff=1.0;
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineCov">   18040892 :       for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     453 </span>            :         int x0=1;
+<span class="lineNum">     454 </span><span class="lineCov">   21646896 :         if(nindices[j]==indices[j]) x0=0;</span>
+<span class="lineNum">     455 </span><span class="lineCov">   21646896 :         double dx=getDx()[j];</span>
+<span class="lineNum">     456 </span><span class="lineCov">   14431264 :         X=fabs((x[j]-xfloor[j])/dx-(double)x0);</span>
+<span class="lineNum">     457 </span><span class="lineCov">    7215632 :         X2=X*X;</span>
+<span class="lineNum">     458 </span><span class="lineCov">    7215632 :         X3=X2*X;</span>
+<span class="lineNum">     459 </span>            :         double yy;
+<span class="lineNum">     460 </span><span class="lineCov">    7215632 :         if(fabs(grid)&lt;0.0000001) yy=0.0;</span>
+<span class="lineNum">     461 </span><span class="lineCov">    1004332 :         else yy=-dder[j]/grid;</span>
+<span class="lineNum">     462 </span><span class="lineCov">   14431264 :         C[j]=(1.0-3.0*X2+2.0*X3) - (x0?-1.0:1.0)*yy*(X-2.0*X2+X3)*dx;</span>
+<span class="lineNum">     463 </span><span class="lineCov">   14431264 :         D[j]=( -6.0*X +6.0*X2) - (x0?-1.0:1.0)*yy*(1.0-4.0*X +3.0*X2)*dx;</span>
+<span class="lineNum">     464 </span><span class="lineCov">    7215632 :         D[j]*=(x0?-1.0:1.0)/dx;</span>
+<span class="lineNum">     465 </span><span class="lineCov">    7215632 :         ff*=C[j];</span>
+<span class="lineNum">     466 </span>            :       }
+<span class="lineNum">     467 </span><span class="lineCov">   18040892 :       for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     468 </span><span class="lineCov">   14431264 :         fd[j]=D[j];</span>
+<span class="lineNum">     469 </span><span class="lineCov">   36067288 :         for(unsigned i=0; i&lt;dimension_; ++i) if(i!=j) fd[j]*=C[i];</span>
+<span class="lineNum">     470 </span>            :       }
+<span class="lineNum">     471 </span><span class="lineCov">    3609628 :       value+=grid*ff;</span>
+<span class="lineNum">     472 </span><span class="lineCov">   25256524 :       for(unsigned j=0; j&lt;dimension_; ++j) der[j]+=grid*fd[j];</span>
+<span class="lineNum">     473 </span>            :     }
+<span class="lineNum">     474 </span>            :     return value;
+<span class="lineNum">     475 </span>            :   } else {
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :     return getValueAndDerivatives(getIndex(x),der);</span>
+<span class="lineNum">     477 </span>            :   }
+<span class="lineNum">     478 </span>            : }
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span><span class="lineCov">    6066982 : void Grid::setValue(index_t index, double value) {</span>
+<span class="lineNum">     481 </span>            :   plumed_dbg_assert(index&lt;maxsize_ &amp;&amp; !usederiv_);
+<span class="lineNum">     482 </span><span class="lineCov">    6066982 :   grid_[index]=value;</span>
+<a name="483"><span class="lineNum">     483 </span><span class="lineCov">    6066982 : }</span></a>
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 : void Grid::setValue(const vector&lt;unsigned&gt; &amp; indices, double value) {</span>
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 :   setValue(getIndex(indices),value);</span>
+<span class="lineNum">     487 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span><span class="lineCov">    1507828 : void Grid::setValueAndDerivatives</span>
+<span class="lineNum">     490 </span>            : (index_t index, double value, vector&lt;double&gt;&amp; der) {
+<span class="lineNum">     491 </span>            :   plumed_dbg_assert(index&lt;maxsize_ &amp;&amp; usederiv_ &amp;&amp; der.size()==dimension_);
+<span class="lineNum">     492 </span><span class="lineCov">    1507828 :   grid_[index]=value;</span>
+<span class="lineNum">     493 </span><span class="lineCov">    1507828 :   der_[index]=der;</span>
+<a name="494"><span class="lineNum">     494 </span><span class="lineCov">    1507828 : }</span></a>
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 : void Grid::setValueAndDerivatives</span>
+<span class="lineNum">     497 </span>            : (const vector&lt;unsigned&gt; &amp; indices, double value, vector&lt;double&gt;&amp; der) {
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :   setValueAndDerivatives(getIndex(indices),value,der);</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 : void Grid::addValue(index_t index, double value) {</span>
+<span class="lineNum">     502 </span>            :   plumed_dbg_assert(index&lt;maxsize_ &amp;&amp; !usederiv_);
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :   grid_[index]+=value;</span>
+<a name="504"><span class="lineNum">     504 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 : void Grid::addValue(const vector&lt;unsigned&gt; &amp; indices, double value) {</span>
+<span class="lineNum">     507 </span><span class="lineNoCov">          0 :   addValue(getIndex(indices),value);</span>
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     509 </span>            : 
+<span class="lineNum">     510 </span><span class="lineCov">    1159337 : void Grid::addValueAndDerivatives</span>
+<span class="lineNum">     511 </span>            : (index_t index, double value, vector&lt;double&gt;&amp; der) {
+<span class="lineNum">     512 </span>            :   plumed_dbg_assert(index&lt;maxsize_ &amp;&amp; usederiv_ &amp;&amp; der.size()==dimension_);
+<span class="lineNum">     513 </span><span class="lineCov">    1159337 :   grid_[index]+=value;</span>
+<span class="lineNum">     514 </span><span class="lineCov">    8101628 :   for(unsigned int i=0; i&lt;dimension_; ++i) der_[index][i]+=der[i];</span>
+<a name="515"><span class="lineNum">     515 </span><span class="lineCov">    1159337 : }</span></a>
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span><span class="lineNoCov">          0 : void Grid::addValueAndDerivatives</span>
+<span class="lineNum">     518 </span>            : (const vector&lt;unsigned&gt; &amp; indices, double value, vector&lt;double&gt;&amp; der) {
+<span class="lineNum">     519 </span><span class="lineNoCov">          0 :   addValueAndDerivatives(getIndex(indices),value,der);</span>
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span><span class="lineCov">        546 : void Grid::scaleAllValuesAndDerivatives( const double&amp; scalef ) {</span>
+<span class="lineNum">     523 </span><span class="lineCov">        546 :   if(usederiv_) {</span>
+<span class="lineNum">     524 </span><span class="lineCov">      41930 :     for(index_t i=0; i&lt;grid_.size(); ++i) {</span>
+<span class="lineNum">     525 </span><span class="lineCov">      20962 :       grid_[i]*=scalef;</span>
+<span class="lineNum">     526 </span><span class="lineCov">     104810 :       for(unsigned j=0; j&lt;dimension_; ++j) der_[i][j]*=scalef;</span>
+<span class="lineNum">     527 </span>            :     }
+<span class="lineNum">     528 </span>            :   } else {
+<span class="lineNum">     529 </span><span class="lineCov">    3024124 :     for(index_t i=0; i&lt;grid_.size(); ++i) grid_[i]*=scalef;</span>
+<span class="lineNum">     530 </span>            :   }
+<span class="lineNum">     531 </span><span class="lineCov">        546 : }</span>
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 : void Grid::logAllValuesAndDerivatives( const double&amp; scalef ) {</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :   if(usederiv_) {</span>
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :     for(index_t i=0; i&lt;grid_.size(); ++i) {</span>
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :       grid_[i] = scalef*log(grid_[i]);</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :       for(unsigned j=0; j&lt;dimension_; ++j) der_[i][j] = scalef/der_[i][j];</span>
+<span class="lineNum">     538 </span>            :     }
+<span class="lineNum">     539 </span>            :   } else {
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :     for(index_t i=0; i&lt;grid_.size(); ++i) grid_[i] = scalef*log(grid_[i]);</span>
+<span class="lineNum">     541 </span>            :   }
+<span class="lineNum">     542 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span><span class="lineCov">       1191 : void Grid::setMinToZero() {</span>
+<span class="lineNum">     545 </span><span class="lineCov">       1191 :   double min=grid_[0];</span>
+<span class="lineNum">     546 </span><span class="lineCov">    6887715 :   for(index_t i=1; i&lt;grid_.size(); ++i) if(grid_[i]&lt;min) min=grid_[i];</span>
+<span class="lineNum">     547 </span><span class="lineCov">    6890097 :   for(index_t i=0; i&lt;grid_.size(); ++i) grid_[i] -= min;</span>
+<span class="lineNum">     548 </span><span class="lineCov">       1191 : }</span>
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span><span class="lineCov">          1 : void Grid::applyFunctionAllValuesAndDerivatives( double (*func)(double val), double (*funcder)(double valder) ) {</span>
+<span class="lineNum">     551 </span><span class="lineCov">          1 :   if(usederiv_) {</span>
+<span class="lineNum">     552 </span><span class="lineCov">       1801 :     for(index_t i=0; i&lt;grid_.size(); ++i) {</span>
+<span class="lineNum">     553 </span><span class="lineCov">        900 :       grid_[i]=func(grid_[i]);</span>
+<span class="lineNum">     554 </span><span class="lineCov">       4500 :       for(unsigned j=0; j&lt;dimension_; ++j) der_[i][j]=funcder(der_[i][j]);</span>
+<span class="lineNum">     555 </span>            :     }
+<span class="lineNum">     556 </span>            :   } else {
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :     for(index_t i=0; i&lt;grid_.size(); ++i) grid_[i]=func(grid_[i]);</span>
+<span class="lineNum">     558 </span>            :   }
+<span class="lineNum">     559 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span><span class="lineCov">        970 : void Grid::writeHeader(OFile&amp; ofile) {</span>
+<span class="lineNum">     562 </span><span class="lineCov">       3486 :   for(unsigned i=0; i&lt;dimension_; ++i) {</span>
+<span class="lineNum">     563 </span><span class="lineCov">       3774 :     ofile.addConstantField(&quot;min_&quot; + argnames[i]);</span>
+<span class="lineNum">     564 </span><span class="lineCov">       2516 :     ofile.addConstantField(&quot;max_&quot; + argnames[i]);</span>
+<span class="lineNum">     565 </span><span class="lineCov">       2516 :     ofile.addConstantField(&quot;nbins_&quot; + argnames[i]);</span>
+<span class="lineNum">     566 </span><span class="lineCov">       2516 :     ofile.addConstantField(&quot;periodic_&quot; + argnames[i]);</span>
+<span class="lineNum">     567 </span>            :   }
+<span class="lineNum">     568 </span><span class="lineCov">        970 : }</span>
+<span class="lineNum">     569 </span>            : 
+<span class="lineNum">     570 </span><span class="lineCov">        970 : void Grid::writeToFile(OFile&amp; ofile) {</span>
+<span class="lineNum">     571 </span><span class="lineCov">        970 :   vector&lt;double&gt; xx(dimension_);</span>
+<span class="lineNum">     572 </span><span class="lineCov">        970 :   vector&lt;double&gt; der(dimension_);</span>
+<span class="lineNum">     573 </span>            :   double f;
+<span class="lineNum">     574 </span><span class="lineCov">        970 :   writeHeader(ofile);</span>
+<span class="lineNum">     575 </span><span class="lineCov">    4802926 :   for(index_t i=0; i&lt;getSize(); ++i) {</span>
+<span class="lineNum">     576 </span><span class="lineCov">    4801956 :     xx=getPoint(i);</span>
+<span class="lineNum">     577 </span><span class="lineCov">    2400978 :     if(usederiv_) {f=getValueAndDerivatives(i,der);}</span>
+<span class="lineNum">     578 </span><span class="lineCov">    1863864 :     else {f=getValue(i);}</span>
+<span class="lineNum">     579 </span><span class="lineCov">    7080881 :     if(i&gt;0 &amp;&amp; dimension_&gt;1 &amp;&amp; getIndices(i)[dimension_-2]==0) ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     580 </span><span class="lineCov">   11761360 :     for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     581 </span><span class="lineCov">   14040573 :       ofile.printField(&quot;min_&quot; + argnames[j], str_min_[j] );</span>
+<span class="lineNum">     582 </span><span class="lineCov">    9360382 :       ofile.printField(&quot;max_&quot; + argnames[j], str_max_[j] );</span>
+<span class="lineNum">     583 </span><span class="lineCov">   14040573 :       ofile.printField(&quot;nbins_&quot; + argnames[j], static_cast&lt;int&gt;(nbin_[j]) );</span>
+<span class="lineNum">     584 </span><span class="lineCov">   10761635 :       if( pbc_[j] ) ofile.printField(&quot;periodic_&quot; + argnames[j], &quot;true&quot; );</span>
+<span class="lineNum">     585 </span><span class="lineCov">   10612172 :       else          ofile.printField(&quot;periodic_&quot; + argnames[j], &quot;false&quot; );</span>
+<span class="lineNum">     586 </span>            :     }
+<span class="lineNum">     587 </span><span class="lineCov">   21121742 :     for(unsigned j=0; j&lt;dimension_; ++j) { ofile.fmtField(&quot; &quot;+fmt_); ofile.printField(argnames[j],xx[j]); }</span>
+<span class="lineNum">     588 </span><span class="lineCov">    4801956 :     ofile.fmtField(&quot; &quot;+fmt_); ofile.printField(funcname,f);</span>
+<span class="lineNum">     589 </span><span class="lineCov">    6617018 :     if(usederiv_) for(unsigned j=0; j&lt;dimension_; ++j) { ofile.fmtField(&quot; &quot;+fmt_); ofile.printField(&quot;der_&quot; + argnames[j],der[j]); }</span>
+<span class="lineNum">     590 </span><span class="lineCov">    2400978 :     ofile.printField();</span>
+<span class="lineNum">     591 </span>            :   }
+<span class="lineNum">     592 </span><span class="lineCov">        970 : }</span>
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span><span class="lineNoCov">          0 : void Grid::writeCubeFile(OFile&amp; ofile, const double&amp; lunit) {</span>
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 :   plumed_assert( dimension_==3 );</span>
+<span class="lineNum">     596 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;PLUMED CUBE FILE\n&quot;);</span>
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z\n&quot;);</span>
+<span class="lineNum">     598 </span>            :   // Number of atoms followed by position of origin (origin set so that center of grid is in center of cell)
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;%d %f %f %f\n&quot;,1,-0.5*lunit*(max_[0]-min_[0]),-0.5*lunit*(max_[1]-min_[1]),-0.5*lunit*(max_[2]-min_[2]));</span>
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;%u %f %f %f\n&quot;,nbin_[0],lunit*dx_[0],0.0,0.0);  // Number of bins in each direction followed by</span>
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;%u %f %f %f\n&quot;,nbin_[1],0.0,lunit*dx_[1],0.0);  // shape of voxel</span>
+<span class="lineNum">     602 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;%u %f %f %f\n&quot;,nbin_[2],0.0,0.0,lunit*dx_[2]);</span>
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :   ofile.printf(&quot;%d %f %f %f\n&quot;,1,0.0,0.0,0.0); // Fake atom otherwise VMD doesn't work</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; pp(3);</span>
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :   for(pp[0]=0; pp[0]&lt;nbin_[0]; ++pp[0]) {</span>
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :     for(pp[1]=0; pp[1]&lt;nbin_[1]; ++pp[1]) {</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :       for(pp[2]=0; pp[2]&lt;nbin_[2]; ++pp[2]) {</span>
+<span class="lineNum">     608 </span><span class="lineNoCov">          0 :         ofile.printf(&quot;%f &quot;,getValue(pp) );</span>
+<span class="lineNum">     609 </span><span class="lineNoCov">          0 :         if(pp[2]%6==5) ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     610 </span>            :       }
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :       ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     612 </span>            :     }
+<span class="lineNum">     613 </span>            :   }
+<span class="lineNum">     614 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span><span class="lineCov">         18 : Grid* Grid::create(const std::string&amp; funcl, const std::vector&lt;Value*&gt; &amp; args, IFile&amp; ifile,</span>
+<span class="lineNum">     617 </span>            :                    const vector&lt;std::string&gt; &amp; gmin,const vector&lt;std::string&gt; &amp; gmax,
+<span class="lineNum">     618 </span>            :                    const vector&lt;unsigned&gt; &amp; nbin,bool dosparse, bool dospline, bool doder) {
+<span class="lineNum">     619 </span><span class="lineCov">         18 :   Grid* grid=Grid::create(funcl,args,ifile,dosparse,dospline,doder);</span>
+<span class="lineNum">     620 </span><span class="lineCov">         18 :   std::vector&lt;unsigned&gt; cbin( grid-&gt;getNbin() );</span>
+<span class="lineNum">     621 </span><span class="lineCov">         36 :   std::vector&lt;std::string&gt; cmin( grid-&gt;getMin() ), cmax( grid-&gt;getMax() );</span>
+<span class="lineNum">     622 </span><span class="lineCov">        117 :   for(unsigned i=0; i&lt;args.size(); ++i) {</span>
+<span class="lineNum">     623 </span><span class="lineCov">         27 :     plumed_massert( cmin[i]==gmin[i], &quot;mismatched grid min&quot; );</span>
+<span class="lineNum">     624 </span><span class="lineCov">         27 :     plumed_massert( cmax[i]==gmax[i], &quot;mismatched grid max&quot; );</span>
+<span class="lineNum">     625 </span><span class="lineCov">         27 :     if( args[i]-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     626 </span><span class="lineCov">         16 :       plumed_massert( cbin[i]==nbin[i], &quot;mismatched grid nbins&quot; );</span>
+<span class="lineNum">     627 </span>            :     } else {
+<span class="lineNum">     628 </span><span class="lineCov">         38 :       plumed_massert( (cbin[i]-1)==nbin[i], &quot;mismatched grid nbins&quot;);</span>
+<span class="lineNum">     629 </span>            :     }
+<span class="lineNum">     630 </span>            :   }
+<span class="lineNum">     631 </span><span class="lineCov">         18 :   return grid;</span>
+<span class="lineNum">     632 </span>            : }
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span><span class="lineCov">         38 : Grid* Grid::create(const std::string&amp; funcl, const std::vector&lt;Value*&gt; &amp; args, IFile&amp; ifile, bool dosparse, bool dospline, bool doder)</span>
+<span class="lineNum">     635 </span>            : {
+<span class="lineNum">     636 </span>            :   Grid* grid=NULL;
+<span class="lineNum">     637 </span><span class="lineCov">         38 :   unsigned nvar=args.size(); bool hasder=false; std::string pstring;</span>
+<span class="lineNum">     638 </span><span class="lineCov">         38 :   std::vector&lt;int&gt; gbin1(nvar); std::vector&lt;unsigned&gt; gbin(nvar);</span>
+<span class="lineNum">     639 </span><span class="lineCov">         76 :   std::vector&lt;std::string&gt; labels(nvar),gmin(nvar),gmax(nvar);</span>
+<span class="lineNum">     640 </span><span class="lineCov">         76 :   std::vector&lt;std::string&gt; fieldnames; ifile.scanFieldList( fieldnames );</span>
+<span class="lineNum">     641 </span>            : // Retrieve names for fields
+<span class="lineNum">     642 </span><span class="lineCov">        284 :   for(unsigned i=0; i&lt;args.size(); ++i) labels[i]=args[i]-&gt;getName();</span>
+<span class="lineNum">     643 </span>            : // And read the stuff from the header
+<span class="lineNum">     644 </span><span class="lineCov">         38 :   plumed_massert( ifile.FieldExist( funcl ), &quot;no column labelled &quot; + funcl + &quot; in in grid input&quot;);</span>
+<span class="lineNum">     645 </span><span class="lineCov">        232 :   for(unsigned i=0; i&lt;args.size(); ++i) {</span>
+<span class="lineNum">     646 </span><span class="lineCov">        104 :     ifile.scanField( &quot;min_&quot; + labels[i], gmin[i]);</span>
+<span class="lineNum">     647 </span><span class="lineCov">        104 :     ifile.scanField( &quot;max_&quot; + labels[i], gmax[i]);</span>
+<span class="lineNum">     648 </span><span class="lineCov">        104 :     ifile.scanField( &quot;periodic_&quot; + labels[i], pstring );</span>
+<span class="lineNum">     649 </span><span class="lineCov">        104 :     ifile.scanField( &quot;nbins_&quot; + labels[i], gbin1[i]);</span>
+<span class="lineNum">     650 </span><span class="lineCov">         52 :     plumed_assert( gbin1[i]&gt;0 );</span>
+<span class="lineNum">     651 </span><span class="lineCov">         52 :     if( args[i]-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     652 </span><span class="lineCov">         18 :       plumed_massert( pstring==&quot;true&quot;, &quot;input value is periodic but grid is not&quot;);</span>
+<span class="lineNum">     653 </span>            :       std::string pmin, pmax;
+<span class="lineNum">     654 </span><span class="lineCov">         54 :       args[i]-&gt;getDomain( pmin, pmax ); gbin[i]=gbin1[i];</span>
+<span class="lineNum">     655 </span><span class="lineCov">         36 :       if( pmin!=gmin[i] || pmax!=gmax[i] ) plumed_merror(&quot;mismatch between grid boundaries and periods of values&quot;);</span>
+<span class="lineNum">     656 </span>            :     } else {
+<span class="lineNum">     657 </span><span class="lineCov">         68 :       gbin[i]=gbin1[i]-1;  // Note header in grid file indicates one more bin that there should be when data is not periodic</span>
+<span class="lineNum">     658 </span><span class="lineCov">         34 :       plumed_massert( pstring==&quot;false&quot;, &quot;input value is not periodic but grid is&quot;);</span>
+<span class="lineNum">     659 </span>            :     }
+<span class="lineNum">     660 </span><span class="lineCov">        156 :     hasder=ifile.FieldExist( &quot;der_&quot; + args[i]-&gt;getName() );</span>
+<span class="lineNum">     661 </span><span class="lineCov">         52 :     if( doder &amp;&amp; !hasder ) plumed_merror(&quot;missing derivatives from grid file&quot;);</span>
+<span class="lineNum">     662 </span><span class="lineCov">        146 :     for(unsigned j=0; j&lt;fieldnames.size(); ++j) {</span>
+<span class="lineNum">     663 </span><span class="lineCov">        160 :       for(unsigned k=i+1; k&lt;args.size(); ++k) {</span>
+<span class="lineNum">     664 </span><span class="lineCov">         14 :         if( fieldnames[j]==labels[k] ) plumed_merror(&quot;arguments in input are not in same order as in grid file&quot;);</span>
+<span class="lineNum">     665 </span>            :       }
+<span class="lineNum">     666 </span><span class="lineCov">         66 :       if( fieldnames[j]==labels[i] ) break;</span>
+<span class="lineNum">     667 </span>            :     }
+<span class="lineNum">     668 </span>            :   }
+<span class="lineNum">     669 </span>            : 
+<span class="lineNum">     670 </span><span class="lineCov">         38 :   if(!dosparse) {grid=new Grid(funcl,args,gmin,gmax,gbin,dospline,doder);}</span>
+<span class="lineNum">     671 </span><span class="lineNoCov">          0 :   else {grid=new SparseGrid(funcl,args,gmin,gmax,gbin,dospline,doder);}</span>
+<span class="lineNum">     672 </span>            : 
+<span class="lineNum">     673 </span><span class="lineCov">         38 :   vector&lt;double&gt; xx(nvar),dder(nvar);</span>
+<span class="lineNum">     674 </span><span class="lineCov">         38 :   vector&lt;double&gt; dx=grid-&gt;getDx();</span>
+<span class="lineNum">     675 </span>            :   double f,x;
+<span class="lineNum">     676 </span><span class="lineCov">      93879 :   while( ifile.scanField(funcl,f) ) {</span>
+<span class="lineNum">     677 </span><span class="lineCov">     464601 :     for(unsigned i=0; i&lt;nvar; ++i) {</span>
+<span class="lineNum">     678 </span><span class="lineCov">     741520 :       ifile.scanField(labels[i],x); xx[i]=x+dx[i]/2.0;</span>
+<span class="lineNum">     679 </span><span class="lineCov">     370760 :       ifile.scanField( &quot;min_&quot; + labels[i], gmin[i]);</span>
+<span class="lineNum">     680 </span><span class="lineCov">     370760 :       ifile.scanField( &quot;max_&quot; + labels[i], gmax[i]);</span>
+<span class="lineNum">     681 </span><span class="lineCov">     370760 :       ifile.scanField( &quot;nbins_&quot; + labels[i], gbin1[i]);</span>
+<span class="lineNum">     682 </span><span class="lineCov">     370760 :       ifile.scanField( &quot;periodic_&quot; + labels[i], pstring );</span>
+<span class="lineNum">     683 </span>            :     }
+<span class="lineNum">     684 </span><span class="lineCov">     399742 :     if(hasder) { for(unsigned i=0; i&lt;nvar; ++i) { ifile.scanField( &quot;der_&quot; + args[i]-&gt;getName(), dder[i] ); } }</span>
+<span class="lineNum">     685 </span><span class="lineCov">      93841 :     index_t index=grid-&gt;getIndex(xx);</span>
+<span class="lineNum">     686 </span><span class="lineCov">      93841 :     if(doder) {grid-&gt;setValueAndDerivatives(index,f,dder);}</span>
+<span class="lineNum">     687 </span><span class="lineCov">      42609 :     else {grid-&gt;setValue(index,f);}</span>
+<span class="lineNum">     688 </span><span class="lineCov">      93841 :     ifile.scanField();</span>
+<span class="lineNum">     689 </span>            :   }
+<span class="lineNum">     690 </span><span class="lineCov">         38 :   return grid;</span>
+<span class="lineNum">     691 </span>            : }
+<a name="692"><span class="lineNum">     692 </span>            : </a>
+<span class="lineNum">     693 </span>            : // Sparse version of grid with map
+<span class="lineNum">     694 </span><span class="lineNoCov">          0 : void SparseGrid::clear() {</span>
+<span class="lineNum">     695 </span>            :   map_.clear();
+<a name="696"><span class="lineNum">     696 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span><span class="lineNoCov">          0 : Grid::index_t SparseGrid::getSize() const {</span>
+<span class="lineNum">     699 </span><span class="lineNoCov">          0 :   return map_.size();</span>
+<a name="700"><span class="lineNum">     700 </span>            : }</a>
+<span class="lineNum">     701 </span>            : 
+<span class="lineNum">     702 </span><span class="lineNoCov">          0 : Grid::index_t SparseGrid::getMaxSize() const {</span>
+<span class="lineNum">     703 </span><span class="lineNoCov">          0 :   return maxsize_;</span>
+<a name="704"><span class="lineNum">     704 </span>            : }</a>
+<span class="lineNum">     705 </span>            : 
+<span class="lineNum">     706 </span><span class="lineNoCov">          0 : double Grid::getDifferenceFromContour( const std::vector&lt;double&gt;&amp; x, std::vector&lt;double&gt;&amp; der ) const {</span>
+<span class="lineNum">     707 </span><span class="lineNoCov">          0 :   return getValueAndDerivatives( x, der ) - contour_location;</span>
+<span class="lineNum">     708 </span>            : }
+<span class="lineNum">     709 </span>            : 
+<span class="lineNum">     710 </span><span class="lineNoCov">          0 : void Grid::findSetOfPointsOnContour(const double&amp; target, const std::vector&lt;bool&gt;&amp; nosearch,</span>
+<span class="lineNum">     711 </span>            :                                     unsigned&amp; npoints, std::vector&lt;std::vector&lt;double&gt; &gt;&amp; points ) {
+<span class="lineNum">     712 </span>            : // Set contour location for function
+<span class="lineNum">     713 </span><span class="lineNoCov">          0 :   contour_location=target;</span>
+<span class="lineNum">     714 </span>            : // Resize points to maximum possible value
+<span class="lineNum">     715 </span><span class="lineNoCov">          0 :   points.resize( dimension_*maxsize_ );</span>
+<span class="lineNum">     716 </span>            : 
+<span class="lineNum">     717 </span>            : // Two points for search
+<span class="lineNum">     718 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; ind(dimension_);</span>
+<span class="lineNum">     719 </span><span class="lineNoCov">          0 :   std::vector&lt;double&gt; direction( dimension_, 0 );</span>
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            : // Run over whole grid
+<span class="lineNum">     722 </span><span class="lineNoCov">          0 :   npoints=0; RootFindingBase&lt;Grid&gt; mymin( this );</span>
+<span class="lineNum">     723 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;maxsize_; ++i) {</span>
+<span class="lineNum">     724 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;dimension_; ++j) ind[j]=getIndices(i)[j];</span>
+<span class="lineNum">     725 </span>            : 
+<span class="lineNum">     726 </span>            :     // Get the value of a point on the grid
+<span class="lineNum">     727 </span><span class="lineNoCov">          0 :     double val1=getValue(i) - target;</span>
+<span class="lineNum">     728 </span>            : 
+<span class="lineNum">     729 </span>            :     // Now search for contour in each direction
+<span class="lineNum">     730 </span>            :     bool edge=false;
+<span class="lineNum">     731 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     732 </span><span class="lineNoCov">          0 :       if( nosearch[j] ) continue ;</span>
+<span class="lineNum">     733 </span>            :       // Make sure we don't search at the edge of the grid
+<span class="lineNum">     734 </span><span class="lineNoCov">          0 :       if( !pbc_[j] &amp;&amp; (ind[j]+1)==nbin_[j] ) continue;</span>
+<span class="lineNum">     735 </span><span class="lineNoCov">          0 :       else if( (ind[j]+1)==nbin_[j] ) { edge=true; ind[j]=0; }</span>
+<span class="lineNum">     736 </span><span class="lineNoCov">          0 :       else ind[j]+=1;</span>
+<span class="lineNum">     737 </span><span class="lineNoCov">          0 :       double val2=getValue(ind) - target;</span>
+<span class="lineNum">     738 </span><span class="lineNoCov">          0 :       if( val1*val2&lt;0 ) {</span>
+<span class="lineNum">     739 </span>            :         // Use initial point location as first guess for search
+<span class="lineNum">     740 </span><span class="lineNoCov">          0 :         points[npoints].resize(dimension_); for(unsigned k=0; k&lt;dimension_; ++k) points[npoints][k]=getPoint(i)[k];</span>
+<span class="lineNum">     741 </span>            :         // Setup direction vector
+<span class="lineNum">     742 </span><span class="lineNoCov">          0 :         direction[j]=0.999999999*dx_[j];</span>
+<span class="lineNum">     743 </span>            :         // And do proper search for contour point
+<span class="lineNum">     744 </span><span class="lineNoCov">          0 :         mymin.linesearch( direction, points[npoints], &amp;Grid::getDifferenceFromContour );</span>
+<span class="lineNum">     745 </span><span class="lineNoCov">          0 :         direction[j]=0.0; npoints++;</span>
+<span class="lineNum">     746 </span>            :       }
+<span class="lineNum">     747 </span><span class="lineNoCov">          0 :       if( pbc_[j] &amp;&amp; edge ) { edge=false; ind[j]=nbin_[j]-1; }</span>
+<span class="lineNum">     748 </span><span class="lineNoCov">          0 :       else ind[j]-=1;</span>
+<span class="lineNum">     749 </span>            :     }
+<span class="lineNum">     750 </span>            :   }
+<a name="751"><span class="lineNum">     751 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span><span class="lineNoCov">          0 : double SparseGrid::getValue(index_t index)const {</span>
+<span class="lineNum">     754 </span><span class="lineNoCov">          0 :   plumed_assert(index&lt;maxsize_);</span>
+<span class="lineNum">     755 </span>            :   double value=0.0;
+<span class="lineNum">     756 </span>            :   const auto it=map_.find(index);
+<span class="lineNum">     757 </span><span class="lineNoCov">          0 :   if(it!=map_.end()) value=it-&gt;second;</span>
+<span class="lineNum">     758 </span><span class="lineNoCov">          0 :   return value;</span>
+<span class="lineNum">     759 </span>            : }
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span><span class="lineCov">        440 : double SparseGrid::getValueAndDerivatives</span>
+<span class="lineNum">     762 </span>            : (index_t index, vector&lt;double&gt;&amp; der)const {
+<span class="lineNum">     763 </span><span class="lineCov">        880 :   plumed_assert(index&lt;maxsize_ &amp;&amp; usederiv_ &amp;&amp; der.size()==dimension_);</span>
+<span class="lineNum">     764 </span>            :   double value=0.0;
+<span class="lineNum">     765 </span><span class="lineCov">       2080 :   for(unsigned int i=0; i&lt;dimension_; ++i) der[i]=0.0;</span>
+<span class="lineNum">     766 </span>            :   const auto it=map_.find(index);
+<span class="lineNum">     767 </span><span class="lineCov">        440 :   if(it!=map_.end()) value=it-&gt;second;</span>
+<span class="lineNum">     768 </span>            :   const auto itder=der_.find(index);
+<span class="lineNum">     769 </span><span class="lineCov">        440 :   if(itder!=der_.end()) der=itder-&gt;second;</span>
+<span class="lineNum">     770 </span><span class="lineCov">        440 :   return value;</span>
+<a name="771"><span class="lineNum">     771 </span>            : }</a>
+<span class="lineNum">     772 </span>            : 
+<span class="lineNum">     773 </span><span class="lineNoCov">          0 : void SparseGrid::setValue(index_t index, double value) {</span>
+<span class="lineNum">     774 </span><span class="lineNoCov">          0 :   plumed_assert(index&lt;maxsize_ &amp;&amp; !usederiv_);</span>
+<span class="lineNum">     775 </span><span class="lineNoCov">          0 :   map_[index]=value;</span>
+<span class="lineNum">     776 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     777 </span>            : 
+<span class="lineNum">     778 </span><span class="lineNoCov">          0 : void SparseGrid::setValueAndDerivatives</span>
+<span class="lineNum">     779 </span>            : (index_t index, double value, vector&lt;double&gt;&amp; der) {
+<span class="lineNum">     780 </span><span class="lineNoCov">          0 :   plumed_assert(index&lt;maxsize_ &amp;&amp; usederiv_ &amp;&amp; der.size()==dimension_);</span>
+<span class="lineNum">     781 </span><span class="lineNoCov">          0 :   map_[index]=value;</span>
+<span class="lineNum">     782 </span><span class="lineNoCov">          0 :   der_[index]=der;</span>
+<a name="783"><span class="lineNum">     783 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     784 </span>            : 
+<span class="lineNum">     785 </span><span class="lineNoCov">          0 : void SparseGrid::addValue(index_t index, double value) {</span>
+<span class="lineNum">     786 </span><span class="lineNoCov">          0 :   plumed_assert(index&lt;maxsize_ &amp;&amp; !usederiv_);</span>
+<span class="lineNum">     787 </span><span class="lineNoCov">          0 :   map_[index]+=value;</span>
+<span class="lineNum">     788 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span><span class="lineCov">      19999 : void SparseGrid::addValueAndDerivatives</span>
+<span class="lineNum">     791 </span>            : (index_t index, double value, vector&lt;double&gt;&amp; der) {
+<span class="lineNum">     792 </span><span class="lineCov">      39998 :   plumed_assert(index&lt;maxsize_ &amp;&amp; usederiv_ &amp;&amp; der.size()==dimension_);</span>
+<span class="lineNum">     793 </span><span class="lineCov">      19999 :   map_[index]+=value;</span>
+<span class="lineNum">     794 </span><span class="lineCov">      19999 :   der_[index].resize(dimension_);</span>
+<span class="lineNum">     795 </span><span class="lineCov">     139048 :   for(unsigned int i=0; i&lt;dimension_; ++i) der_[index][i]+=der[i];</span>
+<span class="lineNum">     796 </span><span class="lineCov">      19999 : }</span>
+<span class="lineNum">     797 </span>            : 
+<span class="lineNum">     798 </span><span class="lineNoCov">          0 : void SparseGrid::writeToFile(OFile&amp; ofile) {</span>
+<span class="lineNum">     799 </span><span class="lineNoCov">          0 :   vector&lt;double&gt; xx(dimension_);</span>
+<span class="lineNum">     800 </span><span class="lineNoCov">          0 :   vector&lt;double&gt; der(dimension_);</span>
+<span class="lineNum">     801 </span>            :   double f;
+<span class="lineNum">     802 </span><span class="lineNoCov">          0 :   writeHeader(ofile);</span>
+<span class="lineNum">     803 </span><span class="lineNoCov">          0 :   ofile.fmtField(&quot; &quot;+fmt_);</span>
+<span class="lineNum">     804 </span><span class="lineNoCov">          0 :   for(const auto &amp; it : map_) {</span>
+<span class="lineNum">     805 </span><span class="lineNoCov">          0 :     index_t i=it.first;</span>
+<span class="lineNum">     806 </span><span class="lineNoCov">          0 :     xx=getPoint(i);</span>
+<span class="lineNum">     807 </span><span class="lineNoCov">          0 :     if(usederiv_) {f=getValueAndDerivatives(i,der);}</span>
+<span class="lineNum">     808 </span><span class="lineNoCov">          0 :     else {f=getValue(i);}</span>
+<span class="lineNum">     809 </span><span class="lineNoCov">          0 :     if(i&gt;0 &amp;&amp; dimension_&gt;1 &amp;&amp; getIndices(i)[dimension_-2]==0) ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     810 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     811 </span><span class="lineNoCov">          0 :       ofile.printField(&quot;min_&quot; + argnames[j], str_min_[j] );</span>
+<span class="lineNum">     812 </span><span class="lineNoCov">          0 :       ofile.printField(&quot;max_&quot; + argnames[j], str_max_[j] );</span>
+<span class="lineNum">     813 </span><span class="lineNoCov">          0 :       ofile.printField(&quot;nbins_&quot; + argnames[j], static_cast&lt;int&gt;(nbin_[j]) );</span>
+<span class="lineNum">     814 </span><span class="lineNoCov">          0 :       if( pbc_[j] ) ofile.printField(&quot;periodic_&quot; + argnames[j], &quot;true&quot; );</span>
+<span class="lineNum">     815 </span><span class="lineNoCov">          0 :       else          ofile.printField(&quot;periodic_&quot; + argnames[j], &quot;false&quot; );</span>
+<span class="lineNum">     816 </span>            :     }
+<span class="lineNum">     817 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;dimension_; ++j) ofile.printField(argnames[j],xx[j]);</span>
+<span class="lineNum">     818 </span><span class="lineNoCov">          0 :     ofile.printField(funcname, f);</span>
+<span class="lineNum">     819 </span><span class="lineNoCov">          0 :     if(usederiv_) { for(unsigned j=0; j&lt;dimension_; ++j) ofile.printField(&quot;der_&quot; + argnames[j],der[j]); }</span>
+<span class="lineNum">     820 </span><span class="lineNoCov">          0 :     ofile.printField();</span>
+<span class="lineNum">     821 </span>            :   }
+<a name="822"><span class="lineNum">     822 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     823 </span>            : 
+<span class="lineNum">     824 </span><span class="lineNoCov">          0 : double SparseGrid::getMinValue() const {</span>
+<span class="lineNum">     825 </span>            :   double minval;
+<span class="lineNum">     826 </span>            :   minval=0.0;
+<span class="lineNum">     827 </span><span class="lineNoCov">          0 :   for(auto const &amp; i : map_) {</span>
+<span class="lineNum">     828 </span><span class="lineNoCov">          0 :     if(i.second&lt;minval) minval=i.second;</span>
+<span class="lineNum">     829 </span>            :   }
+<span class="lineNum">     830 </span><span class="lineNoCov">          0 :   return minval;</span>
+<a name="831"><span class="lineNum">     831 </span>            : }</a>
+<span class="lineNum">     832 </span>            : 
+<span class="lineNum">     833 </span><span class="lineCov">          9 : double SparseGrid::getMaxValue() const {</span>
+<span class="lineNum">     834 </span>            :   double maxval;
+<span class="lineNum">     835 </span>            :   maxval=0.0;
+<span class="lineNum">     836 </span><span class="lineCov">        590 :   for(auto const &amp; i : map_) {</span>
+<span class="lineNum">     837 </span><span class="lineCov">        581 :     if(i.second&gt;maxval) maxval=i.second;</span>
+<span class="lineNum">     838 </span>            :   }
+<span class="lineNum">     839 </span><span class="lineCov">          9 :   return maxval;</span>
+<span class="lineNum">     840 </span>            : }
+<span class="lineNum">     841 </span>            : 
+<span class="lineNum">     842 </span>            : 
+<span class="lineNum">     843 </span><span class="lineCov">     688228 : void Grid::projectOnLowDimension(double &amp;val, std::vector&lt;int&gt; &amp;vHigh, WeightBase * ptr2obj ) {</span>
+<span class="lineNum">     844 </span>            :   unsigned i=0;
+<span class="lineNum">     845 </span><span class="lineCov">    5475683 :   for(i=0; i&lt;vHigh.size(); i++) {</span>
+<span class="lineNum">     846 </span><span class="lineCov">    1373115 :     if(vHigh[i]&lt;0) { // this bin needs to be integrated out</span>
+<span class="lineNum">     847 </span>            :       // parallelize here???
+<span class="lineNum">     848 </span><span class="lineCov">    2746206 :       for(unsigned j=0; j&lt;(getNbin())[i]; j++) {</span>
+<span class="lineNum">     849 </span><span class="lineCov">     681522 :         vHigh[i]=int(j);</span>
+<span class="lineNum">     850 </span><span class="lineCov">     681522 :         projectOnLowDimension(val,vHigh,ptr2obj); // recursive function: this is the core of the mechanism</span>
+<span class="lineNum">     851 </span><span class="lineCov">     681522 :         vHigh[i]=-1;</span>
+<span class="lineNum">     852 </span>            :       }
+<span class="lineNum">     853 </span>            :       return; //
+<span class="lineNum">     854 </span>            :     }
+<span class="lineNum">     855 </span>            :   }
+<span class="lineNum">     856 </span>            :   // when there are no more bin to dig in then retrieve the value
+<span class="lineNum">     857 </span><span class="lineCov">     681522 :   if(i==vHigh.size()) {</span>
+<span class="lineNum">     858 </span>            :     //std::cerr&lt;&lt;&quot;POINT: &quot;;
+<span class="lineNum">     859 </span>            :     //for(unsigned j=0;j&lt;vHigh.size();j++){
+<span class="lineNum">     860 </span>            :     //   std::cerr&lt;&lt;vHigh[j]&lt;&lt;&quot; &quot;;
+<span class="lineNum">     861 </span>            :     //}
+<span class="lineNum">     862 </span><span class="lineCov">     681522 :     std::vector&lt;unsigned&gt; vv(vHigh.size());</span>
+<span class="lineNum">     863 </span><span class="lineCov">    6815220 :     for(unsigned j=0; j&lt;vHigh.size(); j++)vv[j]=unsigned(vHigh[j]);</span>
+<span class="lineNum">     864 </span>            :     //
+<span class="lineNum">     865 </span>            :     // this is the real assignment !!!!! (hack this to have bias or other stuff)
+<span class="lineNum">     866 </span>            :     //
+<span class="lineNum">     867 </span>            : 
+<span class="lineNum">     868 </span>            :     // this case: produce fes
+<span class="lineNum">     869 </span>            :     //val+=exp(beta*getValue(vv)) ;
+<span class="lineNum">     870 </span><span class="lineCov">     681522 :     double myv=getValue(vv);</span>
+<span class="lineNum">     871 </span><span class="lineCov">     681522 :     val=ptr2obj-&gt;projectInnerLoop(val,myv) ;</span>
+<span class="lineNum">     872 </span>            :     // to be added: bias (same as before without negative sign)
+<span class="lineNum">     873 </span>            :     //std::cerr&lt;&lt;&quot; VAL: &quot;&lt;&lt;val &lt;&lt;endl;
+<span class="lineNum">     874 </span>            :   }
+<span class="lineNum">     875 </span>            : }
+<span class="lineNum">     876 </span>            : 
+<span class="lineNum">     877 </span><span class="lineCov">         66 : Grid Grid::project(const std::vector&lt;std::string&gt; &amp; proj, WeightBase *ptr2obj ) {</span>
+<span class="lineNum">     878 </span>            :   // find extrema only for the projection
+<span class="lineNum">     879 </span><span class="lineCov">         66 :   vector&lt;string&gt;   smallMin,smallMax;</span>
+<span class="lineNum">     880 </span>            :   vector&lt;unsigned&gt; smallBin;
+<span class="lineNum">     881 </span>            :   vector&lt;unsigned&gt; dimMapping;
+<span class="lineNum">     882 </span>            :   vector&lt;bool&gt; smallIsPeriodic;
+<span class="lineNum">     883 </span><span class="lineCov">         66 :   vector&lt;string&gt; smallName;</span>
+<span class="lineNum">     884 </span>            : 
+<span class="lineNum">     885 </span>            :   // check if the two key methods are there
+<span class="lineNum">     886 </span>            :   WeightBase* pp = dynamic_cast&lt;WeightBase*&gt;(ptr2obj);
+<span class="lineNum">     887 </span><span class="lineCov">         66 :   if (!pp)plumed_merror(&quot;This WeightBase is not complete: you need a projectInnerLoop and projectOuterLoop &quot;);</span>
+<span class="lineNum">     888 </span>            : 
+<span class="lineNum">     889 </span><span class="lineCov">        330 :   for(unsigned j=0; j&lt;proj.size(); j++) {</span>
+<span class="lineNum">     890 </span><span class="lineCov">        196 :     for(unsigned i=0; i&lt;getArgNames().size(); i++) {</span>
+<span class="lineNum">     891 </span><span class="lineCov">        196 :       if(proj[j]==getArgNames()[i]) {</span>
+<span class="lineNum">     892 </span>            :         unsigned offset;
+<span class="lineNum">     893 </span>            :         // note that at sizetime the non periodic dimension get a bin more
+<span class="lineNum">     894 </span><span class="lineCov">        132 :         if(getIsPeriodic()[i]) {offset=0;} else {offset=1;}</span>
+<span class="lineNum">     895 </span><span class="lineCov">        132 :         smallMax.push_back(getMax()[i]);</span>
+<span class="lineNum">     896 </span><span class="lineCov">        132 :         smallMin.push_back(getMin()[i]);</span>
+<span class="lineNum">     897 </span><span class="lineCov">        264 :         smallBin.push_back(getNbin()[i]-offset);</span>
+<span class="lineNum">     898 </span><span class="lineCov">        198 :         smallIsPeriodic.push_back(getIsPeriodic()[i]);</span>
+<span class="lineNum">     899 </span><span class="lineCov">         66 :         dimMapping.push_back(i);</span>
+<span class="lineNum">     900 </span><span class="lineCov">        132 :         smallName.push_back(getArgNames()[i]);</span>
+<span class="lineNum">     901 </span><span class="lineCov">         66 :         break;</span>
+<span class="lineNum">     902 </span>            :       }
+<span class="lineNum">     903 </span>            :     }
+<span class="lineNum">     904 </span>            :   }
+<span class="lineNum">     905 </span><span class="lineCov">        132 :   Grid smallgrid(&quot;projection&quot;,smallName,smallMin,smallMax,smallBin,false,false,true,smallIsPeriodic,smallMin,smallMax);</span>
+<span class="lineNum">     906 </span>            :   // check that the two grids are commensurate
+<span class="lineNum">     907 </span><span class="lineCov">        330 :   for(unsigned i=0; i&lt;dimMapping.size(); i++) {</span>
+<span class="lineNum">     908 </span><span class="lineCov">        198 :     plumed_massert(  (smallgrid.getMax())[i] == (getMax())[dimMapping[i]],  &quot;the two input grids are not compatible in max&quot;   );</span>
+<span class="lineNum">     909 </span><span class="lineCov">        198 :     plumed_massert(  (smallgrid.getMin())[i] == (getMin())[dimMapping[i]],  &quot;the two input grids are not compatible in min&quot;   );</span>
+<span class="lineNum">     910 </span><span class="lineCov">        396 :     plumed_massert(  (smallgrid.getNbin())[i]== (getNbin())[dimMapping[i]], &quot;the two input grids are not compatible in bin&quot;   );</span>
+<span class="lineNum">     911 </span>            :   }
+<span class="lineNum">     912 </span>            :   vector&lt;unsigned&gt; toBeIntegrated;
+<span class="lineNum">     913 </span><span class="lineCov">        396 :   for(unsigned i=0; i&lt;getArgNames().size(); i++) {</span>
+<span class="lineNum">     914 </span>            :     bool doappend=true;
+<span class="lineNum">     915 </span><span class="lineCov">        462 :     for(unsigned j=0; j&lt;dimMapping.size(); j++) {</span>
+<span class="lineNum">     916 </span><span class="lineCov">        132 :       if(dimMapping[j]==i) {doappend=false; break;}</span>
+<span class="lineNum">     917 </span>            :     }
+<span class="lineNum">     918 </span><span class="lineCov">        132 :     if(doappend)toBeIntegrated.push_back(i);</span>
+<span class="lineNum">     919 </span>            :   }
+<span class="lineNum">     920 </span>            :   //for(unsigned i=0;i&lt;dimMapping.size();i++ ){
+<span class="lineNum">     921 </span>            :   //     cerr&lt;&lt;&quot;Dimension to preserve &quot;&lt;&lt;dimMapping[i]&lt;&lt;endl;
+<span class="lineNum">     922 </span>            :   //}
+<span class="lineNum">     923 </span>            :   //for(unsigned i=0;i&lt;toBeIntegrated.size();i++ ){
+<span class="lineNum">     924 </span>            :   //     cerr&lt;&lt;&quot;Dimension to integrate &quot;&lt;&lt;toBeIntegrated[i]&lt;&lt;endl;
+<span class="lineNum">     925 </span>            :   //}
+<span class="lineNum">     926 </span>            : 
+<span class="lineNum">     927 </span>            :   // loop over all the points in the Grid, find the corresponding fixed index, rotate over all the other ones
+<span class="lineNum">     928 </span><span class="lineCov">      13478 :   for(unsigned i=0; i&lt;smallgrid.getSize(); i++) {</span>
+<span class="lineNum">     929 </span>            :     std::vector&lt;unsigned&gt; v;
+<span class="lineNum">     930 </span><span class="lineCov">      13412 :     v=smallgrid.getIndices(i);</span>
+<span class="lineNum">     931 </span><span class="lineCov">      13412 :     std::vector&lt;int&gt; vHigh((getArgNames()).size(),-1);</span>
+<span class="lineNum">     932 </span><span class="lineCov">      46942 :     for(unsigned j=0; j&lt;dimMapping.size(); j++)vHigh[dimMapping[j]]=int(v[j]);</span>
+<span class="lineNum">     933 </span>            :     // the vector vhigh now contains at the beginning the index of the low dimension and -1 for the values that need to be integrated
+<span class="lineNum">     934 </span><span class="lineCov">       6706 :     double initval=0.;</span>
+<span class="lineNum">     935 </span><span class="lineCov">       6706 :     projectOnLowDimension(initval,vHigh, ptr2obj);</span>
+<span class="lineNum">     936 </span><span class="lineCov">       6706 :     smallgrid.setValue(i,initval);</span>
+<span class="lineNum">     937 </span>            :   }
+<span class="lineNum">     938 </span>            :   // reset to zero just for biasing (this option can be evtl enabled in a future...)
+<span class="lineNum">     939 </span>            :   //double vmin;vmin=-smallgrid.getMinValue()+1;
+<span class="lineNum">     940 </span><span class="lineCov">      13478 :   for(unsigned i=0; i&lt;smallgrid.getSize(); i++) {</span>
+<span class="lineNum">     941 </span>            :     //         //if(dynamic_cast&lt;BiasWeight*&gt;(ptr2obj)){
+<span class="lineNum">     942 </span>            :     //         //        smallgrid.addValue(i,vmin);// go to 1
+<span class="lineNum">     943 </span>            :     //         //}
+<span class="lineNum">     944 </span><span class="lineCov">       6706 :     double vv=smallgrid.getValue(i);</span>
+<span class="lineNum">     945 </span><span class="lineCov">       6706 :     smallgrid.setValue(i,ptr2obj-&gt;projectOuterLoop(vv));</span>
+<span class="lineNum">     946 </span>            :     //         //if(dynamic_cast&lt;BiasWeight*&gt;(ptr2obj)){
+<span class="lineNum">     947 </span>            :     //         //        smallgrid.addValue(i,-vmin);// bring back to the value
+<span class="lineNum">     948 </span>            :     //         //}
+<span class="lineNum">     949 </span>            :   }
+<span class="lineNum">     950 </span>            : 
+<span class="lineNum">     951 </span><span class="lineCov">         66 :   return smallgrid;</span>
+<span class="lineNum">     952 </span>            : }
+<span class="lineNum">     953 </span>            : 
+<span class="lineNum">     954 </span><span class="lineNoCov">          0 : double Grid::integrate( std::vector&lt;unsigned&gt;&amp; npoints ) {</span>
+<span class="lineNum">     955 </span><span class="lineNoCov">          0 :   plumed_dbg_assert( npoints.size()==dimension_ ); plumed_assert( dospline_ );</span>
+<span class="lineNum">     956 </span>            : 
+<span class="lineNum">     957 </span>            :   unsigned ntotgrid=1; double box_vol=1.0;
+<span class="lineNum">     958 </span><span class="lineNoCov">          0 :   std::vector&lt;double&gt; ispacing( npoints.size() );</span>
+<span class="lineNum">     959 </span><span class="lineNoCov">          0 :   for(unsigned j=0; j&lt;dimension_; ++j) {</span>
+<span class="lineNum">     960 </span><span class="lineNoCov">          0 :     if( !pbc_[j] ) {</span>
+<span class="lineNum">     961 </span><span class="lineNoCov">          0 :       ispacing[j] = ( max_[j] - dx_[j] - min_[j] ) / static_cast&lt;double&gt;( npoints[j] );</span>
+<span class="lineNum">     962 </span><span class="lineNoCov">          0 :       npoints[j]+=1;</span>
+<span class="lineNum">     963 </span>            :     } else {
+<span class="lineNum">     964 </span><span class="lineNoCov">          0 :       ispacing[j] = ( max_[j] - min_[j] ) / static_cast&lt;double&gt;( npoints[j] );</span>
+<span class="lineNum">     965 </span>            :     }
+<span class="lineNum">     966 </span><span class="lineNoCov">          0 :     ntotgrid*=npoints[j]; box_vol*=ispacing[j];</span>
+<span class="lineNum">     967 </span>            :   }
+<span class="lineNum">     968 </span>            : 
+<span class="lineNum">     969 </span><span class="lineNoCov">          0 :   std::vector&lt;double&gt; vals( dimension_ );</span>
+<span class="lineNum">     970 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; t_index( dimension_ ); double integral=0.0;</span>
+<span class="lineNum">     971 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;ntotgrid; ++i) {</span>
+<span class="lineNum">     972 </span><span class="lineNoCov">          0 :     t_index[0]=(i%npoints[0]);</span>
+<span class="lineNum">     973 </span>            :     unsigned kk=i;
+<span class="lineNum">     974 </span><span class="lineNoCov">          0 :     for(unsigned j=1; j&lt;dimension_-1; ++j) { kk=(kk-t_index[j-1])/npoints[i-1]; t_index[j]=(kk%npoints[i]); }</span>
+<span class="lineNum">     975 </span><span class="lineNoCov">          0 :     if( dimension_&gt;=2 ) t_index[dimension_-1]=((kk-t_index[dimension_-1])/npoints[dimension_-2]);</span>
+<span class="lineNum">     976 </span>            : 
+<span class="lineNum">     977 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;dimension_; ++j) vals[j]=min_[j] + t_index[j]*ispacing[j];</span>
+<span class="lineNum">     978 </span>            : 
+<span class="lineNum">     979 </span><span class="lineNoCov">          0 :     integral += getValue( vals );</span>
+<span class="lineNum">     980 </span>            :   }
+<span class="lineNum">     981 </span>            : 
+<span class="lineNum">     982 </span><span class="lineNoCov">          0 :   return box_vol*integral;</span>
+<span class="lineNum">     983 </span>            : }
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span><span class="lineNoCov">          0 : void Grid::mpiSumValuesAndDerivatives( Communicator&amp; comm ) {</span>
+<span class="lineNum">     986 </span><span class="lineNoCov">          0 :   comm.Sum( grid_ ); for(unsigned i=0; i&lt;der_.size(); ++i) comm.Sum( der_[i] );</span>
+<span class="lineNum">     987 </span><span class="lineNoCov">          0 : }</span>
+<a name="988"><span class="lineNum">     988 </span>            : </a>
+<span class="lineNum">     989 </span>            : 
+<span class="lineNum">     990 </span><span class="lineCov">      59582 : bool indexed_lt(pair&lt;Grid::index_t, double&gt; const &amp;x, pair&lt;Grid::index_t, double&gt; const   &amp;y) {</span>
+<span class="lineNum">     991 </span><span class="lineCov">      59582 :   return x.second &lt; y.second;</span>
+<span class="lineNum">     992 </span>            : }
+<span class="lineNum">     993 </span>            : 
+<span class="lineNum">     994 </span><span class="lineCov">        273 : double Grid::findMaximalPathMinimum(const std::vector&lt;double&gt; &amp;source, const std::vector&lt;double&gt; &amp;sink) {</span>
+<span class="lineNum">     995 </span>            :   plumed_dbg_assert(source.size() == dimension_);
+<span class="lineNum">     996 </span>            :   plumed_dbg_assert(sink.size() == dimension_);
+<span class="lineNum">     997 </span>            :   // Start and end indices
+<span class="lineNum">     998 </span><span class="lineCov">        273 :   index_t source_idx = getIndex(source);</span>
+<span class="lineNum">     999 </span><span class="lineCov">        273 :   index_t sink_idx = getIndex(sink);</span>
+<span class="lineNum">    1000 </span>            :   // Path cost
+<span class="lineNum">    1001 </span>            :   double maximal_minimum = 0;
+<span class="lineNum">    1002 </span>            :   // In one dimension, path searching is very easy--either go one way if it's not periodic,
+<span class="lineNum">    1003 </span>            :   // or go both ways if it is periodic. There's no reason to pay the cost of Dijkstra.
+<span class="lineNum">    1004 </span><span class="lineCov">        273 :   if (dimension_ == 1) {</span>
+<span class="lineNum">    1005 </span>            :     // Do a search from the grid source to grid sink that does not
+<span class="lineNum">    1006 </span>            :     // cross the grid boundary.
+<span class="lineNum">    1007 </span><span class="lineCov">        147 :     double curr_min_bias = getValue(source_idx);</span>
+<span class="lineNum">    1008 </span>            :     // Either search from a high source to a low sink.
+<span class="lineNum">    1009 </span><span class="lineCov">        147 :     if (source_idx &gt; sink_idx) {</span>
+<span class="lineNum">    1010 </span><span class="lineCov">       1323 :       for (index_t i = source_idx; i &gt;= sink_idx; i--) {</span>
+<span class="lineNum">    1011 </span><span class="lineCov">        588 :         if (curr_min_bias == 0.0) {</span>
+<span class="lineNum">    1012 </span>            :           break;
+<span class="lineNum">    1013 </span>            :         }
+<span class="lineNum">    1014 </span><span class="lineCov">        588 :         curr_min_bias = fmin(curr_min_bias, getValue(i));</span>
+<span class="lineNum">    1015 </span>            :       }
+<span class="lineNum">    1016 </span>            :       // Or search from a low source to a high sink.
+<span class="lineNum">    1017 </span><span class="lineNoCov">          0 :     } else if (source_idx &lt; sink_idx) {</span>
+<span class="lineNum">    1018 </span><span class="lineNoCov">          0 :       for (index_t i = source_idx; i &lt;= sink_idx; i++) {</span>
+<span class="lineNum">    1019 </span><span class="lineNoCov">          0 :         if (curr_min_bias == 0.0) {</span>
+<span class="lineNum">    1020 </span>            :           break;
+<span class="lineNum">    1021 </span>            :         }
+<span class="lineNum">    1022 </span><span class="lineNoCov">          0 :         curr_min_bias = fmin(curr_min_bias, getValue(i));</span>
+<span class="lineNum">    1023 </span>            :       }
+<span class="lineNum">    1024 </span>            :     }
+<span class="lineNum">    1025 </span>            :     maximal_minimum = curr_min_bias;
+<span class="lineNum">    1026 </span>            :     // If the grid is periodic, also do the search that crosses
+<span class="lineNum">    1027 </span>            :     // the grid boundary.
+<span class="lineNum">    1028 </span><span class="lineCov">        147 :     if (pbc_[0]) {</span>
+<span class="lineNum">    1029 </span><span class="lineCov">         42 :       double curr_min_bias = getValue(source_idx);</span>
+<span class="lineNum">    1030 </span>            :       // Either go from a high source to the upper boundary and
+<span class="lineNum">    1031 </span>            :       // then from the bottom boundary to the sink
+<span class="lineNum">    1032 </span><span class="lineCov">         42 :       if (source_idx &gt; sink_idx) {</span>
+<span class="lineNum">    1033 </span><span class="lineCov">        378 :         for (index_t i = source_idx; i &lt; maxsize_; i++) {</span>
+<span class="lineNum">    1034 </span><span class="lineCov">        168 :           if (curr_min_bias == 0.0) {</span>
+<span class="lineNum">    1035 </span>            :             break;
+<span class="lineNum">    1036 </span>            :           }
+<span class="lineNum">    1037 </span><span class="lineCov">        168 :           curr_min_bias = fmin(curr_min_bias, getValue(i));</span>
+<span class="lineNum">    1038 </span>            :         }
+<span class="lineNum">    1039 </span><span class="lineCov">        378 :         for (index_t i = 0; i &lt;= sink_idx; i++) {</span>
+<span class="lineNum">    1040 </span><span class="lineCov">        168 :           if (curr_min_bias == 0.0) {</span>
+<span class="lineNum">    1041 </span>            :             break;
+<span class="lineNum">    1042 </span>            :           }
+<span class="lineNum">    1043 </span><span class="lineCov">        168 :           curr_min_bias = fmin(curr_min_bias, getValue(i));</span>
+<span class="lineNum">    1044 </span>            :         }
+<span class="lineNum">    1045 </span>            :         // Or go from a low source to the bottom boundary and
+<span class="lineNum">    1046 </span>            :         // then from the high boundary to the sink
+<span class="lineNum">    1047 </span><span class="lineNoCov">          0 :       } else if (source_idx &lt; sink_idx) {</span>
+<span class="lineNum">    1048 </span><span class="lineNoCov">          0 :         for (index_t i = source_idx; i &gt; 0; i--) {</span>
+<span class="lineNum">    1049 </span><span class="lineNoCov">          0 :           if (curr_min_bias == 0.0) {</span>
+<span class="lineNum">    1050 </span>            :             break;
+<span class="lineNum">    1051 </span>            :           }
+<span class="lineNum">    1052 </span><span class="lineNoCov">          0 :           curr_min_bias = fmin(curr_min_bias, getValue(i));</span>
+<span class="lineNum">    1053 </span>            :         }
+<span class="lineNum">    1054 </span><span class="lineNoCov">          0 :         curr_min_bias = fmin(curr_min_bias, getValue(0));</span>
+<span class="lineNum">    1055 </span><span class="lineNoCov">          0 :         for (index_t i = maxsize_ - 1; i &lt;= sink_idx; i--) {</span>
+<span class="lineNum">    1056 </span><span class="lineNoCov">          0 :           if (curr_min_bias == 0.0) {</span>
+<span class="lineNum">    1057 </span>            :             break;
+<span class="lineNum">    1058 </span>            :           }
+<span class="lineNum">    1059 </span><span class="lineNoCov">          0 :           curr_min_bias = fmin(curr_min_bias, getValue(i));</span>
+<span class="lineNum">    1060 </span>            :         }
+<span class="lineNum">    1061 </span>            :       }
+<span class="lineNum">    1062 </span>            :       // If the boundary crossing paths was more biased, it's
+<span class="lineNum">    1063 </span>            :       // minimal bias replaces the non-boundary-crossing path's
+<span class="lineNum">    1064 </span>            :       // minimum.
+<span class="lineNum">    1065 </span><span class="lineCov">         42 :       maximal_minimum = fmax(maximal_minimum, curr_min_bias);</span>
+<span class="lineNum">    1066 </span>            :     }
+<span class="lineNum">    1067 </span>            :     // The one dimensional path search is complete.
+<span class="lineNum">    1068 </span>            :     return maximal_minimum;
+<span class="lineNum">    1069 </span>            :     // In two or more dimensions, path searching isn't trivial and we really
+<span class="lineNum">    1070 </span>            :     // do need to use a path search algorithm. Dijkstra is the simplest decent
+<span class="lineNum">    1071 </span>            :     // one. Using it we've never found the path search to be performance
+<span class="lineNum">    1072 </span>            :     // limiting in any solvated biomolecule test system, but faster options are
+<span class="lineNum">    1073 </span>            :     // easy to imagine if they become necessary. NB-In this case, we're actually
+<span class="lineNum">    1074 </span>            :     // using a greedy variant of Dijkstra's algorithm where the first possible
+<span class="lineNum">    1075 </span>            :     // path to a point always controls the path cost to that point. The structure
+<span class="lineNum">    1076 </span>            :     // of the cost function in this case guarantees that the calculated costs will
+<span class="lineNum">    1077 </span>            :     // be correct using this variant even though fine details of the paths may not
+<span class="lineNum">    1078 </span>            :     // match a normal Dijkstra search.
+<span class="lineNum">    1079 </span><span class="lineCov">        126 :   } else if (dimension_ &gt; 1) {</span>
+<span class="lineNum">    1080 </span>            :     // Prepare calculation temporaries for Dijkstra's algorithm.
+<span class="lineNum">    1081 </span>            :     // Minimal path costs from source to a given grid point
+<span class="lineNum">    1082 </span><span class="lineCov">        126 :     vector&lt;double&gt; mins_from_source = vector&lt;double&gt;(maxsize_, -1.0);</span>
+<span class="lineNum">    1083 </span>            :     // Heap for tracking available steps, steps are recorded as std::pairs of
+<span class="lineNum">    1084 </span>            :     // an index and a value.
+<span class="lineNum">    1085 </span>            :     vector&lt; pair&lt;index_t, double&gt; &gt; next_steps;
+<span class="lineNum">    1086 </span>            :     pair&lt;index_t, double&gt; curr_indexed_val;
+<span class="lineNum">    1087 </span>            :     make_heap(next_steps.begin(), next_steps.end(), indexed_lt);
+<span class="lineNum">    1088 </span>            :     // The search begins at the source index.
+<span class="lineNum">    1089 </span><span class="lineCov">        252 :     next_steps.push_back(pair&lt;index_t, double&gt;(source_idx, getValue(source_idx)));</span>
+<span class="lineNum">    1090 </span><span class="lineCov">        126 :     push_heap(next_steps.begin(), next_steps.end(), indexed_lt);</span>
+<span class="lineNum">    1091 </span>            :     // At first no points have been examined and the optimal path has not been found.
+<span class="lineNum">    1092 </span>            :     index_t n_examined = 0;
+<span class="lineNum">    1093 </span>            :     bool path_not_found = true;
+<span class="lineNum">    1094 </span>            :     // Until a path is found,
+<span class="lineNum">    1095 </span><span class="lineCov">       9576 :     while (path_not_found) {</span>
+<span class="lineNum">    1096 </span>            :       // Examine the grid point currently most accessible from
+<span class="lineNum">    1097 </span>            :       // the set of all previously explored grid points by popping
+<span class="lineNum">    1098 </span>            :       // it from the top of the heap.
+<span class="lineNum">    1099 </span>            :       pop_heap(next_steps.begin(), next_steps.end(), indexed_lt);
+<span class="lineNum">    1100 </span>            :       curr_indexed_val = next_steps.back();
+<span class="lineNum">    1101 </span>            :       next_steps.pop_back();
+<span class="lineNum">    1102 </span>            :       n_examined++;
+<span class="lineNum">    1103 </span>            :       // Check if this point is the sink point, and if so
+<span class="lineNum">    1104 </span>            :       // finish the loop.
+<span class="lineNum">    1105 </span><span class="lineCov">       9702 :       if (curr_indexed_val.first == sink_idx) {</span>
+<span class="lineNum">    1106 </span>            :         path_not_found = false;
+<span class="lineNum">    1107 </span>            :         maximal_minimum = curr_indexed_val.second;
+<span class="lineNum">    1108 </span><span class="lineCov">        126 :         break;</span>
+<span class="lineNum">    1109 </span>            :         // Check if this point has reached the worst possible
+<span class="lineNum">    1110 </span>            :         // value, and if so stop looking for paths.
+<span class="lineNum">    1111 </span><span class="lineCov">       9576 :       } else if (curr_indexed_val.second == 0.0) {</span>
+<span class="lineNum">    1112 </span>            :         maximal_minimum = 0.0;
+<span class="lineNum">    1113 </span>            :         break;
+<span class="lineNum">    1114 </span>            :       }
+<span class="lineNum">    1115 </span>            :       // If the search is not over, add this grid point's neighbors to the
+<span class="lineNum">    1116 </span>            :       // possible next points to search for the sink.
+<span class="lineNum">    1117 </span><span class="lineCov">       9576 :       vector&lt;index_t&gt; neighs = getNearestNeighbors(curr_indexed_val.first);</span>
+<span class="lineNum">    1118 </span><span class="lineCov">     129162 :       for (unsigned k = 0; k &lt; neighs.size(); k++) {</span>
+<span class="lineNum">    1119 </span><span class="lineCov">      36670 :         index_t i = neighs[k];</span>
+<span class="lineNum">    1120 </span>            :         // If the neighbor has not already been added to the list of possible next steps,
+<span class="lineNum">    1121 </span><span class="lineCov">      36670 :         if (mins_from_source[i] == -1.0) {</span>
+<span class="lineNum">    1122 </span>            :           // Set the cost to reach it via a path through the current point being examined.
+<span class="lineNum">    1123 </span><span class="lineCov">      24568 :           mins_from_source[i] = fmin(curr_indexed_val.second, getValue(i));</span>
+<span class="lineNum">    1124 </span>            :           // Add the neighboring point to the heap of potential next steps.
+<span class="lineNum">    1125 </span><span class="lineCov">      12284 :           next_steps.push_back(pair&lt;index_t, double&gt;(i, mins_from_source[i]));</span>
+<span class="lineNum">    1126 </span><span class="lineCov">      12284 :           push_heap(next_steps.begin(), next_steps.end(), indexed_lt);</span>
+<span class="lineNum">    1127 </span>            :         }
+<span class="lineNum">    1128 </span>            :       }
+<span class="lineNum">    1129 </span>            :       // Move on to the next best looking step along any of the paths
+<span class="lineNum">    1130 </span>            :       // growing from the source.
+<span class="lineNum">    1131 </span>            :     }
+<span class="lineNum">    1132 </span>            :     // The multidimensional path search is now complete.
+<span class="lineNum">    1133 </span>            :     return maximal_minimum;
+<span class="lineNum">    1134 </span>            :   }
+<span class="lineNum">    1135 </span>            :   return 0.0;
+<a name="1136"><span class="lineNum">    1136 </span>            : }</a>
+<span class="lineNum">    1137 </span>            : 
+<span class="lineNum">    1138 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

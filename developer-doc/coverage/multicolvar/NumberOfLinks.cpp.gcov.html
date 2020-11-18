@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/NumberOfLinks.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - NumberOfLinks.cpp<span style="font-size: 80%;"> (source / <a href="NumberOfLinks.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">53</td>
+            <td class="headerCovTableEntry">59</td>
+            <td class="headerCovTableEntryMed">89.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryMed">84.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //+PLUMEDOC MCOLVARF NLINKS
+<span class="lineNum">      31 </span>            : /*
+<span class="lineNum">      32 </span>            : Calculate number of pairs of atoms/molecules that are &quot;linked&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : In its simplest guise this coordinate calculates a coordination number.  Each pair
+<span class="lineNum">      35 </span>            : of atoms is assumed &quot;linked&quot; if they are within some cutoff of each other.  In more
+<span class="lineNum">      36 </span>            : complex applications each entity is a vector and this quantity measures whether
+<span class="lineNum">      37 </span>            : pairs of vectors are (a) within a certain cutoff and (b) if the two vectors have
+<span class="lineNum">      38 </span>            : similar orientations.  The vectors on individual atoms could be Steinhardt parameters
+<span class="lineNum">      39 </span>            : (see \ref Q3, \ref Q4 and \ref Q6) or they could describe some internal vector in a molecule.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \par Examples
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The following calculates how many bonds there are in a system containing 64 atoms and outputs
+<span class="lineNum">      44 </span>            : this quantity to a file.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : \plumedfile
+<span class="lineNum">      47 </span>            : DENSITY SPECIES=1-64 LABEL=d1
+<span class="lineNum">      48 </span>            : NLINKS ARG=d1 SWITCH={RATIONAL D_0=1.3 R_0=0.2} LABEL=dd
+<span class="lineNum">      49 </span>            : PRINT ARG=dd FILE=colvar
+<span class="lineNum">      50 </span>            : \endplumedfile
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The following calculates how many pairs of neighbouring atoms in a system containg 64 atoms have
+<span class="lineNum">      53 </span>            : similar dispositions for the atoms in their coordination sphere.  This calculation uses the
+<span class="lineNum">      54 </span>            : dot product of the Q6 vectors on adjacent atoms to measure whether or not two atoms have the same
+<span class="lineNum">      55 </span>            : ``orientation&quot;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \plumedfile
+<span class="lineNum">      58 </span>            : Q6 SPECIES=1-64 SWITCH={RATIONAL D_0=1.3 R_0=0.2} LABEL=q6
+<span class="lineNum">      59 </span>            : NLINKS ARG=q6 SWITCH={RATIONAL D_0=1.3 R_0=0.2} LABEL=dd
+<span class="lineNum">      60 </span>            : PRINT ARG=dd FILE=colvar
+<span class="lineNum">      61 </span>            : \endplumedfile
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : */
+<span class="lineNum">      64 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : namespace PLMD {
+<a name="67"><span class="lineNum">      67 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">         12 : class NumberOfLinks : public MultiColvarBase {</span>
+<span class="lineNum">      70 </span>            : private:
+<span class="lineNum">      71 </span>            : /// The values of the quantities in the dot products
+<span class="lineNum">      72 </span>            :   std::vector&lt;double&gt; orient0, orient1;
+<span class="lineNum">      73 </span>            : /// The switching function that tells us if atoms are close enough together
+<span class="lineNum">      74 </span>            :   SwitchingFunction switchingFunction;
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      77 </span>            :   explicit NumberOfLinks(const ActionOptions&amp;);
+<span class="lineNum">      78 </span>            : /// Do the stuff with the switching functions
+<span class="lineNum">      79 </span>            :   double calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      80 </span>            : /// Actually do the calculation
+<a name="81"><span class="lineNum">      81 </span>            :   double compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const ;</a>
+<span class="lineNum">      82 </span>            : /// Is the variable periodic
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<a name="84"><span class="lineNum">      84 </span>            : };</a>
+<span class="lineNum">      85 </span>            : 
+<a name="86"><span class="lineNum">      86 </span><span class="lineCov">       6456 : PLUMED_REGISTER_ACTION(NumberOfLinks,&quot;NLINKS&quot;)</span></a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">          5 : void NumberOfLinks::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">          5 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">      90 </span><span class="lineCov">         20 :   keys.add(&quot;atoms&quot;,&quot;GROUP&quot;,&quot;&quot;);</span>
+<span class="lineNum">      91 </span><span class="lineCov">         20 :   keys.add(&quot;atoms-1&quot;,&quot;GROUPA&quot;,&quot;&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">         20 :   keys.add(&quot;atoms-1&quot;,&quot;GROUPB&quot;,&quot;&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;,&quot;NN&quot;,&quot;6&quot;,&quot;The n parameter of the switching function &quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;,&quot;MM&quot;,&quot;0&quot;,&quot;The m parameter of the switching function; 0 implies 2*NN&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;,&quot;D_0&quot;,&quot;0.0&quot;,&quot;The d_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;R_0&quot;,&quot;The r_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;This keyword is used if you want to employ an alternative to the continuous swiching function defined above. &quot;</span>
+<span class="lineNum">      98 </span>            :            &quot;The following provides information on the \\ref switchingfunction that are available. &quot;
+<span class="lineNum">      99 </span>            :            &quot;When this keyword is present you no longer need the NN, MM, D_0 and R_0 keywords.&quot;);
+<span class="lineNum">     100 </span>            :   // Use actionWithDistributionKeywords
+<span class="lineNum">     101 </span><span class="lineCov">         10 :   keys.remove(&quot;LOWMEM&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">         15 :   keys.addFlag(&quot;LOWMEM&quot;,false,&quot;lower the memory requirements&quot;);</span>
+<a name="103"><span class="lineNum">     103 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">          4 : NumberOfLinks::NumberOfLinks(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     106 </span>            :   Action(ao),
+<span class="lineNum">     107 </span><span class="lineCov">          8 :   MultiColvarBase(ao)</span>
+<span class="lineNum">     108 </span>            : {
+<span class="lineNum">     109 </span>            :   // The weight of this does have derivatives
+<span class="lineNum">     110 </span><span class="lineCov">          4 :   weightHasDerivatives=true;</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :   // Read in the switching function
+<span class="lineNum">     113 </span><span class="lineCov">          8 :   std::string sw, errors; parse(&quot;SWITCH&quot;,sw);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          4 :   if(sw.length()&gt;0) {</span>
+<span class="lineNum">     115 </span><span class="lineCov">          4 :     switchingFunction.set(sw,errors);</span>
+<span class="lineNum">     116 </span>            :   } else {
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     double r_0=-1.0, d_0; int nn, mm;</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :     parse(&quot;NN&quot;,nn); parse(&quot;MM&quot;,mm);</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     parse(&quot;R_0&quot;,r_0); parse(&quot;D_0&quot;,d_0);</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     if( r_0&lt;0.0 ) error(&quot;you must set a value for R_0&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :     switchingFunction.set(nn,mm,r_0,d_0);</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineCov">         12 :   log.printf(&quot;  calculating number of links with atoms separation of %s\n&quot;,( switchingFunction.description() ).c_str() );</span>
+<span class="lineNum">     124 </span><span class="lineCov">         16 :   std::vector&lt;AtomNumber&gt; all_atoms; readTwoGroups( &quot;GROUP&quot;, &quot;GROUPA&quot;, &quot;GROUPB&quot;, all_atoms );</span>
+<span class="lineNum">     125 </span><span class="lineCov">          4 :   setupMultiColvarBase( all_atoms ); setLinkCellCutoff( switchingFunction.get_dmax() );</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">         12 :   for(unsigned i=0; i&lt;getNumberOfBaseMultiColvars(); ++i) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">          4 :     if( !getBaseMultiColvar(i)-&gt;hasDifferentiableOrientation() ) error(&quot;cannot use multicolvar of type &quot; + getBaseMultiColvar(i)-&gt;getName() );</span>
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :   // Create holders for the collective variable
+<span class="lineNum">     132 </span><span class="lineCov">          4 :   readVesselKeywords();</span>
+<span class="lineNum">     133 </span><span class="lineCov">          4 :   plumed_assert( getNumberOfVessels()==0 );</span>
+<span class="lineNum">     134 </span><span class="lineCov">          8 :   std::string input; addVessel( &quot;SUM&quot;, input, -1 );</span>
+<span class="lineNum">     135 </span><span class="lineCov">          4 :   readVesselKeywords();</span>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">       8064 : double NumberOfLinks::calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     139 </span><span class="lineCov">      16128 :   Vector distance = getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) );</span>
+<span class="lineNum">     140 </span><span class="lineCov">       8064 :   double dfunc, sw = switchingFunction.calculateSqr( distance.modulo2(), dfunc );</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">       8064 :   if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     143 </span><span class="lineCov">       8064 :     addAtomDerivatives( 0, 0, (-dfunc)*weight*distance, myatoms );</span>
+<span class="lineNum">     144 </span><span class="lineCov">       8064 :     addAtomDerivatives( 0, 1, (dfunc)*weight*distance, myatoms );</span>
+<span class="lineNum">     145 </span><span class="lineCov">       8064 :     myatoms.addBoxDerivatives( 0, (-dfunc)*weight*Tensor(distance,distance) );</span>
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span><span class="lineCov">       8064 :   return sw;</span>
+<a name="148"><span class="lineNum">     148 </span>            : }</a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">       8064 : double NumberOfLinks::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     151 </span><span class="lineCov">       8064 :   if( getBaseMultiColvar(0)-&gt;getNumberOfQuantities()&lt;3 ) return 1.0;</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">       8064 :   unsigned ncomp=getBaseMultiColvar(0)-&gt;getNumberOfQuantities();</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">       8064 :   std::vector&lt;double&gt; orient0( ncomp ), orient1( ncomp );</span>
+<span class="lineNum">     156 </span><span class="lineCov">       8064 :   getInputData( 0, true, myatoms, orient0 );</span>
+<span class="lineNum">     157 </span><span class="lineCov">       8064 :   getInputData( 1, true, myatoms, orient1 );</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   double dot=0;
+<span class="lineNum">     160 </span><span class="lineCov">     548352 :   for(unsigned k=2; k&lt;orient0.size(); ++k) {</span>
+<span class="lineNum">     161 </span><span class="lineCov">     354816 :     dot+=orient0[k]*orient1[k];</span>
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">       8064 :   if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     165 </span><span class="lineCov">       8064 :     MultiValue&amp; myder0=getInputDerivatives( 0, true, myatoms );</span>
+<span class="lineNum">     166 </span><span class="lineCov">      16128 :     mergeInputDerivatives( 1, 2, orient1.size(), 0, orient1, myder0, myatoms );</span>
+<span class="lineNum">     167 </span><span class="lineCov">       8064 :     MultiValue&amp; myder1=getInputDerivatives( 1, true, myatoms );</span>
+<span class="lineNum">     168 </span><span class="lineCov">      16128 :     mergeInputDerivatives( 1, 2, orient0.size(), 1, orient0, myder1, myatoms );</span>
+<span class="lineNum">     169 </span>            :   }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :   return dot;
+<span class="lineNum">     172 </span>            : }
+<a name="173"><span class="lineNum">     173 </span>            : </a>
+<span class="lineNum">     174 </span>            : }
+<span class="lineNum">     175 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/ActionAtomistic.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - ActionAtomistic.cpp<span style="font-size: 80%;"> (source / <a href="ActionAtomistic.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">156</td>
+            <td class="headerCovTableEntry">171</td>
+            <td class="headerCovTableEntryHi">91.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryMed">79.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ActionAtomistic.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionSet.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;SetupMolInfo.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &quot;ActionWithValue.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;ActionWithVirtualAtom.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;Atoms.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : using namespace std;
+<span class="lineNum">      37 </span>            : 
+<a name="38"><span class="lineNum">      38 </span>            : namespace PLMD {</a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">       2310 : ActionAtomistic::~ActionAtomistic() {</span>
+<span class="lineNum">      41 </span>            : // forget the pending request
+<span class="lineNum">      42 </span><span class="lineCov">       2310 :   atoms.remove(this);</span>
+<span class="lineNum">      43 </span><span class="lineCov">       2310 :   delete(&amp;pbc);</span>
+<span class="lineNum">      44 </span><span class="lineCov">       2310 : }</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">       2310 : ActionAtomistic::ActionAtomistic(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      47 </span>            :   Action(ao),
+<span class="lineNum">      48 </span><span class="lineCov">       2310 :   pbc(*new(Pbc)),</span>
+<span class="lineNum">      49 </span>            :   lockRequestAtoms(false),
+<span class="lineNum">      50 </span>            :   donotretrieve(false),
+<span class="lineNum">      51 </span>            :   donotforce(false),
+<span class="lineNum">      52 </span><span class="lineCov">       9240 :   atoms(plumed.getAtoms())</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineCov">       2310 :   atoms.add(this);</span>
+<span class="lineNum">      55 </span>            : //  if(atoms.getNatoms()==0) error(&quot;Cannot perform calculations involving atoms without atoms&quot;);
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">       2310 : }</span></a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">       2393 : void ActionAtomistic::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      59 </span>            :   (void) keys; // avoid warning
+<span class="lineNum">      60 </span><span class="lineCov">       2393 : }</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">       2238 : void ActionAtomistic::requestAtoms(const vector&lt;AtomNumber&gt; &amp; a) {</span>
+<span class="lineNum">      64 </span><span class="lineCov">       2238 :   plumed_massert(!lockRequestAtoms,&quot;requested atom list can only be changed in the prepare() method&quot;);</span>
+<span class="lineNum">      65 </span><span class="lineCov">       2238 :   int nat=a.size();</span>
+<span class="lineNum">      66 </span><span class="lineCov">       2238 :   indexes=a;</span>
+<span class="lineNum">      67 </span><span class="lineCov">       2238 :   positions.resize(nat);</span>
+<span class="lineNum">      68 </span><span class="lineCov">       2238 :   forces.resize(nat);</span>
+<span class="lineNum">      69 </span><span class="lineCov">       2238 :   masses.resize(nat);</span>
+<span class="lineNum">      70 </span><span class="lineCov">       2238 :   charges.resize(nat);</span>
+<span class="lineNum">      71 </span><span class="lineCov">       2238 :   int n=atoms.positions.size();</span>
+<span class="lineNum">      72 </span><span class="lineCov">       2238 :   clearDependencies();</span>
+<span class="lineNum">      73 </span>            :   unique.clear();
+<span class="lineNum">      74 </span><span class="lineCov">    1835916 :   for(unsigned i=0; i&lt;indexes.size(); i++) {</span>
+<span class="lineNum">      75 </span><span class="lineCov">     610482 :     if(indexes[i].index()&gt;=n) error(&quot;atom out of range&quot;);</span>
+<span class="lineNum">      76 </span><span class="lineCov">    1221144 :     if(atoms.isVirtualAtom(indexes[i])) addDependency(atoms.getVirtualAtomsAction(indexes[i]));</span>
+<span class="lineNum">      77 </span>            : // only real atoms are requested to lower level Atoms class
+<span class="lineNum">      78 </span>            :     else unique.insert(indexes[i]);
+<span class="lineNum">      79 </span>            :   }
+<span class="lineNum">      80 </span><span class="lineCov">       2237 :   updateUniqueLocal();</span>
+<span class="lineNum">      81 </span><span class="lineCov">       2237 :   atoms.unique.clear();</span>
+<a name="82"><span class="lineNum">      82 </span><span class="lineCov">       2237 : }</span></a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">  127141753 : Vector ActionAtomistic::pbcDistance(const Vector &amp;v1,const Vector &amp;v2)const {</span>
+<span class="lineNum">      85 </span><span class="lineCov">  254283506 :   return pbc.distance(v1,v2);</span>
+<a name="86"><span class="lineNum">      86 </span>            : }</a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">     234812 : void ActionAtomistic::pbcApply(std::vector&lt;Vector&gt;&amp; dlist, unsigned max_index)const {</span>
+<span class="lineNum">      89 </span><span class="lineCov">     234812 :   pbc.apply(dlist, max_index);</span>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">     234812 : }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">        175 : void ActionAtomistic::calculateNumericalDerivatives( ActionWithValue* a ) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">        175 :   calculateAtomicNumericalDerivatives( a, 0 );</span>
+<a name="94"><span class="lineNum">      94 </span><span class="lineCov">        175 : }</span></a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 : void ActionAtomistic::changeBox( const Tensor&amp; newbox ) {</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :   pbc.setBox( newbox );</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">        467 : void ActionAtomistic::calculateAtomicNumericalDerivatives( ActionWithValue* a, const unsigned&amp; startnum ) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">        467 :   if(!a) {</span>
+<span class="lineNum">     102 </span><span class="lineCov">        250 :     a=dynamic_cast&lt;ActionWithValue*&gt;(this);</span>
+<span class="lineNum">     103 </span><span class="lineCov">        250 :     plumed_massert(a,&quot;only Actions with a value can be differentiated&quot;);</span>
+<span class="lineNum">     104 </span>            :   }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   const int nval=a-&gt;getNumberOfComponents();
+<span class="lineNum">     107 </span><span class="lineCov">        467 :   const int natoms=getNumberOfAtoms();</span>
+<span class="lineNum">     108 </span><span class="lineCov">        467 :   std::vector&lt;Vector&gt; value(nval*natoms);</span>
+<span class="lineNum">     109 </span><span class="lineCov">        467 :   std::vector&lt;Tensor&gt; valuebox(nval);</span>
+<span class="lineNum">     110 </span><span class="lineCov">        467 :   std::vector&lt;Vector&gt; savedPositions(natoms);</span>
+<span class="lineNum">     111 </span>            :   const double delta=sqrt(epsilon);
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">      66255 :   for(int i=0; i&lt;natoms; i++) for(int k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     114 </span><span class="lineCov">     148023 :       savedPositions[i][k]=positions[i][k];</span>
+<span class="lineNum">     115 </span><span class="lineCov">      49341 :       positions[i][k]=positions[i][k]+delta;</span>
+<span class="lineNum">     116 </span><span class="lineCov">      49341 :       a-&gt;calculate();</span>
+<span class="lineNum">     117 </span><span class="lineCov">      98682 :       positions[i][k]=savedPositions[i][k];</span>
+<span class="lineNum">     118 </span><span class="lineCov">     204981 :       for(int j=0; j&lt;nval; j++) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">     155640 :         value[j*natoms+i][k]=a-&gt;getOutputQuantity(j);</span>
+<span class="lineNum">     120 </span>            :       }
+<span class="lineNum">     121 </span>            :     }
+<span class="lineNum">     122 </span><span class="lineCov">        467 :   Tensor box(pbc.getBox());</span>
+<span class="lineNum">     123 </span><span class="lineCov">       6071 :   for(int i=0; i&lt;3; i++) for(int k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     124 </span><span class="lineCov">       4203 :       double arg0=box(i,k);</span>
+<span class="lineNum">     125 </span><span class="lineCov">     300249 :       for(int j=0; j&lt;natoms; j++) positions[j]=pbc.realToScaled(positions[j]);</span>
+<span class="lineNum">     126 </span><span class="lineCov">       4203 :       box(i,k)=box(i,k)+delta;</span>
+<span class="lineNum">     127 </span><span class="lineCov">       4203 :       pbc.setBox(box);</span>
+<span class="lineNum">     128 </span><span class="lineCov">     300249 :       for(int j=0; j&lt;natoms; j++) positions[j]=pbc.scaledToReal(positions[j]);</span>
+<span class="lineNum">     129 </span><span class="lineCov">       4203 :       a-&gt;calculate();</span>
+<span class="lineNum">     130 </span><span class="lineCov">       4203 :       box(i,k)=arg0;</span>
+<span class="lineNum">     131 </span><span class="lineCov">       4203 :       pbc.setBox(box);</span>
+<span class="lineNum">     132 </span><span class="lineCov">     300249 :       for(int j=0; j&lt;natoms; j++) positions[j]=savedPositions[j];</span>
+<span class="lineNum">     133 </span><span class="lineCov">      32607 :       for(int j=0; j&lt;nval; j++) valuebox[j](i,k)=a-&gt;getOutputQuantity(j);</span>
+<span class="lineNum">     134 </span>            :     }
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">        467 :   a-&gt;calculate();</span>
+<span class="lineNum">     137 </span><span class="lineCov">        467 :   a-&gt;clearDerivatives();</span>
+<span class="lineNum">     138 </span><span class="lineCov">       3623 :   for(int j=0; j&lt;nval; j++) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">       1578 :     Value* v=a-&gt;copyOutput(j);</span>
+<span class="lineNum">     140 </span>            :     double ref=v-&gt;get();
+<span class="lineNum">     141 </span><span class="lineCov">       1578 :     if(v-&gt;hasDerivatives()) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">      76925 :       for(int i=0; i&lt;natoms; i++) for(int k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     143 </span><span class="lineCov">     114312 :           double d=(value[j*natoms+i][k]-ref)/delta;</span>
+<span class="lineNum">     144 </span><span class="lineCov">      57156 :           v-&gt;addDerivative(startnum+3*i+k,d);</span>
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span><span class="lineCov">        717 :       Tensor virial;</span>
+<span class="lineNum">     147 </span><span class="lineCov">       9321 :       for(int i=0; i&lt;3; i++) for(int k=0; k&lt;3; k++)virial(i,k)= (valuebox[j](i,k)-ref)/delta;</span>
+<span class="lineNum">     148 </span>            : // BE CAREFUL WITH NON ORTHOROMBIC CELL
+<span class="lineNum">     149 </span><span class="lineCov">        717 :       virial=-matmul(box.transpose(),virial);</span>
+<span class="lineNum">     150 </span><span class="lineCov">       9321 :       for(int i=0; i&lt;3; i++) for(int k=0; k&lt;3; k++) v-&gt;addDerivative(startnum+3*natoms+3*k+i,virial(k,i));</span>
+<span class="lineNum">     151 </span>            :     }
+<span class="lineNum">     152 </span>            :   }
+<a name="153"><span class="lineNum">     153 </span><span class="lineCov">        467 : }</span></a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">       3222 : void ActionAtomistic::parseAtomList(const std::string&amp;key, std::vector&lt;AtomNumber&gt; &amp;t) {</span>
+<span class="lineNum">     156 </span><span class="lineCov">       3222 :   parseAtomList(key,-1,t);</span>
+<span class="lineNum">     157 </span><span class="lineCov">       3221 : }</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">       4817 : void ActionAtomistic::parseAtomList(const std::string&amp;key,const int num, std::vector&lt;AtomNumber&gt; &amp;t) {</span>
+<span class="lineNum">     160 </span><span class="lineCov">      14451 :   plumed_massert( keywords.style(key,&quot;atoms&quot;) || keywords.style(key,&quot;hidden&quot;), &quot;keyword &quot; + key + &quot; should be registered as atoms&quot;);</span>
+<span class="lineNum">     161 </span><span class="lineCov">       3146 :   vector&lt;string&gt; strings;</span>
+<span class="lineNum">     162 </span><span class="lineCov">       4817 :   if( num&lt;0 ) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">       3222 :     parseVector(key,strings);</span>
+<span class="lineNum">     164 </span><span class="lineCov">       4892 :     if(strings.empty()) return;</span>
+<span class="lineNum">     165 </span>            :   } else {
+<span class="lineNum">     166 </span><span class="lineCov">       1595 :     if ( !parseNumberedVector(key,num,strings) ) return;</span>
+<span class="lineNum">     167 </span>            :   }
+<span class="lineNum">     168 </span><span class="lineCov">       3145 :   interpretAtomList( strings, t );</span>
+<span class="lineNum">     169 </span>            : }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">       3323 : void ActionAtomistic::interpretAtomList( std::vector&lt;std::string&gt;&amp; strings, std::vector&lt;AtomNumber&gt; &amp;t) {</span>
+<span class="lineNum">     172 </span><span class="lineCov">       3323 :   Tools::interpretRanges(strings); t.resize(0);</span>
+<span class="lineNum">     173 </span><span class="lineCov">     479221 :   for(unsigned i=0; i&lt;strings.size(); ++i) {</span>
+<span class="lineNum">     174 </span>            :     AtomNumber atom;
+<span class="lineNum">     175 </span><span class="lineCov">     157525 :     bool ok=Tools::convert(strings[i],atom); // this is converting strings to AtomNumbers</span>
+<span class="lineNum">     176 </span><span class="lineCov">     157525 :     if(ok) t.push_back(atom);</span>
+<span class="lineNum">     177 </span>            : // here we check if this is a special symbol for MOLINFO
+<span class="lineNum">     178 </span><span class="lineCov">     158507 :     if( !ok &amp;&amp; strings[i].compare(0,1,&quot;@&quot;)==0 ) {</span>
+<span class="lineNum">     179 </span><span class="lineCov">        502 :       std::size_t dot=strings[i].find_first_of(&quot;@&quot;); std::string symbol=strings[i].substr(dot+1);</span>
+<span class="lineNum">     180 </span><span class="lineCov">       1004 :       vector&lt;SetupMolInfo*&gt; moldat=plumed.getActionSet().select&lt;SetupMolInfo*&gt;();</span>
+<span class="lineNum">     181 </span><span class="lineCov">        502 :       if( moldat.size()&gt;0 ) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">        502 :         vector&lt;AtomNumber&gt; atom_list; moldat[0]-&gt;interpretSymbol( symbol, atom_list );</span>
+<span class="lineNum">     183 </span><span class="lineCov">       1004 :         if( atom_list.size()&gt;0 ) { ok=true; t.insert(t.end(),atom_list.begin(),atom_list.end()); }</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :         else { error(strings[i] + &quot; is not a label plumed knows&quot;); }</span>
+<span class="lineNum">     185 </span>            :       } else {
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         error(&quot;atoms specified using @ symbol but no MOLINFO was available&quot;);</span>
+<span class="lineNum">     187 </span>            :       }
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span>            : // here we check if the atom name is the name of a group
+<span class="lineNum">     190 </span><span class="lineCov">     157525 :     if(!ok) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">        480 :       if(atoms.groups.count(strings[i])) {</span>
+<span class="lineNum">     192 </span><span class="lineCov">        298 :         const auto m=atoms.groups.find(strings[i]);</span>
+<span class="lineNum">     193 </span><span class="lineCov">        298 :         t.insert(t.end(),m-&gt;second.begin(),m-&gt;second.end());</span>
+<span class="lineNum">     194 </span>            :         ok=true;
+<span class="lineNum">     195 </span>            :       }
+<span class="lineNum">     196 </span>            :     }
+<span class="lineNum">     197 </span>            : // here we check if the atom name is the name of an added virtual atom
+<span class="lineNum">     198 </span><span class="lineCov">     157227 :     if(!ok) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">        182 :       const ActionSet&amp;actionSet(plumed.getActionSet());</span>
+<span class="lineNum">     200 </span><span class="lineCov">       1175 :       for(const auto &amp; a : actionSet) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">       1175 :         ActionWithVirtualAtom* c=dynamic_cast&lt;ActionWithVirtualAtom*&gt;(a);</span>
+<span class="lineNum">     202 </span><span class="lineCov">       1795 :         if(c) if(c-&gt;getLabel()==strings[i]) {</span>
+<span class="lineNum">     203 </span>            :             ok=true;
+<span class="lineNum">     204 </span><span class="lineCov">        364 :             t.push_back(c-&gt;getIndex());</span>
+<span class="lineNum">     205 </span>            :             break;
+<span class="lineNum">     206 </span>            :           }
+<span class="lineNum">     207 </span>            :       }
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span><span class="lineCov">     157343 :     if(!ok) error(&quot;it was not possible to interpret atom name &quot; + strings[i]);</span>
+<span class="lineNum">     210 </span>            :     // plumed_massert(ok,&quot;it was not possible to interpret atom name &quot; + strings[i]);
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span><span class="lineCov">       3323 : }</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineCov">      92770 : void ActionAtomistic::retrieveAtoms() {</span>
+<span class="lineNum">     216 </span><span class="lineCov">      92770 :   pbc=atoms.pbc;</span>
+<span class="lineNum">     217 </span><span class="lineCov">      92770 :   Colvar*cc=dynamic_cast&lt;Colvar*&gt;(this);</span>
+<span class="lineNum">     218 </span><span class="lineCov">     170401 :   if(cc &amp;&amp; cc-&gt;checkIsEnergy()) energy=atoms.getEnergy();</span>
+<span class="lineNum">     219 </span><span class="lineCov">      92770 :   if(donotretrieve) return;</span>
+<span class="lineNum">     220 </span><span class="lineCov">     183370 :   chargesWereSet=atoms.chargesWereSet();</span>
+<span class="lineNum">     221 </span>            :   const vector&lt;Vector&gt; &amp; p(atoms.positions);
+<span class="lineNum">     222 </span>            :   const vector&lt;double&gt; &amp; c(atoms.charges);
+<span class="lineNum">     223 </span>            :   const vector&lt;double&gt; &amp; m(atoms.masses);
+<span class="lineNum">     224 </span><span class="lineCov">    7666814 :   for(unsigned j=0; j&lt;indexes.size(); j++) positions[j]=p[indexes[j].index()];</span>
+<span class="lineNum">     225 </span><span class="lineCov">    7666814 :   for(unsigned j=0; j&lt;indexes.size(); j++) charges[j]=c[indexes[j].index()];</span>
+<span class="lineNum">     226 </span><span class="lineCov">    7666814 :   for(unsigned j=0; j&lt;indexes.size(); j++) masses[j]=m[indexes[j].index()];</span>
+<span class="lineNum">     227 </span>            : }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span><span class="lineCov">        599 : void ActionAtomistic::setForcesOnAtoms( const std::vector&lt;double&gt;&amp; forcesToApply, unsigned ind ) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">        599 :   if(donotforce) return;</span>
+<span class="lineNum">     231 </span><span class="lineCov">     638389 :   for(unsigned i=0; i&lt;indexes.size(); ++i) {</span>
+<span class="lineNum">     232 </span><span class="lineCov">     424794 :     forces[i][0]=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     233 </span><span class="lineCov">     424794 :     forces[i][1]=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     234 </span><span class="lineCov">     424794 :     forces[i][2]=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     235 </span>            :   }
+<span class="lineNum">     236 </span><span class="lineCov">       1198 :   virial(0,0)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     237 </span><span class="lineCov">       1198 :   virial(0,1)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     238 </span><span class="lineCov">       1198 :   virial(0,2)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     239 </span><span class="lineCov">       1198 :   virial(1,0)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     240 </span><span class="lineCov">       1198 :   virial(1,1)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     241 </span><span class="lineCov">       1198 :   virial(1,2)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     242 </span><span class="lineCov">       1198 :   virial(2,0)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     243 </span><span class="lineCov">       1198 :   virial(2,1)=forcesToApply[ind]; ind++;</span>
+<span class="lineNum">     244 </span><span class="lineCov">       1198 :   virial(2,2)=forcesToApply[ind];</span>
+<span class="lineNum">     245 </span>            :   plumed_dbg_assert( ind+1==forcesToApply.size());
+<span class="lineNum">     246 </span>            : }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">      92371 : void ActionAtomistic::applyForces() {</span>
+<span class="lineNum">     249 </span><span class="lineCov">      92371 :   if(donotforce) return;</span>
+<span class="lineNum">     250 </span><span class="lineCov">      91382 :   vector&lt;Vector&gt;   &amp; f(atoms.forces);</span>
+<span class="lineNum">     251 </span><span class="lineCov">      91382 :   Tensor           &amp; v(atoms.virial);</span>
+<span class="lineNum">     252 </span><span class="lineCov">    7598444 :   for(unsigned j=0; j&lt;indexes.size(); j++) f[indexes[j].index()]+=forces[j];</span>
+<span class="lineNum">     253 </span><span class="lineCov">      91382 :   v+=virial;</span>
+<span class="lineNum">     254 </span><span class="lineCov">      91382 :   atoms.forceOnEnergy+=forceOnEnergy;</span>
+<span class="lineNum">     255 </span>            : }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span><span class="lineCov">      92770 : void ActionAtomistic::clearOutputForces() {</span>
+<span class="lineNum">     258 </span><span class="lineCov">      92770 :   virial.zero();</span>
+<span class="lineNum">     259 </span><span class="lineCov">      92770 :   if(donotforce) return;</span>
+<span class="lineNum">     260 </span><span class="lineCov">    5797153 :   for(unsigned i=0; i&lt;forces.size(); ++i)forces[i].zero();</span>
+<span class="lineNum">     261 </span><span class="lineCov">      91781 :   forceOnEnergy=0.0;</span>
+<span class="lineNum">     262 </span>            : }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 : void ActionAtomistic::readAtomsFromPDB( const PDB&amp; pdb ) {</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :   Colvar*cc=dynamic_cast&lt;Colvar*&gt;(this);</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :   if(cc &amp;&amp; cc-&gt;checkIsEnergy()) error(&quot;can't read energies from pdb files&quot;);</span>
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :   for(unsigned j=0; j&lt;indexes.size(); j++) {</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :     if( indexes[j].index()&gt;pdb.size() ) error(&quot;there are not enough atoms in the input pdb file&quot;);</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :     if( pdb.getAtomNumbers()[j].index()!=indexes[j].index() ) error(&quot;there are atoms missing in the pdb file&quot;);</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :     positions[j]=pdb.getPositions()[indexes[j].index()];</span>
+<span class="lineNum">     273 </span>            :   }
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :   for(unsigned j=0; j&lt;indexes.size(); j++) charges[j]=pdb.getBeta()[indexes[j].index()];</span>
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :   for(unsigned j=0; j&lt;indexes.size(); j++) masses[j]=pdb.getOccupancy()[indexes[j].index()];</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span><span class="lineCov">      52109 : void ActionAtomistic::makeWhole() {</span>
+<span class="lineNum">     279 </span><span class="lineCov">    1017967 :   for(unsigned j=0; j&lt;positions.size()-1; ++j) {</span>
+<span class="lineNum">     280 </span>            :     const Vector &amp; first (positions[j]);
+<span class="lineNum">     281 </span><span class="lineCov">     304583 :     Vector &amp; second (positions[j+1]);</span>
+<span class="lineNum">     282 </span><span class="lineCov">     304583 :     second=first+pbcDistance(first,second);</span>
+<span class="lineNum">     283 </span>            :   }
+<span class="lineNum">     284 </span><span class="lineCov">      52109 : }</span>
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">      11625 : void ActionAtomistic::updateUniqueLocal() {</span>
+<span class="lineNum">     287 </span>            :   unique_local.clear();
+<span class="lineNum">     288 </span><span class="lineCov">      23250 :   if(atoms.dd &amp;&amp; atoms.shuffledAtoms&gt;0) {</span>
+<span class="lineNum">     289 </span><span class="lineCov">      79984 :     for(auto pp=unique.begin(); pp!=unique.end(); ++pp) {</span>
+<span class="lineNum">     290 </span><span class="lineCov">     140952 :       if(atoms.g2l[pp-&gt;index()]&gt;=0) unique_local.insert(*pp);</span>
+<span class="lineNum">     291 </span>            :     }
+<span class="lineNum">     292 </span>            :   } else {
+<span class="lineNum">     293 </span>            :     unique_local.insert(unique.begin(),unique.end());
+<span class="lineNum">     294 </span>            :   }
+<a name="295"><span class="lineNum">     295 </span><span class="lineCov">      11625 : }</span></a>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

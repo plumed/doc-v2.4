@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/DFSClustering.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - DFSClustering.cpp<span style="font-size: 80%;"> (source / <a href="DFSClustering.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ClusteringBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AdjacencyMatrixVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #ifdef __PLUMED_HAS_BOOST_GRAPH
+<span class="lineNum">      27 </span>            : #include &lt;boost/graph/adjacency_list.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/graph/connected_components.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/graph/graph_utility.hpp&gt;
+<span class="lineNum">      30 </span>            : #endif
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC MATRIXF DFSCLUSTERING
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Find the connected components of the matrix using the depth first search clustering algorithm.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : As discussed in the section of the manual on \ref contactmatrix a useful tool for developing complex collective variables is the notion of the
+<span class="lineNum">      37 </span>            : so called adjacency matrix.  An adjacency matrix is an \f$N \times N\f$ matrix in which the \f$i\f$th, \f$j\f$th element tells you whether
+<span class="lineNum">      38 </span>            : or not the \f$i\f$th and \f$j\f$th atoms/molecules from a set of \f$N\f$ atoms/molecules are adjacent or not.  As detailed in \cite tribello-clustering
+<span class="lineNum">      39 </span>            : these matrices provide a representation of a graph and can thus can be analysed using tools from graph theory.  This particular action performs
+<span class="lineNum">      40 </span>            : a depth first search clustering to find the connected components of this graph.  You can read more about depth first search here:
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : https://en.wikipedia.org/wiki/Depth-first_search
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : This action is useful if you are looking at a phenomenon such as nucleation where the aim is to detect the sizes of the crystalline nuclei that have formed
+<span class="lineNum">      45 </span>            : in your simulation cell.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \par Examples
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : The input below calculates the coordination numbers of atoms 1-100 and then computes the an adjacency
+<span class="lineNum">      50 </span>            : matrix whose elements measures whether atoms \f$i\f$ and \f$j\f$ are within 0.55 nm of each other.  The action
+<span class="lineNum">      51 </span>            : labelled dfs then treats the elements of this matrix as zero or ones and thus thinks of the matrix as defining
+<span class="lineNum">      52 </span>            : a graph.  This dfs action then finds the largest connected component in this graph.  The sum of the coordination
+<span class="lineNum">      53 </span>            : numbers for the atoms in this largest connected component are then computed and this quantity is output to a colvar
+<span class="lineNum">      54 </span>            : file.  The way this input can be used is described in detail in \cite tribello-clustering.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \plumedfile
+<span class="lineNum">      57 </span>            : lq: COORDINATIONNUMBER SPECIES=1-100 SWITCH={CUBIC D_0=0.45  D_MAX=0.55} LOWMEM
+<span class="lineNum">      58 </span>            : cm: CONTACT_MATRIX ATOMS=lq  SWITCH={CUBIC D_0=0.45  D_MAX=0.55}
+<span class="lineNum">      59 </span>            : dfs: DFSCLUSTERING MATRIX=cm
+<span class="lineNum">      60 </span>            : clust1: CLUSTER_PROPERTIES CLUSTERS=dfs CLUSTER=1 SUM
+<span class="lineNum">      61 </span>            : PRINT ARG=clust1.* FILE=colvar
+<span class="lineNum">      62 </span>            : \endplumedfile
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : */
+<span class="lineNum">      65 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : namespace PLMD {
+<a name="68"><span class="lineNum">      68 </span>            : namespace adjmat {</a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">         45 : class DFSClustering : public ClusteringBase {</span>
+<span class="lineNum">      71 </span>            : private:
+<span class="lineNum">      72 </span>            : #ifdef __PLUMED_HAS_BOOST_GRAPH
+<span class="lineNum">      73 </span>            : /// The list of edges in the graph
+<span class="lineNum">      74 </span>            :   std::vector&lt;std::pair&lt;unsigned,unsigned&gt; &gt; edge_list;
+<span class="lineNum">      75 </span>            : #else
+<span class="lineNum">      76 </span>            : /// The number of neighbors each atom has
+<span class="lineNum">      77 </span>            :   std::vector&lt;unsigned&gt; nneigh;
+<span class="lineNum">      78 </span>            : /// The adjacency list
+<span class="lineNum">      79 </span>            :   Matrix&lt;unsigned&gt; adj_list;
+<span class="lineNum">      80 </span>            : /// The color that tells us whether a node has been visited
+<span class="lineNum">      81 </span>            :   std::vector&lt;unsigned&gt; color;
+<span class="lineNum">      82 </span>            : /// The recursive function at the heart of this method
+<span class="lineNum">      83 </span>            :   int explore( const unsigned&amp; index );
+<span class="lineNum">      84 </span>            : #endif
+<span class="lineNum">      85 </span>            : public:
+<span class="lineNum">      86 </span>            : /// Create manual
+<span class="lineNum">      87 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      88 </span>            : /// Constructor
+<span class="lineNum">      89 </span>            :   explicit DFSClustering(const ActionOptions&amp;);
+<span class="lineNum">      90 </span>            : /// Do the clustering
+<span class="lineNum">      91 </span>            :   void performClustering();
+<a name="92"><span class="lineNum">      92 </span>            : };</a>
+<span class="lineNum">      93 </span>            : 
+<a name="94"><span class="lineNum">      94 </span><span class="lineCov">       6467 : PLUMED_REGISTER_ACTION(DFSClustering,&quot;DFSCLUSTERING&quot;)</span></a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">         16 : void DFSClustering::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      97 </span><span class="lineCov">         16 :   ClusteringBase::registerKeywords( keys );</span>
+<span class="lineNum">      98 </span><span class="lineCov">         80 :   keys.add(&quot;compulsory&quot;,&quot;MAXCONNECT&quot;,&quot;0&quot;,&quot;maximum number of connections that can be formed by any given node in the graph. &quot;</span>
+<span class="lineNum">      99 </span>            :            &quot;By default this is set equal to zero and the number of connections is set equal to the number &quot;
+<span class="lineNum">     100 </span>            :            &quot;of nodes.  You only really need to set this if you are working with a very large system and &quot;
+<span class="lineNum">     101 </span>            :            &quot;memory is at a premium&quot;);
+<a name="102"><span class="lineNum">     102 </span><span class="lineCov">         16 : }</span></a>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">         15 : DFSClustering::DFSClustering(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     105 </span>            :   Action(ao),
+<span class="lineNum">     106 </span><span class="lineCov">         30 :   ClusteringBase(ao)</span>
+<span class="lineNum">     107 </span>            : {
+<span class="lineNum">     108 </span><span class="lineCov">         30 :   unsigned maxconnections; parse(&quot;MAXCONNECT&quot;,maxconnections);</span>
+<span class="lineNum">     109 </span>            : #ifdef __PLUMED_HAS_BOOST_GRAPH
+<span class="lineNum">     110 </span>            :   if( maxconnections&gt;0 ) edge_list.resize( getNumberOfNodes()*maxconnections );
+<span class="lineNum">     111 </span>            :   else edge_list.resize(0.5*getNumberOfNodes()*(getNumberOfNodes()-1));
+<span class="lineNum">     112 </span>            : #else
+<span class="lineNum">     113 </span><span class="lineCov">         15 :   nneigh.resize( getNumberOfNodes() ); color.resize(getNumberOfNodes());</span>
+<span class="lineNum">     114 </span><span class="lineCov">         15 :   if( maxconnections&gt;0 ) adj_list.resize(getNumberOfNodes(),maxconnections);</span>
+<span class="lineNum">     115 </span><span class="lineCov">         15 :   else adj_list.resize(getNumberOfNodes(),getNumberOfNodes());</span>
+<span class="lineNum">     116 </span>            : #endif
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">         15 : }</span></a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">         24 : void DFSClustering::performClustering() {</span>
+<span class="lineNum">     120 </span>            : #ifdef __PLUMED_HAS_BOOST_GRAPH
+<span class="lineNum">     121 </span>            :   // Get the list of edges
+<span class="lineNum">     122 </span>            :   unsigned nedges=0; getAdjacencyVessel()-&gt;retrieveEdgeList( nedges, edge_list );
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :   // Build the graph using boost
+<span class="lineNum">     125 </span>            :   boost::adjacency_list&lt;boost::vecS,boost::vecS,boost::undirectedS&gt; sg(&amp;edge_list[0],&amp;edge_list[nedges],getNumberOfNodes());
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :   // Find the connected components using boost (-1 here for compatibility with non-boost version)
+<span class="lineNum">     128 </span>            :   number_of_cluster=boost::connected_components(sg,&amp;which_cluster[0]) - 1;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :   // And work out the size of each cluster
+<span class="lineNum">     131 </span>            :   for(unsigned i=0; i&lt;which_cluster.size(); ++i) cluster_sizes[which_cluster[i]].first++;
+<span class="lineNum">     132 </span>            : #else
+<span class="lineNum">     133 </span>            :   // Get the adjacency matrix
+<span class="lineNum">     134 </span><span class="lineCov">         24 :   getAdjacencyVessel()-&gt;retrieveAdjacencyLists( nneigh, adj_list );</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :   // Perform clustering
+<span class="lineNum">     137 </span><span class="lineCov">         48 :   number_of_cluster=-1; color.assign(color.size(),0);</span>
+<span class="lineNum">     138 </span><span class="lineCov">       8217 :   for(unsigned i=0; i&lt;getNumberOfNodes(); ++i) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">      22200 :     if( color[i]==0 ) { number_of_cluster++; color[i]=explore(i); }</span>
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span>            : #endif
+<span class="lineNum">     142 </span><span class="lineCov">         24 : }</span>
+<a name="143"><span class="lineNum">     143 </span>            : </a>
+<span class="lineNum">     144 </span>            : #ifndef __PLUMED_HAS_BOOST_GRAPH
+<span class="lineNum">     145 </span><span class="lineCov">       8193 : int DFSClustering::explore( const unsigned&amp; index ) {</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">      16386 :   color[index]=1;</span>
+<span class="lineNum">     148 </span><span class="lineCov">     106464 :   for(unsigned i=0; i&lt;nneigh[index]; ++i) {</span>
+<span class="lineNum">     149 </span><span class="lineCov">      30026 :     unsigned j=adj_list(index,i);</span>
+<span class="lineNum">     150 </span><span class="lineCov">      62431 :     if( color[j]==0 ) color[j]=explore(j);</span>
+<span class="lineNum">     151 </span>            :   }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   // Count the size of the cluster
+<span class="lineNum">     154 </span><span class="lineCov">      16386 :   cluster_sizes[number_of_cluster].first++;</span>
+<span class="lineNum">     155 </span><span class="lineCov">      16386 :   which_cluster[index] = number_of_cluster;</span>
+<span class="lineNum">     156 </span><span class="lineCov">      16386 :   return color[index];</span>
+<span class="lineNum">     157 </span>            : }
+<span class="lineNum">     158 </span>            : #endif
+<a name="159"><span class="lineNum">     159 </span>            : </a>
+<span class="lineNum">     160 </span>            : }
+<span class="lineNum">     161 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

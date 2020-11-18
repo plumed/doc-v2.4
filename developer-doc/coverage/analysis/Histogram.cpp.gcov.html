@@ -1,0 +1,616 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - analysis/Histogram.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">analysis</a> - Histogram.cpp<span style="font-size: 80%;"> (source / <a href="Histogram.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">205</td>
+            <td class="headerCovTableEntry">209</td>
+            <td class="headerCovTableEntryHi">98.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/KernelFunctions.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;gridtools/ActionWithGrid.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;vesselbase/ActionWithVessel.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;vesselbase/StoreDataVessel.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;multicolvar/MultiColvarBase.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<span class="lineNum">      32 </span>            : namespace analysis {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //+PLUMEDOC GRIDCALC HISTOGRAM
+<span class="lineNum">      35 </span>            : /*
+<span class="lineNum">      36 </span>            : Accumulate the average probability density along a few CVs from a trajectory.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : When using this method it is supposed that you have some collective variable \f$\zeta\f$ that
+<span class="lineNum">      39 </span>            : gives a reasonable description of some physical or chemical phenomenon.  As an example of what we
+<span class="lineNum">      40 </span>            : mean by this suppose you wish to examine the following SN2 reaction:
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : \f[
+<span class="lineNum">      43 </span>            :  \textrm{OH}^- + \textrm{CH}_3Cl  \rightarrow \textrm{CH}_3OH + \textrm{Cl}^-
+<span class="lineNum">      44 </span>            : \f]
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : The distance between the chlorine atom and the carbon is an excellent collective variable, \f$\zeta\f$,
+<span class="lineNum">      47 </span>            : in this case because this distance is short for the reactant, \f$\textrm{CH}_3Cl\f$, because the carbon
+<span class="lineNum">      48 </span>            : and chlorine are chemically bonded, and because it is long for the product state when these two atoms are
+<span class="lineNum">      49 </span>            : not chemically bonded.  We thus might want to accumulate the probability density, \f$P(\zeta)\f$, as a function of this distance
+<span class="lineNum">      50 </span>            : as this will provide us with information about the overall likelihood of the reaction.   Furthermore, the
+<span class="lineNum">      51 </span>            : free energy, \f$F(\zeta)\f$, is related to this probability density via:
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : \f[
+<span class="lineNum">      54 </span>            : F(\zeta) = - k_B T \ln P(\zeta)
+<span class="lineNum">      55 </span>            : \f]
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : Accumulating these probability densities is precisely what this Action can be used to do.  Furthermore, the conversion
+<span class="lineNum">      58 </span>            : of the histogram to the free energy can be achieved by using the method \ref CONVERT_TO_FES.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : We calculate histograms within PLUMED using a method known as kernel density estimation, which you can read more about here:
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : https://en.wikipedia.org/wiki/Kernel_density_estimation
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : In PLUMED the value of \f$\zeta\f$ at each discrete instant in time in the trajectory is accumulated.  A kernel, \f$K(\zeta-\zeta(t'),\sigma)\f$,
+<span class="lineNum">      65 </span>            : centered at the current value, \f$\zeta(t)\f$, of this quantity is generated with a bandwith \f$\sigma\f$, which
+<span class="lineNum">      66 </span>            : is set by the user.  These kernels are then used to accumulate the ensemble average for the probability density:
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : \f[
+<span class="lineNum">      69 </span>            : \langle P(\zeta) \rangle = \frac{ \sum_{t'=0}^t w(t') K(\zeta-\zeta(t'),\sigma) }{ \sum_{t'=0}^t w(t') }
+<span class="lineNum">      70 </span>            : \f]
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : Here the sums run over a portion of the trajectory specified by the user.  The final quantity evalulated is a weighted
+<span class="lineNum">      73 </span>            : average as the weights, \f$w(t')\f$, allow us to negate the effect any bias might have on the region of phase space
+<span class="lineNum">      74 </span>            : sampled by the system.  This is discussed in the section of the manual on \ref Analysis.
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : A discrete analogue of kernel density estimation can also be used.  In this analogue the kernels in the above formula
+<span class="lineNum">      77 </span>            : are replaced by dirac delta functions.   When this method is used the final function calculated is no longer a probability
+<span class="lineNum">      78 </span>            : density - it is instead a probability mass function as each element of the function tells you the value of an integral
+<span class="lineNum">      79 </span>            : between two points on your grid rather than the value of a (continuous) function on a grid.
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : Additional material and examples can be also found in the tutorials \ref belfast-1 and \ref lugano-1.
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : \par A note on block averaging and errors
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : Some particularly important
+<span class="lineNum">      86 </span>            : issues related to the convergence of histograms and the estimation of error bars around the ensemble averages you calculate are covered in \ref trieste-2.
+<span class="lineNum">      87 </span>            : The technique for estimating error bars that is known as block averaging is introduced in this tutorial.  The essence of this technique is that
+<span class="lineNum">      88 </span>            : the trajectory is split into a set of blocks and separate ensemble averages are calculated from each separate block of data.  If \f$\{A_i\}\f$ is
+<span class="lineNum">      89 </span>            : the set of \f$N\f$ block averages that are obtained from this technique then the final error bar is calculated as:
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : \f[
+<span class="lineNum">      92 </span>            : \textrm{error} = \sqrt{ \frac{1}{N} \frac{1}{N-1} \sum_{i=1}^N (A_i^2 - \langle A \rangle )^2 } \qquad \textrm{where} \qquad \langle A \rangle = \frac{1}{N} \sum_{i=1}^N A_i
+<span class="lineNum">      93 </span>            : \f]
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : If the simulation is biased and reweighting is performed then life is a little more complex as each of the block averages should be calculated as a
+<span class="lineNum">      96 </span>            : weighted average.  Furthermore, the weights should be taken into account when the final ensemble and error bars are calculated.  As such the error should be:
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : \f[
+<span class="lineNum">      99 </span>            : \textrm{error} = \sqrt{ \frac{1}{N} \frac{\sum_{i=1}^N W_i }{\sum_{i=1}^N W_i - \sum_{i=1}^N W_i^2 / \sum_{i=1}^N W_i} \sum_{i=1}^N W_i (A_i^2 - \langle A \rangle )^2 }
+<span class="lineNum">     100 </span>            : \f]
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : where \f$W_i\f$ is the sum of all the weights for the \f$i\f$th block of data.
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : If we wish to caclulate a normalized histogram we must calculate ensemble averages from our biased simulation using:
+<span class="lineNum">     105 </span>            : \f[
+<span class="lineNum">     106 </span>            :  \langle H(x) \rangle = \frac{\sum_{t=1}^M w_t K( x - x_t,\sigma) }{\sum_{t=1}^M w_t}
+<span class="lineNum">     107 </span>            : \f]
+<span class="lineNum">     108 </span>            : where the sums runs over the trajectory, \f$w_t\f$ is the weight of the \f$t\f$th trajectory frame, \f$x_t\f$ is the value of the cv for the \f$t\f$th
+<span class="lineNum">     109 </span>            : trajectory frame and \f$K\f$ is a kernel function centered on \f$x_t\f$ with bandwidth \f$\sigma\f$.  The quantity that is evaluated is the value of the
+<span class="lineNum">     110 </span>            : normalized histogram at point \f$x\f$.  The following ensemble average will be calculated if you use the NORMALIZATION=true option in HISTOGRAM.
+<span class="lineNum">     111 </span>            : If the ensemble average is calculated in this way we must calculate the associated error bars from our block averages using the second of the expressions
+<span class="lineNum">     112 </span>            : above.
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : A number of works have shown that when biased simulations are performed it is often better to calculate an unormalized estimate of the histogram using:
+<span class="lineNum">     115 </span>            : \f[
+<span class="lineNum">     116 </span>            : \langle H(x) \rangle = \frac{1}{M} \sum_{t=1}^M w_t K( x - x_t,\sigma)
+<span class="lineNum">     117 </span>            : \f]
+<span class="lineNum">     118 </span>            : instead of the expression above.  As such this is what is done by default in HISTOGRAM or if the NORMALIZATION=ndata option is used.
+<span class="lineNum">     119 </span>            : When the histogram is calculated in this second way the first of the two formula above can be used when calculating error bars from
+<span class="lineNum">     120 </span>            : block averages.
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : \par Examples
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : The following input monitors two torsional angles during a simulation
+<span class="lineNum">     125 </span>            : and outputs a continuos histogram as a function of them at the end of the simulation.
+<span class="lineNum">     126 </span>            : \plumedfile
+<span class="lineNum">     127 </span>            : TORSION ATOMS=1,2,3,4 LABEL=r1
+<span class="lineNum">     128 </span>            : TORSION ATOMS=2,3,4,5 LABEL=r2
+<span class="lineNum">     129 </span>            : HISTOGRAM ...
+<span class="lineNum">     130 </span>            :   ARG=r1,r2
+<span class="lineNum">     131 </span>            :   GRID_MIN=-3.14,-3.14
+<span class="lineNum">     132 </span>            :   GRID_MAX=3.14,3.14
+<span class="lineNum">     133 </span>            :   GRID_BIN=200,200
+<span class="lineNum">     134 </span>            :   BANDWIDTH=0.05,0.05
+<span class="lineNum">     135 </span>            :   LABEL=hh
+<span class="lineNum">     136 </span>            : ... HISTOGRAM
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : DUMPGRID GRID=hh FILE=histo
+<span class="lineNum">     139 </span>            : \endplumedfile
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : The following input monitors two torsional angles during a simulation
+<span class="lineNum">     142 </span>            : and outputs a discrete histogram as a function of them at the end of the simulation.
+<span class="lineNum">     143 </span>            : \plumedfile
+<span class="lineNum">     144 </span>            : TORSION ATOMS=1,2,3,4 LABEL=r1
+<span class="lineNum">     145 </span>            : TORSION ATOMS=2,3,4,5 LABEL=r2
+<span class="lineNum">     146 </span>            : HISTOGRAM ...
+<span class="lineNum">     147 </span>            :   ARG=r1,r2
+<span class="lineNum">     148 </span>            :   KERNEL=DISCRETE
+<span class="lineNum">     149 </span>            :   GRID_MIN=-3.14,-3.14
+<span class="lineNum">     150 </span>            :   GRID_MAX=3.14,3.14
+<span class="lineNum">     151 </span>            :   GRID_BIN=200,200
+<span class="lineNum">     152 </span>            :   LABEL=hh
+<span class="lineNum">     153 </span>            : ... HISTOGRAM
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : DUMPGRID GRID=hh FILE=histo
+<span class="lineNum">     156 </span>            : \endplumedfile
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : The following input monitors two torsional angles during a simulation
+<span class="lineNum">     159 </span>            : and outputs the histogram accumulated thus far every 100000 steps.
+<span class="lineNum">     160 </span>            : \plumedfile
+<span class="lineNum">     161 </span>            : TORSION ATOMS=1,2,3,4 LABEL=r1
+<span class="lineNum">     162 </span>            : TORSION ATOMS=2,3,4,5 LABEL=r2
+<span class="lineNum">     163 </span>            : HISTOGRAM ...
+<span class="lineNum">     164 </span>            :   ARG=r1,r2
+<span class="lineNum">     165 </span>            :   GRID_MIN=-3.14,-3.14
+<span class="lineNum">     166 </span>            :   GRID_MAX=3.14,3.14
+<span class="lineNum">     167 </span>            :   GRID_BIN=200,200
+<span class="lineNum">     168 </span>            :   BANDWIDTH=0.05,0.05
+<span class="lineNum">     169 </span>            :   LABEL=hh
+<span class="lineNum">     170 </span>            : ... HISTOGRAM
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : DUMPGRID GRID=hh FILE=histo STRIDE=100000
+<span class="lineNum">     173 </span>            : \endplumedfile
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : The following input monitors two torsional angles during a simulation
+<span class="lineNum">     176 </span>            : and outputs a separate histogram for each 100000 steps worth of trajectory.
+<span class="lineNum">     177 </span>            : Notice how the CLEAR keyword is used here and how it is not used in the
+<span class="lineNum">     178 </span>            : previous example.
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : \plumedfile
+<span class="lineNum">     181 </span>            : TORSION ATOMS=1,2,3,4 LABEL=r1
+<span class="lineNum">     182 </span>            : TORSION ATOMS=2,3,4,5 LABEL=r2
+<span class="lineNum">     183 </span>            : HISTOGRAM ...
+<span class="lineNum">     184 </span>            :   ARG=r1,r2 CLEAR=100000
+<span class="lineNum">     185 </span>            :   GRID_MIN=-3.14,-3.14
+<span class="lineNum">     186 </span>            :   GRID_MAX=3.14,3.14
+<span class="lineNum">     187 </span>            :   GRID_BIN=200,200
+<span class="lineNum">     188 </span>            :   BANDWIDTH=0.05,0.05
+<span class="lineNum">     189 </span>            :   GRID_WFILE=histo
+<span class="lineNum">     190 </span>            :   LABEL=hh
+<span class="lineNum">     191 </span>            : ... HISTOGRAM
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : DUMPGRID GRID=hh FILE=histo STRIDE=100000
+<span class="lineNum">     194 </span>            : \endplumedfile
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : */
+<a name="197"><span class="lineNum">     197 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">         75 : class Histogram : public gridtools::ActionWithGrid {</span>
+<span class="lineNum">     200 </span>            : private:
+<span class="lineNum">     201 </span>            :   double ww;
+<span class="lineNum">     202 </span>            :   bool in_apply, mvectors;
+<span class="lineNum">     203 </span>            :   KernelFunctions* kernel;
+<span class="lineNum">     204 </span>            :   std::vector&lt;double&gt; forcesToApply, finalForces;
+<span class="lineNum">     205 </span>            :   std::vector&lt;vesselbase::ActionWithVessel*&gt; myvessels;
+<span class="lineNum">     206 </span>            :   std::vector&lt;vesselbase::StoreDataVessel*&gt; stashes;
+<span class="lineNum">     207 </span>            :   gridtools::HistogramOnGrid* myhist;
+<span class="lineNum">     208 </span>            : public:
+<span class="lineNum">     209 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     210 </span>            :   explicit Histogram(const ActionOptions&amp;ao);
+<span class="lineNum">     211 </span>            :   unsigned getNumberOfQuantities() const ;
+<span class="lineNum">     212 </span>            :   void prepareForAveraging();
+<a name="213"><span class="lineNum">     213 </span>            :   void performOperations( const bool&amp; from_update );</a>
+<a name="214"><span class="lineNum">     214 </span>            :   void finishAveraging();</a>
+<span class="lineNum">     215 </span><span class="lineCov">        109 :   bool threadSafe() const { return !in_apply; }</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<span class="lineNum">     217 </span>            :   unsigned getNumberOfDerivatives();
+<span class="lineNum">     218 </span>            :   void turnOnDerivatives();
+<span class="lineNum">     219 </span>            :   void compute( const unsigned&amp;, MultiValue&amp; ) const ;
+<span class="lineNum">     220 </span>            :   void apply();
+<a name="221"><span class="lineNum">     221 </span>            : };</a>
+<span class="lineNum">     222 </span>            : 
+<a name="223"><span class="lineNum">     223 </span><span class="lineCov">       6477 : PLUMED_REGISTER_ACTION(Histogram,&quot;HISTOGRAM&quot;)</span></a>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">         26 : void Histogram::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">         78 :   gridtools::ActionWithGrid::registerKeywords( keys ); keys.use(&quot;ARG&quot;); keys.remove(&quot;NORMALIZATION&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">        130 :   keys.add(&quot;compulsory&quot;,&quot;NORMALIZATION&quot;,&quot;ndata&quot;,&quot;This controls how the data is normalized it can be set equal to true, false or ndata.  See above for an explanation&quot;);</span>
+<span class="lineNum">     228 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;,&quot;DATA&quot;,&quot;input data from action with vessel and compute histogram&quot;);</span>
+<span class="lineNum">     229 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;,&quot;VECTORS&quot;,&quot;input three dimsnional vectors for computing histogram&quot;);</span>
+<span class="lineNum">     230 </span><span class="lineCov">        104 :   keys.add(&quot;compulsory&quot;,&quot;GRID_MIN&quot;,&quot;the lower bounds for the grid&quot;);</span>
+<span class="lineNum">     231 </span><span class="lineCov">        104 :   keys.add(&quot;compulsory&quot;,&quot;GRID_MAX&quot;,&quot;the upper bounds for the grid&quot;);</span>
+<span class="lineNum">     232 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;,&quot;GRID_BIN&quot;,&quot;the number of bins for the grid&quot;);</span>
+<span class="lineNum">     233 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;,&quot;GRID_SPACING&quot;,&quot;the approximate grid spacing (to be used as an alternative or together with GRID_BIN)&quot;);</span>
+<span class="lineNum">     234 </span><span class="lineCov">         78 :   keys.use(&quot;UPDATE_FROM&quot;); keys.use(&quot;UPDATE_UNTIL&quot;);</span>
+<span class="lineNum">     235 </span><span class="lineCov">         26 : }</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineCov">         25 : Histogram::Histogram(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     238 </span>            :   Action(ao),
+<span class="lineNum">     239 </span>            :   ActionWithGrid(ao),
+<span class="lineNum">     240 </span>            :   ww(0.0),
+<span class="lineNum">     241 </span>            :   in_apply(false),
+<span class="lineNum">     242 </span>            :   mvectors(false),
+<span class="lineNum">     243 </span><span class="lineCov">         75 :   kernel(NULL)</span>
+<span class="lineNum">     244 </span>            : {
+<span class="lineNum">     245 </span>            :   // Read in arguments
+<span class="lineNum">     246 </span><span class="lineCov">         50 :   std::string vlab; parse(&quot;VECTORS&quot;,vlab);</span>
+<span class="lineNum">     247 </span><span class="lineCov">         25 :   if( vlab.length()&gt;0 ) {</span>
+<span class="lineNum">     248 </span><span class="lineCov">          4 :     ActionWithVessel* myv = plumed.getActionSet().selectWithLabel&lt;ActionWithVessel*&gt;( vlab );</span>
+<span class="lineNum">     249 </span><span class="lineCov">          2 :     if( !myv ) error(&quot;action labelled &quot; + vlab + &quot; does not exist or is not an ActionWithVessel&quot;);</span>
+<span class="lineNum">     250 </span><span class="lineCov">          4 :     myvessels.push_back( myv ); stashes.push_back( myv-&gt;buildDataStashes( NULL ) );</span>
+<span class="lineNum">     251 </span><span class="lineCov">          2 :     addDependency( myv ); mvectors=true;</span>
+<span class="lineNum">     252 </span><span class="lineCov">          2 :     if( myv-&gt;getNumberOfQuantities()!=5 ) error(&quot;can only compute histograms for three dimensional vectors&quot;);</span>
+<span class="lineNum">     253 </span><span class="lineCov">          4 :     log.printf(&quot;  for vector quantities calculated by %s \n&quot;, vlab.c_str() );</span>
+<span class="lineNum">     254 </span>            :   } else {
+<span class="lineNum">     255 </span><span class="lineCov">         69 :     std::vector&lt;std::string&gt; mlab; parseVector(&quot;DATA&quot;,mlab);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         23 :     if( mlab.size()&gt;0 ) {</span>
+<span class="lineNum">     257 </span><span class="lineCov">         34 :       for(unsigned i=0; i&lt;mlab.size(); ++i) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">         16 :         ActionWithVessel* myv = plumed.getActionSet().selectWithLabel&lt;ActionWithVessel*&gt;( mlab[i] );</span>
+<span class="lineNum">     259 </span><span class="lineCov">          8 :         if( !myv ) error(&quot;action labelled &quot; + mlab[i] + &quot; does not exist or is not an ActionWithVessel&quot;);</span>
+<span class="lineNum">     260 </span><span class="lineCov">         16 :         myvessels.push_back( myv ); stashes.push_back( myv-&gt;buildDataStashes( NULL ) );</span>
+<span class="lineNum">     261 </span>            :         // log.printf(&quot;  for all base quantities calculated by %s \n&quot;,myvessel-&gt;getLabel().c_str() );
+<span class="lineNum">     262 </span>            :         // Add the dependency
+<span class="lineNum">     263 </span><span class="lineCov">          8 :         addDependency( myv );</span>
+<span class="lineNum">     264 </span>            :       }
+<span class="lineNum">     265 </span><span class="lineCov">          5 :       unsigned nvals = myvessels[0]-&gt;getFullNumberOfTasks();</span>
+<span class="lineNum">     266 </span><span class="lineCov">         19 :       for(unsigned i=1; i&lt;mlab.size(); ++i) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">          6 :         if( nvals!=myvessels[i]-&gt;getFullNumberOfTasks() ) error(&quot;mismatched number of quantities calculated by actions input to histogram&quot;);</span>
+<span class="lineNum">     268 </span>            :       }
+<span class="lineNum">     269 </span><span class="lineCov">         15 :       log.printf(&quot;  for all base quantities calculated by %s &quot;, myvessels[0]-&gt;getLabel().c_str() );</span>
+<span class="lineNum">     270 </span><span class="lineCov">         22 :       for(unsigned i=1; i&lt;mlab.size(); ++i) log.printf(&quot;, %s \n&quot;, myvessels[i]-&gt;getLabel().c_str() );</span>
+<span class="lineNum">     271 </span><span class="lineCov">          5 :       log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     272 </span>            :     } else {
+<span class="lineNum">     273 </span><span class="lineCov">         36 :       std::vector&lt;Value*&gt; arg; parseArgumentList(&quot;ARG&quot;,arg);</span>
+<span class="lineNum">     274 </span><span class="lineCov">         18 :       if(!arg.empty()) {</span>
+<span class="lineNum">     275 </span><span class="lineCov">         18 :         log.printf(&quot;  with arguments&quot;);</span>
+<span class="lineNum">     276 </span><span class="lineCov">        144 :         for(unsigned i=0; i&lt;arg.size(); i++) log.printf(&quot; %s&quot;,arg[i]-&gt;getName().c_str());</span>
+<span class="lineNum">     277 </span><span class="lineCov">         18 :         log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     278 </span>            :         // Retrieve the bias acting and make sure we request this also
+<span class="lineNum">     279 </span><span class="lineCov">         18 :         std::vector&lt;Value*&gt; bias( ActionWithArguments::getArguments() );</span>
+<span class="lineNum">     280 </span><span class="lineCov">         51 :         for(unsigned i=0; i&lt;bias.size(); ++i) arg.push_back( bias[i] );</span>
+<span class="lineNum">     281 </span><span class="lineCov">         18 :         requestArguments(arg);</span>
+<span class="lineNum">     282 </span>            :       }
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span>            :   }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :   // Read stuff for grid
+<span class="lineNum">     287 </span>            :   unsigned narg = getNumberOfArguments();
+<span class="lineNum">     288 </span><span class="lineCov">         25 :   if( myvessels.size()&gt;0 ) narg=myvessels.size();</span>
+<span class="lineNum">     289 </span>            :   // Input of name and labels
+<span class="lineNum">     290 </span><span class="lineCov">         25 :   std::string vstring=&quot;COMPONENTS=&quot; + getLabel();</span>
+<span class="lineNum">     291 </span><span class="lineCov">         25 :   if( mvectors ) {</span>
+<span class="lineNum">     292 </span>            :     vstring += &quot; COORDINATES=x,y,z PBC=F,F,F&quot;;
+<span class="lineNum">     293 </span><span class="lineCov">         23 :   } else if( myvessels.size()&gt;0 ) {</span>
+<span class="lineNum">     294 </span><span class="lineCov">         15 :     vstring += &quot; COORDINATES=&quot; + myvessels[0]-&gt;getLabel();</span>
+<span class="lineNum">     295 </span><span class="lineCov">         25 :     for(unsigned i=1; i&lt;myvessels.size(); ++i) vstring +=&quot;,&quot; + myvessels[i]-&gt;getLabel();</span>
+<span class="lineNum">     296 </span>            :     // Input for PBC
+<span class="lineNum">     297 </span><span class="lineCov">          5 :     if( myvessels[0]-&gt;isPeriodic() ) vstring+=&quot; PBC=T&quot;;</span>
+<span class="lineNum">     298 </span>            :     else vstring+=&quot; PBC=F&quot;;
+<span class="lineNum">     299 </span><span class="lineCov">         19 :     for(unsigned i=1; i&lt;myvessels.size(); ++i) {</span>
+<span class="lineNum">     300 </span><span class="lineCov">          3 :       if( myvessels[i]-&gt;isPeriodic() ) vstring+=&quot;,T&quot;;</span>
+<span class="lineNum">     301 </span>            :       else vstring+=&quot;,F&quot;;
+<span class="lineNum">     302 </span>            :     }
+<span class="lineNum">     303 </span>            :   } else {
+<span class="lineNum">     304 </span><span class="lineCov">         36 :     vstring += &quot; COORDINATES=&quot; + getPntrToArgument(0)-&gt;getName();</span>
+<span class="lineNum">     305 </span><span class="lineCov">         45 :     for(unsigned i=1; i&lt;getNumberOfArguments(); ++i) vstring += &quot;,&quot; + getPntrToArgument(i)-&gt;getName();</span>
+<span class="lineNum">     306 </span>            :     // Input for PBC
+<span class="lineNum">     307 </span><span class="lineCov">         18 :     if( getPntrToArgument(0)-&gt;isPeriodic() ) vstring+=&quot; PBC=T&quot;;</span>
+<span class="lineNum">     308 </span>            :     else vstring+=&quot; PBC=F&quot;;
+<span class="lineNum">     309 </span><span class="lineCov">         36 :     for(unsigned i=1; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     310 </span><span class="lineCov">          9 :       if( getPntrToArgument(i)-&gt;isPeriodic() ) vstring+=&quot;,T&quot;;</span>
+<span class="lineNum">     311 </span>            :       else vstring+=&quot;,F&quot;;
+<span class="lineNum">     312 </span>            :     }
+<span class="lineNum">     313 </span>            :   }
+<span class="lineNum">     314 </span>            :   // And create the grid
+<span class="lineNum">     315 </span><span class="lineCov">         50 :   createGrid( &quot;histogram&quot;, vstring );</span>
+<span class="lineNum">     316 </span><span class="lineCov">         50 :   if( mygrid-&gt;getType()==&quot;flat&quot; ) {</span>
+<span class="lineNum">     317 </span><span class="lineCov">         23 :     if( mvectors ) error(&quot;computing histogram for three dimensional vectors but grid is not of fibonacci type - use CONCENTRATION&quot;);</span>
+<span class="lineNum">     318 </span><span class="lineCov">         46 :     std::vector&lt;std::string&gt; gmin( narg ), gmax( narg );</span>
+<span class="lineNum">     319 </span><span class="lineCov">         69 :     parseVector(&quot;GRID_MIN&quot;,gmin); parseVector(&quot;GRID_MAX&quot;,gmax);</span>
+<span class="lineNum">     320 </span><span class="lineCov">         46 :     std::vector&lt;unsigned&gt; nbin; parseVector(&quot;GRID_BIN&quot;,nbin);</span>
+<span class="lineNum">     321 </span><span class="lineCov">         46 :     std::vector&lt;double&gt; gspacing; parseVector(&quot;GRID_SPACING&quot;,gspacing);</span>
+<span class="lineNum">     322 </span><span class="lineCov">         23 :     if( nbin.size()!=narg &amp;&amp; gspacing.size()!=narg ) {</span>
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :       error(&quot;GRID_BIN or GRID_SPACING must be set&quot;);</span>
+<span class="lineNum">     324 </span>            :     }
+<span class="lineNum">     325 </span><span class="lineCov">         23 :     mygrid-&gt;setBounds( gmin, gmax, nbin, gspacing );</span>
+<span class="lineNum">     326 </span>            :   } else {
+<span class="lineNum">     327 </span><span class="lineCov">          4 :     std::vector&lt;unsigned&gt; nbin; parseVector(&quot;GRID_BIN&quot;,nbin);</span>
+<span class="lineNum">     328 </span><span class="lineCov">          2 :     if( nbin.size()!=1 ) error(&quot;should only be one index for number of bins with spherical grid&quot;);</span>
+<span class="lineNum">     329 </span><span class="lineCov">          6 :     if( mygrid-&gt;getType()==&quot;fibonacci&quot; ) mygrid-&gt;setupFibonacciGrid( nbin[0] );</span>
+<span class="lineNum">     330 </span>            :   }
+<span class="lineNum">     331 </span><span class="lineCov">         25 :   myhist = dynamic_cast&lt;gridtools::HistogramOnGrid*&gt;( mygrid );</span>
+<span class="lineNum">     332 </span><span class="lineCov">         25 :   plumed_assert( myhist );</span>
+<span class="lineNum">     333 </span><span class="lineCov">         25 :   if( myvessels.size()&gt;0 ) {</span>
+<span class="lineNum">     334 </span>            :     // Create a task list
+<span class="lineNum">     335 </span><span class="lineCov">        129 :     for(unsigned i=0; i&lt;myvessels[0]-&gt;getFullNumberOfTasks(); ++i) addTaskToList(i);</span>
+<span class="lineNum">     336 </span><span class="lineCov">          7 :     setAveragingAction( mygrid, true );</span>
+<span class="lineNum">     337 </span>            :   } else {
+<span class="lineNum">     338 </span>            :     // Create a task list
+<span class="lineNum">     339 </span><span class="lineCov">       9172 :     for(unsigned i=0; i&lt;mygrid-&gt;getNumberOfPoints(); ++i) addTaskToList(i);</span>
+<span class="lineNum">     340 </span><span class="lineCov">         18 :     myhist-&gt;addOneKernelEachTimeOnly();</span>
+<span class="lineNum">     341 </span><span class="lineCov">         18 :     setAveragingAction( mygrid, myhist-&gt;noDiscreteKernels() );</span>
+<span class="lineNum">     342 </span>            :   }
+<span class="lineNum">     343 </span><span class="lineCov">         25 :   checkRead();</span>
+<span class="lineNum">     344 </span><span class="lineCov">         25 : }</span>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">          8 : void Histogram::turnOnDerivatives() {</span>
+<span class="lineNum">     347 </span><span class="lineCov">          8 :   ActionWithGrid::turnOnDerivatives();</span>
+<span class="lineNum">     348 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms, tmp_atoms;
+<span class="lineNum">     349 </span><span class="lineCov">         52 :   for(unsigned i=0; i&lt;myvessels.size(); ++i) {</span>
+<span class="lineNum">     350 </span><span class="lineCov">         12 :     multicolvar::MultiColvarBase* mbase=dynamic_cast&lt;multicolvar::MultiColvarBase*&gt;( myvessels[i] );</span>
+<span class="lineNum">     351 </span><span class="lineCov">         12 :     if( !mbase ) error(&quot;do not know how to get histogram derivatives for actions of type &quot; + myvessels[i]-&gt;getName() );</span>
+<span class="lineNum">     352 </span><span class="lineCov">         12 :     tmp_atoms = mbase-&gt;getAbsoluteIndexes();</span>
+<span class="lineNum">     353 </span><span class="lineCov">       1434 :     for(unsigned j=0; j&lt;tmp_atoms.size(); ++j) all_atoms.push_back( tmp_atoms[j] );</span>
+<span class="lineNum">     354 </span>            :     // Make a tempory multi value so we can avoid vector resizing
+<span class="lineNum">     355 </span><span class="lineCov">         12 :     stashes[i]-&gt;resizeTemporyMultiValues( 1 );</span>
+<span class="lineNum">     356 </span>            :   }
+<span class="lineNum">     357 </span><span class="lineCov">          8 :   ActionAtomistic::requestAtoms( all_atoms );</span>
+<span class="lineNum">     358 </span><span class="lineCov">         16 :   finalForces.resize( 3*all_atoms.size() + 9 );</span>
+<span class="lineNum">     359 </span><span class="lineCov">         24 :   forcesToApply.resize( 3*all_atoms.size() + 9*myvessels.size() );</span>
+<span class="lineNum">     360 </span>            :   // And make sure we still have the dependencies which are cleared by requestAtoms
+<span class="lineNum">     361 </span><span class="lineCov">         52 :   for(unsigned i=0; i&lt;myvessels.size(); ++i) addDependency( myvessels[i] );</span>
+<span class="lineNum">     362 </span>            :   // And resize the histogram so that we have a place to store the forces
+<span class="lineNum">     363 </span><span class="lineCov">          8 :   in_apply=true; mygrid-&gt;resize(); in_apply=false;</span>
+<span class="lineNum">     364 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span><span class="lineCov">        660 : unsigned Histogram::getNumberOfDerivatives() {</span>
+<span class="lineNum">     367 </span><span class="lineCov">        660 :   if( in_apply ) {</span>
+<span class="lineNum">     368 </span>            :     unsigned nder=0;
+<span class="lineNum">     369 </span><span class="lineCov">       1398 :     for(unsigned i=0; i&lt;myvessels.size(); ++i) nder += myvessels[i]-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     370 </span>            :     return nder;
+<span class="lineNum">     371 </span>            :   }
+<span class="lineNum">     372 </span><span class="lineCov">        438 :   return getNumberOfArguments();</span>
+<span class="lineNum">     373 </span>            : }
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span><span class="lineCov">        412 : unsigned Histogram::getNumberOfQuantities() const {</span>
+<span class="lineNum">     376 </span><span class="lineCov">        458 :   if( mvectors ) return myvessels[0]-&gt;getNumberOfQuantities();</span>
+<span class="lineNum">     377 </span><span class="lineCov">        366 :   else if( myvessels.size()&gt;0 ) return myvessels.size()+2;</span>
+<span class="lineNum">     378 </span>            :   return 2;
+<span class="lineNum">     379 </span>            : }
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineCov">        102 : void Histogram::prepareForAveraging() {</span>
+<span class="lineNum">     382 </span><span class="lineCov">        102 :   if( myvessels.size()&gt;0 ) {</span>
+<span class="lineNum">     383 </span><span class="lineCov">         32 :     deactivateAllTasks(); double norm=0;</span>
+<span class="lineNum">     384 </span><span class="lineCov">        576 :     for(unsigned i=0; i&lt;stashes[0]-&gt;getNumberOfStoredValues(); ++i) {</span>
+<span class="lineNum">     385 </span><span class="lineCov">        256 :       std::vector&lt;double&gt; cvals( myvessels[0]-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     386 </span><span class="lineCov">        256 :       stashes[0]-&gt;retrieveSequentialValue( i, false, cvals );</span>
+<span class="lineNum">     387 </span><span class="lineCov">        512 :       unsigned itask=myvessels[0]-&gt;getActiveTask(i); double tnorm = cvals[0];</span>
+<span class="lineNum">     388 </span><span class="lineCov">        836 :       for(unsigned j=1; j&lt;myvessels.size(); ++j) {</span>
+<span class="lineNum">     389 </span><span class="lineCov">        216 :         if( myvessels[j]-&gt;getActiveTask(i)!=itask ) error(&quot;mismatched task identities in histogram suggests histogram is meaningless&quot;);</span>
+<span class="lineNum">     390 </span><span class="lineCov">        116 :         if( cvals.size()!=myvessels[j]-&gt;getNumberOfQuantities() ) cvals.resize( myvessels[j]-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     391 </span><span class="lineCov">        216 :         stashes[j]-&gt;retrieveSequentialValue( i, false, cvals ); tnorm *= cvals[0];</span>
+<span class="lineNum">     392 </span>            :       }
+<span class="lineNum">     393 </span><span class="lineCov">        512 :       norm += tnorm; taskFlags[i]=1;</span>
+<span class="lineNum">     394 </span>            :     }
+<span class="lineNum">     395 </span><span class="lineCov">         32 :     lockContributors();</span>
+<span class="lineNum">     396 </span>            :     // Sort out normalization of histogram
+<span class="lineNum">     397 </span><span class="lineCov">         32 :     if( !noNormalization() ) ww = cweight / norm;</span>
+<span class="lineNum">     398 </span><span class="lineCov">          5 :     else ww = cweight;</span>
+<span class="lineNum">     399 </span>            :   } else {
+<span class="lineNum">     400 </span>            :     // Now fetch the kernel and the active points
+<span class="lineNum">     401 </span><span class="lineCov">         70 :     std::vector&lt;double&gt; point( getNumberOfArguments() );</span>
+<span class="lineNum">     402 </span><span class="lineCov">        458 :     for(unsigned i=0; i&lt;point.size(); ++i) point[i]=getArgument(i);</span>
+<span class="lineNum">     403 </span><span class="lineCov">         70 :     unsigned num_neigh; std::vector&lt;unsigned&gt; neighbors(1);</span>
+<span class="lineNum">     404 </span><span class="lineCov">         70 :     kernel = myhist-&gt;getKernelAndNeighbors( point, num_neigh, neighbors );</span>
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span><span class="lineCov">         70 :     if( num_neigh&gt;1 ) {</span>
+<span class="lineNum">     407 </span>            :       // Activate relevant tasks
+<span class="lineNum">     408 </span><span class="lineCov">         65 :       deactivateAllTasks();</span>
+<span class="lineNum">     409 </span><span class="lineCov">      44204 :       for(unsigned i=0; i&lt;num_neigh; ++i) taskFlags[neighbors[i]]=1;</span>
+<span class="lineNum">     410 </span><span class="lineCov">         65 :       lockContributors();</span>
+<span class="lineNum">     411 </span>            :     } else {
+<span class="lineNum">     412 </span>            :       // This is used when we are not doing kernel density evaluation
+<span class="lineNum">     413 </span><span class="lineCov">         10 :       mygrid-&gt;addToGridElement( neighbors[0], 0, cweight );</span>
+<span class="lineNum">     414 </span>            :     }
+<span class="lineNum">     415 </span>            :   }
+<a name="416"><span class="lineNum">     416 </span><span class="lineCov">        102 : }</span></a>
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span><span class="lineCov">          5 : void Histogram::performOperations( const bool&amp; from_update ) { if( myvessels.size()==0 ) plumed_dbg_assert( !myhist-&gt;noDiscreteKernels() ); }</span>
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span><span class="lineCov">        122 : void Histogram::finishAveraging() {</span>
+<span class="lineNum">     421 </span><span class="lineCov">        122 :   if( myvessels.size()==0 ) delete kernel;</span>
+<span class="lineNum">     422 </span><span class="lineCov">        122 : }</span>
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span><span class="lineCov">      15169 : void Histogram::compute( const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     425 </span><span class="lineCov">      15169 :   if( mvectors ) {</span>
+<span class="lineNum">     426 </span><span class="lineCov">        140 :     std::vector&lt;double&gt; cvals( myvessels[0]-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     427 </span><span class="lineCov">        140 :     stashes[0]-&gt;retrieveSequentialValue( current, true, cvals );</span>
+<span class="lineNum">     428 </span><span class="lineCov">       1400 :     for(unsigned i=2; i&lt;myvessels[0]-&gt;getNumberOfQuantities(); ++i) myvals.setValue( i-1, cvals[i] );</span>
+<span class="lineNum">     429 </span><span class="lineCov">        140 :     myvals.setValue( 0, cvals[0] ); myvals.setValue( myvessels[0]-&gt;getNumberOfQuantities() - 1, ww );</span>
+<span class="lineNum">     430 </span><span class="lineCov">        140 :     if( in_apply ) {</span>
+<span class="lineNum">     431 </span><span class="lineCov">         50 :       MultiValue&amp; tmpval = stashes[0]-&gt;getTemporyMultiValue(0);</span>
+<span class="lineNum">     432 </span><span class="lineCov">         99 :       if( tmpval.getNumberOfValues()!=myvessels[0]-&gt;getNumberOfQuantities() ||</span>
+<span class="lineNum">     433 </span><span class="lineCov">         49 :           tmpval.getNumberOfDerivatives()!=myvessels[0]-&gt;getNumberOfDerivatives() )</span>
+<span class="lineNum">     434 </span><span class="lineCov">          2 :         tmpval.resize( myvessels[0]-&gt;getNumberOfQuantities(), myvessels[0]-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     435 </span><span class="lineCov">        100 :       stashes[0]-&gt;retrieveDerivatives( stashes[0]-&gt;getTrueIndex(current), true, tmpval );</span>
+<span class="lineNum">     436 </span><span class="lineCov">        650 :       for(unsigned j=0; j&lt;tmpval.getNumberActive(); ++j) {</span>
+<span class="lineNum">     437 </span><span class="lineCov">        600 :         unsigned jder=tmpval.getActiveIndex(j); myvals.addDerivative( 0, jder, tmpval.getDerivative(0, jder) );</span>
+<span class="lineNum">     438 </span><span class="lineCov">       2100 :         for(unsigned i=2; i&lt;myvessels[0]-&gt;getNumberOfQuantities(); ++i) myvals.addDerivative( i-1, jder, tmpval.getDerivative(i, jder) );</span>
+<span class="lineNum">     439 </span>            :       }
+<span class="lineNum">     440 </span>            :       myvals.updateDynamicList();
+<span class="lineNum">     441 </span>            :     }
+<span class="lineNum">     442 </span><span class="lineCov">      15029 :   } else if( myvessels.size()&gt;0 ) {</span>
+<span class="lineNum">     443 </span><span class="lineCov">        316 :     std::vector&lt;double&gt; cvals( myvessels[0]-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     444 </span><span class="lineCov">        316 :     stashes[0]-&gt;retrieveSequentialValue( current, false, cvals );</span>
+<span class="lineNum">     445 </span><span class="lineCov">        316 :     unsigned derbase; double totweight=cvals[0], tnorm = cvals[0]; myvals.setValue( 1, cvals[1] );</span>
+<span class="lineNum">     446 </span>            :     // Get the derivatives as well if we are in apply
+<span class="lineNum">     447 </span><span class="lineCov">        316 :     if( in_apply ) {</span>
+<span class="lineNum">     448 </span>            :       // This bit gets the total weight
+<span class="lineNum">     449 </span><span class="lineCov">        150 :       double weight0 = cvals[0];  // Store the current weight</span>
+<span class="lineNum">     450 </span><span class="lineCov">        600 :       for(unsigned j=1; j&lt;myvessels.size(); ++j) {</span>
+<span class="lineNum">     451 </span><span class="lineCov">        200 :         stashes[j]-&gt;retrieveSequentialValue( current, false, cvals ); totweight *= cvals[0];</span>
+<span class="lineNum">     452 </span>            :       }
+<span class="lineNum">     453 </span>            :       // And this bit the derivatives
+<span class="lineNum">     454 </span><span class="lineCov">        150 :       MultiValue&amp; tmpval = stashes[0]-&gt;getTemporyMultiValue(0);</span>
+<span class="lineNum">     455 </span><span class="lineCov">        297 :       if( tmpval.getNumberOfValues()!=myvessels[0]-&gt;getNumberOfQuantities() ||</span>
+<span class="lineNum">     456 </span><span class="lineCov">        147 :           tmpval.getNumberOfDerivatives()!=myvessels[0]-&gt;getNumberOfDerivatives() )</span>
+<span class="lineNum">     457 </span><span class="lineCov">          6 :         tmpval.resize( myvessels[0]-&gt;getNumberOfQuantities(), myvessels[0]-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     458 </span><span class="lineCov">        300 :       stashes[0]-&gt;retrieveDerivatives( stashes[0]-&gt;getTrueIndex(current), false, tmpval );</span>
+<span class="lineNum">     459 </span><span class="lineCov">      63030 :       for(unsigned j=0; j&lt;tmpval.getNumberActive(); ++j) {</span>
+<span class="lineNum">     460 </span><span class="lineCov">      31440 :         unsigned jder=tmpval.getActiveIndex(j);</span>
+<span class="lineNum">     461 </span><span class="lineCov">      31440 :         myvals.addDerivative( 1, jder, tmpval.getDerivative(1,jder) );</span>
+<span class="lineNum">     462 </span><span class="lineCov">      62880 :         myvals.addDerivative( 0, jder, (totweight/weight0)*tmpval.getDerivative(0,jder) );</span>
+<span class="lineNum">     463 </span>            :       }
+<span class="lineNum">     464 </span><span class="lineCov">        150 :       derbase = myvessels[0]-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     465 </span>            :     }
+<span class="lineNum">     466 </span><span class="lineCov">       1048 :     for(unsigned i=1; i&lt;myvessels.size(); ++i) {</span>
+<span class="lineNum">     467 </span><span class="lineCov">        216 :       if( cvals.size()!=myvessels[i]-&gt;getNumberOfQuantities() ) cvals.resize( myvessels[i]-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     468 </span><span class="lineCov">        208 :       stashes[i]-&gt;retrieveSequentialValue( current, false, cvals );</span>
+<span class="lineNum">     469 </span><span class="lineCov">        208 :       tnorm *= cvals[0]; myvals.setValue( 1+i, cvals[1] );</span>
+<span class="lineNum">     470 </span>            :       // Get the derivatives as well if we are in apply
+<span class="lineNum">     471 </span><span class="lineCov">        208 :       if( in_apply ) {</span>
+<span class="lineNum">     472 </span><span class="lineCov">        100 :         MultiValue&amp; tmpval = stashes[0]-&gt;getTemporyMultiValue(0);</span>
+<span class="lineNum">     473 </span><span class="lineCov">        200 :         if( tmpval.getNumberOfValues()!=myvessels[0]-&gt;getNumberOfQuantities() ||</span>
+<span class="lineNum">     474 </span><span class="lineCov">        100 :             tmpval.getNumberOfDerivatives()!=myvessels[0]-&gt;getNumberOfDerivatives() )</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :           tmpval.resize( myvessels[0]-&gt;getNumberOfQuantities(), myvessels[0]-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     476 </span><span class="lineCov">        200 :         stashes[i]-&gt;retrieveDerivatives( stashes[i]-&gt;getTrueIndex(current), false, tmpval );</span>
+<span class="lineNum">     477 </span><span class="lineCov">       2080 :         for(unsigned j=0; j&lt;tmpval.getNumberActive(); ++j) {</span>
+<span class="lineNum">     478 </span>            :           unsigned jder=tmpval.getActiveIndex(j);
+<span class="lineNum">     479 </span><span class="lineCov">        990 :           myvals.addDerivative( 1+i, derbase+jder, tmpval.getDerivative(1,jder) );</span>
+<span class="lineNum">     480 </span><span class="lineCov">       1980 :           myvals.addDerivative( 0, derbase+jder, (totweight/cvals[0])*tmpval.getDerivative(0,jder) );</span>
+<span class="lineNum">     481 </span>            :         }
+<span class="lineNum">     482 </span><span class="lineCov">        100 :         derbase += myvessels[i]-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     483 </span>            :       }
+<span class="lineNum">     484 </span>            :     }
+<span class="lineNum">     485 </span><span class="lineCov">        316 :     myvals.setValue( 0, tnorm ); myvals.setValue( 1+myvessels.size(), ww );</span>
+<span class="lineNum">     486 </span><span class="lineCov">        316 :     if( in_apply ) myvals.updateDynamicList();</span>
+<span class="lineNum">     487 </span>            :   } else {
+<span class="lineNum">     488 </span><span class="lineCov">      14713 :     plumed_assert( !in_apply );</span>
+<span class="lineNum">     489 </span><span class="lineCov">      14713 :     std::vector&lt;Value*&gt; vv( myhist-&gt;getVectorOfValues() );</span>
+<span class="lineNum">     490 </span><span class="lineCov">      14713 :     std::vector&lt;double&gt; val( getNumberOfArguments() ), der( getNumberOfArguments() );</span>
+<span class="lineNum">     491 </span>            :     // Retrieve the location of the grid point at which we are evaluating the kernel
+<span class="lineNum">     492 </span><span class="lineCov">      14713 :     mygrid-&gt;getGridPointCoordinates( current, val );</span>
+<span class="lineNum">     493 </span><span class="lineCov">      14713 :     if( kernel ) {</span>
+<span class="lineNum">     494 </span><span class="lineCov">     172269 :       for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) vv[i]-&gt;set( val[i] );</span>
+<span class="lineNum">     495 </span>            :       // Evaluate the histogram at the relevant grid point and set the values
+<span class="lineNum">     496 </span><span class="lineCov">      14713 :       double vvh = kernel-&gt;evaluate( vv, der,true); myvals.setValue( 1, vvh );</span>
+<span class="lineNum">     497 </span>            :     } else {
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;normalisation of vectors does not work with arguments and spherical grids&quot;);</span>
+<span class="lineNum">     499 </span>            :       // Evalulate dot product
+<span class="lineNum">     500 </span>            :       double dot=0; for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) { dot+=val[j]*getArgument(j); der[j]=val[j]; }
+<span class="lineNum">     501 </span>            :       // Von misses distribution for concentration parameter
+<span class="lineNum">     502 </span>            :       double newval = (myhist-&gt;von_misses_norm)*exp( (myhist-&gt;von_misses_concentration)*dot ); myvals.setValue( 1, newval );
+<span class="lineNum">     503 </span>            :       // And final derivatives
+<span class="lineNum">     504 </span>            :       for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) der[j] *= (myhist-&gt;von_misses_concentration)*newval;
+<span class="lineNum">     505 </span>            :     }
+<span class="lineNum">     506 </span>            :     // Set the derivatives and delete the vector of values
+<span class="lineNum">     507 </span><span class="lineCov">      93491 :     for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) { myvals.setDerivative( 1, i, der[i] ); delete vv[i]; }</span>
+<span class="lineNum">     508 </span>            :   }
+<span class="lineNum">     509 </span><span class="lineCov">      15169 : }</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span><span class="lineCov">        125 : void Histogram::apply() {</span>
+<span class="lineNum">     512 </span><span class="lineCov">        125 :   if( !myhist-&gt;wasForced() ) return ;</span>
+<span class="lineNum">     513 </span><span class="lineCov">         20 :   in_apply=true;</span>
+<span class="lineNum">     514 </span>            :   // Run the loop to calculate the forces
+<span class="lineNum">     515 </span><span class="lineCov">         20 :   runAllTasks(); finishAveraging();</span>
+<span class="lineNum">     516 </span>            :   // We now need to retrieve the buffer and set the forces on the atoms
+<span class="lineNum">     517 </span><span class="lineCov">         20 :   myhist-&gt;applyForce( forcesToApply );</span>
+<span class="lineNum">     518 </span>            :   // Now make the forces make sense for the virial
+<span class="lineNum">     519 </span><span class="lineCov">         40 :   unsigned fbase=0, tbase=0, vbase = getNumberOfDerivatives() - myvessels.size()*9;</span>
+<span class="lineNum">     520 </span><span class="lineCov">        380 :   for(unsigned i=vbase; i&lt;vbase+9; ++i) finalForces[i]=0.0;</span>
+<span class="lineNum">     521 </span><span class="lineCov">        130 :   for(unsigned i=0; i&lt;myvessels.size(); ++i) {</span>
+<span class="lineNum">     522 </span><span class="lineCov">       7080 :     for(unsigned j=0; j&lt;myvessels[i]-&gt;getNumberOfDerivatives()-9; ++j) {</span>
+<span class="lineNum">     523 </span><span class="lineCov">      10575 :       finalForces[fbase + j] = forcesToApply[tbase + j];</span>
+<span class="lineNum">     524 </span>            :     }
+<span class="lineNum">     525 </span>            :     unsigned k=0;
+<span class="lineNum">     526 </span><span class="lineCov">        600 :     for(unsigned j=myvessels[i]-&gt;getNumberOfDerivatives()-9; j&lt;myvessels[i]-&gt;getNumberOfDerivatives(); ++j) {</span>
+<span class="lineNum">     527 </span><span class="lineCov">        810 :       finalForces[vbase + k] += forcesToApply[tbase + j]; k++;</span>
+<span class="lineNum">     528 </span>            :     }
+<span class="lineNum">     529 </span><span class="lineCov">         30 :     fbase += myvessels[i]-&gt;getNumberOfDerivatives() - 9;</span>
+<span class="lineNum">     530 </span><span class="lineCov">         30 :     tbase += myvessels[i]-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     531 </span>            :   }
+<span class="lineNum">     532 </span>            :   // And set the final forces on the atoms
+<span class="lineNum">     533 </span><span class="lineCov">         20 :   setForcesOnAtoms( finalForces );</span>
+<span class="lineNum">     534 </span>            :   // Reset everything for next regular loop
+<span class="lineNum">     535 </span><span class="lineCov">         20 :   in_apply=false;</span>
+<span class="lineNum">     536 </span>            : }
+<a name="537"><span class="lineNum">     537 </span>            : </a>
+<span class="lineNum">     538 </span>            : }
+<span class="lineNum">     539 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - mapping/PathTools.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">mapping</a> - PathTools.cpp<span style="font-size: 80%;"> (source / <a href="PathTools.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">113</td>
+            <td class="headerCovTableEntry">117</td>
+            <td class="headerCovTableEntryHi">96.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;cltools/CLTool.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;cltools/CLToolRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;reference/ReferenceConfiguration.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;PathReparameterization.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;reference/MetricRegister.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      31 </span>            : #include &lt;string&gt;
+<span class="lineNum">      32 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      33 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : using namespace std;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace PLMD {
+<span class="lineNum">      38 </span>            : namespace mapping {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : //+PLUMEDOC TOOLS pathtools
+<span class="lineNum">      41 </span>            : /*
+<span class="lineNum">      42 </span>            : pathtools can be used to construct paths from pdb data
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : The path CVs in PLUMED are curvilinear coordinates through a high dimensional vector space.
+<span class="lineNum">      45 </span>            : Enhanced sampling calculations are ofen run using the progress along the paths and the distance from the path as CVs
+<span class="lineNum">      46 </span>            : as this provides a convenient way of defining a reaction coordinate for a complicated process.  This method is explained
+<span class="lineNum">      47 </span>            : in the documentation for \ref PATH.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : The path itself is an ordered set of equally-spaced, high-dimensional frames the way in which these frames
+<span class="lineNum">      50 </span>            : should be constructed will depend on the problem in hand.  In other words, you will need to understand the reaction
+<span class="lineNum">      51 </span>            : you wish to study in order to select a sensible set of frames to use in your path CV.  This tool provides two
+<span class="lineNum">      52 </span>            : methods that may be useful when it comes to constructing paths; namely:
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : - A tool that takes in an initial guess path in which the frames are not equally spaced.  This tool adjusts the positions
+<span class="lineNum">      55 </span>            : of the frames in order to make them equally spaced so that they can be used as the basis for a path CV.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : - A tool that takes two frames as input and that allows you to return a linear path connecting these two frames.  The
+<span class="lineNum">      58 </span>            : output from this method may be useful as an initial guess path.  It is arguable that a linear path rather defeats the
+<span class="lineNum">      59 </span>            : purpose of the path CV method, however, as the whole purpose is to be able to define non-linear paths.
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : Notice that you can use these two methods and take advantage of all the ways of measuring \ref dists that are available within
+<span class="lineNum">      62 </span>            : PLUMED. The way you do this with each of these tools described above is explained in the example below.
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : \par Examples
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : The example below shows how you can take a set of unequally spaced frames from a pdb file named inpath.pdb
+<span class="lineNum">      67 </span>            : and use pathtools to make them equally spaced so that they can be used as the basis for a path CV.  The file
+<span class="lineNum">      68 </span>            : containing this final path is named outpath.pdb.
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : \verbatim
+<span class="lineNum">      71 </span>            : plumed pathtools --path inpath.pdb --metric EUCLIDEAN --out outpath.pdb
+<span class="lineNum">      72 </span>            : \endverbatim
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : The example below shows how can create an initial linear path connecting the two pdb frames in start.pdb and
+<span class="lineNum">      75 </span>            : end.pdb.  In this case the path output to path.pdb will consist of 6 frames: the initial and final frames that
+<span class="lineNum">      76 </span>            : were contained in start.pdb and end.pdb as well as four equally spaced frames along the vector connecting
+<span class="lineNum">      77 </span>            : start.pdb to end.pdb.
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : \verbatim
+<span class="lineNum">      80 </span>            : plumed pathtools --start start.pdb --end end.pdb --nframes 4 --metric OPTIMAL --out path.pdb
+<span class="lineNum">      81 </span>            : \endverbatim
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : Often the idea with path cvs is to create a path connecting some initial state A to some final state B.  You would
+<span class="lineNum">      84 </span>            : in this case have representative configurations from your A and B states defined in the input files to pathtools
+<span class="lineNum">      85 </span>            : that we have called start.pdb and end.pdb in the example above.  Furthermore, it may be useful to have a few frames
+<span class="lineNum">      86 </span>            : before your start frame and after your end frame.  You can use path tools to create these extended paths as shown below.
+<span class="lineNum">      87 </span>            : In this case the final path would now consist of 8 frames.  Four of these frames would lie on the vector connecting state
+<span class="lineNum">      88 </span>            : A to state B, there would be one frame each at start.pdb and end.pdb as well as one frame just before start.pdb and one
+<span class="lineNum">      89 </span>            : frame just after end.pdb.  All these frames would be equally spaced.
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : \verbatim
+<span class="lineNum">      92 </span>            : plumed pathtools --start start.pdb --end end.pdb --nframes 4 --metric OPTIMAL --out path.pdb --nframes-before-start 2 --nframes-after-end 2
+<span class="lineNum">      93 </span>            : \endverbatim
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : Notice also that when you reparameterise paths you must choose two frames to fix.  Generally you chose to fix the states
+<span class="lineNum">      96 </span>            : that are representative of your states A and B.  By default pathtools will fix the first and last frames.  You can, however,
+<span class="lineNum">      97 </span>            : change the states to fix by taking advantage of the fixed flag as shown below.
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : \verbatim
+<span class="lineNum">     100 </span>            : plumed pathtools --path inpath.pdb --metric EUCLIDEAN --out outpath.pdb --fixed 2,12
+<span class="lineNum">     101 </span>            : \endverbatim
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : */
+<a name="104"><span class="lineNum">     104 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">          4 : class PathTools :</span>
+<span class="lineNum">     107 </span>            :   public CLTool
+<span class="lineNum">     108 </span>            : {
+<span class="lineNum">     109 </span>            : public:
+<span class="lineNum">     110 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="111"><span class="lineNum">     111 </span>            :   explicit PathTools(const CLToolOptions&amp; co );</a>
+<span class="lineNum">     112 </span>            :   int main(FILE* in, FILE*out,Communicator&amp; pc);
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :   string description()const {</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :     return &quot;print out a description of the keywords for an action in html&quot;;</span>
+<span class="lineNum">     115 </span>            :   }
+<a name="116"><span class="lineNum">     116 </span>            : };</a>
+<span class="lineNum">     117 </span>            : 
+<a name="118"><span class="lineNum">     118 </span><span class="lineCov">       6456 : PLUMED_REGISTER_CLTOOL(PathTools,&quot;pathtools&quot;)</span></a>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">       1613 : void PathTools::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">       1613 :   CLTool::registerKeywords( keys );</span>
+<span class="lineNum">     122 </span><span class="lineCov">       6452 :   keys.add(&quot;atoms&quot;,&quot;--start&quot;,&quot;a pdb file that contains the structure for the initial frame of your path&quot;);</span>
+<span class="lineNum">     123 </span><span class="lineCov">       6452 :   keys.add(&quot;atoms&quot;,&quot;--end&quot;,&quot;a pdb file that contains the structure for the final frame of your path&quot;);</span>
+<span class="lineNum">     124 </span><span class="lineCov">       6452 :   keys.add(&quot;atoms-1&quot;,&quot;--path&quot;,&quot;a pdb file that contains an initial path in which the frames are not equally spaced&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--fixed&quot;,&quot;0&quot;,&quot;the frames to fix when constructing the path using --path&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">       6452 :   keys.add(&quot;compulsory&quot;,&quot;--metric&quot;,&quot;the measure to use to calculate the distance between frames&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">       6452 :   keys.add(&quot;compulsory&quot;,&quot;--out&quot;,&quot;the name of the file on which to output your path&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--arg-fmt&quot;,&quot;%f&quot;,&quot;the format to use for argument values in your frames&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--tolerance&quot;,&quot;1E-4&quot;,&quot;the tolerance to use for the path reparameterization algorithm&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--nframes-before-start&quot;,&quot;1&quot;,&quot;the number of frames to include in the path before the first frame&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--nframes&quot;,&quot;1&quot;,&quot;the number of frames between the start and end frames in your path&quot;);</span>
+<span class="lineNum">     132 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--nframes-after-end&quot;,&quot;1&quot;,&quot;the number of frames to put after the last frame of your path&quot;);</span>
+<a name="133"><span class="lineNum">     133 </span><span class="lineCov">       1613 : }</span></a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">          4 : PathTools::PathTools(const CLToolOptions&amp; co ):</span>
+<span class="lineNum">     136 </span><span class="lineCov">          4 :   CLTool(co)</span>
+<span class="lineNum">     137 </span>            : {
+<span class="lineNum">     138 </span><span class="lineCov">          4 :   inputdata=commandline;</span>
+<a name="139"><span class="lineNum">     139 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">          4 : int PathTools::main(FILE* in, FILE*out,Communicator&amp; pc) {</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">          8 :   std::string mtype; parse(&quot;--metric&quot;,mtype);</span>
+<span class="lineNum">     144 </span><span class="lineCov">          8 :   std::string ifilename; parse(&quot;--path&quot;,ifilename);</span>
+<span class="lineNum">     145 </span><span class="lineCov">          8 :   std::string ofmt; parse(&quot;--arg-fmt&quot;,ofmt);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          8 :   std::string ofilename; parse(&quot;--out&quot;,ofilename);</span>
+<span class="lineNum">     147 </span><span class="lineCov">          4 :   if( ifilename.length()&gt;0 ) {</span>
+<span class="lineNum">     148 </span>            :     fprintf(out,&quot;Reparameterising path in file named %s so that all frames are equally spaced \n&quot;,ifilename.c_str() );
+<span class="lineNum">     149 </span><span class="lineCov">          2 :     FILE* fp=fopen(ifilename.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     150 </span>            :     bool do_read=true; std::vector&lt;ReferenceConfiguration*&gt; frames;
+<span class="lineNum">     151 </span><span class="lineCov">         46 :     while (do_read) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">         44 :       PDB mypdb;</span>
+<span class="lineNum">     153 </span>            :       // Read the pdb file
+<span class="lineNum">     154 </span><span class="lineCov">         22 :       do_read=mypdb.readFromFilepointer(fp,false,0.1);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         22 :       if( do_read ) {</span>
+<span class="lineNum">     156 </span><span class="lineCov">         20 :         ReferenceConfiguration* mymsd=metricRegister().create&lt;ReferenceConfiguration&gt;( mtype, mypdb );</span>
+<span class="lineNum">     157 </span><span class="lineCov">         20 :         frames.push_back( mymsd ); mymsd-&gt;checkRead();</span>
+<span class="lineNum">     158 </span>            :       }
+<span class="lineNum">     159 </span>            :     }
+<span class="lineNum">     160 </span><span class="lineCov">          4 :     std::vector&lt;unsigned&gt; fixed; parseVector(&quot;--fixed&quot;,fixed);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          2 :     if( fixed.size()==1 ) {</span>
+<span class="lineNum">     162 </span><span class="lineCov">          1 :       if( fixed[0]!=0 ) error(&quot;input to --fixed should be two integers&quot;);</span>
+<span class="lineNum">     163 </span><span class="lineCov">          4 :       fixed.resize(2); fixed[0]=0; fixed[1]=frames.size()-1;</span>
+<span class="lineNum">     164 </span><span class="lineCov">          1 :     } else if( fixed.size()==2 ) {</span>
+<span class="lineNum">     165 </span><span class="lineCov">          2 :       if( fixed[0]&lt;0 || fixed[1]&lt;0 || fixed[0]&gt;(frames.size()-1) || fixed[1]&gt;(frames.size()-1) ) {</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :         error(&quot;input to --fixed should be two numbers between 0 and the number of frames-1&quot;);</span>
+<span class="lineNum">     167 </span>            :       }
+<span class="lineNum">     168 </span>            :     } else {
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :       error(&quot;input to --fixed should be two integers&quot;);</span>
+<span class="lineNum">     170 </span>            :     }
+<span class="lineNum">     171 </span><span class="lineCov">          2 :     std::vector&lt;AtomNumber&gt; atoms; std::vector&lt;std::string&gt; arg_names;</span>
+<span class="lineNum">     172 </span><span class="lineCov">         64 :     for(unsigned i=0; i&lt;frames.size(); ++i) {</span>
+<span class="lineNum">     173 </span><span class="lineCov">         20 :       frames[i]-&gt;getAtomRequests( atoms);</span>
+<span class="lineNum">     174 </span><span class="lineCov">         20 :       frames[i]-&gt;getArgumentRequests( arg_names );</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span>            :     // Generate stuff to reparameterize
+<span class="lineNum">     177 </span><span class="lineCov">          2 :     Pbc fake_pbc; std::vector&lt;Value*&gt; vals;</span>
+<span class="lineNum">     178 </span><span class="lineCov">          6 :     for(unsigned i=0; i&lt;frames[0]-&gt;getNumberOfReferenceArguments(); ++i) {</span>
+<span class="lineNum">     179 </span><span class="lineCov">          8 :       vals.push_back(new Value()); vals[vals.size()-1]-&gt;setNotPeriodic();</span>
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span>            :     // And reparameterize
+<span class="lineNum">     182 </span><span class="lineCov">          4 :     PathReparameterization myparam( fake_pbc, vals, frames );</span>
+<span class="lineNum">     183 </span>            :     // And make all points equally spaced
+<span class="lineNum">     184 </span><span class="lineCov">          6 :     double tol; parse(&quot;--tolerance&quot;,tol); myparam.reparameterize( fixed[0], fixed[1], tol );</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :     // Ouput data on spacings
+<span class="lineNum">     187 </span>            :     double mean=0;
+<span class="lineNum">     188 </span><span class="lineCov">          6 :     MultiValue myvpack( 1, frames[0]-&gt;getNumberOfReferenceArguments() + 3*frames[0]-&gt;getNumberOfReferencePositions() + 9 );</span>
+<span class="lineNum">     189 </span><span class="lineCov">          6 :     ReferenceValuePack mypack( frames[0]-&gt;getNumberOfReferenceArguments(), frames[0]-&gt;getNumberOfReferencePositions(), myvpack );</span>
+<span class="lineNum">     190 </span><span class="lineCov">         58 :     for(unsigned i=1; i&lt;frames.size(); ++i) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">         54 :       double len = frames[i]-&gt;calc( frames[i-1]-&gt;getReferencePositions(), fake_pbc, vals, frames[i-1]-&gt;getReferenceArguments(), mypack, false );</span>
+<span class="lineNum">     192 </span>            :       printf(&quot;FINAL DISTANCE BETWEEN FRAME %u AND %u IS %f \n&quot;,i-1,i,len );
+<span class="lineNum">     193 </span><span class="lineCov">         18 :       mean+=len;</span>
+<span class="lineNum">     194 </span>            :     }
+<span class="lineNum">     195 </span><span class="lineCov">          2 :     printf(&quot;SUGGESTED LAMBDA PARAMETER IS THUS %f \n&quot;,2.3/mean/static_cast&lt;double&gt;( frames.size()-1 ) );</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :     // Delete all the frames
+<span class="lineNum">     198 </span><span class="lineCov">          4 :     OFile ofile; ofile.open(ofilename);</span>
+<span class="lineNum">     199 </span><span class="lineCov">         84 :     for(unsigned i=0; i&lt;frames.size(); ++i) { frames[i]-&gt;print( ofile, ofmt, 10. ); delete frames[i]; }</span>
+<span class="lineNum">     200 </span>            :     // Delete the vals as we don't need them
+<span class="lineNum">     201 </span><span class="lineCov">         10 :     for(unsigned i=0; i&lt;vals.size(); ++i) delete vals[i];</span>
+<span class="lineNum">     202 </span>            :     // Return as we are done
+<span class="lineNum">     203 </span><span class="lineCov">          2 :     ofile.close(); return 0;</span>
+<span class="lineNum">     204 </span>            :   }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : // Read initial frame
+<span class="lineNum">     207 </span><span class="lineCov">          8 :   std::string istart; parse(&quot;--start&quot;,istart); FILE* fp2=fopen(istart.c_str(),&quot;r&quot;); PDB mystartpdb;</span>
+<span class="lineNum">     208 </span><span class="lineCov">          2 :   if( istart.length()==0 ) error(&quot;input is missing use --istart + --iend or --path&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">          2 :   if( !mystartpdb.readFromFilepointer(fp2,false,0.1) ) error(&quot;could not read fila &quot; + istart);</span>
+<span class="lineNum">     210 </span><span class="lineCov">          2 :   ReferenceConfiguration* sframe=metricRegister().create&lt;ReferenceConfiguration&gt;( mtype, mystartpdb );</span>
+<span class="lineNum">     211 </span><span class="lineCov">          2 :   fclose(fp2);</span>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : // Read final frame
+<span class="lineNum">     214 </span><span class="lineCov">          8 :   std::string iend; parse(&quot;--end&quot;,iend); FILE* fp1=fopen(iend.c_str(),&quot;r&quot;); PDB myendpdb;</span>
+<span class="lineNum">     215 </span><span class="lineCov">          2 :   if( iend.length()==0 ) error(&quot;input is missing using --istart + --iend or --path&quot;);</span>
+<span class="lineNum">     216 </span><span class="lineCov">          2 :   if( !myendpdb.readFromFilepointer(fp1,false,0.1) ) error(&quot;could not read fila &quot; + iend);</span>
+<span class="lineNum">     217 </span><span class="lineCov">          2 :   ReferenceConfiguration* eframe=metricRegister().create&lt;ReferenceConfiguration&gt;( mtype, myendpdb );</span>
+<span class="lineNum">     218 </span><span class="lineCov">          2 :   fclose(fp1);</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : // Get atoms and arg requests
+<span class="lineNum">     221 </span><span class="lineCov">          2 :   std::vector&lt;AtomNumber&gt; atoms; std::vector&lt;std::string&gt; arg_names;</span>
+<span class="lineNum">     222 </span><span class="lineCov">          2 :   sframe-&gt;getAtomRequests( atoms); eframe-&gt;getAtomRequests( atoms);</span>
+<span class="lineNum">     223 </span><span class="lineCov">          2 :   sframe-&gt;getArgumentRequests( arg_names ); eframe-&gt;getArgumentRequests( arg_names );</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            : // Now read in the rest of the instructions
+<span class="lineNum">     226 </span>            :   unsigned nbefore, nbetween, nafter;
+<span class="lineNum">     227 </span><span class="lineCov">          8 :   parse(&quot;--nframes-before-start&quot;,nbefore); parse(&quot;--nframes&quot;,nbetween); parse(&quot;--nframes-after-end&quot;,nafter);</span>
+<span class="lineNum">     228 </span><span class="lineCov">          2 :   nbetween++;</span>
+<span class="lineNum">     229 </span>            :   fprintf(out,&quot;Generating linear path connecting structure in file named %s to structure in file named %s \n&quot;,istart.c_str(),iend.c_str() );
+<span class="lineNum">     230 </span><span class="lineCov">          2 :   fprintf(out,&quot;A path consisting of %u equally-spaced frames before the initial structure, %u frames between the intial and final structures &quot;</span>
+<span class="lineNum">     231 </span>            :           &quot;and %u frames after the final structure will be created \n&quot;,nbefore,nbetween,nafter);
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : // Create a vector of arguments to use for calculating displacements
+<span class="lineNum">     234 </span><span class="lineCov">          2 :   Pbc fpbc; std::vector&lt;Value*&gt; args;</span>
+<span class="lineNum">     235 </span><span class="lineCov">          6 :   for(unsigned i=0; i&lt;eframe-&gt;getNumberOfReferenceArguments(); ++i) {</span>
+<span class="lineNum">     236 </span><span class="lineCov">          8 :     args.push_back(new Value()); args[args.size()-1]-&gt;setNotPeriodic();</span>
+<span class="lineNum">     237 </span>            :   }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : // Calculate the distance between the start and the end
+<span class="lineNum">     240 </span><span class="lineCov">          4 :   MultiValue myvpack( 1, sframe-&gt;getNumberOfReferenceArguments() + 3*sframe-&gt;getNumberOfReferencePositions() + 9);</span>
+<span class="lineNum">     241 </span><span class="lineCov">          4 :   ReferenceValuePack mypack( sframe-&gt;getNumberOfReferenceArguments(), sframe-&gt;getNumberOfReferencePositions(), myvpack );</span>
+<span class="lineNum">     242 </span><span class="lineCov">          2 :   double pathlen = sframe-&gt;calc( eframe-&gt;getReferencePositions(), fpbc, args, eframe-&gt;getReferenceArguments(), mypack, false );</span>
+<span class="lineNum">     243 </span>            : // And the spacing between frames
+<span class="lineNum">     244 </span><span class="lineCov">          2 :   double delr = 1.0 / static_cast&lt;double&gt;( nbetween );</span>
+<span class="lineNum">     245 </span>            : // Calculate the vector connecting the start to the end
+<span class="lineNum">     246 </span><span class="lineCov">          8 :   Direction mydir(ReferenceConfigurationOptions(&quot;DIRECTION&quot;)); sframe-&gt;setupPCAStorage( mypack );</span>
+<span class="lineNum">     247 </span><span class="lineCov">          2 :   mydir.setNamesAndAtomNumbers( sframe-&gt;getAbsoluteIndexes(), sframe-&gt;getArgumentNames() ); mydir.zeroDirection();</span>
+<span class="lineNum">     248 </span><span class="lineCov">          2 :   sframe-&gt;extractDisplacementVector( eframe-&gt;getReferencePositions(), args, eframe-&gt;getReferenceArguments(), false, mydir );</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : // Now create frames
+<span class="lineNum">     252 </span>            :   std::vector&lt;ReferenceConfiguration*&gt; final_path;
+<span class="lineNum">     253 </span><span class="lineCov">          8 :   Direction pos(ReferenceConfigurationOptions(&quot;DIRECTION&quot;));</span>
+<span class="lineNum">     254 </span><span class="lineCov">          2 :   pos.setNamesAndAtomNumbers( sframe-&gt;getAbsoluteIndexes(), sframe-&gt;getArgumentNames() );</span>
+<span class="lineNum">     255 </span><span class="lineCov">          6 :   for(int i=0; i&lt;nbefore; ++i) {</span>
+<span class="lineNum">     256 </span><span class="lineCov">          2 :     pos.setDirection( sframe-&gt;getReferencePositions(), sframe-&gt;getReferenceArguments() );</span>
+<span class="lineNum">     257 </span><span class="lineCov">          2 :     pos.displaceReferenceConfiguration( -i*delr, mydir );</span>
+<span class="lineNum">     258 </span><span class="lineCov">          4 :     final_path.push_back( metricRegister().create&lt;ReferenceConfiguration&gt;(mtype) );</span>
+<span class="lineNum">     259 </span><span class="lineCov">          4 :     final_path[final_path.size()-1]-&gt;setNamesAndAtomNumbers( sframe-&gt;getAbsoluteIndexes(), sframe-&gt;getArgumentNames() );</span>
+<span class="lineNum">     260 </span><span class="lineCov">          4 :     final_path[final_path.size()-1]-&gt;setReferenceConfig( pos.getReferencePositions(), pos.getReferenceArguments(), sframe-&gt;getReferenceMetric() );</span>
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span><span class="lineCov">         14 :   for(unsigned i=1; i&lt;nbetween; ++i) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">          6 :     pos.setDirection( sframe-&gt;getReferencePositions(), sframe-&gt;getReferenceArguments() );</span>
+<span class="lineNum">     264 </span><span class="lineCov">          6 :     pos.displaceReferenceConfiguration( i*delr, mydir );</span>
+<span class="lineNum">     265 </span><span class="lineCov">         12 :     final_path.push_back( metricRegister().create&lt;ReferenceConfiguration&gt;(mtype) );</span>
+<span class="lineNum">     266 </span><span class="lineCov">         12 :     final_path[final_path.size()-1]-&gt;setNamesAndAtomNumbers( sframe-&gt;getAbsoluteIndexes(), sframe-&gt;getArgumentNames() );</span>
+<span class="lineNum">     267 </span><span class="lineCov">         12 :     final_path[final_path.size()-1]-&gt;setReferenceConfig( pos.getReferencePositions(), pos.getReferenceArguments(), sframe-&gt;getReferenceMetric() );</span>
+<span class="lineNum">     268 </span>            :   }
+<span class="lineNum">     269 </span><span class="lineCov">         12 :   for(unsigned i=0; i&lt;nafter; ++i) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">          5 :     pos.setDirection( eframe-&gt;getReferencePositions(), eframe-&gt;getReferenceArguments() );</span>
+<span class="lineNum">     271 </span><span class="lineCov">          5 :     pos.displaceReferenceConfiguration( i*delr, mydir );</span>
+<span class="lineNum">     272 </span><span class="lineCov">         10 :     final_path.push_back( metricRegister().create&lt;ReferenceConfiguration&gt;(mtype) );</span>
+<span class="lineNum">     273 </span><span class="lineCov">         10 :     final_path[final_path.size()-1]-&gt;setNamesAndAtomNumbers( sframe-&gt;getAbsoluteIndexes(), sframe-&gt;getArgumentNames() );</span>
+<span class="lineNum">     274 </span><span class="lineCov">         10 :     final_path[final_path.size()-1]-&gt;setReferenceConfig( pos.getReferencePositions(), pos.getReferenceArguments(), sframe-&gt;getReferenceMetric() );</span>
+<span class="lineNum">     275 </span>            :   }
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :   double mean=0; printf(&quot;DISTANCE BETWEEN ORIGINAL FRAMES %f \n&quot;,pathlen);
+<span class="lineNum">     278 </span><span class="lineCov">         37 :   for(unsigned i=1; i&lt;final_path.size(); ++i) {</span>
+<span class="lineNum">     279 </span><span class="lineCov">         33 :     double len = final_path[i]-&gt;calc( final_path[i-1]-&gt;getReferencePositions(), fpbc, args, final_path[i-1]-&gt;getReferenceArguments(), mypack, false );</span>
+<span class="lineNum">     280 </span>            :     printf(&quot;FINAL DISTANCE BETWEEN FRAME %u AND %u IS %f \n&quot;,i-1,i,len );
+<span class="lineNum">     281 </span><span class="lineCov">         11 :     mean+=len;</span>
+<span class="lineNum">     282 </span>            :   }
+<span class="lineNum">     283 </span><span class="lineCov">          2 :   printf(&quot;SUGGESTED LAMBDA PARAMETER IS THUS %f \n&quot;,2.3/mean/static_cast&lt;double&gt;( final_path.size()-1 ) );</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">          4 :   OFile ofile; ofile.open(ofilename);</span>
+<span class="lineNum">     286 </span><span class="lineCov">         56 :   for(unsigned i=0; i&lt;final_path.size(); ++i) { final_path[i]-&gt;print( ofile, ofmt, 10. ); delete final_path[i]; }</span>
+<span class="lineNum">     287 </span>            : // Delete the args as we don't need them anymore
+<span class="lineNum">     288 </span><span class="lineCov">         10 :   for(unsigned i=0; i&lt;args.size(); ++i) delete args[i];</span>
+<span class="lineNum">     289 </span><span class="lineCov">          2 :   ofile.close(); delete sframe; delete eframe; return 0;</span>
+<span class="lineNum">     290 </span>            : }
+<a name="291"><span class="lineNum">     291 </span>            : </a>
+<span class="lineNum">     292 </span>            : } // End of namespace
+<span class="lineNum">     293 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

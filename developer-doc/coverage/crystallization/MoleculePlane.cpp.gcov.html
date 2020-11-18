@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/MoleculePlane.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - MoleculePlane.cpp<span style="font-size: 80%;"> (source / <a href="MoleculePlane.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">54</td>
+            <td class="headerCovTableEntryLo">74.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;VectorMultiColvar.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace PLMD {
+<span class="lineNum">      26 </span>            : namespace crystallization {
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : //+PLUMEDOC MCOLVAR PLANES
+<span class="lineNum">      29 </span>            : /*
+<span class="lineNum">      30 </span>            : Calculate the plane perpendicular to two vectors in order to represent the orientation of a planar molecule.
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : \par Examples
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : */
+<span class="lineNum">      36 </span>            : //+ENDPLUMEDOC
+<a name="37"><span class="lineNum">      37 </span>            : </a>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineCov">          4 : class MoleculePlane : public VectorMultiColvar {</span>
+<span class="lineNum">      40 </span>            : private:
+<span class="lineNum">      41 </span>            : public:
+<span class="lineNum">      42 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      43 </span>            :   explicit MoleculePlane( const ActionOptions&amp; ao );
+<span class="lineNum">      44 </span>            :   AtomNumber getAbsoluteIndexOfCentralAtom( const unsigned&amp; iatom ) const ;
+<span class="lineNum">      45 </span>            :   void calculateVector( multicolvar::AtomValuePack&amp; myatoms ) const ;
+<a name="46"><span class="lineNum">      46 </span>            : };</a>
+<span class="lineNum">      47 </span>            : 
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(MoleculePlane,&quot;PLANES&quot;)</span></a>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">          3 : void MoleculePlane::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">          6 :   VectorMultiColvar::registerKeywords( keys ); keys.use(&quot;VMEAN&quot;);</span>
+<span class="lineNum">      52 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;,&quot;MOL&quot;,&quot;The numerical indices of the atoms in the molecule. If three atoms are specified the orientation &quot;</span>
+<span class="lineNum">      53 </span>            :            &quot;of the molecule is taken as the normal to the plane containing the vector connecting the first and &quot;
+<span class="lineNum">      54 </span>            :            &quot;second atoms and the vector connecting the second and third atoms.  If four atoms are specified the &quot;
+<span class="lineNum">      55 </span>            :            &quot;orientation of the molecule is taken as the normal to the plane containing the vector connecting the &quot;
+<span class="lineNum">      56 </span>            :            &quot;first and second atoms and the vector connecting the third and fourth atoms. The molecule is always &quot;
+<span class="lineNum">      57 </span>            :            &quot;assumed to lie at the geometric centre for the three/four atoms.&quot;);
+<span class="lineNum">      58 </span><span class="lineCov">          9 :   keys.reset_style(&quot;MOL&quot;,&quot;atoms&quot;);</span>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">          2 : MoleculePlane::MoleculePlane( const ActionOptions&amp; ao ):</span>
+<span class="lineNum">      62 </span>            :   Action(ao),
+<span class="lineNum">      63 </span><span class="lineCov">          2 :   VectorMultiColvar(ao)</span>
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">      66 </span><span class="lineCov">          4 :   readAtomsLikeKeyword(&quot;MOL&quot;,-1,all_atoms);</span>
+<span class="lineNum">      67 </span><span class="lineCov">          2 :   if( ablocks.size()!=3 &amp;&amp; ablocks.size()!=4 ) error(&quot;number of atoms in molecule specification is wrong.  Should be three or four.&quot;);</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">          2 :   if( all_atoms.size()==0 ) error(&quot;No atoms were specified&quot;);</span>
+<span class="lineNum">      70 </span><span class="lineCov">          2 :   setVectorDimensionality( 3 ); setupMultiColvarBase( all_atoms );</span>
+<a name="71"><span class="lineNum">      71 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 : AtomNumber MoleculePlane::getAbsoluteIndexOfCentralAtom( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">      74 </span>            :   plumed_dbg_assert( iatom&lt;atom_lab.size() );
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :   plumed_assert( atom_lab[iatom].first==0 );</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :   return ActionAtomistic::getAbsoluteIndex( ablocks[0][atom_lab[iatom].second] );</span>
+<a name="77"><span class="lineNum">      77 </span>            : }</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">       8888 : void MoleculePlane::calculateVector( multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">      80 </span><span class="lineCov">       8888 :   Vector d1, d2, cp;</span>
+<span class="lineNum">      81 </span><span class="lineCov">       8888 :   if( myatoms.getNumberOfAtoms()==3 ) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">      17776 :     d1=getSeparation( myatoms.getPosition(1), myatoms.getPosition(0) );</span>
+<span class="lineNum">      83 </span><span class="lineCov">       8888 :     d2=getSeparation( myatoms.getPosition(1), myatoms.getPosition(2) );</span>
+<span class="lineNum">      84 </span>            :   } else {
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     d1=getSeparation( myatoms.getPosition(1), myatoms.getPosition(0) );</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :     d2=getSeparation( myatoms.getPosition(2), myatoms.getPosition(3) );</span>
+<span class="lineNum">      87 </span>            :   }
+<span class="lineNum">      88 </span><span class="lineCov">       8888 :   cp = crossProduct( d1, d2 );</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">      17776 :   addAtomDerivatives( 2, 0, crossProduct( Vector(-1.0,0,0), d2 ), myatoms );</span>
+<span class="lineNum">      91 </span><span class="lineCov">       8888 :   if( myatoms.getNumberOfAtoms()==3 ) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">      17776 :     addAtomDerivatives( 2, 1, crossProduct( Vector(+1.0,0,0), d2 ) + crossProduct( Vector(-1.0,0,0), d1 ), myatoms );</span>
+<span class="lineNum">      93 </span><span class="lineCov">       8888 :     addAtomDerivatives( 2, 2, crossProduct( Vector(+1.0,0,0), d1 ), myatoms );</span>
+<span class="lineNum">      94 </span>            :   } else {
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 2, 1, crossProduct( Vector(+1.0,0,0), d2 ), myatoms );</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 2, 2, crossProduct( Vector(-1.0,0,0), d1 ), myatoms );</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 2, 3, crossProduct( Vector(+1.0,0,0), d1 ), myatoms );</span>
+<span class="lineNum">      98 </span>            :   }
+<span class="lineNum">      99 </span><span class="lineCov">      17776 :   myatoms.addBoxDerivatives( 2, Tensor(d1,crossProduct(Vector(+1.0,0,0), d2)) + Tensor( d2, crossProduct(Vector(-1.0,0,0), d1)) );</span>
+<span class="lineNum">     100 </span><span class="lineCov">       8888 :   myatoms.addValue( 2, cp[0] );</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">       8888 :   addAtomDerivatives( 3, 0, crossProduct( Vector(0,-1.0,0), d2 ), myatoms );</span>
+<span class="lineNum">     103 </span><span class="lineCov">       8888 :   if( myatoms.getNumberOfAtoms()==3 ) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">      17776 :     addAtomDerivatives( 3, 1, crossProduct( Vector(0,+1.0,0), d2 ) + crossProduct( Vector(0,-1.0,0), d1 ), myatoms );</span>
+<span class="lineNum">     105 </span><span class="lineCov">       8888 :     addAtomDerivatives( 3, 2, crossProduct( Vector(0,+1.0,0), d1 ), myatoms );</span>
+<span class="lineNum">     106 </span>            :   } else {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 3, 1, crossProduct( Vector(0,+1.0,0), d2 ), myatoms );</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 3, 2, crossProduct( Vector(0,-1.0,0), d1 ), myatoms );</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 3, 3, crossProduct( Vector(0,+1.0,0), d1 ), myatoms );</span>
+<span class="lineNum">     110 </span>            :   }
+<span class="lineNum">     111 </span><span class="lineCov">      17776 :   myatoms.addBoxDerivatives( 3, Tensor(d1,crossProduct(Vector(0,+1.0,0), d2)) + Tensor( d2, crossProduct(Vector(0,-1.0,0), d1)) );</span>
+<span class="lineNum">     112 </span><span class="lineCov">       8888 :   myatoms.addValue( 3, cp[1] );</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">       8888 :   addAtomDerivatives( 4, 0, crossProduct( Vector(0,0,-1.0), d2 ), myatoms );</span>
+<span class="lineNum">     115 </span><span class="lineCov">       8888 :   if( myatoms.getNumberOfAtoms()==3 ) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">      17776 :     addAtomDerivatives( 4, 1, crossProduct( Vector(0,0,+1.0), d2 ) + crossProduct( Vector(0,0,-1.0), d1 ), myatoms );</span>
+<span class="lineNum">     117 </span><span class="lineCov">       8888 :     addAtomDerivatives( 4, 2, crossProduct( Vector(0,0,+1.0), d1 ), myatoms);</span>
+<span class="lineNum">     118 </span>            :   } else {
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 4, 1, crossProduct( Vector(0,0,-1.0), d2 ), myatoms);</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 4, 2, crossProduct( Vector(0,0,-1.0), d1 ), myatoms);</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :     addAtomDerivatives( 4, 3, crossProduct( Vector(0,0,+1.0), d1 ), myatoms);</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineCov">      17776 :   myatoms.addBoxDerivatives( 4, Tensor(d1,crossProduct(Vector(0,0,+1.0), d2)) + Tensor( d2, crossProduct(Vector(0,0,-1.0), d1)) );</span>
+<span class="lineNum">     124 </span><span class="lineCov">       8888 :   myatoms.addValue( 4, cp[2] );</span>
+<span class="lineNum">     125 </span><span class="lineCov">       8888 : }</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : // Vector MoleculePlane::getCentralAtom(){
+<span class="lineNum">     128 </span>            : //   Vector com; com.zero();
+<span class="lineNum">     129 </span>            : //   if( getNAtoms()==3 ){
+<span class="lineNum">     130 </span>            : //       com+=(1.0/3.0)*getPosition(0);
+<span class="lineNum">     131 </span>            : //       com+=(1.0/3.0)*getPosition(1);
+<span class="lineNum">     132 </span>            : //       com+=(1.0/3.0)*getPosition(2);
+<span class="lineNum">     133 </span>            : //       addCentralAtomDerivatives( 0, (1.0/3.0)*Tensor::identity() );
+<span class="lineNum">     134 </span>            : //       addCentralAtomDerivatives( 1, (1.0/3.0)*Tensor::identity() );
+<span class="lineNum">     135 </span>            : //       addCentralAtomDerivatives( 2, (1.0/3.0)*Tensor::identity() );
+<span class="lineNum">     136 </span>            : //       return com;
+<span class="lineNum">     137 </span>            : //   }
+<span class="lineNum">     138 </span>            : //   com+=0.25*getPosition(0);
+<span class="lineNum">     139 </span>            : //   com+=0.25*getPosition(1);
+<span class="lineNum">     140 </span>            : //   com+=0.25*getPosition(2);
+<span class="lineNum">     141 </span>            : //   com+=0.25*getPosition(3);
+<span class="lineNum">     142 </span>            : //   addCentralAtomDerivatives( 0, 0.25*Tensor::identity() );
+<span class="lineNum">     143 </span>            : //   addCentralAtomDerivatives( 1, 0.25*Tensor::identity() );
+<span class="lineNum">     144 </span>            : //   addCentralAtomDerivatives( 2, 0.25*Tensor::identity() );
+<span class="lineNum">     145 </span>            : //   addCentralAtomDerivatives( 3, 0.25*Tensor::identity() );
+<span class="lineNum">     146 </span>            : //   return com;
+<span class="lineNum">     147 </span>            : // }
+<a name="148"><span class="lineNum">     148 </span>            : </a>
+<span class="lineNum">     149 </span>            : }
+<span class="lineNum">     150 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

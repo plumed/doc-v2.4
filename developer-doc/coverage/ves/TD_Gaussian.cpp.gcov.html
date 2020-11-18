@@ -1,0 +1,392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TD_Gaussian.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TD_Gaussian.cpp<span style="font-size: 80%;"> (source / <a href="TD_Gaussian.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">74</td>
+            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntryHi">90.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace ves {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC VES_TARGETDIST TD_GAUSSIAN
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Target distribution given by a sum of Gaussians (static).
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : Employ a target distribution that is given by a sum of multivariate Gaussian (or normal)
+<span class="lineNum">      36 </span>            : distributions, defined as
+<span class="lineNum">      37 </span>            : \f[
+<span class="lineNum">      38 </span>            : p(\mathbf{s}) = \sum_{i} \, w_{i} \, N(\mathbf{s};\mathbf{\mu}_{i},\mathbf{\Sigma}_{i})
+<span class="lineNum">      39 </span>            : \f]
+<span class="lineNum">      40 </span>            : where \f$\mathbf{\mu}_{i}=(\mu_{1,i},\mu_{2,i},\ldots,\mu_{d,i})\f$
+<span class="lineNum">      41 </span>            : and \f$\mathbf{\Sigma}_{i}\f$ are
+<span class="lineNum">      42 </span>            : the center and the covariance matrix for the \f$i\f$-th Gaussian.
+<span class="lineNum">      43 </span>            : The weights \f$w_{i}\f$ are normalized to 1, \f$\sum_{i}w_{i}=1\f$.
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : By default the Gaussian distributions are considered as separable into
+<span class="lineNum">      46 </span>            : independent one-dimensional Gaussian distributions. In other words,
+<span class="lineNum">      47 </span>            : the covariance matrix is taken as diagonal
+<span class="lineNum">      48 </span>            : \f$\mathbf{\Sigma}_{i}=(\sigma^2_{1,i},\sigma^2_{2,i},\ldots,\sigma^{2}_{d,i})\f$.
+<span class="lineNum">      49 </span>            : The Gaussian distribution is then written as
+<span class="lineNum">      50 </span>            : \f[
+<span class="lineNum">      51 </span>            : N(\mathbf{s};\mathbf{\mu}_{i},\mathbf{\sigma}_{i}) =
+<span class="lineNum">      52 </span>            : \prod^{d}_{k} \, \frac{1}{\sqrt{2\pi\sigma^2_{d,i}}} \,
+<span class="lineNum">      53 </span>            : \exp\left(
+<span class="lineNum">      54 </span>            : -\frac{(s_{d}-\mu_{d,i})^2}{2\sigma^2_{d,i}}
+<span class="lineNum">      55 </span>            : \right)
+<span class="lineNum">      56 </span>            : \f]
+<span class="lineNum">      57 </span>            : where
+<span class="lineNum">      58 </span>            : \f$\mathbf{\sigma}_{i}=(\sigma_{1,i},\sigma_{2,i},\ldots,\sigma_{d,i})\f$
+<span class="lineNum">      59 </span>            : is the standard deviation.
+<span class="lineNum">      60 </span>            : In this case you need to specify the centers \f$\mathbf{\mu}_{i}\f$ using the
+<span class="lineNum">      61 </span>            : numbered CENTER keywords and the standard deviations \f$\mathbf{\sigma}_{i}\f$
+<span class="lineNum">      62 </span>            : using the numbered SIGMA keywords.
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : For two arguments it is possible to employ
+<span class="lineNum">      65 </span>            : [bivariate Gaussians](https://en.wikipedia.org/wiki/Multivariate_normal_distribution)
+<span class="lineNum">      66 </span>            : with correlation between arguments, defined as
+<span class="lineNum">      67 </span>            : \f[
+<span class="lineNum">      68 </span>            : N(\mathbf{s};\mathbf{\mu}_{i},\mathbf{\sigma}_{i},\rho_i) =
+<span class="lineNum">      69 </span>            : \frac{1}{2 \pi \sigma_{1,i} \sigma_{2,i} \sqrt{1-\rho_i^2}}
+<span class="lineNum">      70 </span>            : \,
+<span class="lineNum">      71 </span>            : \exp\left(
+<span class="lineNum">      72 </span>            : -\frac{1}{2(1-\rho_i^2)}
+<span class="lineNum">      73 </span>            : \left[
+<span class="lineNum">      74 </span>            : \frac{(s_{1}-\mu_{1,i})^2}{\sigma_{1,i}^2}+
+<span class="lineNum">      75 </span>            : \frac{(s_{2}-\mu_{2,i})^2}{\sigma_{2,i}^2}-
+<span class="lineNum">      76 </span>            : \frac{2 \rho_i (s_{1}-\mu_{1,i})(s_{2}-\mu_{2,i})}{\sigma_{1,i}\sigma_{2,i}}
+<span class="lineNum">      77 </span>            : \right]
+<span class="lineNum">      78 </span>            : \right)
+<span class="lineNum">      79 </span>            : \f]
+<span class="lineNum">      80 </span>            : where \f$\rho_i\f$ is the correlation between \f$s_{1}\f$ and \f$s_{2}\f$
+<span class="lineNum">      81 </span>            : that goes from -1 to 1. In this case the covariance matrix is given as
+<span class="lineNum">      82 </span>            : \f[
+<span class="lineNum">      83 </span>            : \mathbf{\Sigma}=
+<span class="lineNum">      84 </span>            : \left[
+<span class="lineNum">      85 </span>            : \begin{array}{cc}
+<span class="lineNum">      86 </span>            : \sigma^2_{1,i} &amp; \rho_i \sigma_{1,i} \sigma_{2,i} \\
+<span class="lineNum">      87 </span>            : \rho_i \sigma_{1,i} \sigma_{2,i} &amp; \sigma^2_{2,i}
+<span class="lineNum">      88 </span>            : \end{array}
+<span class="lineNum">      89 </span>            : \right]
+<span class="lineNum">      90 </span>            : \f]
+<span class="lineNum">      91 </span>            : The correlation \f$\rho\f$ is given using
+<span class="lineNum">      92 </span>            : the numbered CORRELATION keywords. A value of \f$\rho=0\f$ means
+<span class="lineNum">      93 </span>            : that the arguments are considered as
+<span class="lineNum">      94 </span>            : un-correlated, which is the default behavior.
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : The Gaussian distributions are always defined with the conventional
+<span class="lineNum">      97 </span>            : normalization factor such that they are normalized to 1 over an unbounded
+<span class="lineNum">      98 </span>            : region. However, in calculation within VES we normally consider bounded
+<span class="lineNum">      99 </span>            : region on which the target distribution is defined. Thus, if the center of
+<span class="lineNum">     100 </span>            : a Gaussian is close to the boundary of the region it can happen that the
+<span class="lineNum">     101 </span>            : tails go outside the region. In that case it might be needed to use the
+<span class="lineNum">     102 </span>            : NORMALIZE keyword to make sure that the target distribution is properly
+<span class="lineNum">     103 </span>            : normalized to 1 over the bounded region. The code will issue a warning
+<span class="lineNum">     104 </span>            : if that is needed.
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : For periodic CVs it is generally better to use \ref TD_VONMISES &quot;Von Mises&quot;
+<span class="lineNum">     107 </span>            : distributions instead of Gaussians as these distributions properly
+<span class="lineNum">     108 </span>            : account for the periodicity of the CVs.
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : \par Examples
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : One single Gaussians in one-dimension.
+<span class="lineNum">     114 </span>            : \plumedfile
+<span class="lineNum">     115 </span>            : td: TD_GAUSSIAN CENTER1=-1.5 SIGMA1=0.8
+<span class="lineNum">     116 </span>            : \endplumedfile
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : Sum of three Gaussians in two-dimensions with equal weights as
+<span class="lineNum">     119 </span>            : no weights are given.
+<span class="lineNum">     120 </span>            : \plumedfile
+<span class="lineNum">     121 </span>            : TD_GAUSSIAN ...
+<span class="lineNum">     122 </span>            :  CENTER1=-1.5,+1.5 SIGMA1=0.8,0.3
+<span class="lineNum">     123 </span>            :  CENTER2=+1.5,-1.5 SIGMA2=0.3,0.8
+<span class="lineNum">     124 </span>            :  CENTER3=+1.5,+1.5 SIGMA3=0.4,0.4
+<span class="lineNum">     125 </span>            :  LABEL=td
+<span class="lineNum">     126 </span>            : ... TD_GAUSSIAN
+<span class="lineNum">     127 </span>            : \endplumedfile
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : Sum of three Gaussians in two-dimensions which
+<span class="lineNum">     130 </span>            : are weighted unequally. Note that weights are automatically
+<span class="lineNum">     131 </span>            : normalized to 1 so that WEIGHTS=1.0,2.0,1.0 is equal to
+<span class="lineNum">     132 </span>            : specifying WEIGHTS=0.25,0.50,0.25.
+<span class="lineNum">     133 </span>            : \plumedfile
+<span class="lineNum">     134 </span>            : TD_GAUSSIAN ...
+<span class="lineNum">     135 </span>            :  CENTER1=-1.5,+1.5 SIGMA1=0.8,0.3
+<span class="lineNum">     136 </span>            :  CENTER2=+1.5,-1.5 SIGMA2=0.3,0.8
+<span class="lineNum">     137 </span>            :  CENTER3=+1.5,+1.5 SIGMA3=0.4,0.4
+<span class="lineNum">     138 </span>            :  WEIGHTS=1.0,2.0,1.0
+<span class="lineNum">     139 </span>            :  LABEL=td
+<span class="lineNum">     140 </span>            : ... TD_GAUSSIAN
+<span class="lineNum">     141 </span>            : \endplumedfile
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : Sum of two bivariate Gaussians where there is correlation of
+<span class="lineNum">     144 </span>            : \f$\rho_{2}=0.75\f$ between the two arguments for the second Gaussian.
+<span class="lineNum">     145 </span>            : \plumedfile
+<span class="lineNum">     146 </span>            : TD_GAUSSIAN ...
+<span class="lineNum">     147 </span>            :  CENTER1=-1.5,+1.5 SIGMA1=0.8,0.3
+<span class="lineNum">     148 </span>            :  CENTER2=+1.5,-1.5 SIGMA2=0.3,0.8 CORRELATION2=0.75
+<span class="lineNum">     149 </span>            :  LABEL=td
+<span class="lineNum">     150 </span>            : ... TD_GAUSSIAN
+<span class="lineNum">     151 </span>            : \endplumedfile
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : */
+<a name="158"><span class="lineNum">     158 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">        429 : class TD_Gaussian: public TargetDistribution {</span>
+<span class="lineNum">     161 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; centers_;
+<span class="lineNum">     162 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; sigmas_;
+<span class="lineNum">     163 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; correlation_;
+<span class="lineNum">     164 </span>            :   std::vector&lt;double&gt; weights_;
+<span class="lineNum">     165 </span>            :   bool diagonal_;
+<span class="lineNum">     166 </span>            :   unsigned int ncenters_;
+<span class="lineNum">     167 </span>            :   double GaussianDiagonal(const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const bool normalize=true) const;
+<span class="lineNum">     168 </span>            :   double Gaussian2D(const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const std::vector&lt;double&gt;&amp;, const bool normalize=true) const;
+<span class="lineNum">     169 </span>            : public:
+<span class="lineNum">     170 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     171 </span>            :   explicit TD_Gaussian(const ActionOptions&amp; ao);
+<span class="lineNum">     172 </span>            :   double getValue(const std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     173 </span>            : };
+<a name="174"><span class="lineNum">     174 </span>            : </a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">       6595 : PLUMED_REGISTER_ACTION(TD_Gaussian,&quot;TD_GAUSSIAN&quot;)</span>
+<a name="177"><span class="lineNum">     177 </span>            : </a>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span><span class="lineCov">        144 : void TD_Gaussian::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     180 </span><span class="lineCov">        144 :   TargetDistribution::registerKeywords(keys);</span>
+<span class="lineNum">     181 </span><span class="lineCov">        576 :   keys.add(&quot;numbered&quot;,&quot;CENTER&quot;,&quot;The centers of the Gaussian distributions.&quot;);</span>
+<span class="lineNum">     182 </span><span class="lineCov">        576 :   keys.add(&quot;numbered&quot;,&quot;SIGMA&quot;,&quot;The standard deviations of the Gaussian distributions.&quot;);</span>
+<span class="lineNum">     183 </span><span class="lineCov">        576 :   keys.add(&quot;numbered&quot;,&quot;CORRELATION&quot;,&quot;The correlation for two-dimensional bivariate Gaussian distributions. Only works for two arguments. The value should be between -1 and 1. If no value is given the Gaussians is considered as un-correlated (i.e. value of 0.0).&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineCov">        576 :   keys.add(&quot;optional&quot;,&quot;WEIGHTS&quot;,&quot;The weights of the Gaussian distributions. Have to be as many as the number of centers given with the numbered CENTER keywords. If no weights are given the distributions are weighted equally. The weights are automatically normalized to 1.&quot;);</span>
+<span class="lineNum">     185 </span><span class="lineCov">        288 :   keys.use(&quot;WELLTEMPERED_FACTOR&quot;);</span>
+<span class="lineNum">     186 </span><span class="lineCov">        288 :   keys.use(&quot;SHIFT_TO_ZERO&quot;);</span>
+<span class="lineNum">     187 </span><span class="lineCov">        288 :   keys.use(&quot;NORMALIZE&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineCov">        144 : }</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">        143 : TD_Gaussian::TD_Gaussian(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     192 </span>            :   PLUMED_VES_TARGETDISTRIBUTION_INIT(ao),
+<span class="lineNum">     193 </span>            :   centers_(0),
+<span class="lineNum">     194 </span>            :   sigmas_(0),
+<span class="lineNum">     195 </span>            :   correlation_(0),
+<span class="lineNum">     196 </span>            :   weights_(0),
+<span class="lineNum">     197 </span>            :   diagonal_(true),
+<span class="lineNum">     198 </span><span class="lineCov">        143 :   ncenters_(0)</span>
+<span class="lineNum">     199 </span>            : {
+<span class="lineNum">     200 </span><span class="lineCov">        163 :   for(unsigned int i=1;; i++) {</span>
+<span class="lineNum">     201 </span>            :     std::vector&lt;double&gt; tmp_center;
+<span class="lineNum">     202 </span><span class="lineCov">        612 :     if(!parseNumberedVector(&quot;CENTER&quot;,i,tmp_center) ) {break;}</span>
+<span class="lineNum">     203 </span><span class="lineCov">        163 :     centers_.push_back(tmp_center);</span>
+<span class="lineNum">     204 </span><span class="lineCov">        163 :   }</span>
+<span class="lineNum">     205 </span><span class="lineCov">        163 :   for(unsigned int i=1;; i++) {</span>
+<span class="lineNum">     206 </span>            :     std::vector&lt;double&gt; tmp_sigma;
+<span class="lineNum">     207 </span><span class="lineCov">        612 :     if(!parseNumberedVector(&quot;SIGMA&quot;,i,tmp_sigma) ) {break;}</span>
+<span class="lineNum">     208 </span><span class="lineCov">        163 :     sigmas_.push_back(tmp_sigma);</span>
+<span class="lineNum">     209 </span><span class="lineCov">        163 :   }</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineCov">        143 :   if(centers_.size()==0) {</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: CENTER keywords seem to be missing. Note that numbered keywords start at CENTER1.&quot;);</span>
+<span class="lineNum">     213 </span>            :   }
+<span class="lineNum">     214 </span>            :   //
+<span class="lineNum">     215 </span><span class="lineCov">        143 :   if(centers_.size()!=sigmas_.size()) {</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: there has to be an equal amount of CENTER and SIGMA keywords&quot;);</span>
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            :   //
+<span class="lineNum">     219 </span><span class="lineCov">        143 :   setDimension(centers_[0].size());</span>
+<span class="lineNum">     220 </span><span class="lineCov">        143 :   ncenters_ = centers_.size();</span>
+<span class="lineNum">     221 </span>            :   // check centers and sigmas
+<span class="lineNum">     222 </span><span class="lineCov">        469 :   for(unsigned int i=0; i&lt;ncenters_; i++) {</span>
+<span class="lineNum">     223 </span><span class="lineCov">        326 :     if(centers_[i].size()!=getDimension()) {</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: one of the CENTER keyword does not match the given dimension&quot;);</span>
+<span class="lineNum">     225 </span>            :     }
+<span class="lineNum">     226 </span><span class="lineCov">        163 :     if(sigmas_[i].size()!=getDimension()) {</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: one of the SIGMA keyword does not match the given dimension&quot;);</span>
+<span class="lineNum">     228 </span>            :     }
+<span class="lineNum">     229 </span>            :   }
+<span class="lineNum">     230 </span>            :   //
+<span class="lineNum">     231 </span><span class="lineCov">        143 :   correlation_.resize(ncenters_);</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">        469 :   for(unsigned int i=0; i&lt;ncenters_; i++) {</span>
+<span class="lineNum">     234 </span>            :     std::vector&lt;double&gt; corr;
+<span class="lineNum">     235 </span><span class="lineCov">        326 :     parseNumberedVector(&quot;CORRELATION&quot;,(i+1),corr);</span>
+<span class="lineNum">     236 </span><span class="lineCov">        163 :     if(corr.size()&gt;0) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">          3 :       diagonal_ = false;</span>
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span>            :     else {
+<span class="lineNum">     240 </span><span class="lineCov">        320 :       corr.assign(1,0.0);</span>
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span><span class="lineCov">        326 :     correlation_[i] = corr;</span>
+<span class="lineNum">     243 </span>            :   }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineCov">        145 :   if(!diagonal_ &amp;&amp; getDimension()!=2) {</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: CORRELATION is only defined for two-dimensional Gaussians for now.&quot;);</span>
+<span class="lineNum">     247 </span>            :   }
+<span class="lineNum">     248 </span><span class="lineCov">        775 :   for(unsigned int i=0; i&lt;correlation_.size(); i++) {</span>
+<span class="lineNum">     249 </span><span class="lineCov">        163 :     if(correlation_[i].size()!=1) {</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot;: only one value should be given in CORRELATION&quot;);</span>
+<span class="lineNum">     251 </span>            :     }
+<span class="lineNum">     252 </span><span class="lineCov">        489 :     for(unsigned int k=0; k&lt;correlation_[i].size(); k++) {</span>
+<span class="lineNum">     253 </span><span class="lineCov">        163 :       if(correlation_[i][k] &lt;= -1.0 ||  correlation_[i][k] &gt;= 1.0) {</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :         plumed_merror(getName()+&quot;: values given in CORRELATION should be between -1.0 and 1.0&quot; );</span>
+<span class="lineNum">     255 </span>            :       }
+<span class="lineNum">     256 </span>            :     }
+<span class="lineNum">     257 </span>            :   }
+<span class="lineNum">     258 </span>            :   //
+<span class="lineNum">     259 </span><span class="lineCov">        286 :   parseVector(&quot;WEIGHTS&quot;,weights_);</span>
+<span class="lineNum">     260 </span><span class="lineCov">        283 :   if(weights_.size()==0) {weights_.assign(centers_.size(),1.0);}</span>
+<span class="lineNum">     261 </span><span class="lineCov">        143 :   if(centers_.size()!=weights_.size()) {</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: there has to be as many weights given in WEIGHTS as numbered CENTER keywords&quot;);</span>
+<span class="lineNum">     263 </span>            :   }
+<span class="lineNum">     264 </span>            :   //
+<span class="lineNum">     265 </span>            :   double sum_weights=0.0;
+<span class="lineNum">     266 </span><span class="lineCov">        469 :   for(unsigned int i=0; i&lt;weights_.size(); i++) {sum_weights+=weights_[i];}</span>
+<span class="lineNum">     267 </span><span class="lineCov">        775 :   for(unsigned int i=0; i&lt;weights_.size(); i++) {weights_[i]/=sum_weights;}</span>
+<span class="lineNum">     268 </span>            :   //
+<span class="lineNum">     269 </span><span class="lineCov">        143 :   checkRead();</span>
+<span class="lineNum">     270 </span><span class="lineCov">        143 : }</span>
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">     215307 : double TD_Gaussian::getValue(const std::vector&lt;double&gt;&amp; argument) const {</span>
+<span class="lineNum">     274 </span>            :   double value=0.0;
+<span class="lineNum">     275 </span><span class="lineCov">     215307 :   if(diagonal_) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">     750545 :     for(unsigned int i=0; i&lt;ncenters_; i++) {</span>
+<span class="lineNum">     277 </span><span class="lineCov">     833460 :       value+=weights_[i]*GaussianDiagonal(argument, centers_[i], sigmas_[i]);</span>
+<span class="lineNum">     278 </span>            :     }
+<span class="lineNum">     279 </span>            :   }
+<span class="lineNum">     280 </span><span class="lineCov">      20402 :   else if(!diagonal_ &amp;&amp; getDimension()==2) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">     102010 :     for(unsigned int i=0; i&lt;ncenters_; i++) {</span>
+<span class="lineNum">     282 </span><span class="lineCov">     122412 :       value+=weights_[i]*Gaussian2D(argument, centers_[i], sigmas_[i],correlation_[i]);</span>
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span>            :   }
+<span class="lineNum">     285 </span><span class="lineCov">     215307 :   return value;</span>
+<span class="lineNum">     286 </span>            : }
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineCov">     277820 : double TD_Gaussian::GaussianDiagonal(const std::vector&lt;double&gt;&amp; argument, const std::vector&lt;double&gt;&amp; center, const std::vector&lt;double&gt;&amp; sigma, bool normalize) const {</span>
+<span class="lineNum">     290 </span>            :   double value = 1.0;
+<span class="lineNum">     291 </span><span class="lineCov">    2120557 :   for(unsigned int k=0; k&lt;argument.size(); k++) {</span>
+<span class="lineNum">     292 </span><span class="lineCov">    1564917 :     double arg=(argument[k]-center[k])/sigma[k];</span>
+<span class="lineNum">     293 </span><span class="lineCov">     521639 :     double tmp_exp = exp(-0.5*arg*arg);</span>
+<span class="lineNum">     294 </span><span class="lineCov">    1043278 :     if(normalize) {tmp_exp/=(sigma[k]*sqrt(2.0*pi));}</span>
+<span class="lineNum">     295 </span><span class="lineCov">     521639 :     value*=tmp_exp;</span>
+<span class="lineNum">     296 </span>            :   }
+<span class="lineNum">     297 </span><span class="lineCov">     277820 :   return value;</span>
+<span class="lineNum">     298 </span>            : }
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineCov">      40804 : double TD_Gaussian::Gaussian2D(const std::vector&lt;double&gt;&amp; argument, const std::vector&lt;double&gt;&amp; center, const std::vector&lt;double&gt;&amp; sigma, const std::vector&lt;double&gt;&amp; correlation, bool normalize) const {</span>
+<span class="lineNum">     302 </span><span class="lineCov">     122412 :   double arg1 = (argument[0]-center[0])/sigma[0];</span>
+<span class="lineNum">     303 </span><span class="lineCov">      40804 :   double arg2 = (argument[1]-center[1])/sigma[1];</span>
+<span class="lineNum">     304 </span><span class="lineCov">      40804 :   double corr = correlation[0];</span>
+<span class="lineNum">     305 </span><span class="lineCov">      40804 :   double value = (arg1*arg1 + arg2*arg2 - 2.0*corr*arg1*arg2);</span>
+<span class="lineNum">     306 </span><span class="lineCov">      40804 :   value *= -1.0 / ( 2.0*(1.0-corr*corr) );</span>
+<span class="lineNum">     307 </span><span class="lineCov">      40804 :   value = exp(value);</span>
+<span class="lineNum">     308 </span><span class="lineCov">      40804 :   if(normalize) {</span>
+<span class="lineNum">     309 </span><span class="lineCov">      40804 :     value /=  2*pi*sigma[0]*sigma[1]*sqrt(1.0-corr*corr);</span>
+<span class="lineNum">     310 </span>            :   }
+<span class="lineNum">     311 </span><span class="lineCov">      40804 :   return value;</span>
+<span class="lineNum">     312 </span>            : }
+<a name="313"><span class="lineNum">     313 </span>            : </a>
+<span class="lineNum">     314 </span>            : }
+<span class="lineNum">     315 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TargetDistribution.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TargetDistribution.h<span style="font-size: 80%;"> (source / <a href="TargetDistribution.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryMed">84.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_ves_TargetDistribution_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_ves_TargetDistribution_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/Action.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #define PLUMED_VES_TARGETDISTRIBUTION_INIT(ao) TargetDistribution(ao)
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /**
+<span class="lineNum">      36 </span>            : \ingroup INHERIT
+<span class="lineNum">      37 </span>            : Abstract base class for implenting new target distributions.
+<span class="lineNum">      38 </span>            : */
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : class Action;
+<span class="lineNum">      41 </span>            : class Grid;
+<span class="lineNum">      42 </span>            : class Value;
+<span class="lineNum">      43 </span>            : class Keywords;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace ves {
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : class TargetDistModifer;
+<span class="lineNum">      48 </span>            : class VesBias;
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : class TargetDistribution :
+<span class="lineNum">      51 </span>            :   public Action
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span>            : private:
+<span class="lineNum">      54 </span>            :   enum TargetDistType {
+<span class="lineNum">      55 </span>            :     static_targetdist,
+<span class="lineNum">      56 </span>            :     dynamic_targetdist
+<span class="lineNum">      57 </span>            :   } type_;
+<span class="lineNum">      58 </span>            :   //
+<span class="lineNum">      59 </span>            :   bool force_normalization_;
+<span class="lineNum">      60 </span>            :   bool check_normalization_;
+<span class="lineNum">      61 </span>            :   bool check_nonnegative_;
+<span class="lineNum">      62 </span>            :   bool check_nan_inf_;
+<span class="lineNum">      63 </span>            :   bool shift_targetdist_to_zero_;
+<span class="lineNum">      64 </span>            :   // dimension of the distribution
+<span class="lineNum">      65 </span>            :   unsigned int dimension_;
+<span class="lineNum">      66 </span>            :   // grid parameters
+<span class="lineNum">      67 </span>            :   std::vector&lt;Value*&gt; grid_args_;
+<span class="lineNum">      68 </span>            :   //
+<span class="lineNum">      69 </span>            :   Grid* targetdist_grid_pntr_;
+<span class="lineNum">      70 </span>            :   Grid* log_targetdist_grid_pntr_;
+<span class="lineNum">      71 </span>            :   //
+<span class="lineNum">      72 </span>            :   std::vector&lt;TargetDistModifer*&gt; targetdist_modifer_pntrs_;
+<span class="lineNum">      73 </span>            :   //
+<span class="lineNum">      74 </span>            :   Action* action_pntr_;
+<span class="lineNum">      75 </span>            :   VesBias* vesbias_pntr_;
+<span class="lineNum">      76 </span>            :   //
+<span class="lineNum">      77 </span>            :   bool needs_bias_grid_;
+<span class="lineNum">      78 </span>            :   bool needs_bias_withoutcutoff_grid_;
+<span class="lineNum">      79 </span>            :   bool needs_fes_grid_;
+<span class="lineNum">      80 </span>            :   //
+<span class="lineNum">      81 </span>            :   Grid* bias_grid_pntr_;
+<span class="lineNum">      82 </span>            :   Grid* bias_withoutcutoff_grid_pntr_;
+<span class="lineNum">      83 </span>            :   Grid* fes_grid_pntr_;
+<span class="lineNum">      84 </span>            :   //
+<span class="lineNum">      85 </span>            :   bool static_grid_calculated;
+<span class="lineNum">      86 </span>            :   //
+<span class="lineNum">      87 </span>            :   bool allow_bias_cutoff_;
+<span class="lineNum">      88 </span>            :   bool bias_cutoff_active_;
+<span class="lineNum">      89 </span>            :   //
+<span class="lineNum">      90 </span>            :   void calculateStaticDistributionGrid();
+<span class="lineNum">      91 </span>            :   void updateBiasCutoffForTargetDistGrid();
+<span class="lineNum">      92 </span>            :   void checkNanAndInf();
+<span class="lineNum">      93 </span>            : protected:
+<span class="lineNum">      94 </span>            :   void setStatic() {type_=static_targetdist;}
+<span class="lineNum">      95 </span><span class="lineCov">         36 :   void setDynamic() {type_=dynamic_targetdist;}</span>
+<span class="lineNum">      96 </span>            :   // set the that target distribution is normalized
+<span class="lineNum">      97 </span><span class="lineCov">         68 :   void setForcedNormalization() {force_normalization_=true; check_normalization_=false;}</span>
+<span class="lineNum">      98 </span>            :   void unsetForcedNormalization() {force_normalization_=false; check_normalization_=true;};
+<span class="lineNum">      99 </span>            :   //
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :   void setBiasGridNeeded() {needs_bias_grid_=true;}</span>
+<span class="lineNum">     101 </span><span class="lineCov">          3 :   void setBiasWithoutCutoffGridNeeded() {needs_bias_withoutcutoff_grid_=true;}</span>
+<span class="lineNum">     102 </span><span class="lineCov">         33 :   void setFesGridNeeded() {needs_fes_grid_=true;}</span>
+<span class="lineNum">     103 </span>            :   //
+<span class="lineNum">     104 </span>            :   VesBias* getPntrToVesBias() const;
+<a name="105"><span class="lineNum">     105 </span>            :   Action* getPntrToAction() const;</a>
+<span class="lineNum">     106 </span>            :   //
+<span class="lineNum">     107 </span><span class="lineCov">        234 :   virtual void setupAdditionalGrids(const std::vector&lt;Value*&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;unsigned int&gt;&amp;) {}</span>
+<span class="lineNum">     108 </span>            :   //
+<span class="lineNum">     109 </span>            :   void normalizeTargetDistGrid();
+<span class="lineNum">     110 </span>            :   //
+<span class="lineNum">     111 </span><span class="lineCov">    3182769 :   Grid&amp; targetDistGrid() const {return *targetdist_grid_pntr_;}</span>
+<span class="lineNum">     112 </span><span class="lineCov">    1494463 :   Grid&amp; logTargetDistGrid() const {return *log_targetdist_grid_pntr_;}</span>
+<span class="lineNum">     113 </span>            :   //
+<span class="lineNum">     114 </span>            :   Grid* getBiasGridPntr() const {return bias_grid_pntr_;}
+<span class="lineNum">     115 </span><span class="lineCov">       2624 :   Grid* getBiasWithoutCutoffGridPntr() const {return bias_withoutcutoff_grid_pntr_;}</span>
+<span class="lineNum">     116 </span><span class="lineCov">    1130107 :   Grid* getFesGridPntr() const {return fes_grid_pntr_;}</span>
+<span class="lineNum">     117 </span>            :   //
+<span class="lineNum">     118 </span>            :   double getBeta() const;
+<span class="lineNum">     119 </span>            :   //
+<span class="lineNum">     120 </span>            :   void applyTargetDistModiferToGrid(TargetDistModifer* modifer_pntr);
+<span class="lineNum">     121 </span>            :   //
+<span class="lineNum">     122 </span>            :   void setMinimumOfTargetDistGridToZero();
+<a name="123"><span class="lineNum">     123 </span>            :   void updateLogTargetDistGrid();</a>
+<span class="lineNum">     124 </span>            :   //
+<span class="lineNum">     125 </span><span class="lineCov">        308 :   virtual void updateGrid() {calculateStaticDistributionGrid();}</span>
+<span class="lineNum">     126 </span>            : public:
+<span class="lineNum">     127 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     128 </span>            :   explicit TargetDistribution(const ActionOptions&amp;);
+<span class="lineNum">     129 </span>            :   ~TargetDistribution();
+<span class="lineNum">     130 </span>            :   //
+<span class="lineNum">     131 </span>            :   bool isStatic() const {return type_==static_targetdist;}
+<span class="lineNum">     132 </span><span class="lineCov">        573 :   bool isDynamic() const {return type_==dynamic_targetdist;}</span>
+<span class="lineNum">     133 </span>            :   // is the target distribution normalize or not
+<span class="lineNum">     134 </span>            :   bool forcedNormalization() const {return force_normalization_;};
+<span class="lineNum">     135 </span><span class="lineCov">       5194 :   bool isTargetDistGridShiftedToZero() const {return shift_targetdist_to_zero_;}</span>
+<span class="lineNum">     136 </span>            :   //
+<span class="lineNum">     137 </span><span class="lineCov">        437 :   bool biasGridNeeded() const {return needs_bias_grid_;}</span>
+<span class="lineNum">     138 </span><span class="lineCov">         40 :   bool biasWithoutCutoffGridNeeded() const {return needs_bias_withoutcutoff_grid_;}</span>
+<span class="lineNum">     139 </span><span class="lineCov">        437 :   bool fesGridNeeded()  const {return needs_fes_grid_;}</span>
+<span class="lineNum">     140 </span>            :   //
+<span class="lineNum">     141 </span>            :   void allowBiasCutoff() {allow_bias_cutoff_=true;}
+<span class="lineNum">     142 </span>            :   void doNotAllowBiasCutoff() {allow_bias_cutoff_=false;}
+<span class="lineNum">     143 </span>            :   bool isBiasCutoffAllowed() const {return allow_bias_cutoff_;}
+<span class="lineNum">     144 </span>            :   bool biasCutoffActive() const {return bias_cutoff_active_;}
+<span class="lineNum">     145 </span>            :   //
+<span class="lineNum">     146 </span>            :   void setDimension(const unsigned int dimension);
+<span class="lineNum">     147 </span><span class="lineCov">     499151 :   unsigned getDimension() const {return dimension_;}</span>
+<span class="lineNum">     148 </span>            :   //
+<span class="lineNum">     149 </span>            :   virtual void linkVesBias(VesBias*);
+<span class="lineNum">     150 </span>            :   virtual void linkAction(Action*);
+<span class="lineNum">     151 </span>            :   //
+<span class="lineNum">     152 </span>            :   virtual void linkBiasGrid(Grid*);
+<span class="lineNum">     153 </span>            :   virtual void linkBiasWithoutCutoffGrid(Grid*);
+<span class="lineNum">     154 </span>            :   virtual void linkFesGrid(Grid*);
+<span class="lineNum">     155 </span>            :   //
+<span class="lineNum">     156 </span>            :   void setupBiasCutoff();
+<span class="lineNum">     157 </span>            :   //
+<span class="lineNum">     158 </span><span class="lineCov">        826 :   Grid* getTargetDistGridPntr() const {return targetdist_grid_pntr_;}</span>
+<span class="lineNum">     159 </span><span class="lineCov">        160 :   Grid* getLogTargetDistGridPntr() const {return log_targetdist_grid_pntr_;}</span>
+<span class="lineNum">     160 </span>            :   //
+<span class="lineNum">     161 </span>            :   void clearLogTargetDistGrid();
+<span class="lineNum">     162 </span>            :   // calculate the target distribution itself
+<span class="lineNum">     163 </span>            :   virtual double getValue(const std::vector&lt;double&gt;&amp;) const = 0;
+<span class="lineNum">     164 </span>            :   //
+<span class="lineNum">     165 </span>            :   void setupGrids(const std::vector&lt;Value*&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;unsigned int&gt;&amp;);
+<span class="lineNum">     166 </span>            :   //
+<span class="lineNum">     167 </span>            :   Grid getMarginal(const std::vector&lt;std::string&gt;&amp;);
+<span class="lineNum">     168 </span>            :   //
+<span class="lineNum">     169 </span>            :   void updateTargetDist();
+<span class="lineNum">     170 </span>            :   //
+<span class="lineNum">     171 </span>            :   void readInRestartTargetDistGrid(const std::string&amp;);
+<span class="lineNum">     172 </span>            :   //
+<span class="lineNum">     173 </span>            :   static double integrateGrid(const Grid*);
+<span class="lineNum">     174 </span>            :   static double normalizeGrid(Grid*);
+<a name="175"><span class="lineNum">     175 </span>            :   static Grid getMarginalDistributionGrid(Grid*, const std::vector&lt;std::string&gt;&amp;);</a>
+<a name="176"><span class="lineNum">     176 </span>            :   // empty standard action stuff</a>
+<a name="177"><span class="lineNum">     177 </span><span class="lineNoCov">          0 :   void update() {};</span></a>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :   void apply() {};</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :   void calculate() {};</span>
+<span class="lineNum">     180 </span>            : };
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : inline
+<span class="lineNum">     184 </span>            : VesBias* TargetDistribution::getPntrToVesBias() const {
+<span class="lineNum">     185 </span>            :   plumed_massert(vesbias_pntr_!=NULL,&quot;the VES bias has not been linked&quot;);
+<span class="lineNum">     186 </span>            :   return vesbias_pntr_;
+<span class="lineNum">     187 </span>            : }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : inline
+<span class="lineNum">     191 </span>            : Action* TargetDistribution::getPntrToAction() const {
+<span class="lineNum">     192 </span>            :   plumed_massert(action_pntr_!=NULL,&quot;the action has not been linked&quot;);
+<span class="lineNum">     193 </span>            :   return action_pntr_;
+<span class="lineNum">     194 </span>            : }
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : inline
+<span class="lineNum">     198 </span><span class="lineCov">         78 : void TargetDistribution::normalizeTargetDistGrid() {</span>
+<span class="lineNum">     199 </span><span class="lineCov">         78 :   double normalization = normalizeGrid(targetdist_grid_pntr_);</span>
+<span class="lineNum">     200 </span><span class="lineCov">         78 :   if(normalization&lt;0.0) {plumed_merror(getName()+&quot;: something went wrong trying to normalize the target distribution, integrating over it gives a negative value.&quot;);}</span>
+<span class="lineNum">     201 </span><span class="lineCov">         78 : }</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : }
+<span class="lineNum">     208 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

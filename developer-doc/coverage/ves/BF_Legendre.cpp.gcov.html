@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/BF_Legendre.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - BF_Legendre.cpp<span style="font-size: 80%;"> (source / <a href="BF_Legendre.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace ves {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC VES_BASISF BF_LEGENDRE
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Legendre polynomials basis functions.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : Use as basis functions [Legendre polynomials](https://en.wikipedia.org/wiki/Legendre_polynomials)
+<span class="lineNum">      36 </span>            : \f$P_{n}(x)\f$ defined on a bounded interval.
+<span class="lineNum">      37 </span>            : You need to provide the interval \f$[a,b]\f$
+<span class="lineNum">      38 </span>            : on which the basis functions are to be used, and the order of the
+<span class="lineNum">      39 </span>            : expansion \f$N\f$ (i.e. the highest order polynomial used).
+<span class="lineNum">      40 </span>            : The total number of basis functions is \f$N+1\f$ as the constant \f$P_{0}(x)=1\f$
+<span class="lineNum">      41 </span>            : is also included.
+<span class="lineNum">      42 </span>            : These basis functions should not be used for periodic CVs.
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : Intrinsically the Legendre polynomials are defined on the interval \f$[-1,1]\f$.
+<span class="lineNum">      45 </span>            : A variable \f$t\f$ in the interval \f$[a,b]\f$ is transformed to a variable \f$x\f$
+<span class="lineNum">      46 </span>            : in the intrinsic interval \f$[-1,1]\f$ by using the transform function
+<span class="lineNum">      47 </span>            : \f[
+<span class="lineNum">      48 </span>            : x(t) = \frac{t-(a+b)/2}
+<span class="lineNum">      49 </span>            : {(b-a)/2}
+<span class="lineNum">      50 </span>            : \f]
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The Legendre polynomials are given by the recurrence relation
+<span class="lineNum">      53 </span>            : \f{align}{
+<span class="lineNum">      54 </span>            : P_{0}(x)    &amp;= 1 \\
+<span class="lineNum">      55 </span>            : P_{1}(x)    &amp;= x \\
+<span class="lineNum">      56 </span>            : P_{n+1}(x)  &amp;= \frac{2n+1}{n+1} \, x \, P_{n}(x) -  \frac{n}{n+1} \, P_{n-1}(x)
+<span class="lineNum">      57 </span>            : \f}
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : The first 6 polynomials are shown below
+<span class="lineNum">      60 </span>            : \image html ves_basisf-legendre.png
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : The Legendre polynomial are orthogonal over the interval \f$[-1,1]\f$
+<span class="lineNum">      63 </span>            : \f[
+<span class="lineNum">      64 </span>            : \int_{-1}^{1} dx \, P_{n}(x)\, P_{m}(x)  =  \frac{2}{2n+1} \delta_{n,m}
+<span class="lineNum">      65 </span>            : \f]
+<span class="lineNum">      66 </span>            : By using the SCALED keyword the polynomials are scaled by a factor of
+<span class="lineNum">      67 </span>            : \f$ \sqrt{\frac{2n+1}{2}}\f$ such that they are orthonormal to 1.
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : From the above equation it follows that integral of the basis functions
+<span class="lineNum">      71 </span>            : over the uniform target distribution \f$p_{\mathrm{u}}(x)\f$ are given by
+<span class="lineNum">      72 </span>            : \f[
+<span class="lineNum">      73 </span>            : \int_{-1}^{1} dx \, P_{n}(x) p_{\mathrm{u}}(x) =  \delta_{n,0},
+<span class="lineNum">      74 </span>            : \f]
+<span class="lineNum">      75 </span>            : and thus always zero except for the constant \f$P_{0}(x)=1\f$.
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : For further mathematical properties of the Legendre polynomials see for example
+<span class="lineNum">      79 </span>            : the [Wikipedia page](https://en.wikipedia.org/wiki/Legendre_polynomials).
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : \par Examples
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : Here we employ a Legendre expansion of order 20 over the interval -4.0 to 8.0.
+<span class="lineNum">      84 </span>            : This results in a total number of 21 basis functions.
+<span class="lineNum">      85 </span>            : The label used to identify  the basis function action can then be
+<span class="lineNum">      86 </span>            : referenced later on in the input file.
+<span class="lineNum">      87 </span>            : \plumedfile
+<span class="lineNum">      88 </span>            : bf_leg: BF_LEGENDRE MINIMUM=-4.0 MAXIMUM=8.0 ORDER=20
+<span class="lineNum">      89 </span>            : \endplumedfile
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : \par Examples
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : */
+<a name="94"><span class="lineNum">      94 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">         53 : class BF_Legendre : public BasisFunctions {</span>
+<span class="lineNum">      97 </span>            :   bool scaled_;
+<span class="lineNum">      98 </span>            :   virtual void setupUniformIntegrals();
+<span class="lineNum">      99 </span>            : public:
+<span class="lineNum">     100 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     101 </span>            :   explicit BF_Legendre(const ActionOptions&amp;);
+<span class="lineNum">     102 </span>            :   void getAllValues(const double, double&amp;, bool&amp;, std::vector&lt;double&gt;&amp;, std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     103 </span>            : };
+<a name="104"><span class="lineNum">     104 </span>            : </a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">       6505 : PLUMED_REGISTER_ACTION(BF_Legendre,&quot;BF_LEGENDRE&quot;)</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">         54 : void BF_Legendre::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">         54 :   BasisFunctions::registerKeywords(keys);</span>
+<span class="lineNum">     111 </span><span class="lineCov">        162 :   keys.addFlag(&quot;SCALED&quot;,false,&quot;Scale the polynomials such that they are orthonormal to 1.&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">         54 : }</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">         53 : BF_Legendre::BF_Legendre(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     115 </span>            :   PLUMED_VES_BASISFUNCTIONS_INIT(ao),
+<span class="lineNum">     116 </span><span class="lineCov">         53 :   scaled_(false)</span>
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span><span class="lineCov">        159 :   parseFlag(&quot;SCALED&quot;,scaled_); addKeywordToList(&quot;SCALED&quot;,scaled_);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         53 :   setNumberOfBasisFunctions(getOrder()+1);</span>
+<span class="lineNum">     120 </span><span class="lineCov">        159 :   setIntrinsicInterval(&quot;-1.0&quot;,&quot;+1.0&quot;);</span>
+<span class="lineNum">     121 </span>            :   setNonPeriodic();
+<span class="lineNum">     122 </span>            :   setIntervalBounded();
+<span class="lineNum">     123 </span><span class="lineCov">        106 :   setType(&quot;Legendre&quot;);</span>
+<span class="lineNum">     124 </span><span class="lineCov">        106 :   setDescription(&quot;Legendre polynomials&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">        106 :   setLabelPrefix(&quot;L&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         53 :   setupBF();</span>
+<span class="lineNum">     127 </span><span class="lineCov">         53 :   checkRead();</span>
+<span class="lineNum">     128 </span><span class="lineCov">         53 : }</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">    1464140 : void BF_Legendre::getAllValues(const double arg, double&amp; argT, bool&amp; inside_range, std::vector&lt;double&gt;&amp; values, std::vector&lt;double&gt;&amp; derivs) const {</span>
+<span class="lineNum">     132 </span>            :   // plumed_assert(values.size()==numberOfBasisFunctions());
+<span class="lineNum">     133 </span>            :   // plumed_assert(derivs.size()==numberOfBasisFunctions());
+<span class="lineNum">     134 </span><span class="lineCov">    1464140 :   inside_range=true;</span>
+<span class="lineNum">     135 </span><span class="lineCov">    1464140 :   argT=translateArgument(arg, inside_range);</span>
+<span class="lineNum">     136 </span><span class="lineCov">    1464140 :   std::vector&lt;double&gt; derivsT(derivs.size());</span>
+<span class="lineNum">     137 </span>            :   //
+<span class="lineNum">     138 </span><span class="lineCov">    1464140 :   values[0]=1.0;</span>
+<span class="lineNum">     139 </span><span class="lineCov">    1464140 :   derivsT[0]=0.0;</span>
+<span class="lineNum">     140 </span><span class="lineCov">    1464140 :   derivs[0]=0.0;</span>
+<span class="lineNum">     141 </span><span class="lineCov">    1464140 :   values[1]=argT;</span>
+<span class="lineNum">     142 </span><span class="lineCov">    1464140 :   derivsT[1]=1.0;</span>
+<span class="lineNum">     143 </span><span class="lineCov">    1464140 :   derivs[1]=intervalDerivf();</span>
+<span class="lineNum">     144 </span><span class="lineCov">   26811744 :   for(unsigned int i=1; i &lt; getOrder(); i++) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">   12673802 :     double io = static_cast&lt;double&gt;(i);</span>
+<span class="lineNum">     146 </span><span class="lineCov">   50695208 :     values[i+1]  = ((2.0*io+1.0)/(io+1.0))*argT*values[i] - (io/(io+1.0))*values[i-1];</span>
+<span class="lineNum">     147 </span><span class="lineCov">   50695208 :     derivsT[i+1] = ((2.0*io+1.0)/(io+1.0))*(values[i]+argT*derivsT[i])-(io/(io+1.0))*derivsT[i-1];</span>
+<span class="lineNum">     148 </span><span class="lineCov">   25347604 :     derivs[i+1]  = intervalDerivf()*derivsT[i+1];</span>
+<span class="lineNum">     149 </span>            :   }
+<span class="lineNum">     150 </span><span class="lineCov">    1464140 :   if(scaled_) {</span>
+<span class="lineNum">     151 </span>            :     // L0 is also scaled!
+<span class="lineNum">     152 </span><span class="lineCov">   14848896 :     for(unsigned int i=0; i&lt;values.size(); i++) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">    4644704 :       double io = static_cast&lt;double&gt;(i);</span>
+<span class="lineNum">     154 </span><span class="lineCov">    4644704 :       double sf = sqrt(io+0.5);</span>
+<span class="lineNum">     155 </span><span class="lineCov">    4644704 :       values[i] *= sf;</span>
+<span class="lineNum">     156 </span><span class="lineCov">    4644704 :       derivs[i] *= sf;</span>
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span>            :   }
+<span class="lineNum">     159 </span><span class="lineCov">    1714981 :   if(!inside_range) {for(unsigned int i=0; i&lt;derivs.size(); i++) {derivs[i]=0.0;}}</span>
+<span class="lineNum">     160 </span><span class="lineCov">    1464140 : }</span>
+<a name="161"><span class="lineNum">     161 </span>            : </a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">         51 : void BF_Legendre::setupUniformIntegrals() {</span>
+<span class="lineNum">     164 </span>            :   setAllUniformIntegralsToZero();
+<span class="lineNum">     165 </span>            :   double L0_int = 1.0;
+<span class="lineNum">     166 </span><span class="lineCov">         51 :   if(scaled_) {L0_int = sqrt(0.5);}</span>
+<span class="lineNum">     167 </span>            :   setUniformIntegral(0,L0_int);
+<span class="lineNum">     168 </span><span class="lineCov">         51 : }</span>
+<span class="lineNum">     169 </span>            : 
+<a name="170"><span class="lineNum">     170 </span>            : </a>
+<span class="lineNum">     171 </span>            : }
+<span class="lineNum">     172 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

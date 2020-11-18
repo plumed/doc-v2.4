@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - bias/ReweightTemperature.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">bias</a> - ReweightTemperature.cpp<span style="font-size: 80%;"> (source / <a href="ReweightTemperature.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;ReweightBase.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : //+PLUMEDOC REWEIGHTING REWEIGHT_TEMP
+<span class="lineNum">      29 </span>            : /*
+<span class="lineNum">      30 </span>            : Calculate weights for ensemble averages allow for the computing of ensemble averages at temperatures lower/higher than that used in your original simulation.
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : We can use our knowledge of the Boltzmann distribution in the cannonical ensemble to reweight the data
+<span class="lineNum">      33 </span>            : contained in trajectories.  Using this procedure we can take trajectory at temperature \f$T_1\f$ and use it to
+<span class="lineNum">      34 </span>            : extract probabilities at a different temperature, \f$T_2\f$, using:
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : \f[
+<span class="lineNum">      37 </span>            : P(s',t) = \frac{ \sum_{t'}^t \delta( s(x) - s' ) \exp\left( +( \left[\frac{1}{T_1} - \frac{1}{T_2}\right] \frac{U(x,t')}{k_B} \right) }{ \sum_{t'}^t \exp\left( +\left[\frac{1}{T_1} - \frac{1}{T_2}\right] \frac{U(x,t')}{k_B} \right) }
+<span class="lineNum">      38 </span>            : \f]
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : The weights calculated by this action are equal to \f$\exp\left( +( \left[\frac{1}{T_1} - \frac{1}{T_2}\right] \frac{U(x,t')}{k_B} \right)\f$ and take
+<span class="lineNum">      41 </span>            : the effect the bias has on the system into account.  These weights can be used in any action
+<span class="lineNum">      42 </span>            : that computes ensemble averages.  For example this action can be used in tandem with \ref HISTOGRAM or \ref AVERAGE.
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : \par Examples
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : The following input can be used to postprocess a molecular dynamics trajectory calculated at a temperature of 500 K.
+<span class="lineNum">      47 </span>            : The \ref HISTOGRAM as a function of the distance between atoms 1 and 2 that would have been obtained if the simulation
+<span class="lineNum">      48 </span>            : had been run at the lower temperature of 300 K is estimated using the data from the higher temperature trajectory and output
+<span class="lineNum">      49 </span>            : to a file.
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \plumedfile
+<span class="lineNum">      52 </span>            : x: DISTANCE ATOMS=1,2
+<span class="lineNum">      53 </span>            : aa: REWEIGHT_TEMP TEMP=500 REWEIGHT_TEMP=300
+<span class="lineNum">      54 </span>            : hB: HISTOGRAM ARG=x GRID_MIN=0.0 GRID_MAX=3.0 GRID_BIN=100 BANDWIDTH=0.1 LOGWEIGHTS=aa
+<span class="lineNum">      55 </span>            : DUMPGRID GRID=hB FILE=histoB
+<span class="lineNum">      56 </span>            : \endplumedfile
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : */
+<span class="lineNum">      59 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : namespace PLMD {
+<a name="62"><span class="lineNum">      62 </span>            : namespace bias {</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          3 : class ReweightTemperature : public ReweightBase {</span>
+<span class="lineNum">      65 </span>            : private:
+<span class="lineNum">      66 </span>            : ///
+<span class="lineNum">      67 </span>            :   double rtemp;
+<span class="lineNum">      68 </span>            : /// The biases we are using in reweighting and the args we store them separately
+<span class="lineNum">      69 </span>            :   std::vector&lt;Value*&gt; biases;
+<span class="lineNum">      70 </span>            : public:
+<span class="lineNum">      71 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">      72 </span>            :   explicit ReweightTemperature(const ActionOptions&amp;ao);
+<span class="lineNum">      73 </span>            :   void prepare();
+<span class="lineNum">      74 </span>            :   double getLogWeight() const ;
+<a name="75"><span class="lineNum">      75 </span>            : };</a>
+<span class="lineNum">      76 </span>            : 
+<a name="77"><span class="lineNum">      77 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(ReweightTemperature,&quot;REWEIGHT_TEMP&quot;)</span></a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">          2 : void ReweightTemperature::registerKeywords(Keywords&amp; keys ) {</span>
+<span class="lineNum">      80 </span><span class="lineCov">          2 :   ReweightBase::registerKeywords( keys );</span>
+<span class="lineNum">      81 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;REWEIGHT_TEMP&quot;,&quot;reweight data from a trajectory at one temperature and output the probability &quot;</span>
+<span class="lineNum">      82 </span>            :            &quot;distribution at a second temperature. This is not possible during postprocessing.&quot;);
+<a name="83"><span class="lineNum">      83 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">          1 : ReweightTemperature::ReweightTemperature(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      86 </span>            :   Action(ao),
+<span class="lineNum">      87 </span><span class="lineCov">          1 :   ReweightBase(ao)</span>
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span><span class="lineCov">          1 :   parse(&quot;REWEIGHT_TEMP&quot;,rtemp);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          1 :   log.printf(&quot;  reweighting simulation to probabilities at temperature %f\n&quot;,rtemp);</span>
+<span class="lineNum">      91 </span><span class="lineCov">          2 :   rtemp*=plumed.getAtoms().getKBoltzmann();</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          2 :   std::vector&lt;ActionWithValue*&gt; all=plumed.getActionSet().select&lt;ActionWithValue*&gt;();</span>
+<span class="lineNum">      94 </span><span class="lineCov">          1 :   if( all.empty() ) error(&quot;your input file is not telling plumed to calculate anything&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">          1 :   log.printf(&quot;  using the following biases in reweighting &quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">         47 :   for(unsigned j=0; j&lt;all.size(); j++) {</span>
+<span class="lineNum">      97 </span><span class="lineCov">         45 :     std::string flab; flab=all[j]-&gt;getLabel() + &quot;.bias&quot;;</span>
+<span class="lineNum">      98 </span><span class="lineCov">         15 :     if( all[j]-&gt;exists(flab) ) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">         14 :       biases.push_back( all[j]-&gt;copyOutput(flab) );</span>
+<span class="lineNum">     100 </span><span class="lineCov">         14 :       log.printf(&quot; %s&quot;, flab.c_str());</span>
+<span class="lineNum">     101 </span>            :     }
+<span class="lineNum">     102 </span>            :   }
+<span class="lineNum">     103 </span><span class="lineCov">          1 :   log.printf(&quot;\n&quot;);</span>
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">        200 : void ReweightTemperature::prepare() {</span>
+<span class="lineNum">     107 </span><span class="lineCov">        200 :   plumed.getAtoms().setCollectEnergy(true);</span>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">        200 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">        200 : double ReweightTemperature::getLogWeight() const {</span>
+<span class="lineNum">     111 </span>            :   // Retrieve the bias
+<span class="lineNum">     112 </span><span class="lineCov">       6000 :   double bias=0.0; for(unsigned i=0; i&lt;biases.size(); ++i) bias+=biases[i]-&gt;get();</span>
+<span class="lineNum">     113 </span><span class="lineCov">        400 :   double energy=plumed.getAtoms().getEnergy()+bias;</span>
+<span class="lineNum">     114 </span><span class="lineCov">        200 :   return -( (1.0/rtemp) - (1.0/simtemp) )*(energy+bias);</span>
+<span class="lineNum">     115 </span>            : }
+<a name="116"><span class="lineNum">     116 </span>            : </a>
+<span class="lineNum">     117 </span>            : }
+<span class="lineNum">     118 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - secondarystructure/AlphaRMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">secondarystructure</a> - AlphaRMSD.cpp<span style="font-size: 80%;"> (source / <a href="AlphaRMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">52</td>
+            <td class="headerCovTableEntry">52</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;SecondaryStructureRMSD.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<span class="lineNum">      28 </span>            : namespace secondarystructure {
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //+PLUMEDOC COLVAR ALPHARMSD
+<span class="lineNum">      31 </span>            : /*
+<span class="lineNum">      32 </span>            : Probe the alpha helical content of a protein structure.
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : Any chain of six contiguous residues in a protein chain can form an alpha helix. This
+<span class="lineNum">      35 </span>            : colvar thus generates the set of all possible six residue sections and calculates
+<span class="lineNum">      36 </span>            : the RMSD distance between the configuration in which the residues find themselves
+<span class="lineNum">      37 </span>            : and an idealized alpha helical structure. These distances can be calculated by either
+<span class="lineNum">      38 </span>            : aligning the instantaneous structure with the reference structure and measuring each
+<span class="lineNum">      39 </span>            : atomic displacement or by calculating differences between the set of interatomic
+<span class="lineNum">      40 </span>            : distances in the reference and instantaneous structures.
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : This colvar is based on the following reference \cite pietrucci09jctc.  The authors of
+<span class="lineNum">      43 </span>            : this paper use the set of distances from the alpha helix configurations to measure
+<span class="lineNum">      44 </span>            : the number of segments that have an alpha helical configuration. This is done by calculating
+<span class="lineNum">      45 </span>            : the following sum of functions of the rmsd distances:
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \f[
+<span class="lineNum">      48 </span>            : s = \sum_i \frac{ 1 - \left(\frac{r_i-d_0}{r_0}\right)^n } { 1 - \left(\frac{r_i-d_0}{r_0}\right)^m }
+<span class="lineNum">      49 </span>            : \f]
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : where the sum runs over all possible segments of alpha helix.  By default the
+<span class="lineNum">      52 </span>            : NN, MM and D_0 parameters are set equal to those used in \cite pietrucci09jctc.  The R_0
+<span class="lineNum">      53 </span>            : parameter must be set by the user - the value used in \cite pietrucci09jctc was 0.08 nm.
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : If you change the function in the above sum you can calculate quantities such as the average
+<span class="lineNum">      56 </span>            : distance from a purely the alpha helical configuration or the distance between the set of
+<span class="lineNum">      57 </span>            : residues that is closest to an alpha helix and the reference configuration. To do these sorts of
+<span class="lineNum">      58 </span>            : calculations you can use the AVERAGE and MIN keywords. In addition you can use the LESS_THAN
+<span class="lineNum">      59 </span>            : keyword if you would like to change the form of the switching function. If you use any of these
+<span class="lineNum">      60 </span>            : options you no longer need to specify NN, R_0, MM and D_0.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : Please be aware that for codes like gromacs you must ensure that plumed
+<span class="lineNum">      63 </span>            : reconstructs the chains involved in your CV when you calculate this CV using
+<span class="lineNum">      64 </span>            : anthing other than TYPE=DRMSD.  For more details as to how to do this see \ref WHOLEMOLECULES.
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : \par Examples
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : The following input calculates the number of six residue segments of
+<span class="lineNum">      69 </span>            : protein that are in an alpha helical configuration.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : \plumedfile
+<span class="lineNum">      72 </span>            : MOLINFO STRUCTURE=helix.pdb
+<span class="lineNum">      73 </span>            : hh: ALPHARMSD RESIDUES=all
+<span class="lineNum">      74 </span>            : \endplumedfile
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : Here the same is done use RMSD instead of DRMSD
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : \plumedfile
+<span class="lineNum">      79 </span>            : MOLINFO STRUCTURE=helix.pdb
+<span class="lineNum">      80 </span>            : WHOLEMOLECULES ENTITY0=1-100
+<span class="lineNum">      81 </span>            : hh: ALPHARMSD RESIDUES=all TYPE=OPTIMAL R_0=0.1
+<span class="lineNum">      82 </span>            : \endplumedfile
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : */
+<a name="85"><span class="lineNum">      85 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          6 : class AlphaRMSD : public SecondaryStructureRMSD {</span>
+<span class="lineNum">      88 </span>            : public:
+<span class="lineNum">      89 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      90 </span>            :   explicit AlphaRMSD(const ActionOptions&amp;);
+<a name="91"><span class="lineNum">      91 </span>            : };</a>
+<span class="lineNum">      92 </span>            : 
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">       6455 : PLUMED_REGISTER_ACTION(AlphaRMSD,&quot;ALPHARMSD&quot;)</span></a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">          4 : void AlphaRMSD::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">          4 :   SecondaryStructureRMSD::registerKeywords( keys );</span>
+<a name="97"><span class="lineNum">      97 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">          3 : AlphaRMSD::AlphaRMSD(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     100 </span>            :   Action(ao),
+<span class="lineNum">     101 </span><span class="lineCov">          3 :   SecondaryStructureRMSD(ao)</span>
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span>            :   // read in the backbone atoms
+<span class="lineNum">     104 </span><span class="lineCov">          6 :   std::vector&lt;unsigned&gt; chains; readBackboneAtoms( &quot;protein&quot;, chains);</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   // This constructs all conceivable sections of alpha helix in the backbone of the chains
+<span class="lineNum">     107 </span><span class="lineCov">          3 :   unsigned nprevious=0; std::vector&lt;unsigned&gt; nlist(30);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         15 :   for(unsigned i=0; i&lt;chains.size(); ++i) {</span>
+<span class="lineNum">     109 </span><span class="lineCov">          3 :     if( chains[i]&lt;30 ) error(&quot;segment of backbone defined is not long enough to form an alpha helix. Each backbone fragment must contain a minimum of 6 residues&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">          3 :     unsigned nres=chains[i]/5;</span>
+<span class="lineNum">     111 </span><span class="lineCov">          3 :     if( chains[i]%5!=0 ) error(&quot;backbone segment received does not contain a multiple of five residues&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">         21 :     for(unsigned ires=0; ires&lt;nres-5; ires++) {</span>
+<span class="lineNum">     113 </span><span class="lineCov">          9 :       unsigned accum=nprevious + 5*ires;</span>
+<span class="lineNum">     114 </span><span class="lineCov">        549 :       for(unsigned k=0; k&lt;30; ++k) nlist[k] = accum+k;</span>
+<span class="lineNum">     115 </span><span class="lineCov">          9 :       addColvar( nlist );</span>
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span><span class="lineCov">          3 :     nprevious+=chains[i];</span>
+<span class="lineNum">     118 </span>            :   }
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :   // Build the reference structure ( in angstroms )
+<span class="lineNum">     121 </span><span class="lineCov">          3 :   std::vector&lt;Vector&gt; reference(30);</span>
+<span class="lineNum">     122 </span><span class="lineCov">          3 :   reference[0] = Vector( 0.733,  0.519,  5.298 ); // N    i</span>
+<span class="lineNum">     123 </span><span class="lineCov">          3 :   reference[1] = Vector( 1.763,  0.810,  4.301 ); // CA</span>
+<span class="lineNum">     124 </span><span class="lineCov">          3 :   reference[2] = Vector( 3.166,  0.543,  4.881 ); // CB</span>
+<span class="lineNum">     125 </span><span class="lineCov">          3 :   reference[3] = Vector( 1.527, -0.045,  3.053 ); // C</span>
+<span class="lineNum">     126 </span><span class="lineCov">          3 :   reference[4] = Vector( 1.646,  0.436,  1.928 ); // O</span>
+<span class="lineNum">     127 </span><span class="lineCov">          3 :   reference[5] = Vector( 1.180, -1.312,  3.254 ); // N    i+1</span>
+<span class="lineNum">     128 </span><span class="lineCov">          3 :   reference[6] = Vector( 0.924, -2.203,  2.126 ); // CA</span>
+<span class="lineNum">     129 </span><span class="lineCov">          3 :   reference[7] = Vector( 0.650, -3.626,  2.626 ); // CB</span>
+<span class="lineNum">     130 </span><span class="lineCov">          3 :   reference[8] = Vector(-0.239, -1.711,  1.261 ); // C</span>
+<span class="lineNum">     131 </span><span class="lineCov">          3 :   reference[9] = Vector(-0.190, -1.815,  0.032 ); // O</span>
+<span class="lineNum">     132 </span><span class="lineCov">          3 :   reference[10] = Vector(-1.280, -1.172,  1.891 ); // N    i+2</span>
+<span class="lineNum">     133 </span><span class="lineCov">          3 :   reference[11] = Vector(-2.416, -0.661,  1.127 ); // CA</span>
+<span class="lineNum">     134 </span><span class="lineCov">          3 :   reference[12] = Vector(-3.548, -0.217,  2.056 ); // CB</span>
+<span class="lineNum">     135 </span><span class="lineCov">          3 :   reference[13] = Vector(-1.964,  0.529,  0.276 ); // C</span>
+<span class="lineNum">     136 </span><span class="lineCov">          3 :   reference[14] = Vector(-2.364,  0.659, -0.880 ); // O</span>
+<span class="lineNum">     137 </span><span class="lineCov">          3 :   reference[15] = Vector(-1.130,  1.391,  0.856 ); // N    i+3</span>
+<span class="lineNum">     138 </span><span class="lineCov">          3 :   reference[16] = Vector(-0.620,  2.565,  0.148 ); // CA</span>
+<span class="lineNum">     139 </span><span class="lineCov">          3 :   reference[17] = Vector( 0.228,  3.439,  1.077 ); // CB</span>
+<span class="lineNum">     140 </span><span class="lineCov">          3 :   reference[18] = Vector( 0.231,  2.129, -1.032 ); // C</span>
+<span class="lineNum">     141 </span><span class="lineCov">          3 :   reference[19] = Vector( 0.179,  2.733, -2.099 ); // O</span>
+<span class="lineNum">     142 </span><span class="lineCov">          3 :   reference[20] = Vector( 1.028,  1.084, -0.833 ); // N    i+4</span>
+<span class="lineNum">     143 </span><span class="lineCov">          3 :   reference[21] = Vector( 1.872,  0.593, -1.919 ); // CA</span>
+<span class="lineNum">     144 </span><span class="lineCov">          3 :   reference[22] = Vector( 2.850, -0.462, -1.397 ); // CB</span>
+<span class="lineNum">     145 </span><span class="lineCov">          3 :   reference[23] = Vector( 1.020,  0.020, -3.049 ); // C</span>
+<span class="lineNum">     146 </span><span class="lineCov">          3 :   reference[24] = Vector( 1.317,  0.227, -4.224 ); // O</span>
+<span class="lineNum">     147 </span><span class="lineCov">          3 :   reference[25] = Vector(-0.051, -0.684, -2.696 ); // N    i+5</span>
+<span class="lineNum">     148 </span><span class="lineCov">          3 :   reference[26] = Vector(-0.927, -1.261, -3.713 ); // CA</span>
+<span class="lineNum">     149 </span><span class="lineCov">          3 :   reference[27] = Vector(-1.933, -2.219, -3.074 ); // CB</span>
+<span class="lineNum">     150 </span><span class="lineCov">          3 :   reference[28] = Vector(-1.663, -0.171, -4.475 ); // C</span>
+<span class="lineNum">     151 </span><span class="lineCov">          3 :   reference[29] = Vector(-1.916, -0.296, -5.673 ); // O</span>
+<span class="lineNum">     152 </span>            :   // Store the secondary structure ( last number makes sure we convert to internal units nm )
+<span class="lineNum">     153 </span><span class="lineCov">          3 :   setSecondaryStructure( reference, 0.17/atoms.getUnits().getLength(), 0.1/atoms.getUnits().getLength() );</span>
+<span class="lineNum">     154 </span><span class="lineCov">          3 : }</span>
+<a name="155"><span class="lineNum">     155 </span>            : </a>
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/WrapAround.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - WrapAround.cpp<span style="font-size: 80%;"> (source / <a href="WrapAround.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/AtomNumber.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      34 </span>            : #include &lt;string&gt;
+<span class="lineNum">      35 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : using namespace std;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace PLMD {
+<span class="lineNum">      40 </span>            : namespace generic {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : //+PLUMEDOC GENERIC WRAPAROUND
+<span class="lineNum">      43 </span>            : /*
+<span class="lineNum">      44 </span>            : Rebuild periodic boundary conditions around chosen atoms.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : Modify position of atoms indicated by ATOMS by shifting them by lattice vectors so that they are
+<span class="lineNum">      48 </span>            : as close as possible to the atoms indicated by AROUND. More precisely, for every atom i
+<span class="lineNum">      49 </span>            : in the ATOMS list the following procedure is performed:
+<span class="lineNum">      50 </span>            : - The atom j among those in the AROUND list is searched that is closest to atom i.
+<span class="lineNum">      51 </span>            : - The atom i is replaced with its periodic image that is closest to atom j.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : This action works similarly to \ref WHOLEMOLECULES in that it replaces atoms coordinate. Notice that only
+<span class="lineNum">      54 </span>            : atoms specified with ATOMS are replaced, and that, at variance with \ref WHOLEMOLECULES,
+<span class="lineNum">      55 </span>            : the order in which atoms are specified is irrelevant.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : This is often convenient at a post processing stage (using the \ref driver), but sometime
+<span class="lineNum">      58 </span>            : it is required during the simulation if collective variables need atoms to be in a specific periodic image.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : \attention This directive modifies the stored position at the precise moment it is executed. This means that only collective variables which are below it in the input script will see the corrected positions. As a general rule, put it at the top of the input file. Also, unless you know exactly what you are doing, leave the default stride (1), so that this action is performed at every MD step.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : Consider that the computational cost grows with the product
+<span class="lineNum">      63 </span>            : of the size of the two lists (ATOMS and AROUND), so that this action can become very expensive.
+<span class="lineNum">      64 </span>            : If you are using it to analyse a trajectory this is usually not a big problem. If you use it to
+<span class="lineNum">      65 </span>            : analyze a simulation on the fly, e.g. with \ref DUMPATOMS to store a properly wrapped trajectory,
+<span class="lineNum">      66 </span>            : consider the possibility of using the STRIDE keyword here (with great care).
+<span class="lineNum">      67 </span>            : \par Examples
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : This command instructs plumed to move all the ions to their periodic image that is as close as possible to
+<span class="lineNum">      70 </span>            : the rna group.
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : \plumedfile
+<span class="lineNum">      73 </span>            : rna: GROUP ATOMS=1-100
+<span class="lineNum">      74 </span>            : ions: GROUP ATOMS=101-110
+<span class="lineNum">      75 </span>            : # first make the rna molecule whole
+<span class="lineNum">      76 </span>            : WHOLEMOLECULES ENTITY0=rna
+<span class="lineNum">      77 </span>            : WRAPAROUND ATOMS=ions AROUND=rna
+<span class="lineNum">      78 </span>            : DUMPATOMS FILE=dump.xyz ATOMS=rna,ions
+<span class="lineNum">      79 </span>            : \endplumedfile
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : In case you want to do it during a simulation and you only care about wrapping the ions in
+<span class="lineNum">      82 </span>            : the `dump.xyz` file, you can use the following:
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : \plumedfile
+<span class="lineNum">      85 </span>            : # add some restraint that do not require molecules to be whole:
+<span class="lineNum">      86 </span>            : a: TORSION ATOMS=1,2,10,11
+<span class="lineNum">      87 </span>            : RESTRAINT ARG=a AT=0.0 KAPPA=5
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : # then do the things that are required for dumping the trajectory
+<span class="lineNum">      91 </span>            : # notice that they are all done every 100 steps, so as not to
+<span class="lineNum">      92 </span>            : # unnecessarily overload the calculation
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : rna: GROUP ATOMS=1-100
+<span class="lineNum">      95 </span>            : ions: GROUP ATOMS=101-110
+<span class="lineNum">      96 </span>            : # first make the rna molecule whole
+<span class="lineNum">      97 </span>            : WHOLEMOLECULES ENTITY0=rna STRIDE=100
+<span class="lineNum">      98 </span>            : WRAPAROUND ATOMS=ions AROUND=rna STRIDE=100
+<span class="lineNum">      99 </span>            : DUMPATOMS FILE=dump.xyz ATOMS=rna,ions STRIDE=100
+<span class="lineNum">     100 </span>            : \endplumedfile
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : Notice that if the biased variable requires a molecule to be whole, you might have to put
+<span class="lineNum">     103 </span>            : just the \ref WHOLEMOLECULES command before computing that variable and leave the default STRIDE=1.
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : This command instructs plumed to center all atoms around the center of mass of a solute molecule.
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : \plumedfile
+<span class="lineNum">     108 </span>            : solute: GROUP ATOMS=1-100
+<span class="lineNum">     109 </span>            : all: GROUP ATOMS=1-1000
+<span class="lineNum">     110 </span>            : # center of the solute:
+<span class="lineNum">     111 </span>            : # notice that since plumed 2.2 this also works if the
+<span class="lineNum">     112 </span>            : # solute molecule is broken
+<span class="lineNum">     113 </span>            : com: COM ATOMS=solute
+<span class="lineNum">     114 </span>            : # notice that we wrap around a single atom. this should be fast
+<span class="lineNum">     115 </span>            : WRAPAROUND ATOMS=all AROUND=com
+<span class="lineNum">     116 </span>            : DUMPATOMS FILE=dump.xyz ATOMS=all
+<span class="lineNum">     117 </span>            : \endplumedfile
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : Notice that whereas \ref WHOLEMOLECULES is designed to make molecules whole,
+<span class="lineNum">     120 </span>            : \ref WRAPAROUND can easily break molecules. In the last example,
+<span class="lineNum">     121 </span>            : if solvent (atoms 101-1000) is made e.g. of water, then water
+<span class="lineNum">     122 </span>            : molecules could be broken by \ref WRAPAROUND (hydrogen could end up
+<span class="lineNum">     123 </span>            : in an image and oxygen in another one).
+<span class="lineNum">     124 </span>            : One solution is to use \ref WHOLEMOLECULES on _all_ the water molecules
+<span class="lineNum">     125 </span>            : after \ref WRAPAROUND. This is tedious. A better solution is to use the
+<span class="lineNum">     126 </span>            : GROUPBY option which is going
+<span class="lineNum">     127 </span>            : to consider the atoms listed in ATOMS as a list of groups
+<span class="lineNum">     128 </span>            : each of size GROUPBY. The first atom of the group will be brought
+<span class="lineNum">     129 </span>            : close to the AROUND atoms. The following atoms of the group
+<span class="lineNum">     130 </span>            : will be just brought close to the first atom of the group.
+<span class="lineNum">     131 </span>            : Assuming that oxygen is the first atom of each water molecules,
+<span class="lineNum">     132 </span>            : in the following examples all the water oxygens will be brought
+<span class="lineNum">     133 </span>            : close to the solute, and all the hydrogens will be kept close
+<span class="lineNum">     134 </span>            : to their related oxygen.
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : \plumedfile
+<span class="lineNum">     137 </span>            : solute: GROUP ATOMS=1-100
+<span class="lineNum">     138 </span>            : water: GROUP ATOMS=101-1000
+<span class="lineNum">     139 </span>            : com: COM ATOMS=solute
+<span class="lineNum">     140 </span>            : # notice that we wrap around a single atom. this should be fast
+<span class="lineNum">     141 </span>            : WRAPAROUND ATOMS=solute AROUND=com
+<span class="lineNum">     142 </span>            : # notice that we wrap around a single atom. this should be fast
+<span class="lineNum">     143 </span>            : WRAPAROUND ATOMS=water AROUND=com GROUPBY=3
+<span class="lineNum">     144 </span>            : DUMPATOMS FILE=dump.xyz ATOMS=solute,water
+<span class="lineNum">     145 </span>            : \endplumedfile
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : */
+<span class="lineNum">     148 </span>            : //+ENDPLUMEDOC
+<a name="149"><span class="lineNum">     149 </span>            : </a>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">          8 : class WrapAround:</span>
+<span class="lineNum">     152 </span>            :   public ActionPilot,
+<span class="lineNum">     153 </span>            :   public ActionAtomistic
+<span class="lineNum">     154 </span>            : {
+<span class="lineNum">     155 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     156 </span>            :   vector&lt;AtomNumber&gt; reference;
+<span class="lineNum">     157 </span>            :   unsigned groupby;
+<span class="lineNum">     158 </span>            : public:
+<span class="lineNum">     159 </span>            :   explicit WrapAround(const ActionOptions&amp;ao);
+<a name="160"><span class="lineNum">     160 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<span class="lineNum">     161 </span>            :   void calculate();
+<span class="lineNum">     162 </span><span class="lineCov">         10 :   void apply() {}</span>
+<a name="163"><span class="lineNum">     163 </span>            : };</a>
+<span class="lineNum">     164 </span>            : 
+<a name="165"><span class="lineNum">     165 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(WrapAround,&quot;WRAPAROUND&quot;)</span></a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">          3 : void WrapAround::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     168 </span><span class="lineCov">          3 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">     169 </span><span class="lineCov">          3 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">     170 </span><span class="lineCov">          3 :   ActionPilot::registerKeywords( keys );</span>
+<span class="lineNum">     171 </span><span class="lineCov">         15 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which molecules are reassembled.  Unless you are completely certain about what you are doing leave this set equal to 1!&quot;);</span>
+<span class="lineNum">     172 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;,&quot;AROUND&quot;,&quot;reference atoms&quot;);</span>
+<span class="lineNum">     173 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;wrapped atoms&quot;);</span>
+<span class="lineNum">     174 </span><span class="lineCov">         15 :   keys.add(&quot;compulsory&quot;,&quot;GROUPBY&quot;,&quot;1&quot;,&quot;group atoms so as not to break molecules&quot;);</span>
+<a name="175"><span class="lineNum">     175 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">          2 : WrapAround::WrapAround(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     178 </span>            :   Action(ao),
+<span class="lineNum">     179 </span>            :   ActionPilot(ao),
+<span class="lineNum">     180 </span>            :   ActionAtomistic(ao),
+<span class="lineNum">     181 </span><span class="lineCov">          6 :   groupby(1)</span>
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span><span class="lineCov">          4 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          4 :   parseAtomList(&quot;AROUND&quot;,reference);</span>
+<span class="lineNum">     185 </span><span class="lineCov">          4 :   parse(&quot;GROUPBY&quot;,groupby);</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">          2 :   log.printf(&quot;  atoms in reference :&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         13 :   for(unsigned j=0; j&lt;reference.size(); ++j) log.printf(&quot; %d&quot;,reference[j].serial() );</span>
+<span class="lineNum">     189 </span><span class="lineCov">          2 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     190 </span><span class="lineCov">          2 :   log.printf(&quot;  atoms to be wrapped :&quot;);</span>
+<span class="lineNum">     191 </span><span class="lineCov">        658 :   for(unsigned j=0; j&lt;atoms.size(); ++j) log.printf(&quot; %d&quot;,atoms[j].serial() );</span>
+<span class="lineNum">     192 </span><span class="lineCov">          2 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     193 </span><span class="lineCov">          2 :   if(groupby&gt;1) log&lt;&lt;&quot;  atoms will be grouped by &quot;&lt;&lt;groupby&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">          2 :   if(atoms.size()%groupby!=0) error(&quot;number of atoms should be a multiple of groupby option&quot;);</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">          2 :   if(groupby&lt;=1) Tools::removeDuplicates(atoms);</span>
+<span class="lineNum">     200 </span><span class="lineCov">          2 :   Tools::removeDuplicates(reference);</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">          2 :   vector&lt;AtomNumber&gt; merged(atoms.size()+reference.size());</span>
+<span class="lineNum">     203 </span>            :   merge(atoms.begin(),atoms.end(),reference.begin(),reference.end(),merged.begin());
+<span class="lineNum">     204 </span><span class="lineCov">          2 :   Tools::removeDuplicates(merged);</span>
+<span class="lineNum">     205 </span><span class="lineCov">          2 :   requestAtoms(merged);</span>
+<span class="lineNum">     206 </span>            :   doNotRetrieve();
+<span class="lineNum">     207 </span>            :   doNotForce();
+<a name="208"><span class="lineNum">     208 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">         10 : void WrapAround::calculate() {</span>
+<span class="lineNum">     211 </span><span class="lineCov">       1805 :   for(unsigned i=0; i&lt;atoms.size(); i+=groupby) {</span>
+<span class="lineNum">     212 </span>            :     Vector &amp; first (modifyPosition(atoms[i]));
+<span class="lineNum">     213 </span>            :     double mindist2=std::numeric_limits&lt;double&gt;::max();
+<span class="lineNum">     214 </span>            :     int closest=-1;
+<span class="lineNum">     215 </span><span class="lineCov">       4625 :     for(unsigned j=0; j&lt;reference.size(); ++j) {</span>
+<span class="lineNum">     216 </span>            :       Vector &amp; second (modifyPosition(reference[j]));
+<span class="lineNum">     217 </span><span class="lineCov">       1145 :       Vector distance=pbcDistance(first,second);</span>
+<span class="lineNum">     218 </span><span class="lineCov">       1145 :       double distance2=modulo2(distance);</span>
+<span class="lineNum">     219 </span><span class="lineCov">       1145 :       if(distance2&lt;mindist2) {</span>
+<span class="lineNum">     220 </span>            :         mindist2=distance2;
+<span class="lineNum">     221 </span><span class="lineCov">        875 :         closest=j;</span>
+<span class="lineNum">     222 </span>            :       }
+<span class="lineNum">     223 </span>            :     }
+<span class="lineNum">     224 </span><span class="lineCov">        595 :     plumed_massert(closest&gt;=0,&quot;closest not found&quot;);</span>
+<span class="lineNum">     225 </span><span class="lineCov">        595 :     Vector &amp; second (modifyPosition(reference[closest]));</span>
+<span class="lineNum">     226 </span>            : // place first atom of the group
+<span class="lineNum">     227 </span><span class="lineCov">        595 :     first=second+pbcDistance(second,first);</span>
+<span class="lineNum">     228 </span>            : // then place other atoms close to the first of the group
+<span class="lineNum">     229 </span><span class="lineCov">       1585 :     for(unsigned j=1; j&lt;groupby; j++) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">        495 :       Vector &amp; second (modifyPosition(atoms[i+j]));</span>
+<span class="lineNum">     231 </span><span class="lineCov">        495 :       second=first+pbcDistance(first,second);</span>
+<span class="lineNum">     232 </span>            :     }
+<span class="lineNum">     233 </span>            :   }
+<span class="lineNum">     234 </span><span class="lineCov">         10 : }</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : 
+<a name="238"><span class="lineNum">     238 </span>            : }</a>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

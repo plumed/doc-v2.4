@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/CoordinationNumbers.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - CoordinationNumbers.cpp<span style="font-size: 80%;"> (source / <a href="CoordinationNumbers.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">52</td>
+            <td class="headerCovTableEntry">52</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/NeighborList.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : namespace multicolvar {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : //+PLUMEDOC MCOLVAR COORDINATIONNUMBER
+<span class="lineNum">      37 </span>            : /*
+<span class="lineNum">      38 </span>            : Calculate the coordination numbers of atoms so that you can then calculate functions of the distribution of
+<span class="lineNum">      39 </span>            : coordination numbers such as the minimum, the number less than a certain quantity and so on.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : To make the calculation of coordination numbers differentiable the following function is used:
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : \f[
+<span class="lineNum">      44 </span>            : s = \frac{ 1 - \left(\frac{r-d_0}{r_0}\right)^n } { 1 - \left(\frac{r-d_0}{r_0}\right)^m }
+<span class="lineNum">      45 </span>            : \f]
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : If R_POWER is set, this will use the product of pairwise distance
+<span class="lineNum">      48 </span>            : raised to the R_POWER with the coordination number function defined
+<span class="lineNum">      49 </span>            : above. This was used in White and Voth \cite white2014efficient as a
+<span class="lineNum">      50 </span>            : way of indirectly biasing radial distribution functions. Note that in
+<span class="lineNum">      51 </span>            : that reference this function is referred to as moments of coordination
+<span class="lineNum">      52 </span>            : number, but here we call them powers to distinguish from the existing
+<span class="lineNum">      53 </span>            : MOMENTS keyword of Multicolvars.
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : \par Examples
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : The following input tells plumed to calculate the coordination numbers of atoms 1-100 with themselves.
+<span class="lineNum">      58 </span>            : The minimum coordination number is then calculated.
+<span class="lineNum">      59 </span>            : \plumedfile
+<span class="lineNum">      60 </span>            : COORDINATIONNUMBER SPECIES=1-100 R_0=1.0 MIN={BETA=0.1}
+<span class="lineNum">      61 </span>            : \endplumedfile
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : The following input tells plumed to calculate how many atoms from 1-100 are within 3.0 of each of the atoms
+<span class="lineNum">      64 </span>            : from 101-110.  In the first 101 is the central atom, in the second 102 is the central atom and so on.  The
+<span class="lineNum">      65 </span>            : number of coordination numbers more than 6 is then computed.
+<span class="lineNum">      66 </span>            : \plumedfile
+<span class="lineNum">      67 </span>            : COORDINATIONNUMBER SPECIESA=101-110 SPECIESB=1-100 R_0=3.0 MORE_THAN={RATIONAL R_0=6.0 NN=6 MM=12 D_0=0}
+<span class="lineNum">      68 </span>            : \endplumedfile
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : The following input tells plumed to calculate the mean coordination number of all atoms with themselves
+<span class="lineNum">      71 </span>            : and its powers. An explicit cutoff is set for each of 8.
+<span class="lineNum">      72 </span>            : \plumedfile
+<span class="lineNum">      73 </span>            : cn0: COORDINATIONNUMBER SPECIES=1-10 SWITCH={RATIONAL R_0=1.0 D_MAX=8} MEAN
+<span class="lineNum">      74 </span>            : cn1: COORDINATIONNUMBER SPECIES=1-10 SWITCH={RATIONAL R_0=1.0 D_MAX=8} R_POWER=1 MEAN
+<span class="lineNum">      75 </span>            : cn2: COORDINATIONNUMBER SPECIES=1-10 SWITCH={RATIONAL R_0=1.0 D_MAX=8} R_POWER=2 MEAN
+<span class="lineNum">      76 </span>            : PRINT ARG=cn0.mean,cn1.mean,cn2.mean STRIDE=1 FILE=cn_out
+<span class="lineNum">      77 </span>            : \endplumedfile
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : */
+<span class="lineNum">      80 </span>            : //+ENDPLUMEDOC
+<a name="81"><span class="lineNum">      81 </span>            : </a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">         98 : class CoordinationNumbers : public MultiColvarBase {</span>
+<span class="lineNum">      84 </span>            : private:
+<span class="lineNum">      85 </span>            :   double rcut2;
+<span class="lineNum">      86 </span>            :   int r_power;
+<span class="lineNum">      87 </span>            :   SwitchingFunction switchingFunction;
+<span class="lineNum">      88 </span>            : public:
+<span class="lineNum">      89 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      90 </span>            :   explicit CoordinationNumbers(const ActionOptions&amp;);
+<span class="lineNum">      91 </span>            : // active methods:
+<a name="92"><span class="lineNum">      92 </span>            :   virtual double compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const ;</a>
+<span class="lineNum">      93 </span>            : /// Returns the number of coordinates of the field
+<span class="lineNum">      94 </span><span class="lineCov">        654 :   bool isPeriodic() { return false; }</span>
+<a name="95"><span class="lineNum">      95 </span>            : };</a>
+<span class="lineNum">      96 </span>            : 
+<a name="97"><span class="lineNum">      97 </span><span class="lineCov">       6501 : PLUMED_REGISTER_ACTION(CoordinationNumbers,&quot;COORDINATIONNUMBER&quot;)</span></a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">         50 : void CoordinationNumbers::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">         50 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">     101 </span><span class="lineCov">        200 :   keys.use(&quot;SPECIES&quot;); keys.use(&quot;SPECIESA&quot;); keys.use(&quot;SPECIESB&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">        250 :   keys.add(&quot;compulsory&quot;,&quot;NN&quot;,&quot;6&quot;,&quot;The n parameter of the switching function &quot;);</span>
+<span class="lineNum">     103 </span><span class="lineCov">        250 :   keys.add(&quot;compulsory&quot;,&quot;MM&quot;,&quot;0&quot;,&quot;The m parameter of the switching function; 0 implies 2*NN&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">        250 :   keys.add(&quot;compulsory&quot;,&quot;D_0&quot;,&quot;0.0&quot;,&quot;The d_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">     105 </span><span class="lineCov">        200 :   keys.add(&quot;compulsory&quot;,&quot;R_0&quot;,&quot;The r_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">     106 </span><span class="lineCov">        200 :   keys.add(&quot;optional&quot;,&quot;R_POWER&quot;,&quot;Multiply the coordination number function by a power of r, &quot;</span>
+<span class="lineNum">     107 </span>            :            &quot;as done in White and Voth (see note above, default: no)&quot;);
+<span class="lineNum">     108 </span><span class="lineCov">        200 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;This keyword is used if you want to employ an alternative to the continuous swiching function defined above. &quot;</span>
+<span class="lineNum">     109 </span>            :            &quot;The following provides information on the \\ref switchingfunction that are available. &quot;
+<span class="lineNum">     110 </span>            :            &quot;When this keyword is present you no longer need the NN, MM, D_0 and R_0 keywords.&quot;);
+<span class="lineNum">     111 </span>            :   // Use actionWithDistributionKeywords
+<span class="lineNum">     112 </span><span class="lineCov">        250 :   keys.use(&quot;MEAN&quot;); keys.use(&quot;MORE_THAN&quot;); keys.use(&quot;LESS_THAN&quot;); keys.use(&quot;MAX&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">        250 :   keys.use(&quot;MIN&quot;); keys.use(&quot;BETWEEN&quot;); keys.use(&quot;HISTOGRAM&quot;); keys.use(&quot;MOMENTS&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">        200 :   keys.use(&quot;ALT_MIN&quot;); keys.use(&quot;LOWEST&quot;); keys.use(&quot;HIGHEST&quot;);</span>
+<a name="115"><span class="lineNum">     115 </span><span class="lineCov">         50 : }</span></a>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">         49 : CoordinationNumbers::CoordinationNumbers(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     118 </span>            :   Action(ao),
+<span class="lineNum">     119 </span>            :   MultiColvarBase(ao),
+<span class="lineNum">     120 </span><span class="lineCov">         49 :   r_power(0)</span>
+<span class="lineNum">     121 </span>            : {
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :   // Read in the switching function
+<span class="lineNum">     124 </span><span class="lineCov">         98 :   std::string sw, errors; parse(&quot;SWITCH&quot;,sw);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         49 :   if(sw.length()&gt;0) {</span>
+<span class="lineNum">     126 </span><span class="lineCov">         47 :     switchingFunction.set(sw,errors);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         47 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     128 </span>            :   } else {
+<span class="lineNum">     129 </span><span class="lineCov">          2 :     double r_0=-1.0, d_0; int nn, mm;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          6 :     parse(&quot;NN&quot;,nn); parse(&quot;MM&quot;,mm);</span>
+<span class="lineNum">     131 </span><span class="lineCov">          6 :     parse(&quot;R_0&quot;,r_0); parse(&quot;D_0&quot;,d_0);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          2 :     if( r_0&lt;0.0 ) error(&quot;you must set a value for R_0&quot;);</span>
+<span class="lineNum">     133 </span><span class="lineCov">          2 :     switchingFunction.set(nn,mm,r_0,d_0);</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :   }
+<span class="lineNum">     136 </span><span class="lineCov">        147 :   log.printf(&quot;  coordination of central atom and those within %s\n&quot;,( switchingFunction.description() ).c_str() );</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   //get cutoff of switching function
+<span class="lineNum">     139 </span><span class="lineCov">         49 :   double rcut = switchingFunction.get_dmax();</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :   //parse power
+<span class="lineNum">     142 </span><span class="lineCov">         98 :   parse(&quot;R_POWER&quot;, r_power);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         49 :   if(r_power &gt; 0) {</span>
+<span class="lineNum">     144 </span><span class="lineCov">          4 :     log.printf(&quot;  Multiplying switching function by r^%d\n&quot;, r_power);</span>
+<span class="lineNum">     145 </span><span class="lineCov">          8 :     double offset = switchingFunction.calculate(rcut*0.9999, rcut2) * pow(rcut*0.9999, r_power);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          4 :     log.printf(&quot;  You will have a discontinuous jump of %f to 0 near the cutoff of your switching function. &quot;</span>
+<span class="lineNum">     147 </span>            :                &quot;Consider setting D_MAX or reducing R_POWER if this is large\n&quot;, offset);
+<span class="lineNum">     148 </span>            :   }
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :   // Set the link cell cutoff
+<span class="lineNum">     151 </span><span class="lineCov">         49 :   setLinkCellCutoff( rcut );</span>
+<span class="lineNum">     152 </span><span class="lineCov">         49 :   rcut2 = rcut * rcut;</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :   // And setup the ActionWithVessel
+<span class="lineNum">     155 </span><span class="lineCov">         49 :   std::vector&lt;AtomNumber&gt; all_atoms; setupMultiColvarBase( all_atoms ); checkRead();</span>
+<a name="156"><span class="lineNum">     156 </span><span class="lineCov">         49 : }</span></a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">      35583 : double CoordinationNumbers::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     159 </span>            :   // Calculate the coordination number
+<span class="lineNum">     160 </span>            :   double dfunc, sw, d, raised;
+<span class="lineNum">     161 </span><span class="lineCov">    7623756 :   for(unsigned i=1; i&lt;myatoms.getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">     162 </span>            :     Vector&amp; distance=myatoms.getPosition(i);
+<span class="lineNum">     163 </span>            :     double d2;
+<span class="lineNum">     164 </span><span class="lineCov">    7088532 :     if ( (d2=distance[0]*distance[0])&lt;rcut2 &amp;&amp;</span>
+<span class="lineNum">     165 </span><span class="lineCov">    6193468 :          (d2+=distance[1]*distance[1])&lt;rcut2 &amp;&amp;</span>
+<span class="lineNum">     166 </span><span class="lineCov">    9281859 :          (d2+=distance[2]*distance[2])&lt;rcut2 &amp;&amp;</span>
+<span class="lineNum">     167 </span>            :          d2&gt;epsilon ) {
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">    2624333 :       sw = switchingFunction.calculateSqr( d2, dfunc );</span>
+<span class="lineNum">     170 </span><span class="lineCov">    2624333 :       if(r_power &gt; 0) {</span>
+<span class="lineNum">     171 </span><span class="lineCov">      19350 :         d = sqrt(d2); raised = pow( d, r_power - 1 );</span>
+<span class="lineNum">     172 </span><span class="lineCov">      38700 :         accumulateSymmetryFunction( 1, i, sw * raised * d,</span>
+<span class="lineNum">     173 </span><span class="lineCov">      38700 :                                     (dfunc * d * raised + sw * r_power * raised / d) * distance,</span>
+<span class="lineNum">     174 </span><span class="lineCov">      38700 :                                     (-dfunc * d * raised - sw * r_power * raised / d) * Tensor(distance, distance),</span>
+<span class="lineNum">     175 </span>            :                                     myatoms );
+<span class="lineNum">     176 </span>            :       } else {
+<span class="lineNum">     177 </span><span class="lineCov">    2604983 :         accumulateSymmetryFunction( 1, i, sw, (dfunc)*distance, (-dfunc)*Tensor(distance,distance), myatoms );</span>
+<span class="lineNum">     178 </span>            :       }
+<span class="lineNum">     179 </span>            :     }
+<span class="lineNum">     180 </span>            :   }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">      35583 :   return myatoms.getValue(1);</span>
+<span class="lineNum">     183 </span>            : }
+<a name="184"><span class="lineNum">     184 </span>            : </a>
+<span class="lineNum">     185 </span>            : }
+<span class="lineNum">     186 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

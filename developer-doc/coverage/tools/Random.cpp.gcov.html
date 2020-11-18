@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/Random.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - Random.cpp<span style="font-size: 80%;"> (source / <a href="Random.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntryLo">55.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryLo">53.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Random.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      24 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      25 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      26 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      27 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      28 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : const double Random::fact=5.9604644775390625e-8;     /* 1 / 2^24  */
+<span class="lineNum">      33 </span>            : const double Random::EPS=3.0e-16;
+<span class="lineNum">      34 </span>            : const double Random::AM=1.0/IM;
+<span class="lineNum">      35 </span>            : const double Random::RNMX=(1.0-EPS); // 1.0-EPS;
+<a name="36"><span class="lineNum">      36 </span><span class="lineCov">       1613 : const std::string Random::noname=&quot;noname&quot;;</span></a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">       3074 : Random::Random(const std::string &amp; name):</span>
+<span class="lineNum">      39 </span>            :   switchGaussian(false),
+<span class="lineNum">      40 </span>            :   saveGaussian(0.0),
+<span class="lineNum">      41 </span>            : // this is required because if a Random object is created during
+<span class="lineNum">      42 </span>            : // initialization than Random::noname could still be initialized.
+<span class="lineNum">      43 </span>            : // In practice: without this it is not possible to declare
+<span class="lineNum">      44 </span>            : // a static Random object without enforcing the order of the
+<span class="lineNum">      45 </span>            : // static constructors.
+<span class="lineNum">      46 </span><span class="lineCov">       6148 :   name(&amp;name!=&amp;noname?name:&quot;noname&quot;)</span>
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span><span class="lineCov">       3074 :   iy=0;</span>
+<span class="lineNum">      49 </span><span class="lineCov">       3074 :   iv[0]=0;</span>
+<span class="lineNum">      50 </span><span class="lineCov">       3074 :   setSeed(0);</span>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">       3074 : }</span></a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">       3331 : void Random::setSeed(int idum_) {</span>
+<span class="lineNum">      54 </span><span class="lineCov">       3331 :   idum=idum_;</span>
+<span class="lineNum">      55 </span><span class="lineCov">       3331 :   incPrec=false;</span>
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">       3331 : }</span></a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">     269584 : double Random::RandU01 ()</span>
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span><span class="lineCov">     269584 :   if (incPrec)</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :     return U01d();</span>
+<span class="lineNum">      62 </span>            :   else
+<span class="lineNum">      63 </span><span class="lineCov">     269584 :     return U01();</span>
+<span class="lineNum">      64 </span>            : }
+<a name="65"><span class="lineNum">      65 </span>            : </a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 : double Random::U01d ()</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            :   double u;
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :   u = U01();</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :   u += U01() * fact;</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :   return (u &lt; 1.0) ? u : (u - 1.0);</span>
+<a name="73"><span class="lineNum">      73 </span>            : }</a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">    4046460 : double Random::U01() {</span>
+<span class="lineNum">      76 </span>            :   int j,k;
+<span class="lineNum">      77 </span>            :   double temp;
+<span class="lineNum">      78 </span><span class="lineCov">    4046460 :   if (idum &lt;= 0 || !iy) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">        579 :     if (-idum &lt; 1) idum=1;</span>
+<span class="lineNum">      80 </span><span class="lineCov">        116 :     else idum = -idum;</span>
+<span class="lineNum">      81 </span><span class="lineCov">      46899 :     for (j=NTAB+7; j&gt;=0; j--) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">      23160 :       k=idum/IQ;</span>
+<span class="lineNum">      83 </span><span class="lineCov">      23160 :       idum=IA*(idum-k*IQ)-IR*k;</span>
+<span class="lineNum">      84 </span><span class="lineCov">      23160 :       if (idum &lt; 0) idum += IM;</span>
+<span class="lineNum">      85 </span><span class="lineCov">      23160 :       if (j &lt; NTAB) iv[j] = idum;</span>
+<span class="lineNum">      86 </span>            :     }
+<span class="lineNum">      87 </span><span class="lineCov">        579 :     iy=iv[0];</span>
+<span class="lineNum">      88 </span>            :   }
+<span class="lineNum">      89 </span><span class="lineCov">    4046460 :   k=idum/IQ;</span>
+<span class="lineNum">      90 </span><span class="lineCov">    4046460 :   idum=IA*(idum-k*IQ)-IR*k;</span>
+<span class="lineNum">      91 </span><span class="lineCov">    4046460 :   if (idum &lt; 0) idum += IM;</span>
+<span class="lineNum">      92 </span><span class="lineCov">    4046460 :   j=iy/NDIV;</span>
+<span class="lineNum">      93 </span><span class="lineCov">    4046460 :   iy=iv[j];</span>
+<span class="lineNum">      94 </span><span class="lineCov">    4046460 :   iv[j] = idum;</span>
+<span class="lineNum">      95 </span><span class="lineCov">    4046460 :   if ((temp=AM*iy) &gt; RNMX) return RNMX;</span>
+<span class="lineNum">      96 </span><span class="lineCov">    4046460 :   else return temp;</span>
+<a name="97"><span class="lineNum">      97 </span>            : }</a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 : void Random::WriteStateFull(std::ostream &amp; out)const {</span>
+<span class="lineNum">     100 </span>            :   out&lt;&lt;name&lt;&lt;std::endl;
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :   out&lt;&lt;idum&lt;&lt;&quot; &quot;&lt;&lt;iy;</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :   for(int i=0; i&lt;NTAB; i++) {</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     out&lt;&lt;&quot; &quot;&lt;&lt;iv[i];</span>
+<span class="lineNum">     104 </span>            :   };
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :   out&lt;&lt;&quot; &quot;&lt;&lt;switchGaussian;</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :   out&lt;&lt;&quot; &quot;&lt;&lt;saveGaussian;</span>
+<span class="lineNum">     107 </span>            :   out&lt;&lt;std::endl;
+<a name="108"><span class="lineNum">     108 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 : void Random::ReadStateFull (std::istream &amp; in) {</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :   getline(in,name);</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :   in&gt;&gt;idum&gt;&gt;iy;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :   for (int i = 0; i &lt; NTAB; i++) in&gt;&gt;iv[i];</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :   in&gt;&gt;switchGaussian;</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :   in&gt;&gt;saveGaussian;</span>
+<a name="116"><span class="lineNum">     116 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 : void Random::toString(std::string &amp; str)const {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :   std::ostringstream ostr;</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :   ostr&lt;&lt;idum&lt;&lt;&quot;|&quot;&lt;&lt;iy;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :   for(int i=0; i&lt;NTAB; i++) {</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :     ostr&lt;&lt;&quot;|&quot;&lt;&lt;iv[i];</span>
+<span class="lineNum">     123 </span>            :   };
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :   str=ostr.str();</span>
+<a name="125"><span class="lineNum">     125 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 : void Random::fromString(const std::string &amp; str) {</span>
+<span class="lineNum">     128 </span>            :   std::string s=str;
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;s.length(); i++) if(s[i]=='|') s[i]=' ';</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :   std::istringstream istr(s.c_str());</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :   istr&gt;&gt;idum&gt;&gt;iy;</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   for (int i = 0; i &lt; NTAB; i++) istr&gt;&gt;iv[i];</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : // This allows to have the same stream of random numbers
+<span class="lineNum">     136 </span>            : // with different compilers:
+<span class="lineNum">     137 </span>            : #ifdef __INTEL_COMPILER
+<span class="lineNum">     138 </span>            : #pragma intel optimization_level 0
+<a name="139"><span class="lineNum">     139 </span>            : #endif</a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">     211896 : double Random::Gaussian() {</span>
+<span class="lineNum">     142 </span>            :   double v1,v2,rsq;
+<span class="lineNum">     143 </span><span class="lineCov">     211896 :   if(switchGaussian) {</span>
+<span class="lineNum">     144 </span><span class="lineCov">     105925 :     switchGaussian=false;</span>
+<span class="lineNum">     145 </span><span class="lineCov">     105925 :     return saveGaussian;</span>
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span>            :   while(true) {
+<span class="lineNum">     148 </span><span class="lineCov">     134753 :     v1=2.0*RandU01()-1.0;</span>
+<span class="lineNum">     149 </span><span class="lineCov">     134753 :     v2=2.0*RandU01()-1.0;</span>
+<span class="lineNum">     150 </span><span class="lineCov">     134753 :     rsq=v1*v1+v2*v2;</span>
+<span class="lineNum">     151 </span><span class="lineCov">     134753 :     if(rsq&lt;1.0 &amp;&amp; rsq&gt;0.0) break;</span>
+<span class="lineNum">     152 </span>            :   }
+<span class="lineNum">     153 </span><span class="lineCov">     105971 :   double fac=sqrt(-2.*std::log(rsq)/rsq);</span>
+<span class="lineNum">     154 </span><span class="lineCov">     105971 :   saveGaussian=v1*fac;</span>
+<span class="lineNum">     155 </span><span class="lineCov">     105971 :   switchGaussian=true;</span>
+<span class="lineNum">     156 </span><span class="lineCov">     105971 :   return v2*fac;</span>
+<a name="157"><span class="lineNum">     157 </span>            : }</a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 : void Random::Shuffle(std::vector&lt;unsigned&gt;&amp; vec) {</span>
+<span class="lineNum">     160 </span>            :   std::iterator_traits&lt;std::vector&lt;unsigned&gt;::iterator &gt;::difference_type i, n;
+<span class="lineNum">     161 </span>            :   n = vec.end() - vec.begin();
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   for(i=n-1; i&gt;0; --i) {</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     std::swap(vec[i], vec[(int)round(RandU01() * IM) % i]);</span>
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 : }</span>
+<a name="166"><span class="lineNum">     166 </span>            : </a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

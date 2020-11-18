@@ -1,0 +1,315 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/Read.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - Read.cpp<span style="font-size: 80%;"> (source / <a href="Read.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">91</td>
+            <td class="headerCovTableEntry">101</td>
+            <td class="headerCovTableEntryHi">90.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryMed">78.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/IFile.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace generic {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC GENERIC READ
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Read quantities from a colvar file.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : This Action can be used with driver to read in a colvar file that was generated during
+<span class="lineNum">      38 </span>            : an MD simulation
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \par Description of components
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : The READ command will read those fields that are labelled with the text string given to the
+<span class="lineNum">      43 </span>            : VALUE keyword.  It will also read in any fields that are labelleled with the text string
+<span class="lineNum">      44 </span>            : given to the VALUE keyword followed by a dot and a further string. If a single Value is read in
+<span class="lineNum">      45 </span>            : this value can be referenced using the label of the Action.  Alternatively, if multiple quanties
+<span class="lineNum">      46 </span>            : are read in, they can be referenced elsewhere in the input by using the label for the Action
+<span class="lineNum">      47 </span>            : followed by a dot and the character string that appeared after the dot in the title of the field.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \par Examples
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : This input reads in data from a file called input_colvar.data that was generated
+<span class="lineNum">      52 </span>            : in a calculation that involved PLUMED.  The first command reads in the data from the
+<span class="lineNum">      53 </span>            : column headed phi1 while the second reads in the data from the column headed phi2.
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : \plumedfile
+<span class="lineNum">      56 </span>            : rphi1:       READ FILE=input_colvar.data  VALUES=phi1
+<span class="lineNum">      57 </span>            : rphi2:       READ FILE=input_colvar.data  VALUES=phi2
+<span class="lineNum">      58 </span>            : PRINT ARG=rphi1,rphi2 STRIDE=500  FILE=output_colvar.data
+<span class="lineNum">      59 </span>            : \endplumedfile
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : */
+<span class="lineNum">      62 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : class Read :
+<span class="lineNum">      65 </span>            :   public ActionPilot,
+<span class="lineNum">      66 </span>            :   public ActionWithValue
+<span class="lineNum">      67 </span>            : {
+<span class="lineNum">      68 </span>            : private:
+<span class="lineNum">      69 </span>            :   bool ignore_time;
+<span class="lineNum">      70 </span>            :   bool ignore_forces;
+<span class="lineNum">      71 </span>            :   bool cloned_file;
+<span class="lineNum">      72 </span>            :   unsigned nlinesPerStep;
+<span class="lineNum">      73 </span>            :   std::string filename;
+<span class="lineNum">      74 </span>            :   IFile* ifile;
+<span class="lineNum">      75 </span>            :   std::vector&lt;Value*&gt; readvals;
+<span class="lineNum">      76 </span>            : public:
+<span class="lineNum">      77 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      78 </span>            :   explicit Read(const ActionOptions&amp;);
+<a name="79"><span class="lineNum">      79 </span>            :   ~Read();</a>
+<span class="lineNum">      80 </span>            :   void prepare();
+<span class="lineNum">      81 </span><span class="lineCov">       2331 :   void apply() {}</span>
+<span class="lineNum">      82 </span>            :   void calculate();
+<span class="lineNum">      83 </span>            :   void update();
+<span class="lineNum">      84 </span>            :   std::string getFilename() const;
+<span class="lineNum">      85 </span>            :   IFile* getFile();
+<span class="lineNum">      86 </span>            :   unsigned getNumberOfDerivatives();
+<span class="lineNum">      87 </span>            :   void turnOnDerivatives();
+<a name="88"><span class="lineNum">      88 </span>            : };</a>
+<span class="lineNum">      89 </span>            : 
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">       6489 : PLUMED_REGISTER_ACTION(Read,&quot;READ&quot;)</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">         38 : void Read::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">         38 :   Action::registerKeywords(keys);</span>
+<span class="lineNum">      94 </span><span class="lineCov">         38 :   ActionPilot::registerKeywords(keys);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         38 :   ActionWithValue::registerKeywords(keys);</span>
+<span class="lineNum">      96 </span><span class="lineCov">        190 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which the file should be read.&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">        190 :   keys.add(&quot;compulsory&quot;,&quot;EVERY&quot;,&quot;1&quot;,&quot;only read every ith line of the colvar file. This should be used if the colvar was written more frequently than the trajectory.&quot;);</span>
+<span class="lineNum">      98 </span><span class="lineCov">        152 :   keys.add(&quot;compulsory&quot;,&quot;VALUES&quot;,&quot;the values to read from the file&quot;);</span>
+<span class="lineNum">      99 </span><span class="lineCov">        152 :   keys.add(&quot;compulsory&quot;,&quot;FILE&quot;,&quot;the name of the file from which to read these quantities&quot;);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        114 :   keys.addFlag(&quot;IGNORE_TIME&quot;,false,&quot;ignore the time in the colvar file. When this flag is not present read will be quite strict &quot;</span>
+<span class="lineNum">     101 </span>            :                &quot;about the start time of the simulation and the stride between frames&quot;);
+<span class="lineNum">     102 </span><span class="lineCov">        114 :   keys.addFlag(&quot;IGNORE_FORCES&quot;,false,&quot;use this flag if the forces added by any bias can be safely ignored.  As an example forces can be &quot;</span>
+<span class="lineNum">     103 </span>            :                &quot;safely ignored if you are doing postprocessing that does not involve outputting forces&quot;);
+<span class="lineNum">     104 </span><span class="lineCov">         76 :   keys.remove(&quot;NUMERICAL_DERIVATIVES&quot;);</span>
+<span class="lineNum">     105 </span><span class="lineCov">         76 :   keys.use(&quot;UPDATE_FROM&quot;);</span>
+<span class="lineNum">     106 </span><span class="lineCov">         76 :   keys.use(&quot;UPDATE_UNTIL&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         38 :   ActionWithValue::useCustomisableComponents(keys);</span>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">         38 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">         37 : Read::Read(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     111 </span>            :   Action(ao),
+<span class="lineNum">     112 </span>            :   ActionPilot(ao),
+<span class="lineNum">     113 </span>            :   ActionWithValue(ao),
+<span class="lineNum">     114 </span>            :   ignore_time(false),
+<span class="lineNum">     115 </span>            :   ignore_forces(false),
+<span class="lineNum">     116 </span><span class="lineCov">         74 :   nlinesPerStep(1)</span>
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span>            :   // Read the file name from the input line
+<span class="lineNum">     119 </span><span class="lineCov">         74 :   parse(&quot;FILE&quot;,filename);</span>
+<span class="lineNum">     120 </span>            :   // Check if time is to be ignored
+<span class="lineNum">     121 </span><span class="lineCov">         74 :   parseFlag(&quot;IGNORE_TIME&quot;,ignore_time);</span>
+<span class="lineNum">     122 </span>            :   // Check if forces are to be ignored
+<span class="lineNum">     123 </span><span class="lineCov">         74 :   parseFlag(&quot;IGNORE_FORCES&quot;,ignore_forces);</span>
+<span class="lineNum">     124 </span>            :   // Open the file if it is not already opened
+<span class="lineNum">     125 </span><span class="lineCov">         37 :   cloned_file=false;</span>
+<span class="lineNum">     126 </span><span class="lineCov">         74 :   std::vector&lt;Read*&gt; other_reads=plumed.getActionSet().select&lt;Read*&gt;();</span>
+<span class="lineNum">     127 </span><span class="lineCov">         80 :   for(unsigned i=0; i&lt;other_reads.size(); ++i) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">          4 :     if( other_reads[i]-&gt;getFilename()==filename ) {</span>
+<span class="lineNum">     129 </span><span class="lineCov">          2 :       ifile=other_reads[i]-&gt;getFile();</span>
+<span class="lineNum">     130 </span><span class="lineCov">          2 :       cloned_file=true;</span>
+<span class="lineNum">     131 </span>            :     }
+<span class="lineNum">     132 </span>            :   }
+<span class="lineNum">     133 </span><span class="lineCov">         37 :   if( !cloned_file ) {</span>
+<span class="lineNum">     134 </span><span class="lineCov">         35 :     ifile=new IFile();</span>
+<span class="lineNum">     135 </span><span class="lineCov">         35 :     if( !ifile-&gt;FileExist(filename) ) error(&quot;could not find file named &quot; + filename);</span>
+<span class="lineNum">     136 </span><span class="lineCov">         35 :     ifile-&gt;link(*this);</span>
+<span class="lineNum">     137 </span><span class="lineCov">         35 :     ifile-&gt;open(filename);</span>
+<span class="lineNum">     138 </span><span class="lineCov">         35 :     ifile-&gt;allowIgnoredFields();</span>
+<span class="lineNum">     139 </span>            :   }
+<span class="lineNum">     140 </span><span class="lineCov">         74 :   parse(&quot;EVERY&quot;,nlinesPerStep);</span>
+<span class="lineNum">     141 </span><span class="lineCov">         37 :   if(nlinesPerStep&gt;1) log.printf(&quot;  only reading every %uth line of file %s\n&quot;,nlinesPerStep,filename.c_str() );</span>
+<span class="lineNum">     142 </span><span class="lineCov">         74 :   else log.printf(&quot;  reading data from file %s\n&quot;,filename.c_str() );</span>
+<span class="lineNum">     143 </span>            :   // Find out what we are reading
+<span class="lineNum">     144 </span><span class="lineCov">        111 :   std::vector&lt;std::string&gt; valread; parseVector(&quot;VALUES&quot;,valread);</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :   std::size_t dot=valread[0].find_first_of('.');
+<span class="lineNum">     147 </span><span class="lineCov">         37 :   if( valread[0].find(&quot;.&quot;)!=std::string::npos ) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">          3 :     std::string label=valread[0].substr(0,dot);</span>
+<span class="lineNum">     149 </span><span class="lineCov">          3 :     std::string name=valread[0].substr(dot+1);</span>
+<span class="lineNum">     150 </span><span class="lineCov">          3 :     if( name==&quot;*&quot; ) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">          1 :       if( valread.size()&gt;1 ) error(&quot;all values must be from the same Action when using READ&quot;);</span>
+<span class="lineNum">     152 </span><span class="lineCov">          1 :       std::vector&lt;std::string&gt; fieldnames;</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :       ifile-&gt;scanFieldList( fieldnames );</span>
+<span class="lineNum">     154 </span><span class="lineCov">         23 :       for(unsigned i=0; i&lt;fieldnames.size(); ++i) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">         14 :         if( fieldnames[i].substr(0,dot)==label ) {</span>
+<span class="lineNum">     156 </span><span class="lineCov">         12 :           readvals.push_back(new Value(this, fieldnames[i], false) ); addComponentWithDerivatives( fieldnames[i].substr(dot+1) );</span>
+<span class="lineNum">     157 </span><span class="lineCov">          9 :           if( ifile-&gt;FieldExist(&quot;min_&quot; + fieldnames[i]) ) componentIsPeriodic( fieldnames[i].substr(dot+1), &quot;-pi&quot;,&quot;pi&quot; );</span>
+<span class="lineNum">     158 </span><span class="lineCov">          6 :           else componentIsNotPeriodic( fieldnames[i].substr(dot+1) );</span>
+<span class="lineNum">     159 </span>            :         }
+<span class="lineNum">     160 </span>            :       }
+<span class="lineNum">     161 </span>            :     } else {
+<span class="lineNum">     162 </span><span class="lineCov">          4 :       readvals.push_back(new Value(this, valread[0], false) ); addComponentWithDerivatives( name );</span>
+<span class="lineNum">     163 </span><span class="lineCov">          6 :       if( ifile-&gt;FieldExist(&quot;min_&quot; + valread[0]) ) componentIsPeriodic( valread[0].substr(dot+1), &quot;-pi&quot;, &quot;pi&quot; );</span>
+<span class="lineNum">     164 </span><span class="lineCov">          4 :       else componentIsNotPeriodic( valread[0].substr(dot+1) );</span>
+<span class="lineNum">     165 </span><span class="lineCov">          7 :       for(unsigned i=1; i&lt;valread.size(); ++i) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">          2 :         if( valread[i].substr(0,dot)!=label ) error(&quot;all values must be from the same Action when using READ&quot;);;</span>
+<span class="lineNum">     167 </span><span class="lineCov">          4 :         readvals.push_back(new Value(this, valread[i], false) ); addComponentWithDerivatives( valread[i].substr(dot+1) );</span>
+<span class="lineNum">     168 </span><span class="lineCov">          3 :         if( ifile-&gt;FieldExist(&quot;min_&quot; + valread[i]) ) componentIsPeriodic( valread[i].substr(dot+1), &quot;-pi&quot;, &quot;pi&quot; );</span>
+<span class="lineNum">     169 </span><span class="lineCov">          2 :         else componentIsNotPeriodic( valread[i].substr(dot+1) );</span>
+<span class="lineNum">     170 </span>            :       }
+<span class="lineNum">     171 </span>            :     }
+<span class="lineNum">     172 </span>            :   } else {
+<span class="lineNum">     173 </span><span class="lineCov">         34 :     if( valread.size()!=1 ) error(&quot;all values must be from the same Action when using READ&quot;);</span>
+<span class="lineNum">     174 </span><span class="lineCov">         68 :     readvals.push_back(new Value(this, valread[0], false) ); addValueWithDerivatives();</span>
+<span class="lineNum">     175 </span><span class="lineCov">        102 :     if( ifile-&gt;FieldExist(&quot;min_&quot; + valread[0]) ) setPeriodic( &quot;-pi&quot;, &quot;pi&quot; );</span>
+<span class="lineNum">     176 </span><span class="lineCov">         34 :     else setNotPeriodic();</span>
+<span class="lineNum">     177 </span><span class="lineCov">         68 :     log.printf(&quot;  reading value %s and storing as %s\n&quot;,valread[0].c_str(),getLabel().c_str() );</span>
+<span class="lineNum">     178 </span>            :   }
+<span class="lineNum">     179 </span><span class="lineCov">         37 :   checkRead();</span>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">         37 : }</span></a>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">        148 : Read::~Read() {</span>
+<span class="lineNum">     183 </span><span class="lineCov">         37 :   if( !cloned_file ) { ifile-&gt;close(); delete ifile; }</span>
+<span class="lineNum">     184 </span><span class="lineCov">        194 :   for(unsigned i=0; i&lt;readvals.size(); ++i) delete readvals[i];</span>
+<a name="185"><span class="lineNum">     185 </span><span class="lineCov">         74 : }</span></a>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">          2 : std::string Read::getFilename() const {</span>
+<span class="lineNum">     188 </span><span class="lineCov">          2 :   return filename;</span>
+<a name="189"><span class="lineNum">     189 </span>            : }</a>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">          2 : IFile* Read::getFile() {</span>
+<span class="lineNum">     192 </span><span class="lineCov">          2 :   return ifile;</span>
+<a name="193"><span class="lineNum">     193 </span>            : }</a>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 : unsigned Read::getNumberOfDerivatives() {</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :   return 0;</span>
+<a name="197"><span class="lineNum">     197 </span>            : }</a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 : void Read::turnOnDerivatives() {</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :   if( !ignore_forces ) error(&quot;cannot calculate derivatives for colvars that are read in from a file.  If you are postprocessing and &quot;</span>
+<span class="lineNum">     201 </span>            :                                &quot;these forces do not matter add the flag IGNORE_FORCES to all READ actions&quot;);
+<a name="202"><span class="lineNum">     202 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">       2331 : void Read::prepare() {</span>
+<span class="lineNum">     205 </span><span class="lineCov">       2331 :   if( !cloned_file ) {</span>
+<span class="lineNum">     206 </span>            :     double du_time;
+<span class="lineNum">     207 </span><span class="lineCov">       2476 :     if( !ifile-&gt;scanField(&quot;time&quot;,du_time) ) {</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :       error(&quot;Reached end of file &quot; + filename + &quot; before end of trajectory&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">       2476 :     } else if( fabs( du_time-getTime() )&gt;plumed.getAtoms().getTimeStep() &amp;&amp; !ignore_time ) {</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :       std::string str_dutime,str_ptime; Tools::convert(du_time,str_dutime); Tools::convert(getTime(),str_ptime);</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :       error(&quot;mismatched times in colvar files : colvar time=&quot; + str_dutime + &quot; plumed time=&quot; + str_ptime + &quot;. Add IGNORE_TIME to ignore error.&quot;);</span>
+<span class="lineNum">     212 </span>            :     }
+<span class="lineNum">     213 </span>            :   }
+<a name="214"><span class="lineNum">     214 </span><span class="lineCov">       2331 : }</span></a>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">       2331 : void Read::calculate() {</span>
+<span class="lineNum">     217 </span>            :   std::string smin, smax;
+<span class="lineNum">     218 </span><span class="lineCov">      15234 :   for(unsigned i=0; i&lt;readvals.size(); ++i) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">       7048 :     ifile-&gt;scanField( readvals[i] );</span>
+<span class="lineNum">     220 </span><span class="lineCov">       7048 :     getPntrToComponent(i)-&gt;set( readvals[i]-&gt;get() );</span>
+<span class="lineNum">     221 </span><span class="lineCov">       3524 :     if( readvals[i]-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :       readvals[i]-&gt;getDomain( smin, smax );</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :       getPntrToComponent(i)-&gt;setDomain( smin, smax );</span>
+<span class="lineNum">     224 </span>            :     }
+<span class="lineNum">     225 </span>            :   }
+<a name="226"><span class="lineNum">     226 </span><span class="lineCov">       2331 : }</span></a>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">       2331 : void Read::update() {</span>
+<span class="lineNum">     229 </span><span class="lineCov">       2331 :   if( !cloned_file ) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">       3714 :     for(unsigned i=0; i&lt;nlinesPerStep; ++i) {</span>
+<span class="lineNum">     231 </span><span class="lineCov">       1238 :       ifile-&gt;scanField(); double du_time;</span>
+<span class="lineNum">     232 </span><span class="lineCov">       3714 :       if( plumed.getAtoms().getNatoms()==0 &amp;&amp; !ifile-&gt;scanField(&quot;time&quot;,du_time) ) plumed.stop();</span>
+<span class="lineNum">     233 </span>            :     }
+<span class="lineNum">     234 </span>            :   }
+<span class="lineNum">     235 </span><span class="lineCov">       2331 : }</span>
+<a name="236"><span class="lineNum">     236 </span>            : </a>
+<span class="lineNum">     237 </span>            : }
+<span class="lineNum">     238 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/Communicator.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - Communicator.h<span style="font-size: 80%;"> (source / <a href="Communicator.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">33</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntryMed">89.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntryHi">94.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_Communicator_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_Communicator_h
+<span class="lineNum">      24 </span>            : #ifdef __PLUMED_HAS_MPI
+<span class="lineNum">      25 </span>            : #include &lt;mpi.h&gt;
+<span class="lineNum">      26 </span>            : #endif
+<span class="lineNum">      27 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      28 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      29 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      30 </span>            : #include &lt;string&gt;
+<span class="lineNum">      31 </span>            : #include &quot;Vector.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;Tensor.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;Matrix.h&quot;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace PLMD {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #ifndef  __PLUMED_HAS_MPI
+<span class="lineNum">      38 </span>            : /// Surrogate of MPI_Comm when MPI library is not available
+<span class="lineNum">      39 </span>            : class MPI_Comm {};
+<span class="lineNum">      40 </span>            : /// Surrogate of MPI_Datatype when MPI library is not available
+<span class="lineNum">      41 </span>            : class MPI_Datatype {};
+<span class="lineNum">      42 </span>            : /// Surrogate of MPI_Status when MPI library is not available
+<span class="lineNum">      43 </span>            : class MPI_Status {};
+<span class="lineNum">      44 </span>            : /// Surrogate of MPI_Request when MPI library is not available
+<span class="lineNum">      45 </span>            : class MPI_Request {};
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : /// \ingroup TOOLBOX
+<span class="lineNum">      49 </span>            : /// Class containing wrappers to MPI.
+<span class="lineNum">      50 </span>            : /// All the MPI related stuff is relegated here.
+<span class="lineNum">      51 </span>            : class Communicator {
+<span class="lineNum">      52 </span>            : /// Communicator
+<span class="lineNum">      53 </span>            :   MPI_Comm communicator;
+<span class="lineNum">      54 </span>            : /// Function returning the MPI type.
+<span class="lineNum">      55 </span>            : /// You can use it to access to the MPI type of a C++ type, e.g.
+<span class="lineNum">      56 </span>            : /// `MPI_Datatype type=getMPIType&lt;double&gt;();`
+<span class="lineNum">      57 </span>            :   template &lt;class T&gt;
+<span class="lineNum">      58 </span>            :   static MPI_Datatype getMPIType();
+<span class="lineNum">      59 </span>            : /// Structure defining a buffer for MPI.
+<span class="lineNum">      60 </span>            : /// It contains info on the pointed data and its type and size. It is useful to
+<span class="lineNum">      61 </span>            : /// allow wrapper of MPI functions where the triplet (buffer,type,size)
+<span class="lineNum">      62 </span>            : /// is grouped into a single object. It can be built starting from
+<span class="lineNum">      63 </span>            : /// different kinds of data. To implement compatibility of MPI wrappers
+<span class="lineNum">      64 </span>            : /// with e.g. vectors, add constructors here.
+<span class="lineNum">      65 </span>            :   struct Data {
+<span class="lineNum">      66 </span>            :     void*pointer;
+<span class="lineNum">      67 </span>            :     int size;
+<span class="lineNum">      68 </span>            :     MPI_Datatype type;
+<span class="lineNum">      69 </span>            : /// Init from pointer and size
+<span class="lineNum">      70 </span><span class="lineCov">    2019776 :     template &lt;typename T&gt; Data(T*p,int s): pointer(p), size(s), type(getMPIType&lt;T&gt;()) {}</span>
+<span class="lineNum">      71 </span>            : /// Init from reference
+<span class="lineNum">      72 </span><span class="lineCov">    5829875 :     template &lt;typename T&gt; explicit Data(T&amp;p): pointer(&amp;p), size(1), type(getMPIType&lt;T&gt;()) {}</span>
+<span class="lineNum">      73 </span>            : /// Init from pointer to VectorGeneric
+<span class="lineNum">      74 </span><span class="lineCov">      11128 :     template &lt;unsigned n&gt; explicit Data(VectorGeneric&lt;n&gt; *p,int s): pointer(p), size(n*s), type(getMPIType&lt;double&gt;()) {}</span>
+<span class="lineNum">      75 </span>            : /// Init from reference to VectorGeneric
+<span class="lineNum">      76 </span>            :     template &lt;unsigned n&gt; explicit Data(VectorGeneric&lt;n&gt; &amp;p): pointer(&amp;p), size(n), type(getMPIType&lt;double&gt;()) {}
+<span class="lineNum">      77 </span>            : /// Init from pointer to TensorGeneric
+<span class="lineNum">      78 </span><span class="lineCov">         16 :     template &lt;unsigned n,unsigned m&gt; explicit Data(TensorGeneric&lt;n,m&gt; *p,int s): pointer(p), size(n*m*s), type(getMPIType&lt;double&gt;()) {}</span>
+<span class="lineNum">      79 </span>            : /// Init from reference to TensorGeneric
+<span class="lineNum">      80 </span><span class="lineCov">      20133 :     template &lt;unsigned n,unsigned m&gt; explicit Data(TensorGeneric&lt;n,m&gt; &amp;p): pointer(&amp;p), size(n*m), type(getMPIType&lt;double&gt;()) {}</span>
+<span class="lineNum">      81 </span>            : /// Init from reference to std::vector
+<span class="lineNum">      82 </span><span class="lineCov">    1983568 :     template &lt;typename T&gt; explicit Data(std::vector&lt;T&gt;&amp;v) {</span>
+<span class="lineNum">      83 </span><span class="lineCov">    3967136 :       if(v.size()&gt;0) { Data d(&amp;v[0],v.size()); pointer=d.pointer; size=d.size; type=d.type; }</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :       else { pointer=NULL; size=0; }</span>
+<span class="lineNum">      85 </span><span class="lineCov">      11144 :     }</span>
+<span class="lineNum">      86 </span>            : /// Init from reference to PLMD::Matrix
+<span class="lineNum">      87 </span><span class="lineCov">         19 :     template &lt;typename T&gt; explicit Data(Matrix&lt;T&gt;&amp;m ) {</span>
+<span class="lineNum">      88 </span><span class="lineCov">         38 :       if(m.nrows()*m.ncols()&gt;0) { Data d(&amp;m(0,0),m.nrows()*m.ncols()); pointer=d.pointer; size=d.size; type=d.type; }</span>
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :       else { pointer=NULL; size=0; }</span>
+<span class="lineNum">      90 </span>            :     }
+<span class="lineNum">      91 </span>            : /// Init from reference to std::string
+<span class="lineNum">      92 </span>            :     explicit Data(std::string&amp;s) {
+<span class="lineNum">      93 </span>            :       if(s.size()&gt;0) { Data d(&amp;s[0],s.size()); pointer=d.pointer; size=d.size; type=d.type; }
+<span class="lineNum">      94 </span>            :       else { pointer=NULL; size=0; }
+<span class="lineNum">      95 </span>            :     }
+<span class="lineNum">      96 </span>            :   };
+<span class="lineNum">      97 </span>            : /// Const version of Communicator::Data
+<span class="lineNum">      98 </span>            : /// See Communicator::Data documentation
+<span class="lineNum">      99 </span>            :   struct ConstData {
+<span class="lineNum">     100 </span>            :     const void*pointer;
+<span class="lineNum">     101 </span>            :     int size;
+<span class="lineNum">     102 </span>            :     MPI_Datatype type;
+<span class="lineNum">     103 </span><span class="lineCov">      17217 :     template &lt;typename T&gt; explicit ConstData(const T*p,int s): pointer(p), size(s), type(getMPIType&lt;T&gt;()) {}</span>
+<span class="lineNum">     104 </span><span class="lineCov">        206 :     template &lt;typename T&gt; explicit ConstData(const T&amp;p): pointer(&amp;p), size(1), type(getMPIType&lt;T&gt;()) {}</span>
+<span class="lineNum">     105 </span>            :     template &lt;unsigned n&gt; explicit ConstData(const VectorGeneric&lt;n&gt; *p,int s): pointer(p), size(n*s), type(getMPIType&lt;double&gt;()) {}
+<span class="lineNum">     106 </span>            :     template &lt;unsigned n&gt; explicit ConstData(const VectorGeneric&lt;n&gt; &amp;p): pointer(&amp;p), size(n), type(getMPIType&lt;double&gt;()) {}
+<span class="lineNum">     107 </span>            :     template &lt;unsigned n,unsigned m&gt; explicit ConstData(const TensorGeneric&lt;n,m&gt; *p,int s): pointer(p), size(n*m*s), type(getMPIType&lt;double&gt;()) {}
+<span class="lineNum">     108 </span>            :     template &lt;unsigned n,unsigned m&gt; explicit ConstData(const TensorGeneric&lt;n,m&gt; &amp;p): pointer(&amp;p), size(n*m), type(getMPIType&lt;double&gt;()) {}
+<span class="lineNum">     109 </span><span class="lineCov">        144 :     template &lt;typename T&gt; explicit ConstData(const std::vector&lt;T&gt;&amp;v) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">        288 :       if(v.size()&gt;0) { ConstData d(&amp;v[0],v.size()); pointer=d.pointer; size=d.size; type=d.type; }</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :       else { pointer=NULL; size=0; }</span>
+<span class="lineNum">     112 </span>            :     }
+<span class="lineNum">     113 </span>            :     template &lt;typename T&gt; explicit ConstData(const Matrix&lt;T&gt;&amp;m ) {
+<span class="lineNum">     114 </span>            :       if(m.nrows()*m.ncols()&gt;0) { ConstData d(&amp;m(0,0),m.nrows()*m.ncols()); pointer=d.pointer; size=d.size; type=d.type; }
+<span class="lineNum">     115 </span>            :       else { pointer=NULL; size=0; }
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span><span class="lineCov">         42 :     explicit ConstData(const std::string&amp;s) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">         84 :       if(s.size()&gt;0) { ConstData d(&amp;s[0],s.size()); pointer=d.pointer; size=d.size; type=d.type; }</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :       else { pointer=NULL; size=0; }</span>
+<span class="lineNum">     120 </span>            :     }
+<span class="lineNum">     121 </span>            :   };
+<span class="lineNum">     122 </span>            : public:
+<span class="lineNum">     123 </span>            : /// Wrapper class for MPI_Status
+<span class="lineNum">     124 </span>            :   class Status {
+<span class="lineNum">     125 </span>            :     int Get_count(MPI_Datatype)const;
+<span class="lineNum">     126 </span>            :   public:
+<span class="lineNum">     127 </span>            :     MPI_Status s;
+<span class="lineNum">     128 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     129 </span><span class="lineCov">       7280 :     int Get_count()const {return Get_count(getMPIType&lt;T&gt;());}</span>
+<span class="lineNum">     130 </span>            :   };
+<span class="lineNum">     131 </span>            : /// Special status used when status should be ignored.
+<span class="lineNum">     132 </span>            : /// E.g. `Recv(a,0,1,Communicator::StatusIgnore);`
+<span class="lineNum">     133 </span>            : /// Notice that this is the default for Recv, so this is equivalent to
+<span class="lineNum">     134 </span>            : /// `Recv(a,0,1);`
+<span class="lineNum">     135 </span>            :   static Status StatusIgnore;
+<span class="lineNum">     136 </span>            : /// Wrapper class for MPI_Request
+<span class="lineNum">     137 </span>            :   class Request {
+<span class="lineNum">     138 </span>            :   public:
+<span class="lineNum">     139 </span>            :     MPI_Request r;
+<span class="lineNum">     140 </span>            :     void wait(Status&amp;s=StatusIgnore);
+<span class="lineNum">     141 </span>            :   };
+<span class="lineNum">     142 </span>            : /// Default constructor
+<span class="lineNum">     143 </span>            :   Communicator();
+<span class="lineNum">     144 </span>            : /// Copy constructor.
+<span class="lineNum">     145 </span>            : /// It effectively &quot;clones&quot; the communicator, providing a new one acting on the same group
+<span class="lineNum">     146 </span>            :   Communicator(const Communicator&amp;);
+<span class="lineNum">     147 </span>            : /// Assignment operator.
+<span class="lineNum">     148 </span>            : /// It effectively &quot;clones&quot; the communicator, providing a new one acting on the same group
+<span class="lineNum">     149 </span>            :   Communicator&amp; operator=(const Communicator&amp;);
+<span class="lineNum">     150 </span>            : /// Destructor
+<span class="lineNum">     151 </span>            :   virtual ~Communicator();
+<span class="lineNum">     152 </span>            : /// Obtain the rank of the present process
+<span class="lineNum">     153 </span>            :   int Get_rank()const;
+<span class="lineNum">     154 </span>            : /// Obtain the number of processes
+<span class="lineNum">     155 </span>            :   int Get_size()const;
+<span class="lineNum">     156 </span>            : /// Set from a real MPI communicator.
+<span class="lineNum">     157 </span>            : /// \param comm MPI communicator
+<span class="lineNum">     158 </span>            :   void Set_comm(MPI_Comm comm);
+<span class="lineNum">     159 </span>            : /// Reference to MPI communicator
+<span class="lineNum">     160 </span>            :   MPI_Comm &amp; Get_comm();
+<span class="lineNum">     161 </span>            : /// Set from a pointer to a real MPI communicator (C).
+<span class="lineNum">     162 </span>            : /// \param comm Pointer to a C MPI communicator
+<span class="lineNum">     163 </span>            :   void Set_comm(void*comm);
+<span class="lineNum">     164 </span>            : /// Set from a pointer to a real MPI communicator (FORTRAN).
+<span class="lineNum">     165 </span>            : /// \param comm Pointer to a FORTRAN MPI communicator (INTEGER)
+<span class="lineNum">     166 </span>            :   void Set_fcomm(void*comm);
+<span class="lineNum">     167 </span>            : /// Wrapper to MPI_Abort.
+<span class="lineNum">     168 </span>            : /// \param code Error code
+<span class="lineNum">     169 </span>            :   void Abort(int code);
+<span class="lineNum">     170 </span>            : /// Wrapper to MPI_Barrier
+<span class="lineNum">     171 </span>            :   void Barrier()const;
+<span class="lineNum">     172 </span>            : /// Tests if MPI library is initialized
+<span class="lineNum">     173 </span>            :   static bool initialized();
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : /// Returns MPI_COMM_WORLD if MPI is initialized, otherwise the default communicator
+<span class="lineNum">     176 </span>            :   static Communicator &amp; Get_world();
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : /// Wrapper for MPI_Allreduce with MPI_SUM (data struct)
+<a name="179"><span class="lineNum">     179 </span>            :   void Sum(Data);</a>
+<span class="lineNum">     180 </span>            : /// Wrapper for MPI_Allreduce with MPI_SUM (pointer)
+<a name="181"><span class="lineNum">     181 </span><span class="lineCov">      60604 :   template &lt;class T&gt; void Sum(T*buf,int count) {Sum(Data(buf,count));}</span></a>
+<span class="lineNum">     182 </span>            : /// Wrapper for MPI_Allreduce with MPI_SUM (reference)
+<span class="lineNum">     183 </span><span class="lineCov">    7750346 :   template &lt;class T&gt; void Sum(T&amp;buf) {Sum(Data(buf));}</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : /// Wrapper for MPI_Bcast (data struct)
+<span class="lineNum">     186 </span>            :   void Bcast(Data,int);
+<span class="lineNum">     187 </span>            : /// Wrapper for MPI_Bcast (pointer)
+<a name="188"><span class="lineNum">     188 </span>            :   template &lt;class T&gt; void Bcast(T*buf,int count,int root) {Bcast(Data(buf,count),root);}</a>
+<span class="lineNum">     189 </span>            : /// Wrapper for MPI_Bcast (reference)
+<span class="lineNum">     190 </span><span class="lineCov">    7904916 :   template &lt;class T&gt; void Bcast(T&amp;buf,int root) {Bcast(Data(buf),root);}</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            : /// Wrapper for MPI_Isend (data struct)
+<a name="193"><span class="lineNum">     193 </span>            :   Request Isend(ConstData,int,int);</a>
+<span class="lineNum">     194 </span>            : /// Wrapper for MPI_Isend (pointer)
+<a name="195"><span class="lineNum">     195 </span><span class="lineCov">      29120 :   template &lt;class T&gt; Request Isend(const T*buf,int count,int source,int tag) {return Isend(ConstData(buf,count),source,tag);}</span></a>
+<span class="lineNum">     196 </span>            : /// Wrapper for MPI_Isend (reference)
+<span class="lineNum">     197 </span><span class="lineCov">        168 :   template &lt;class T&gt; Request Isend(const T&amp;buf,int source,int tag) {return Isend(ConstData(buf),source,tag);}</span>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : /// Wrapper for MPI_Allgatherv (data struct)
+<a name="200"><span class="lineNum">     200 </span>            :   void Allgatherv(ConstData in,Data out,const int*,const int*);</a>
+<span class="lineNum">     201 </span>            : /// Wrapper for MPI_Allgatherv (pointer)
+<span class="lineNum">     202 </span><span class="lineCov">       2267 :   template &lt;class T,class S&gt; void Allgatherv(const T*sendbuf,int sendcount,S*recvbuf,const int*recvcounts,const int*displs) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">       2267 :     Allgatherv(ConstData(sendbuf,sendcount),Data(recvbuf,0),recvcounts,displs);</span>
+<span class="lineNum">     204 </span><span class="lineCov">       2267 :   }</span>
+<span class="lineNum">     205 </span>            : /// Wrapper for MPI_Allgatherv (reference)
+<span class="lineNum">     206 </span>            :   template &lt;class T,class S&gt; void Allgatherv(const T&amp;sendbuf,S&amp;recvbuf,const int*recvcounts,const int*displs) {
+<span class="lineNum">     207 </span>            :     Allgatherv(ConstData(sendbuf),Data(recvbuf),recvcounts,displs);
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : /// Wrapper for MPI_Allgather (data struct)
+<a name="211"><span class="lineNum">     211 </span>            :   void Allgather(ConstData in,Data out);</a>
+<span class="lineNum">     212 </span>            : /// Wrapper for MPI_Allgatherv (pointer)
+<span class="lineNum">     213 </span><span class="lineCov">        204 :   template &lt;class T,class S&gt; void Allgather(const T*sendbuf,int sendcount,S*recvbuf,int recvcount) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">        408 :     Allgather(ConstData(sendbuf,sendcount),Data(recvbuf,recvcount*Get_size()));</span>
+<a name="215"><span class="lineNum">     215 </span><span class="lineCov">        204 :   }</span></a>
+<span class="lineNum">     216 </span>            : /// Wrapper for MPI_Allgatherv (reference)
+<span class="lineNum">     217 </span><span class="lineCov">        308 :   template &lt;class T,class S&gt; void Allgather(const T&amp;sendbuf,S&amp;recvbuf) {</span>
+<span class="lineNum">     218 </span><span class="lineCov">        308 :     Allgather(ConstData(sendbuf),Data(recvbuf));</span>
+<span class="lineNum">     219 </span><span class="lineCov">        308 :   }</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : /// Wrapper for MPI_Recv (data struct)
+<a name="222"><span class="lineNum">     222 </span>            :   void Recv(Data,int,int,Status&amp;s=StatusIgnore);</a>
+<span class="lineNum">     223 </span>            : /// Wrapper for MPI_Recv (pointer)
+<a name="224"><span class="lineNum">     224 </span><span class="lineCov">      29120 :   template &lt;class T&gt; void Recv(T*buf,int count,int source,int tag,Status&amp;s=StatusIgnore) {Recv(Data(buf,count),source,tag,s);}</span></a>
+<span class="lineNum">     225 </span>            : /// Wrapper for MPI_Recv (reference)
+<span class="lineNum">     226 </span><span class="lineCov">        168 :   template &lt;class T&gt; void Recv(T&amp;buf,int source,int tag,Status&amp;s=StatusIgnore) {Recv(Data(buf),source,tag,s);}</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : /// Wrapper to MPI_Comm_split
+<span class="lineNum">     229 </span>            :   void Split(int,int,Communicator&amp;)const;
+<span class="lineNum">     230 </span>            : };
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

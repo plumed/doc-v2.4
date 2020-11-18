@@ -1,0 +1,347 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - gridtools/FourierTransform.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">gridtools</a> - FourierTransform.cpp<span style="font-size: 80%;"> (source / <a href="FourierTransform.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">90</td>
+            <td class="headerCovTableEntryLo">7.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryLo">38.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      23 </span>            : #include &lt;complex&gt;
+<span class="lineNum">      24 </span>            : #include &quot;ActionWithInputGrid.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : #ifdef __PLUMED_HAS_FFTW
+<span class="lineNum">      27 </span>            : #include &lt;fftw3.h&gt; // FFTW interface
+<span class="lineNum">      28 </span>            : #endif
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace gridtools {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC GRIDANALYSIS FOURIER_TRANSFORM
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Compute the Discrete Fourier Transform (DFT) by means of FFTW of data stored on a 2D grid.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : This action can operate on any other action that outputs scalar data on a two-dimensional grid.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : Up to now, even if the input data are purely real the action uses a complex DFT.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : Just as a quick reference, given a 1D array \f$\mathbf{X}\f$ of size \f$n\f$, this action computes the vector \f$\mathbf{Y}\f$ given by
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : \f[
+<span class="lineNum">      44 </span>            : Y_k = \sum_{j=0}^{n-1} X_j e^{2\pi\, j k \sqrt{-1}/n}.
+<span class="lineNum">      45 </span>            : \f]
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : This can be easily extended to more than one dimension. All the other details can be found at http://www.fftw.org/doc/What-FFTW-Really-Computes.html#What-FFTW-Really-Computes.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : The keyword &quot;FOURIER_PARAMETERS&quot; deserves just a note on the usage. This keyword specifies how the Fourier transform will be normalized. The keyword takes two numerical parameters (\f$a,\,b\f$) that define the normalization according to the following expression
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \f[
+<span class="lineNum">      52 </span>            : \frac{1}{n^{(1-a)/2}} \sum_{j=0}^{n-1} X_j e^{2\pi b\, j k \sqrt{-1}/n}
+<span class="lineNum">      53 </span>            : \f]
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : The default values of these parameters are: \f$a=1\f$ and \f$b=1\f$.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \par Examples
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : The following example tells Plumed to compute the complex 2D 'backward' Discrete Fourier Transform by taking the data saved on a grid called 'density', and normalizing the output by \f$ \frac{1}{\sqrt{N_x\, N_y}}\f$, where \f$N_x\f$ and \f$N_y\f$ are the number of data on the grid (it can be the case that \f$N_x \neq N_y\f$):
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : \plumedfile
+<span class="lineNum">      62 </span>            : FOURIER_TRANSFORM STRIDE=1 GRID=density FT_TYPE=complex FOURIER_PARAMETERS=0,-1 FILE=fourier.dat
+<span class="lineNum">      63 </span>            : \endplumedfile
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : */
+<span class="lineNum">      66 </span>            : //+ENDPLUMEDOC
+<a name="67"><span class="lineNum">      67 </span>            : </a>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 : class FourierTransform : public ActionWithInputGrid {</span>
+<span class="lineNum">      70 </span>            : private:
+<span class="lineNum">      71 </span>            :   std::string output_type;
+<span class="lineNum">      72 </span>            :   bool real_output, store_norm;
+<span class="lineNum">      73 </span>            :   std::vector&lt;unsigned&gt; gdirs;
+<span class="lineNum">      74 </span>            :   std::vector&lt;int&gt; fourier_params;
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      77 </span>            :   explicit FourierTransform(const ActionOptions&amp;ao);
+<span class="lineNum">      78 </span>            : #ifndef __PLUMED_HAS_FFTW
+<span class="lineNum">      79 </span>            :   void performOperations( const bool&amp; from_update ) {}
+<span class="lineNum">      80 </span>            : #else
+<a name="81"><span class="lineNum">      81 </span>            :   void performOperations( const bool&amp; from_update );</a>
+<a name="82"><span class="lineNum">      82 </span>            : #endif</a>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :   void compute( const unsigned&amp;, MultiValue&amp; ) const {}</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<a name="85"><span class="lineNum">      85 </span>            : };</a>
+<span class="lineNum">      86 </span>            : 
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(FourierTransform,&quot;FOURIER_TRANSFORM&quot;)</span></a>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">          1 : void FourierTransform::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      90 </span><span class="lineCov">          3 :   ActionWithInputGrid::registerKeywords( keys ); keys.remove(&quot;BANDWIDTH&quot;); keys.remove(&quot;KERNEL&quot;);</span>
+<span class="lineNum">      91 </span><span class="lineCov">          4 :   keys.add(&quot;optional&quot;,&quot;FT_TYPE&quot;,&quot;choose what kind of data you want as output on the grid. Possible values are: ABS = compute the complex modulus of Fourier coefficients (DEFAULT); NORM = compute the norm (i.e. ABS^2) of Fourier coefficients; COMPLEX = store the FFTW complex output on the grid (as a vector).&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">          5 :   keys.add(&quot;compulsory&quot;,&quot;FOURIER_PARAMETERS&quot;,&quot;default&quot;,&quot;what kind of normalization is applied to the output and if the Fourier transform in FORWARD or BACKWARD. This keyword takes the form FOURIER_PARAMETERS=A,B, where A and B can be 0, 1 or -1. The default values are A=1 (no normalization at all) and B=1 (forward FFT). Other possible choices for A are: &quot;</span>
+<span class="lineNum">      93 </span>            :            &quot;A=-1: normalize by the number of data, &quot;
+<span class="lineNum">      94 </span>            :            &quot;A=0: normalize by the square root of the number of data (one forward and followed by backward FFT recover the original data). &quot;);
+<a name="95"><span class="lineNum">      95 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 : FourierTransform::FourierTransform(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      98 </span>            :   Action(ao),
+<span class="lineNum">      99 </span>            :   ActionWithInputGrid(ao),
+<span class="lineNum">     100 </span>            :   real_output(true),
+<span class="lineNum">     101 </span>            :   store_norm(false),
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :   fourier_params(2)</span>
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span>            : #ifndef __PLUMED_HAS_FFTW
+<span class="lineNum">     105 </span>            :   error(&quot;this feature is only available if you compile PLUMED with FFTW&quot;);
+<span class="lineNum">     106 </span>            : #else
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :   if( ingrid-&gt;getDimension()!=2 ) error(&quot;fourier transform currently only works with two dimensional grids&quot;);</span>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :   // Get the type of FT
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :   parse(&quot;FT_TYPE&quot;,output_type);</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :   if (output_type.length()==0) {</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     log&lt;&lt;&quot;  keyword FT_TYPE unset. By default output grid will contain REAL Fourier coefficients\n&quot;;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :   } else if ( output_type==&quot;ABS&quot; || output_type==&quot;abs&quot;) {</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :     log &lt;&lt; &quot;  keyword FT_TYPE is '&quot;&lt;&lt; output_type &lt;&lt; &quot;' : will compute the MODULUS of Fourier coefficients\n&quot;;</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :   } else if ( output_type==&quot;NORM&quot; || output_type==&quot;norm&quot;) {</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     log &lt;&lt; &quot;  keyword FT_TYPE is '&quot;&lt;&lt; output_type &lt;&lt; &quot;' : will compute the NORM of Fourier coefficients\n&quot;;</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     store_norm=true;</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :   } else if ( output_type==&quot;COMPLEX&quot; || output_type==&quot;complex&quot; ) {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     log&lt;&lt;&quot;  keyword FT_TYPE is '&quot;&lt;&lt; output_type &lt;&lt;&quot;' : output grid will contain the COMPLEX Fourier coefficients\n&quot;;</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     real_output=false;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :   } else error(&quot;keyword FT_TYPE unrecognized!&quot;);</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :   // Normalize output?
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :   std::string params_str; parse(&quot;FOURIER_PARAMETERS&quot;,params_str);</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :   if (params_str==&quot;default&quot;) {</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :     fourier_params.assign( fourier_params.size(), 1 );</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :     log.printf(&quot;  default values of Fourier parameters A=%i, B=%i : the output will NOT be normalized and BACKWARD Fourier transform is computed \n&quot;, fourier_params[0],fourier_params[1]);</span>
+<span class="lineNum">     128 </span>            :   } else {
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     std::vector&lt;std::string&gt; fourier_str = Tools::getWords(params_str, &quot;\t\n ,&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     if (fourier_str.size()&gt;2) error(&quot;FOURIER_PARAMETERS can take just two values&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :     for (unsigned i=0; i&lt;fourier_str.size(); ++i) {</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :       Tools::convert(fourier_str[i],fourier_params[i]);</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :       if (fourier_params[i]&gt;1 || fourier_params[i]&lt;-1) error(&quot;values accepted for FOURIER_PARAMETERS are only -1, 1 or 0&quot;);</span>
+<span class="lineNum">     134 </span>            :     }
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :     log.printf(&quot;  Fourier parameters are A=%i, B=%i \n&quot;, fourier_params[0],fourier_params[1]);</span>
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :   // Create the input from the old string
+<span class="lineNum">     140 </span>            :   std::string vstring;
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :   unsigned n=0; gdirs.resize( ingrid-&gt;getDimension() );</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;ingrid-&gt;getDimension(); ++i) {</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :     gdirs[n]=i; n++;</span>
+<span class="lineNum">     144 </span>            :   }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :   plumed_assert( n==ingrid-&gt;getDimension() );</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :   if (real_output) {</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :     if (!store_norm) vstring=&quot;COMPONENTS=&quot; + getLabel() + &quot;_abs&quot;;</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :     else vstring=&quot;COMPONENTS=&quot; + getLabel() + &quot;_norm&quot;;</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :   } else vstring=&quot;COMPONENTS=&quot; + getLabel() + &quot;_real,&quot; + getLabel() + &quot;_imag&quot;;</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   // Set COORDINATES keyword
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :   vstring += &quot; COORDINATES=&quot; + ingrid-&gt;getComponentName( gdirs[0] );</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :   for(unsigned i=1; i&lt;gdirs.size(); ++i) vstring += &quot;,&quot; + ingrid-&gt;getComponentName( gdirs[i] );</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :   // Set PBC keyword
+<span class="lineNum">     158 </span>            :   vstring += &quot; PBC=&quot;;
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :   if( ingrid-&gt;isPeriodic(gdirs[0]) ) vstring+=&quot;T&quot;; else vstring+=&quot;F&quot;;</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :   for(unsigned i=1; i&lt;gdirs.size(); ++i) {</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     if( ingrid-&gt;isPeriodic(gdirs[i]) ) vstring+=&quot;,T&quot;; else vstring+=&quot;,F&quot;;</span>
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :   // Create a grid on which to store the fourier transform of the input grid
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :   createGrid( &quot;grid&quot;, vstring );</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :   if( ingrid-&gt;noDerivatives() ) mygrid-&gt;setNoDerivatives();</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :   setAveragingAction( mygrid, false );</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :   checkRead();</span>
+<span class="lineNum">     171 </span>            : #endif
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 : }</span>
+<a name="173"><span class="lineNum">     173 </span>            : </a>
+<span class="lineNum">     174 </span>            : #ifdef __PLUMED_HAS_FFTW
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 : void FourierTransform::performOperations( const bool&amp; from_update ) {</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :   // Spacing of the real grid
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :   std::vector&lt;double&gt; g_spacing ( ingrid-&gt;getGridSpacing() );</span>
+<span class="lineNum">     179 </span>            :   // Spacing of the k-grid
+<span class="lineNum">     180 </span>            :   std::vector&lt;double&gt; ft_spacing;
+<span class="lineNum">     181 </span>            :   // Extents of the k-grid
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :   std::vector&lt;std::string&gt; ft_min( ingrid-&gt;getMin() ), ft_max( ingrid-&gt;getMax() );</span>
+<span class="lineNum">     183 </span>            :   // Number of bins in the k-grid (equal to the number of bins in the real grid)
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; ft_bins ( ingrid-&gt;getNbin() );</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :   for (unsigned i=0; i&lt;ingrid-&gt;getDimension(); ++i) {</span>
+<span class="lineNum">     187 </span>            :     // Check PBC in current grid dimension
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :     if( !ingrid-&gt;isPeriodic(i) ) ft_bins[i]++;</span>
+<span class="lineNum">     189 </span>            :     // Compute k-grid extents
+<span class="lineNum">     190 </span>            :     double dmin, dmax;
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     Tools::convert(ft_min[i],dmin); Tools::convert(ft_max[i],dmax);</span>
+<span class="lineNum">     192 </span>            :     // We want to have the min of k-grid at point (0,0)
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     dmin=0.0;</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :     dmax=2.0*pi*ft_bins[i]/( ingrid-&gt;getGridExtent(i) );</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     Tools::convert(dmin,ft_min[i]); Tools::convert(dmax,ft_max[i]);</span>
+<span class="lineNum">     196 </span>            :   }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :   // This is the actual setup of the k-grid
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :   mygrid-&gt;setBounds( ft_min, ft_max, ft_bins, ft_spacing); resizeFunctions();</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :   // *** CHECK CORRECT k-GRID BOUNDARIES ***
+<span class="lineNum">     202 </span>            :   //log&lt;&lt;&quot;Real grid boundaries: \n&quot;
+<span class="lineNum">     203 </span>            :   //    &lt;&lt;&quot;  min_x: &quot;&lt;&lt;mygrid-&gt;getMin()[0]&lt;&lt;&quot;  min_y: &quot;&lt;&lt;mygrid-&gt;getMin()[1]&lt;&lt;&quot;\n&quot;
+<span class="lineNum">     204 </span>            :   //    &lt;&lt;&quot;  max_x: &quot;&lt;&lt;mygrid-&gt;getMax()[0]&lt;&lt;&quot;  max_y: &quot;&lt;&lt;mygrid-&gt;getMax()[1]&lt;&lt;&quot;\n&quot;
+<span class="lineNum">     205 </span>            :   //    &lt;&lt;&quot;K-grid boundaries:&quot;&lt;&lt;&quot;\n&quot;
+<span class="lineNum">     206 </span>            :   //    &lt;&lt;&quot;  min_x: &quot;&lt;&lt;ft_min[0]&lt;&lt;&quot;  min_y: &quot;&lt;&lt;ft_min[1]&lt;&lt;&quot;\n&quot;
+<span class="lineNum">     207 </span>            :   //    &lt;&lt;&quot;  max_x: &quot;&lt;&lt;ft_max[0]&lt;&lt;&quot;  max_y: &quot;&lt;&lt;ft_max[1]&lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :   // Get the size of the input data arrays (to allocate FFT data)
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; N_input_data( ingrid-&gt;getNbin() );</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :   size_t fft_dimension=1; for(unsigned i=0; i&lt;N_input_data.size(); ++i) fft_dimension*=static_cast&lt;size_t&gt;( N_input_data[i] );</span>
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :   // FFT arrays
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :   std::vector&lt;std::complex&lt;double&gt; &gt; input_data(fft_dimension), fft_data(fft_dimension);</span>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :   // Fill real input with the data on the grid
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; ind( ingrid-&gt;getDimension() );</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :   for (unsigned i=0; i&lt;ingrid-&gt;getNumberOfPoints(); ++i) {</span>
+<span class="lineNum">     222 </span>            :     // Get point indices
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :     ingrid-&gt;getIndices(i, ind);</span>
+<span class="lineNum">     224 </span>            :     // Fill input data in row-major order
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :     input_data[ind[0]*N_input_data[0]+ind[1]].real( getFunctionValue( i ) );</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :     input_data[ind[0]*N_input_data[0]+ind[1]].imag( 0.0 );</span>
+<span class="lineNum">     227 </span>            :   }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :   // *** HERE is the only clear limitation: I'm computing explicitly a 2D FT. It should not happen to deal with other than two-dimensional grid ...
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :   fftw_plan plan_complex = fftw_plan_dft_2d(N_input_data[0], N_input_data[1], reinterpret_cast&lt;fftw_complex*&gt;(&amp;input_data[0]), reinterpret_cast&lt;fftw_complex*&gt;(&amp;fft_data[0]), fourier_params[1], FFTW_ESTIMATE);</span>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :   // Compute FT
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :   fftw_execute( plan_complex );</span>
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :   // Compute the normalization constant
+<span class="lineNum">     236 </span>            :   double norm=1.0;
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :   for (unsigned i=0; i&lt;N_input_data.size(); ++i) {</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :     norm *= pow( N_input_data[i], (1-fourier_params[0])/2 );</span>
+<span class="lineNum">     239 </span>            :   }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :   // Save FT data to output grid
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; N_out_data ( mygrid-&gt;getNbin() );</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned&gt; out_ind ( mygrid-&gt;getDimension() );</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;mygrid-&gt;getNumberOfPoints(); ++i) {</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :     mygrid-&gt;getIndices( i, out_ind );</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :     if (real_output) {</span>
+<span class="lineNum">     247 </span>            :       double ft_value;
+<span class="lineNum">     248 </span>            :       // Compute abs/norm and fix normalization
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :       if (!store_norm) ft_value=std::abs( fft_data[out_ind[0]*N_out_data[0]+out_ind[1]] / norm );</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :       else ft_value=std::norm( fft_data[out_ind[0]*N_out_data[0]+out_ind[1]] / norm );</span>
+<span class="lineNum">     251 </span>            :       // Set the value
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :       mygrid-&gt;setGridElement( i, 0, ft_value );</span>
+<span class="lineNum">     253 </span>            :     } else {
+<span class="lineNum">     254 </span>            :       double ft_value_real, ft_value_imag;
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :       ft_value_real=fft_data[out_ind[0]*N_out_data[0]+out_ind[1]].real() / norm;</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :       ft_value_imag=fft_data[out_ind[0]*N_out_data[0]+out_ind[1]].imag() / norm;</span>
+<span class="lineNum">     257 </span>            :       // Set values
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :       mygrid-&gt;setGridElement( i, 0, ft_value_real);</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :       mygrid-&gt;setGridElement( i, 1, ft_value_imag);</span>
+<span class="lineNum">     260 </span>            :     }
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :   // Free FFTW stuff
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :   fftw_destroy_plan(plan_complex);</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     267 </span>            : #endif
+<a name="268"><span class="lineNum">     268 </span>            : </a>
+<span class="lineNum">     269 </span>            : } // end namespace 'gridtools'
+<span class="lineNum">     270 </span><span class="lineCov">       4839 : } // end namespace 'PLMD'</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

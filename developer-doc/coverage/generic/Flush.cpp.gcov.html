@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/Flush.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - Flush.cpp<span style="font-size: 80%;"> (source / <a href="Flush.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<span class="lineNum">      28 </span>            : namespace generic {
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC GENERIC FLUSH
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : This command instructs plumed to flush all the open files with a user specified frequency.
+<span class="lineNum">      35 </span>            : Notice that all files are flushed anyway every 10000 steps.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : This
+<span class="lineNum">      38 </span>            : is useful for preventing data loss that would otherwise arrise as a consequence of the code
+<span class="lineNum">      39 </span>            : storing data for printing in the buffers. Notice that wherever it is written in the
+<span class="lineNum">      40 </span>            : plumed input file, it will flush all the open files.
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : \par Examples
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : A command like this in the input will instruct plumed to flush all the output files every 100 steps
+<span class="lineNum">      45 </span>            : \plumedfile
+<span class="lineNum">      46 </span>            : d1: DISTANCE ATOMS=1,10
+<span class="lineNum">      47 </span>            : PRINT ARG=d1 STRIDE=5 FILE=colvar1
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : FLUSH STRIDE=100
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : d2: DISTANCE ATOMS=2,11
+<span class="lineNum">      52 </span>            : # also this print is flushed every 100 steps:
+<span class="lineNum">      53 </span>            : PRINT ARG=d2 STRIDE=10 FILE=colvar2
+<span class="lineNum">      54 </span>            : \endplumedfile
+<span class="lineNum">      55 </span>            : (see also \ref DISTANCE and \ref PRINT).
+<span class="lineNum">      56 </span>            : */
+<a name="57"><span class="lineNum">      57 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">         32 : class Flush:</span>
+<span class="lineNum">      60 </span>            :   public ActionPilot
+<a name="61"><span class="lineNum">      61 </span>            : {</a>
+<span class="lineNum">      62 </span>            : public:
+<span class="lineNum">      63 </span><span class="lineCov">         16 :   explicit Flush(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      64 </span>            :     Action(ao),
+<span class="lineNum">      65 </span><span class="lineCov">         16 :     ActionPilot(ao)</span>
+<span class="lineNum">      66 </span>            :   {
+<span class="lineNum">      67 </span><span class="lineCov">         16 :     checkRead();</span>
+<a name="68"><span class="lineNum">      68 </span><span class="lineCov">         16 :   }</span></a>
+<a name="69"><span class="lineNum">      69 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">        453 :   void calculate() {}</span></a>
+<span class="lineNum">      71 </span><span class="lineCov">        453 :   void apply() {}</span>
+<span class="lineNum">      72 </span><span class="lineCov">        453 :   void update() {</span>
+<span class="lineNum">      73 </span><span class="lineCov">        453 :     plumed.fflush();</span>
+<span class="lineNum">      74 </span><span class="lineCov">        453 :     log.flush();</span>
+<span class="lineNum">      75 </span><span class="lineCov">        453 :     const ActionSet &amp; actionSet(plumed.getActionSet());</span>
+<span class="lineNum">      76 </span><span class="lineCov">       1888 :     for(const auto &amp; p : actionSet)</span>
+<span class="lineNum">      77 </span><span class="lineCov">       1435 :       p-&gt;fflush();</span>
+<span class="lineNum">      78 </span><span class="lineCov">        453 :   }</span>
+<a name="79"><span class="lineNum">      79 </span>            : };</a>
+<span class="lineNum">      80 </span>            : 
+<a name="81"><span class="lineNum">      81 </span><span class="lineCov">       6468 : PLUMED_REGISTER_ACTION(Flush,&quot;FLUSH&quot;)</span></a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">         17 : void Flush::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">         17 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">      85 </span><span class="lineCov">         17 :   ActionPilot::registerKeywords( keys );</span>
+<span class="lineNum">      86 </span><span class="lineCov">         68 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;the frequency with which all the open files should be flushed&quot;);</span>
+<span class="lineNum">      87 </span><span class="lineCov">         34 :   keys.remove(&quot;LABEL&quot;);</span>
+<span class="lineNum">      88 </span><span class="lineCov">         17 : }</span>
+<a name="89"><span class="lineNum">      89 </span>            : </a>
+<span class="lineNum">      90 </span>            : }
+<span class="lineNum">      91 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/GREX.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - GREX.cpp<span style="font-size: 80%;"> (source / <a href="GREX.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">102</td>
+            <td class="headerCovTableEntry">139</td>
+            <td class="headerCovTableEntryLo">73.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;GREX.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Atoms.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      28 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &quot;GREXEnum.inc&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<a name="33"><span class="lineNum">      33 </span>            : namespace PLMD {</a>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">       1594 : const std::unordered_map&lt;std::string, int&gt; &amp; GREXWordMap() {</span>
+<span class="lineNum">      36 </span><span class="lineCov">       1747 :   static std::unordered_map&lt;std::string, int&gt; word_map;</span>
+<span class="lineNum">      37 </span>            :   static bool init=false;
+<span class="lineNum">      38 </span><span class="lineCov">       1594 :   if(!init) {</span>
+<span class="lineNum">      39 </span>            : #include &quot;GREXMap.inc&quot;
+<span class="lineNum">      40 </span>            :   }
+<span class="lineNum">      41 </span><span class="lineCov">       1594 :   init=true;</span>
+<span class="lineNum">      42 </span><span class="lineCov">       1594 :   return word_map;</span>
+<a name="43"><span class="lineNum">      43 </span>            : }</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">        153 : GREX::GREX(PlumedMain&amp;p):</span>
+<span class="lineNum">      46 </span>            :   initialized(false),
+<span class="lineNum">      47 </span><span class="lineCov">        153 :   intracomm(*new Communicator),</span>
+<span class="lineNum">      48 </span><span class="lineCov">        153 :   intercomm(*new Communicator),</span>
+<span class="lineNum">      49 </span>            :   plumedMain(p),
+<span class="lineNum">      50 </span>            :   atoms(p.getAtoms()),
+<span class="lineNum">      51 </span>            :   partner(-1), // = unset
+<span class="lineNum">      52 </span>            :   localDeltaBias(0),
+<span class="lineNum">      53 </span>            :   foreignDeltaBias(0),
+<span class="lineNum">      54 </span>            :   localUNow(0),
+<span class="lineNum">      55 </span>            :   localUSwap(0),
+<span class="lineNum">      56 </span><span class="lineCov">        765 :   myreplica(-1) // = unset</span>
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span><span class="lineCov">        306 :   p.setSuffix(&quot;.NA&quot;);</span>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">        153 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">        459 : GREX::~GREX() {</span>
+<span class="lineNum">      62 </span><span class="lineCov">        153 :   delete &amp;intercomm;</span>
+<span class="lineNum">      63 </span><span class="lineCov">        153 :   delete &amp;intracomm;</span>
+<span class="lineNum">      64 </span><span class="lineCov">        306 : }</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : #define CHECK_INIT(ini,word) plumed_massert(ini,&quot;cmd(\&quot;&quot; + word +&quot;\&quot;) should be only used after GREX initialization&quot;)
+<span class="lineNum">      67 </span>            : #define CHECK_NOTINIT(ini,word) plumed_massert(!(ini),&quot;cmd(\&quot;&quot; + word +&quot;\&quot;) should be only used before GREX initialization&quot;)
+<a name="68"><span class="lineNum">      68 </span>            : #define CHECK_NOTNULL(val,word) plumed_massert(val,&quot;NULL pointer received in cmd(\&quot;GREX &quot; + word + &quot;\&quot;)&quot;);</a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">        797 : void GREX::cmd(const string&amp;key,void*val) {</span>
+<span class="lineNum">      71 </span><span class="lineCov">       1594 :   std::vector&lt;std::string&gt; words=Tools::getWords(key);</span>
+<span class="lineNum">      72 </span><span class="lineCov">        797 :   unsigned nw=words.size();</span>
+<span class="lineNum">      73 </span><span class="lineCov">        797 :   if(nw==0) {</span>
+<span class="lineNum">      74 </span>            :     // do nothing
+<span class="lineNum">      75 </span>            :   } else {
+<span class="lineNum">      76 </span>            :     int iword=-1;
+<span class="lineNum">      77 </span><span class="lineCov">        797 :     const auto it=GREXWordMap().find(words[0]);</span>
+<span class="lineNum">      78 </span><span class="lineCov">        797 :     if(it!=GREXWordMap().end()) iword=it-&gt;second;</span>
+<span class="lineNum">      79 </span><span class="lineCov">        797 :     switch(iword) {</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     case cmd_initialized:</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :       CHECK_NOTNULL(val,key);</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :       *static_cast&lt;int*&gt;(val)=initialized;</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">      84 </span><span class="lineCov">        153 :     case cmd_setMPIIntracomm:</span>
+<span class="lineNum">      85 </span><span class="lineCov">        153 :       CHECK_NOTINIT(initialized,key);</span>
+<span class="lineNum">      86 </span><span class="lineCov">        153 :       intracomm.Set_comm(val);</span>
+<span class="lineNum">      87 </span>            :       break;
+<span class="lineNum">      88 </span><span class="lineCov">        113 :     case cmd_setMPIIntercomm:</span>
+<span class="lineNum">      89 </span><span class="lineCov">        113 :       CHECK_NOTINIT(initialized,key);</span>
+<span class="lineNum">      90 </span><span class="lineCov">        113 :       intercomm.Set_comm(val);</span>
+<span class="lineNum">      91 </span><span class="lineCov">        113 :       plumedMain.multi_sim_comm.Set_comm(val);</span>
+<span class="lineNum">      92 </span>            :       break;
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     case cmd_setMPIFIntracomm:</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :       CHECK_NOTINIT(initialized,key);</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :       intracomm.Set_fcomm(val);</span>
+<span class="lineNum">      96 </span>            :       break;
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     case cmd_setMPIFIntercomm:</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :       CHECK_NOTINIT(initialized,key);</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :       intercomm.Set_fcomm(val);</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :       plumedMain.multi_sim_comm.Set_fcomm(val);</span>
+<span class="lineNum">     101 </span>            :       break;
+<span class="lineNum">     102 </span><span class="lineCov">        153 :     case cmd_init:</span>
+<span class="lineNum">     103 </span><span class="lineCov">        153 :       CHECK_NOTINIT(initialized,key);</span>
+<span class="lineNum">     104 </span><span class="lineCov">        153 :       initialized=true;</span>
+<span class="lineNum">     105 </span>            : // note that for PEs!=root this is automatically 0 (comm defaults to MPI_COMM_SELF)
+<span class="lineNum">     106 </span><span class="lineCov">        153 :       myreplica=intercomm.Get_rank();</span>
+<span class="lineNum">     107 </span><span class="lineCov">        153 :       intracomm.Sum(myreplica);</span>
+<span class="lineNum">     108 </span>            :       {
+<span class="lineNum">     109 </span>            :         std::string s;
+<span class="lineNum">     110 </span><span class="lineCov">        153 :         Tools::convert(myreplica,s);</span>
+<span class="lineNum">     111 </span><span class="lineCov">        306 :         plumedMain.setSuffix(&quot;.&quot;+s);</span>
+<span class="lineNum">     112 </span>            :       }
+<span class="lineNum">     113 </span><span class="lineCov">        153 :       break;</span>
+<span class="lineNum">     114 </span><span class="lineCov">         42 :     case cmd_prepare:</span>
+<span class="lineNum">     115 </span><span class="lineCov">         42 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     116 </span><span class="lineCov">         42 :       if(intracomm.Get_rank()==0) return;</span>
+<span class="lineNum">     117 </span><span class="lineCov">         42 :       intracomm.Bcast(partner,0);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         42 :       calculate();</span>
+<span class="lineNum">     119 </span>            :       break;
+<span class="lineNum">     120 </span><span class="lineCov">         42 :     case cmd_setPartner:</span>
+<span class="lineNum">     121 </span><span class="lineCov">         42 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     122 </span><span class="lineCov">         42 :       partner=*static_cast&lt;int*&gt;(val);</span>
+<span class="lineNum">     123 </span><span class="lineCov">         42 :       break;</span>
+<span class="lineNum">     124 </span><span class="lineCov">         84 :     case cmd_savePositions:</span>
+<span class="lineNum">     125 </span><span class="lineCov">         84 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         84 :       savePositions();</span>
+<span class="lineNum">     127 </span>            :       break;
+<span class="lineNum">     128 </span><span class="lineCov">         42 :     case cmd_calculate:</span>
+<span class="lineNum">     129 </span><span class="lineCov">         42 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     130 </span><span class="lineCov">         42 :       if(intracomm.Get_rank()!=0) return;</span>
+<span class="lineNum">     131 </span><span class="lineCov">         42 :       intracomm.Bcast(partner,0);</span>
+<span class="lineNum">     132 </span><span class="lineCov">         42 :       calculate();</span>
+<span class="lineNum">     133 </span>            :       break;
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     case cmd_getLocalDeltaBias:</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :       CHECK_NOTNULL(val,key);</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :       atoms.double2MD(localDeltaBias/(atoms.getMDUnits().getEnergy()/atoms.getUnits().getEnergy()),val);</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :     case cmd_cacheLocalUNow:</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :       CHECK_NOTNULL(val,key);</span>
+<span class="lineNum">     142 </span>            :       {
+<span class="lineNum">     143 </span>            :         double x;
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         atoms.MD2double(val,x);</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         localUNow=x*(atoms.getMDUnits().getEnergy()/atoms.getUnits().getEnergy());</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :         intracomm.Sum(localUNow);</span>
+<span class="lineNum">     147 </span>            :       }
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :     case cmd_cacheLocalUSwap:</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :       CHECK_NOTNULL(val,key);</span>
+<span class="lineNum">     152 </span>            :       {
+<span class="lineNum">     153 </span>            :         double x;
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :         atoms.MD2double(val,x);</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :         localUSwap=x*(atoms.getMDUnits().getEnergy()/atoms.getUnits().getEnergy());</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         intracomm.Sum(localUSwap);</span>
+<span class="lineNum">     157 </span>            :       }
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :     case cmd_getForeignDeltaBias:</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :       CHECK_NOTNULL(val,key);</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :       atoms.double2MD(foreignDeltaBias/(atoms.getMDUnits().getEnergy()/atoms.getUnits().getEnergy()),val);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     164 </span><span class="lineCov">         42 :     case cmd_shareAllDeltaBias:</span>
+<span class="lineNum">     165 </span><span class="lineCov">         42 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     166 </span><span class="lineCov">         42 :       if(intracomm.Get_rank()!=0) return;</span>
+<span class="lineNum">     167 </span><span class="lineCov">         84 :       allDeltaBias.assign(intercomm.Get_size(),0.0);</span>
+<span class="lineNum">     168 </span><span class="lineCov">         84 :       allDeltaBias[intercomm.Get_rank()]=localDeltaBias;</span>
+<span class="lineNum">     169 </span><span class="lineCov">         42 :       intercomm.Sum(allDeltaBias);</span>
+<span class="lineNum">     170 </span>            :       break;
+<span class="lineNum">     171 </span><span class="lineCov">        126 :     case cmd_getDeltaBias:</span>
+<span class="lineNum">     172 </span><span class="lineCov">        126 :       CHECK_INIT(initialized,key);</span>
+<span class="lineNum">     173 </span><span class="lineCov">        126 :       CHECK_NOTNULL(val,key);</span>
+<span class="lineNum">     174 </span><span class="lineCov">        126 :       plumed_assert(nw==2);</span>
+<span class="lineNum">     175 </span><span class="lineCov">        126 :       plumed_massert(allDeltaBias.size()==static_cast&lt;unsigned&gt;(intercomm.Get_size()),</span>
+<span class="lineNum">     176 </span>            :                      &quot;to retrieve bias with cmd(\&quot;GREX getDeltaBias\&quot;), first share it with cmd(\&quot;GREX shareAllDeltaBias\&quot;)&quot;);
+<span class="lineNum">     177 </span>            :       {
+<span class="lineNum">     178 </span>            :         unsigned rep;
+<span class="lineNum">     179 </span><span class="lineCov">        126 :         Tools::convert(words[1],rep);</span>
+<span class="lineNum">     180 </span><span class="lineCov">        252 :         plumed_massert(rep&lt;allDeltaBias.size(),&quot;replica index passed to cmd(\&quot;GREX getDeltaBias\&quot;) is out of range&quot;);</span>
+<span class="lineNum">     181 </span><span class="lineCov">        126 :         double d=allDeltaBias[rep]/(atoms.getMDUnits().getEnergy()/atoms.getUnits().getEnergy());</span>
+<span class="lineNum">     182 </span><span class="lineCov">        126 :         atoms.double2MD(d,val);</span>
+<span class="lineNum">     183 </span>            :       }
+<span class="lineNum">     184 </span><span class="lineCov">        126 :       break;</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :     default:</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;cannot interpret cmd(\&quot; GREX&quot; + key + &quot;\&quot;). check plumed developers manual to see the available commands.&quot;);</span>
+<span class="lineNum">     187 </span>            :       break;
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span>            :   }
+<a name="190"><span class="lineNum">     190 </span>            : }</a>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">         84 : void GREX::savePositions() {</span>
+<span class="lineNum">     193 </span><span class="lineCov">         84 :   plumedMain.prepareDependencies();</span>
+<span class="lineNum">     194 </span><span class="lineCov">         84 :   plumedMain.resetActive(true);</span>
+<span class="lineNum">     195 </span><span class="lineCov">         84 :   atoms.shareAll();</span>
+<span class="lineNum">     196 </span><span class="lineCov">         84 :   plumedMain.waitData();</span>
+<span class="lineNum">     197 </span><span class="lineCov">        168 :   ostringstream o;</span>
+<span class="lineNum">     198 </span><span class="lineCov">         84 :   atoms.writeBinary(o);</span>
+<span class="lineNum">     199 </span><span class="lineCov">        168 :   buffer=o.str();</span>
+<a name="200"><span class="lineNum">     200 </span><span class="lineCov">         84 : }</span></a>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">         84 : void GREX::calculate() {</span>
+<span class="lineNum">     203 </span>            : //fprintf(stderr,&quot;CALCULATE %d %d\n&quot;,intercomm.Get_rank(),partner);
+<span class="lineNum">     204 </span>            :   unsigned nn=buffer.size();
+<span class="lineNum">     205 </span><span class="lineCov">         84 :   vector&lt;char&gt; rbuf(nn);</span>
+<span class="lineNum">     206 </span><span class="lineCov">         84 :   localDeltaBias=-plumedMain.getBias();</span>
+<span class="lineNum">     207 </span><span class="lineCov">         84 :   if(intracomm.Get_rank()==0) {</span>
+<span class="lineNum">     208 </span><span class="lineCov">         42 :     Communicator::Request req=intercomm.Isend(buffer,partner,1066);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         42 :     intercomm.Recv(rbuf,partner,1066);</span>
+<span class="lineNum">     210 </span><span class="lineCov">         42 :     req.wait();</span>
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span><span class="lineCov">         84 :   intracomm.Bcast(rbuf,0);</span>
+<span class="lineNum">     213 </span><span class="lineCov">        252 :   istringstream i(string(&amp;rbuf[0],rbuf.size()));</span>
+<span class="lineNum">     214 </span><span class="lineCov">         84 :   atoms.readBinary(i);</span>
+<span class="lineNum">     215 </span><span class="lineCov">         84 :   plumedMain.setExchangeStep(true);</span>
+<span class="lineNum">     216 </span><span class="lineCov">         84 :   plumedMain.prepareDependencies();</span>
+<span class="lineNum">     217 </span><span class="lineCov">         84 :   plumedMain.justCalculate();</span>
+<span class="lineNum">     218 </span><span class="lineCov">         84 :   plumedMain.setExchangeStep(false);</span>
+<span class="lineNum">     219 </span><span class="lineCov">         84 :   localDeltaBias+=plumedMain.getBias();</span>
+<span class="lineNum">     220 </span><span class="lineCov">         84 :   localDeltaBias+=localUSwap-localUNow;</span>
+<span class="lineNum">     221 </span><span class="lineCov">         84 :   if(intracomm.Get_rank()==0) {</span>
+<span class="lineNum">     222 </span><span class="lineCov">         42 :     Communicator::Request req=intercomm.Isend(localDeltaBias,partner,1067);</span>
+<span class="lineNum">     223 </span><span class="lineCov">         42 :     intercomm.Recv(foreignDeltaBias,partner,1067);</span>
+<span class="lineNum">     224 </span><span class="lineCov">         42 :     req.wait();</span>
+<span class="lineNum">     225 </span>            : //fprintf(stderr,&quot;&gt;&gt;&gt; %d %d %20.12f %20.12f %20.12f %20.12f\n&quot;,intercomm.Get_rank(),partner,localDeltaBias,foreignDeltaBias,localUSwap,localUNow);
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span><span class="lineCov">         84 :   intracomm.Bcast(foreignDeltaBias,0);</span>
+<a name="228"><span class="lineNum">     228 </span><span class="lineCov">         84 : }</span></a>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

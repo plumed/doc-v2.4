@@ -1,0 +1,257 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/FilterMoreThan.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - FilterMoreThan.cpp<span style="font-size: 80%;"> (source / <a href="FilterMoreThan.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryMed">82.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">92.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;MultiColvarFilter.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC MTRANSFORMS MTRANSFORM_MORE
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : This action can be useed to transform the colvar values calculated by a multicolvar using one minus a \ref switchingfunction
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : In this action each colvar, \f$s_i\f$, calculated by multicolvar is transformed by a \ref switchingfunction function that
+<span class="lineNum">      31 </span>            : is equal to one if the colvar is greater than a certain target value and which is equal to zero otherwise.
+<span class="lineNum">      32 </span>            : It is important to understand the distinction between what is done here and what is done by \ref MFILTER_MORE.
+<span class="lineNum">      33 </span>            : In \ref MFILTER_MORE a weight, \f$w_i\f$ for the colvar is calculated using the \ref histogrambead.  If one calculates the
+<span class="lineNum">      34 </span>            : MEAN for \ref MFILTER_MORE one is thus calculating:
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : \f[
+<span class="lineNum">      37 </span>            : \mu = \frac{ \sum_i [1 - \sigma(s_i) ] s_i }{\sum_i [1 - \sigma(s_i)] }
+<span class="lineNum">      38 </span>            : \f]
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : where \f$\sigma\f$ is the \ref switchingfunction.  In this action by contrast the colvar is being transformed by the \ref switchingfunction.
+<span class="lineNum">      41 </span>            : If one thus calculates a MEAN for this action one computes:
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : \f[
+<span class="lineNum">      44 </span>            : \mu = \frac{ \sum_{i=1}^N 1 - \sigma(s_i) }{ N }
+<span class="lineNum">      45 </span>            : \f]
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : In other words, you are calculating the mean for the transformed colvar.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \par Examples
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : The following input gives an example of how a MTRANSFORM_MORE action can be used to duplicate
+<span class="lineNum">      52 </span>            : functionality that is elsehwere in PLUMED.
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : \plumedfile
+<span class="lineNum">      55 </span>            : DISTANCES ...
+<span class="lineNum">      56 </span>            :  GROUPA=1-10 GROUPB=11-20
+<span class="lineNum">      57 </span>            :  LABEL=d1
+<span class="lineNum">      58 </span>            : ... DISTANCES
+<span class="lineNum">      59 </span>            : MTRANSFORM_MORE DATA=d1 SWITCH={GAUSSIAN D_0=1.5 R_0=0.00001}
+<span class="lineNum">      60 </span>            : \endplumedfile
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : In this case you can achieve the same result by using:
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : \plumedfile
+<span class="lineNum">      65 </span>            : DISTANCES ...
+<span class="lineNum">      66 </span>            :  GROUPA=1-10 GROUPB=11-20
+<span class="lineNum">      67 </span>            :  MORE_THAN={GAUSSIAN D_0=1.5 R_0=0.00001}
+<span class="lineNum">      68 </span>            : ... DISTANCES
+<span class="lineNum">      69 </span>            : \endplumedfile
+<span class="lineNum">      70 </span>            : (see \ref DISTANCES)
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : The advantage of MTRANSFORM_MORE comes, however, if you want to use transformed colvars as input
+<span class="lineNum">      73 </span>            : for \ref MULTICOLVARDENS
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : */
+<span class="lineNum">      76 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : //+PLUMEDOC MFILTERS MFILTER_MORE
+<span class="lineNum">      79 </span>            : /*
+<span class="lineNum">      80 </span>            : This action can be used to filter the distribution of colvar values in a multicolvar
+<span class="lineNum">      81 </span>            : so that one can compute the mean and so on for only those multicolvars more than a tolerance.
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : This action can be used to create a dynamic group of atom based on the value of a multicolvar.
+<span class="lineNum">      84 </span>            : In this action a multicolvar is within the dynamic group if its value is greater than a target.
+<span class="lineNum">      85 </span>            : In practise a weight, \f$w_i\f$  is ascribed to each colvar, \f$s_i\f$ calculated by a multicolvar
+<span class="lineNum">      86 </span>            : and this weight measures the degree to which a colvar is a member of the group.  This weight is
+<span class="lineNum">      87 </span>            : calculated using a \ref switchingfunction , \f$\sigma\f$ so it is given by:
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : \f[
+<span class="lineNum">      90 </span>            : w_i = 1 - \sigma(s_i)
+<span class="lineNum">      91 </span>            : \f]
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : If one calculates a function of the set of multicolvars
+<span class="lineNum">      94 </span>            : these weights are included in the calculation.  As such if one calculates the MEAN, \f$\mu\f$ of a filtered
+<span class="lineNum">      95 </span>            : multicolvar what is computed is the following:
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : \f[
+<span class="lineNum">      98 </span>            : \mu = \frac{ \sum_i w_i s_i }{ \sum_i w_i}
+<span class="lineNum">      99 </span>            : \f]
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : One is thus calculating the mean for those colvars that are greater than the target.
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : \par Examples
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : The example shown below calculates the mean for those distances that greater than 1.5 nm in length
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : \plumedfile
+<span class="lineNum">     108 </span>            : DISTANCES GROUPA=1 GROUPB=2-50 MEAN LABEL=d1
+<span class="lineNum">     109 </span>            : MFILTER_MORE DATA=d1 SWITCH={GAUSSIAN D_0=1.5 R_0=0.00001} MEAN LABEL=d4
+<span class="lineNum">     110 </span>            : \endplumedfile
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : More complicated things can be done by using the label of a filter as input to a new multicolvar as shown
+<span class="lineNum">     113 </span>            : in the example below.  Here the coordination numbers of all atoms are computed.  The atoms with a coordination
+<span class="lineNum">     114 </span>            : number greater than 2 are then identified using the filter.  This reduced list of atoms is then used as input
+<span class="lineNum">     115 </span>            : to a second coordination number calculation.  This second coordination number thus measures the number of
+<span class="lineNum">     116 </span>            : two-coordinated atoms that each of the two-coordinated atoms is bound to.
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : \plumedfile
+<span class="lineNum">     119 </span>            : 1: COORDINATIONNUMBER SPECIES=1-150 SWITCH={EXP D_0=4.0 R_0=0.5 D_MAX=6.0}
+<span class="lineNum">     120 </span>            : cf: MFILTER_MORE DATA=c1 SWITCH={RATIONAL D_0=2.0 R_0=0.1} LOWMEM
+<span class="lineNum">     121 </span>            : c2: COORDINATIONNUMBER SPECIES=cf SWITCH={EXP D_0=4.0 R_0=0.5 D_MAX=6.0} MORE_THAN={RATIONAL D_0=2.0 R_0=0.1}
+<span class="lineNum">     122 </span>            : \endplumedfile
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : */
+<span class="lineNum">     125 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : namespace PLMD {
+<a name="128"><span class="lineNum">     128 </span>            : namespace multicolvar {</a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">         14 : class FilterMore : public MultiColvarFilter {</span>
+<span class="lineNum">     131 </span>            : private:
+<span class="lineNum">     132 </span>            :   SwitchingFunction sf;
+<span class="lineNum">     133 </span>            : public:
+<span class="lineNum">     134 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     135 </span>            :   explicit FilterMore(const ActionOptions&amp; ao);
+<span class="lineNum">     136 </span>            :   double applyFilter( const double&amp; val, double&amp; df ) const ;
+<a name="137"><span class="lineNum">     137 </span>            : };</a>
+<a name="138"><span class="lineNum">     138 </span>            : </a>
+<span class="lineNum">     139 </span><span class="lineCov">       6458 : PLUMED_REGISTER_ACTION(FilterMore,&quot;MFILTER_MORE&quot;)</span>
+<a name="140"><span class="lineNum">     140 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(FilterMore,&quot;MTRANSFORM_MORE&quot;)</span></a>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">          9 : void FilterMore::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     143 </span><span class="lineCov">          9 :   MultiColvarFilter::registerKeywords( keys );</span>
+<span class="lineNum">     144 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;NN&quot;,&quot;6&quot;,&quot;The n parameter of the switching function &quot;);</span>
+<span class="lineNum">     145 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;MM&quot;,&quot;0&quot;,&quot;The m parameter of the switching function; 0 implies 2*NN&quot;);</span>
+<span class="lineNum">     146 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;D_0&quot;,&quot;0.0&quot;,&quot;The d_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">     147 </span><span class="lineCov">         36 :   keys.add(&quot;compulsory&quot;,&quot;R_0&quot;,&quot;The r_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">     148 </span><span class="lineCov">         36 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;This keyword is used if you want to employ an alternative to the continuous swiching function defined above. &quot;</span>
+<span class="lineNum">     149 </span>            :            &quot;The following provides information on the \\ref switchingfunction that are available. &quot;
+<span class="lineNum">     150 </span>            :            &quot;When this keyword is present you no longer need the NN, MM, D_0 and R_0 keywords.&quot;);
+<a name="151"><span class="lineNum">     151 </span><span class="lineCov">          9 : }</span></a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">          7 : FilterMore::FilterMore(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     154 </span>            :   Action(ao),
+<span class="lineNum">     155 </span><span class="lineCov">          7 :   MultiColvarFilter(ao)</span>
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span>            :   // Read in the switching function
+<span class="lineNum">     158 </span><span class="lineCov">         14 :   std::string sw, errors; parse(&quot;SWITCH&quot;,sw);</span>
+<span class="lineNum">     159 </span><span class="lineCov">          7 :   if(sw.length()&gt;0) {</span>
+<span class="lineNum">     160 </span><span class="lineCov">          7 :     sf.set(sw,errors);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          7 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     162 </span>            :   } else {
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     double r_0=-1.0, d_0; int nn, mm;</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :     parse(&quot;NN&quot;,nn); parse(&quot;MM&quot;,mm);</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :     parse(&quot;R_0&quot;,r_0); parse(&quot;D_0&quot;,d_0);</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :     if( r_0&lt;0.0 ) error(&quot;you must set a value for R_0&quot;);</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     sf.set(nn,mm,r_0,d_0);</span>
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span><span class="lineCov">         21 :   log.printf(&quot;  filtering colvar values and focussing only on those more than %s\n&quot;,( sf.description() ).c_str() );</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">          7 :   checkRead();</span>
+<a name="172"><span class="lineNum">     172 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">      16806 : double FilterMore::applyFilter( const double&amp; val, double&amp; df ) const {</span>
+<span class="lineNum">     175 </span><span class="lineCov">      16806 :   double f = 1.0 - sf.calculate( val, df ); df*=-val;</span>
+<span class="lineNum">     176 </span><span class="lineCov">      16806 :   return f;</span>
+<span class="lineNum">     177 </span>            : }
+<a name="178"><span class="lineNum">     178 </span>            : </a>
+<span class="lineNum">     179 </span>            : }
+<span class="lineNum">     180 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - analysis/Analysis.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">analysis</a> - Analysis.h<span style="font-size: 80%;"> (source / <a href="Analysis.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">57.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_analysis_Analysis_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_analysis_Analysis_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;vesselbase/ActionWithAveraging.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #define PLUMED_ANALYSIS_INIT(ao) Action(ao),Analysis(ao)
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : class ReferenceConfiguration;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace analysis {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /**
+<span class="lineNum">      36 </span>            : \ingroup INHERIT
+<span class="lineNum">      37 </span>            : This is the abstract base class to use for implementing new methods for analyzing the trajectory, within it there
+<span class="lineNum">      38 </span>            : is information as to how to go about implementing a new analysis method.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : */
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : class Analysis : public vesselbase::ActionWithAveraging {
+<span class="lineNum">      43 </span>            : private:
+<span class="lineNum">      44 </span>            : /// Are we treating each block of data separately
+<span class="lineNum">      45 </span>            :   bool nomemory;
+<span class="lineNum">      46 </span>            : /// Are we writing a checkpoint file
+<span class="lineNum">      47 </span>            :   bool write_chq;
+<span class="lineNum">      48 </span>            : /// Are we reusing data stored by another analysis action
+<span class="lineNum">      49 </span>            :   bool reusing_data;
+<span class="lineNum">      50 </span>            : /// If we are reusing data are we ignoring the reweighting in that data
+<span class="lineNum">      51 </span>            :   bool ignore_reweight;
+<span class="lineNum">      52 </span>            : /// The Analysis action that we are reusing data from
+<span class="lineNum">      53 </span>            :   Analysis* mydatastash;
+<span class="lineNum">      54 </span>            : /// The frequency with which we are performing analysis
+<span class="lineNum">      55 </span>            :   unsigned freq;
+<span class="lineNum">      56 </span>            : /// Number of data point we need to run analysis
+<span class="lineNum">      57 </span>            :   unsigned ndata;
+<span class="lineNum">      58 </span>            : /// The temperature at which we are running the calculation
+<span class="lineNum">      59 </span>            :   double simtemp;
+<span class="lineNum">      60 </span>            : /// The temperature at which we want the histogram
+<span class="lineNum">      61 </span>            :   double rtemp;
+<span class="lineNum">      62 </span>            : /// Do we need the energy (are we reweighting at a different temperature)
+<span class="lineNum">      63 </span>            :   bool needeng;
+<span class="lineNum">      64 </span>            : /// The piece of data we are inserting
+<span class="lineNum">      65 </span>            :   unsigned idata;
+<span class="lineNum">      66 </span>            : /// The weights of all the data points
+<span class="lineNum">      67 </span>            :   std::vector&lt;double&gt; logweights;
+<span class="lineNum">      68 </span>            : /// Have we analyzed the data for the first time
+<span class="lineNum">      69 </span>            : //  bool firstAnalysisDone;
+<span class="lineNum">      70 </span>            : /// The value of the old normalization constant
+<span class="lineNum">      71 </span>            : //  double norm, old_norm;
+<span class="lineNum">      72 </span>            : /// The format to use in output files
+<span class="lineNum">      73 </span>            :   std::string ofmt;
+<span class="lineNum">      74 </span>            : /// Tempory vector to store values of arguments
+<span class="lineNum">      75 </span>            :   std::vector&lt;double&gt; current_args;
+<span class="lineNum">      76 </span>            : /// The type of metric we are using to measure distances
+<span class="lineNum">      77 </span>            :   std::string metricname;
+<span class="lineNum">      78 </span>            : /// The checkpoint file
+<span class="lineNum">      79 </span>            :   OFile rfile;
+<span class="lineNum">      80 </span>            : /// Read in data from a file
+<span class="lineNum">      81 </span>            :   void readDataFromFile( const std::string&amp; filename );
+<span class="lineNum">      82 </span>            : /// Get the metric if we are using malonobius distance and flexible hill
+<span class="lineNum">      83 </span>            :   std::vector&lt;double&gt; getMetric() const ;
+<span class="lineNum">      84 </span>            : protected:
+<span class="lineNum">      85 </span>            : /// List of argument names
+<span class="lineNum">      86 </span>            :   std::vector&lt;std::string&gt; argument_names;
+<span class="lineNum">      87 </span>            : /// This is used to read in output file names for analysis methods.  When
+<span class="lineNum">      88 </span>            : /// this method is used and the calculation is not restarted old analysis
+<span class="lineNum">      89 </span>            : /// files are backed up.
+<span class="lineNum">      90 </span>            :   void parseOutputFile( const std::string&amp; key, std::string&amp; filename );
+<span class="lineNum">      91 </span>            : /// The data we are going to analyze
+<span class="lineNum">      92 </span>            :   std::vector&lt;ReferenceConfiguration*&gt; data;
+<span class="lineNum">      93 </span>            : /// Get the name of the metric we are using to measure distances
+<span class="lineNum">      94 </span>            :   std::string getMetricName() const ;
+<span class="lineNum">      95 </span>            : /// Return the number of data points
+<span class="lineNum">      96 </span>            :   unsigned getNumberOfDataPoints() const;
+<span class="lineNum">      97 </span>            : /// Return the weight of the ith point
+<span class="lineNum">      98 </span>            :   double getWeight( const unsigned&amp; idata ) const ;
+<span class="lineNum">      99 </span>            : /// Retrieve the ith point
+<span class="lineNum">     100 </span>            :   void getDataPoint( const unsigned&amp; idata, std::vector&lt;double&gt;&amp; point, double&amp; weight ) const ;
+<span class="lineNum">     101 </span>            : /// Returns true if argument i is periodic together with the domain
+<span class="lineNum">     102 </span>            :   bool getPeriodicityInformation(const unsigned&amp; i, std::string&amp; dmin, std::string&amp; dmax);
+<span class="lineNum">     103 </span>            : /// Are we analyzing each data block separately (if we are not this also returns the old normalization )
+<span class="lineNum">     104 </span>            :   bool usingMemory() const;
+<span class="lineNum">     105 </span>            : /// Return the format to use for numbers in output files
+<span class="lineNum">     106 </span>            :   std::string getOutputFormat() const ;
+<span class="lineNum">     107 </span>            : /// Finalize the weights without using the log sums
+<span class="lineNum">     108 </span>            : //  void finalizeWeightsNoLogSums( const double&amp; onorm );
+<span class="lineNum">     109 </span>            : public:
+<span class="lineNum">     110 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="111"><span class="lineNum">     111 </span>            :   explicit Analysis(const ActionOptions&amp;);</a>
+<a name="112"><span class="lineNum">     112 </span>            :   ~Analysis();</a>
+<span class="lineNum">     113 </span><span class="lineCov">       1294 :   void calculate() {}</span>
+<span class="lineNum">     114 </span><span class="lineCov">       1294 :   void apply() {}</span>
+<span class="lineNum">     115 </span>            :   void accumulate();
+<span class="lineNum">     116 </span>            :   void performOperations( const bool&amp; from_update );
+<span class="lineNum">     117 </span>            :   virtual void performAnalysis()=0;
+<a name="118"><span class="lineNum">     118 </span>            :   void runFinalJobs();</a>
+<span class="lineNum">     119 </span>            :   void runAnalysis();
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :   bool isPeriodic() { plumed_error(); return false; }</span>
+<span class="lineNum">     121 </span>            :   /// Convert the stored log weights to proper weights
+<span class="lineNum">     122 </span>            :   virtual void finalizeWeights( const bool&amp; ignore_weights );
+<span class="lineNum">     123 </span>            : };
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : inline
+<span class="lineNum">     126 </span>            : std::string Analysis::getMetricName() const {
+<span class="lineNum">     127 </span>            :   return metricname;
+<span class="lineNum">     128 </span>            : }
+<a name="129"><span class="lineNum">     129 </span>            : </a>
+<span class="lineNum">     130 </span>            : inline
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 : unsigned Analysis::getNumberOfDataPoints() const {</span>
+<span class="lineNum">     132 </span><span class="lineCov">       3684 :   if( !reusing_data ) {</span>
+<span class="lineNum">     133 </span>            :     plumed_dbg_assert( data.size()==logweights.size() );
+<span class="lineNum">     134 </span><span class="lineCov">       3684 :     return data.size();</span>
+<span class="lineNum">     135 </span>            :   } else {
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :     return mydatastash-&gt;getNumberOfDataPoints();</span>
+<span class="lineNum">     137 </span>            :   }
+<span class="lineNum">     138 </span>            : }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : inline
+<span class="lineNum">     141 </span>            : bool Analysis::usingMemory() const {
+<span class="lineNum">     142 </span>            :   if( !reusing_data ) {
+<span class="lineNum">     143 </span>            :     return !nomemory;
+<span class="lineNum">     144 </span>            :   } else {
+<span class="lineNum">     145 </span>            :     return mydatastash-&gt;usingMemory();
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span>            : }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : inline
+<span class="lineNum">     150 </span>            : std::string Analysis::getOutputFormat() const {
+<span class="lineNum">     151 </span>            :   return ofmt;
+<span class="lineNum">     152 </span>            : }
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : }
+<span class="lineNum">     155 </span>            : }
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

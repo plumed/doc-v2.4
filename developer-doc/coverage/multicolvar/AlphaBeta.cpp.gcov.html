@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/AlphaBeta.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - AlphaBeta.cpp<span style="font-size: 80%;"> (source / <a href="AlphaBeta.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntryHi">93.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Torsion.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace multicolvar {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC COLVAR ALPHABETA
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Measures a distance including pbc between the instantaneous values of a set of torsional angles and set of reference values.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : This colvar calculates the following quantity.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \f[
+<span class="lineNum">      42 </span>            : s = \frac{1}{2} \sum_i \left[ 1 + \cos( \phi_i - \phi_i^{\textrm{Ref}} ) \right]
+<span class="lineNum">      43 </span>            : \f]
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : where the \f$\phi_i\f$ values are the instantaneous values for the \ref TORSION angles of interest.
+<span class="lineNum">      46 </span>            : The \f$\phi_i^{\textrm{Ref}}\f$ values are the user-specified reference values for the torsional angles.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \par Examples
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : The following provides an example of the input for an alpha beta similarity.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : \plumedfile
+<span class="lineNum">      53 </span>            : ALPHABETA ...
+<span class="lineNum">      54 </span>            : ATOMS1=168,170,172,188 REFERENCE1=3.14
+<span class="lineNum">      55 </span>            : ATOMS2=170,172,188,190 REFERENCE2=3.14
+<span class="lineNum">      56 </span>            : ATOMS3=188,190,192,230 REFERENCE3=3.14
+<span class="lineNum">      57 </span>            : LABEL=ab
+<span class="lineNum">      58 </span>            : ... ALPHABETA
+<span class="lineNum">      59 </span>            : PRINT ARG=ab FILE=colvar STRIDE=10
+<span class="lineNum">      60 </span>            : \endplumedfile
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : Because all the reference values are the same we can calculate the same quantity using
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : \plumedfile
+<span class="lineNum">      65 </span>            : ALPHABETA ...
+<span class="lineNum">      66 </span>            : ATOMS1=168,170,172,188 REFERENCE=3.14
+<span class="lineNum">      67 </span>            : ATOMS2=170,172,188,190
+<span class="lineNum">      68 </span>            : ATOMS3=188,190,192,230
+<span class="lineNum">      69 </span>            : LABEL=ab
+<span class="lineNum">      70 </span>            : ... ALPHABETA
+<span class="lineNum">      71 </span>            : PRINT ARG=ab FILE=colvar STRIDE=10
+<span class="lineNum">      72 </span>            : \endplumedfile
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : Writing out the atoms involved in all the torsions in this way can be rather tedious. Thankfully if you are working with protein you
+<span class="lineNum">      75 </span>            : can avoid this by using the \ref MOLINFO command.  PLUMED uses the pdb file that you provide to this command to learn
+<span class="lineNum">      76 </span>            : about the topology of the protein molecule.  This means that you can specify torsion angles using the following syntax:
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : \plumedfile
+<span class="lineNum">      79 </span>            : MOLINFO MOLTYPE=protein STRUCTURE=myprotein.pdb
+<span class="lineNum">      80 </span>            : ALPHABETA ...
+<span class="lineNum">      81 </span>            : ATOMS1=@phi-3 REFERENCE=3.14
+<span class="lineNum">      82 </span>            : ATOMS2=@psi-3
+<span class="lineNum">      83 </span>            : ATOMS3=@phi-4
+<span class="lineNum">      84 </span>            : LABEL=ab
+<span class="lineNum">      85 </span>            : ... ALPHABETA
+<span class="lineNum">      86 </span>            : PRINT ARG=ab FILE=colvar STRIDE=10
+<span class="lineNum">      87 </span>            : \endplumedfile
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : Here, \@phi-3 tells plumed that you would like to calculate the \f$\phi\f$ angle in the third residue of the protein.
+<span class="lineNum">      90 </span>            : Similarly \@psi-4 tells plumed that you want to calculate the \f$\psi\f$ angle of the 4th residue of the protein.
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : */
+<a name="94"><span class="lineNum">      94 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">          3 : class AlphaBeta : public MultiColvarBase {</span>
+<span class="lineNum">      97 </span>            : private:
+<span class="lineNum">      98 </span>            :   std::vector&lt;double&gt; target;
+<span class="lineNum">      99 </span>            : public:
+<span class="lineNum">     100 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="101"><span class="lineNum">     101 </span>            :   explicit AlphaBeta(const ActionOptions&amp;);</a>
+<span class="lineNum">     102 </span>            :   virtual double compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<a name="104"><span class="lineNum">     104 </span>            : };</a>
+<span class="lineNum">     105 </span>            : 
+<a name="106"><span class="lineNum">     106 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(AlphaBeta,&quot;ALPHABETA&quot;)</span></a>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">          2 : void AlphaBeta::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     109 </span><span class="lineCov">          2 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">     110 </span><span class="lineCov">          8 :   keys.add(&quot;numbered&quot;,&quot;ATOMS&quot;,&quot;the atoms involved in each of the alpha-beta variables you wish to calculate. &quot;</span>
+<span class="lineNum">     111 </span>            :            &quot;Keywords like ATOMS1, ATOMS2, ATOMS3,... should be listed and one alpha-beta values will be &quot;
+<span class="lineNum">     112 </span>            :            &quot;calculated for each ATOM keyword you specify (all ATOM keywords should &quot;
+<span class="lineNum">     113 </span>            :            &quot;specify the indices of four atoms).  The eventual number of quantities calculated by this &quot;
+<span class="lineNum">     114 </span>            :            &quot;action will depend on what functions of the distribution you choose to calculate.&quot;);
+<span class="lineNum">     115 </span><span class="lineCov">          6 :   keys.reset_style(&quot;ATOMS&quot;,&quot;atoms&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineCov">          8 :   keys.add(&quot;numbered&quot;,&quot;REFERENCE&quot;,&quot;the reference values for each of the torsional angles.  If you use a single REFERENCE value the &quot;</span>
+<span class="lineNum">     117 </span>            :            &quot;same reference value is used for all torsions&quot;);
+<span class="lineNum">     118 </span><span class="lineCov">          6 :   keys.reset_style(&quot;REFERENCE&quot;,&quot;compulsory&quot;);</span>
+<a name="119"><span class="lineNum">     119 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">          1 : AlphaBeta::AlphaBeta(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     122 </span>            :   Action(ao),
+<span class="lineNum">     123 </span><span class="lineCov">          1 :   MultiColvarBase(ao)</span>
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span>            :   // Read in the atoms
+<span class="lineNum">     126 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">     127 </span><span class="lineCov">          2 :   readAtomsLikeKeyword( &quot;ATOMS&quot;, 4, all_atoms );</span>
+<span class="lineNum">     128 </span><span class="lineCov">          1 :   setupMultiColvarBase( all_atoms );</span>
+<span class="lineNum">     129 </span>            :   // Resize target
+<span class="lineNum">     130 </span><span class="lineCov">          1 :   target.resize( getFullNumberOfTasks() );</span>
+<span class="lineNum">     131 </span>            :   // Setup central atom indices
+<span class="lineNum">     132 </span><span class="lineCov">          1 :   std::vector&lt;bool&gt; catom_ind(4, false);</span>
+<span class="lineNum">     133 </span>            :   catom_ind[1]=catom_ind[2]=true;
+<span class="lineNum">     134 </span><span class="lineCov">          1 :   setAtomsForCentralAtom( catom_ind );</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :   // Read in reference values
+<span class="lineNum">     137 </span>            :   unsigned ntarget=0;
+<span class="lineNum">     138 </span><span class="lineCov">          2 :   for(unsigned i=0; i&lt;target.size(); ++i) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">          3 :     if( !parseNumbered( &quot;REFERENCE&quot;, i+1, target[i] ) ) break;</span>
+<span class="lineNum">     140 </span>            :     ntarget++;
+<span class="lineNum">     141 </span>            :   }
+<span class="lineNum">     142 </span><span class="lineCov">          1 :   if( ntarget==0 ) {</span>
+<span class="lineNum">     143 </span><span class="lineCov">          3 :     parse(&quot;REFERENCE&quot;,target[0]);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         23 :     for(unsigned i=1; i&lt;target.size(); ++i) target[i]=target[0];</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :   } else if( ntarget!=target.size() ) {</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :     error(&quot;found wrong number of REFERENCE values&quot;);</span>
+<span class="lineNum">     147 </span>            :   }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :   // And setup the ActionWithVessel
+<span class="lineNum">     150 </span><span class="lineCov">          1 :   if( getNumberOfVessels()==0 ) {</span>
+<span class="lineNum">     151 </span>            :     std::string fake_input;
+<span class="lineNum">     152 </span><span class="lineCov">          2 :     addVessel( &quot;SUM&quot;, fake_input, -1 );  // -1 here means that this value will be named getLabel()</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :     readVesselKeywords();  // This makes sure resizing is done</span>
+<span class="lineNum">     154 </span>            :   }
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   // And check everything has been read in correctly
+<span class="lineNum">     157 </span><span class="lineCov">          1 :   checkRead();</span>
+<a name="158"><span class="lineNum">     158 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">         40 : double AlphaBeta::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     161 </span><span class="lineCov">         80 :   const Vector d0=getSeparation(myatoms.getPosition(1),myatoms.getPosition(0));</span>
+<span class="lineNum">     162 </span><span class="lineCov">         40 :   const Vector d1=getSeparation(myatoms.getPosition(2),myatoms.getPosition(1));</span>
+<span class="lineNum">     163 </span><span class="lineCov">         40 :   const Vector d2=getSeparation(myatoms.getPosition(3),myatoms.getPosition(2));</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">         40 :   Vector dd0,dd1,dd2;</span>
+<span class="lineNum">     166 </span>            :   PLMD::Torsion t;
+<span class="lineNum">     167 </span><span class="lineCov">         40 :   const double value  = t.compute(d0,d1,d2,dd0,dd1,dd2);</span>
+<span class="lineNum">     168 </span><span class="lineCov">         80 :   const double svalue = -0.5*sin(value-target[tindex]);</span>
+<span class="lineNum">     169 </span><span class="lineCov">         40 :   const double cvalue = 1.+cos(value-target[tindex]);</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">         40 :   dd0 *= svalue;</span>
+<span class="lineNum">     172 </span><span class="lineCov">         40 :   dd1 *= svalue;</span>
+<span class="lineNum">     173 </span><span class="lineCov">         40 :   dd2 *= svalue;</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">         40 :   addAtomDerivatives(1, 0, dd0, myatoms);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         40 :   addAtomDerivatives(1, 1, dd1-dd0, myatoms);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         40 :   addAtomDerivatives(1, 2, dd2-dd1, myatoms);</span>
+<span class="lineNum">     178 </span><span class="lineCov">         40 :   addAtomDerivatives(1, 3, -dd2, myatoms);</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">         40 :   myatoms.addBoxDerivatives(1, -(extProduct(d0,dd0)+extProduct(d1,dd1)+extProduct(d2,dd2)));</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">         40 :   return 0.5*cvalue;</span>
+<span class="lineNum">     183 </span>            : }
+<a name="184"><span class="lineNum">     184 </span>            : </a>
+<span class="lineNum">     185 </span>            : }
+<span class="lineNum">     186 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

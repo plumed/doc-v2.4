@@ -1,0 +1,356 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/OFile.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - OFile.h<span style="font-size: 80%;"> (source / <a href="OFile.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">83</td>
+            <td class="headerCovTableEntry">95</td>
+            <td class="headerCovTableEntryMed">87.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_OFile_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_OFile_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;FileBase.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      27 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : class Value;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : /**
+<span class="lineNum">      34 </span>            : \ingroup TOOLBOX
+<span class="lineNum">      35 </span>            : Class for output files
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : This class provides features similar to those in the standard C &quot;FILE*&quot; type,
+<span class="lineNum">      38 </span>            : but only for sequential output. See IFile for sequential input.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : See the example here for a possible use:
+<span class="lineNum">      41 </span>            : \verbatim
+<span class="lineNum">      42 </span>            : #include &quot;File.h&quot;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : int main(){
+<span class="lineNum">      45 </span>            :   PLMD::OFile pof;
+<span class="lineNum">      46 </span>            :   pof.open(&quot;ciao&quot;);
+<span class="lineNum">      47 </span>            :   pof.printf(&quot;%s\n&quot;,&quot;test1&quot;);
+<span class="lineNum">      48 </span>            :   pof.setLinePrefix(&quot;plumed: &quot;);
+<span class="lineNum">      49 </span>            :   pof.printf(&quot;%s\n&quot;,&quot;test2&quot;);
+<span class="lineNum">      50 </span>            :   pof.setLinePrefix(&quot;&quot;);
+<span class="lineNum">      51 </span>            :   pof.addConstantField(&quot;x2&quot;).printField(&quot;x2&quot;,67.0);
+<span class="lineNum">      52 </span>            :   pof.printField(&quot;x1&quot;,10.0).printField(&quot;x3&quot;,20.12345678901234567890).printField();
+<span class="lineNum">      53 </span>            :   pof.printField(&quot;x1&quot;,10.0).printField(&quot;x3&quot;,-1e70*20.12345678901234567890).printField();
+<span class="lineNum">      54 </span>            :   pof.printField(&quot;x3&quot;,10.0).printField(&quot;x2&quot;,777.0).printField(&quot;x1&quot;,-1e70*20.12345678901234567890).printField();
+<span class="lineNum">      55 </span>            :   pof.printField(&quot;x3&quot;,67.0).printField(&quot;x1&quot;,18.0).printField();
+<span class="lineNum">      56 </span>            :   pof.close();
+<span class="lineNum">      57 </span>            :   return 0;
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : \endverbatim
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : This program is expected to produce a file &quot;ciao&quot; which reads
+<span class="lineNum">      62 </span>            : \verbatim
+<span class="lineNum">      63 </span>            : test1
+<span class="lineNum">      64 </span>            : plumed: test2
+<span class="lineNum">      65 </span>            : #! FIELDS x1 x3
+<span class="lineNum">      66 </span>            : #! SET x2                      67
+<span class="lineNum">      67 </span>            :                      10      20.12345678901234
+<span class="lineNum">      68 </span>            :                      10 -2.012345678901235e+71
+<span class="lineNum">      69 </span>            : #! FIELDS x1 x3
+<span class="lineNum">      70 </span>            : #! SET x2                     777
+<span class="lineNum">      71 </span>            :  -2.012345678901235e+71                     10
+<span class="lineNum">      72 </span>            :                      18                     67
+<span class="lineNum">      73 </span>            : \endverbatim
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : Notes
+<span class="lineNum">      76 </span>            : - &quot;x2&quot; is declared as &quot;constant&quot;, which means that it is written using the &quot;SET&quot;
+<span class="lineNum">      77 </span>            : keyword. Thus, everytime it is modified, all the headers are repeated in the output file.
+<span class="lineNum">      78 </span>            : - printField() without arguments is used as a &quot;newline&quot;.
+<span class="lineNum">      79 </span>            : - most methods return a reference to the OFile itself, to allow chaining many calls on the same line
+<span class="lineNum">      80 </span>            : (this is similar to &lt;&lt; operator in std::ostream)
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : \section using-correctly-ofile Using correctly OFile in PLUMED
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : When a OFile object is used in PLUMED it can be convenient to link() it
+<span class="lineNum">      85 </span>            : to the Action object where it is defined, or to the PlumedMain object.
+<span class="lineNum">      86 </span>            : This will save in the OFile a pointer to the linked object and will
+<span class="lineNum">      87 </span>            : allow to have some extra information. E.g., if PLUMED is restarting,
+<span class="lineNum">      88 </span>            : files will be appended. Notice that one can enforce this behavior using
+<span class="lineNum">      89 </span>            : the enforceRestart() method before opening a file.
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : To have all files managed consistently, it is important to use OFile in the proper way.
+<span class="lineNum">      92 </span>            : This should allow multi-replica plumed, restart and backups to work in
+<span class="lineNum">      93 </span>            : the expected way. For this reason all the operations in OFile and IFile
+<span class="lineNum">      94 </span>            : are synchronizing all the processors of the group, so call to OFile functions
+<span class="lineNum">      95 </span>            : should always be performed by all processes; for this reason is also not usefull
+<span class="lineNum">      96 </span>            : to use Log for debugging because only master threads will actually write.
+<span class="lineNum">      97 </span>            : For debugging is better to use the standard stderr.
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : \verbatim
+<span class="lineNum">     100 </span>            : int main(){
+<span class="lineNum">     101 </span>            : // this is a growing file, containing a full history
+<span class="lineNum">     102 </span>            : // (frames are appended, as in traditional HILLS and COLVAR)
+<span class="lineNum">     103 </span>            :   OFile grw;
+<span class="lineNum">     104 </span>            : // this is a single-snapshopt file used e.g. for checkpointing
+<span class="lineNum">     105 </span>            : // (rewritten every time)
+<span class="lineNum">     106 </span>            :   OFile snp;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : // open both files at the beginning
+<span class="lineNum">     109 </span>            : // (will go in \ref Action constructor)
+<span class="lineNum">     110 </span>            :   grw.open(&quot;growing&quot;);
+<span class="lineNum">     111 </span>            :   snp.open(&quot;snapshot&quot;);
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : // trajectory loop
+<span class="lineNum">     114 </span>            :   for(int i=0;i&lt;nsteps;i++){
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : // files should be writen in the update() method of an \ref Action
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : // write on growing file
+<span class="lineNum">     119 </span>            :     grw&lt;&lt;&quot;data at step &quot;&lt;&lt;i&lt;&lt;\n&quot;;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : // flushing
+<span class="lineNum">     122 </span>            : // it takes time, so do it only if data is critical
+<span class="lineNum">     123 </span>            : // better to leave this choice to the user with the FLUSH keyword
+<span class="lineNum">     124 </span>            : //    grw.flush();
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : // write on snapshot file
+<span class="lineNum">     127 </span>            :     snp.rewind();
+<span class="lineNum">     128 </span>            :     snp&lt;&lt;&quot;snapshot at step &quot;&lt;&lt;i&lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     129 </span>            :     snp.flush();
+<span class="lineNum">     130 </span>            : // the only difference is that snp is rewound
+<span class="lineNum">     131 </span>            : // notice that it should be rewound just before writing
+<span class="lineNum">     132 </span>            : // because rewind is going to move the file out of the way
+<span class="lineNum">     133 </span>            : // to have a safe copy of the file (&quot;bck.last.filename&quot;)
+<span class="lineNum">     134 </span>            : // Also notice that snapshots should be flushed
+<span class="lineNum">     135 </span>            : // for this reason, it is better to write them only
+<span class="lineNum">     136 </span>            : // rarely to avoid excessive slow down
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :   snp.close();
+<span class="lineNum">     141 </span>            :   grw.close();
+<span class="lineNum">     142 </span>            : }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : \endverbatim
+<span class="lineNum">     145 </span>            : */
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : class OFile:
+<span class="lineNum">     148 </span>            :   public virtual FileBase {
+<span class="lineNum">     149 </span>            : /// Pointer to a linked OFile.
+<span class="lineNum">     150 </span>            : /// see link(OFile&amp;)
+<span class="lineNum">     151 </span>            :   OFile* linked;
+<span class="lineNum">     152 </span>            : /// Internal buffer for printf
+<span class="lineNum">     153 </span>            :   char* buffer_string;
+<span class="lineNum">     154 </span>            : /// Internal buffer (generic use)
+<span class="lineNum">     155 </span>            :   char* buffer;
+<span class="lineNum">     156 </span>            : /// Internal buffer length
+<span class="lineNum">     157 </span>            :   int buflen;
+<span class="lineNum">     158 </span>            : /// This variables stores the actual buffer length
+<span class="lineNum">     159 </span>            :   int actual_buffer_length;
+<span class="lineNum">     160 </span>            : /// Class identifying a single field for fielded output
+<span class="lineNum">     161 </span><span class="lineCov">   42112237 :   class Field:</span>
+<span class="lineNum">     162 </span>            :     public FieldBase {
+<span class="lineNum">     163 </span>            :   };
+<span class="lineNum">     164 </span>            : /// Low-level write
+<span class="lineNum">     165 </span>            :   size_t llwrite(const char*,size_t);
+<span class="lineNum">     166 </span>            : /// True if fields has changed.
+<span class="lineNum">     167 </span>            : /// This could be due to a change in the list of fields or a reset
+<span class="lineNum">     168 </span>            : /// of a nominally constant field
+<span class="lineNum">     169 </span>            :   bool fieldChanged;
+<span class="lineNum">     170 </span>            : /// Format for fields writing
+<span class="lineNum">     171 </span>            :   std::string fieldFmt;
+<span class="lineNum">     172 </span>            : /// All the previously defined variable fields
+<span class="lineNum">     173 </span>            :   std::vector&lt;Field&gt; previous_fields;
+<span class="lineNum">     174 </span>            : /// All the defined variable fields
+<span class="lineNum">     175 </span>            :   std::vector&lt;Field&gt; fields;
+<span class="lineNum">     176 </span>            : /// All the defined constant fields
+<span class="lineNum">     177 </span>            :   std::vector&lt;Field&gt; const_fields;
+<span class="lineNum">     178 </span>            : /// Prefix for line (e.g. &quot;PLUMED: &quot;)
+<span class="lineNum">     179 </span>            :   std::string linePrefix;
+<span class="lineNum">     180 </span>            : /// Temporary ostringstream for &lt;&lt; output
+<span class="lineNum">     181 </span>            :   std::ostringstream oss;
+<span class="lineNum">     182 </span>            : /// The string used for backing up files
+<span class="lineNum">     183 </span>            :   std::string backstring;
+<span class="lineNum">     184 </span>            : /// Find field index given name
+<span class="lineNum">     185 </span>            :   unsigned findField(const std::string&amp;name)const;
+<span class="lineNum">     186 </span>            : /// check if we are restarting
+<span class="lineNum">     187 </span>            :   bool checkRestart()const;
+<span class="lineNum">     188 </span>            : /// True if restart behavior should be forced
+<span class="lineNum">     189 </span>            :   bool enforceRestart_;
+<span class="lineNum">     190 </span>            : /// True if backup behavior (i.e. non restart) should be forced
+<span class="lineNum">     191 </span>            :   bool enforceBackup_;
+<span class="lineNum">     192 </span>            : public:
+<span class="lineNum">     193 </span>            : /// Constructor
+<span class="lineNum">     194 </span>            :   OFile();
+<span class="lineNum">     195 </span>            : /// Destructor
+<span class="lineNum">     196 </span>            :   ~OFile();
+<span class="lineNum">     197 </span>            : /// Allows overloading of link
+<span class="lineNum">     198 </span>            :   using FileBase::link;
+<span class="lineNum">     199 </span>            : /// Allows overloading of open
+<span class="lineNum">     200 </span>            :   using FileBase::open;
+<span class="lineNum">     201 </span>            : /// Allows linking this OFile to another one.
+<span class="lineNum">     202 </span>            : /// In this way, everything written to this OFile will be immediately
+<span class="lineNum">     203 </span>            : /// written on the linked OFile. Notice that a OFile should
+<span class="lineNum">     204 </span>            : /// be either opened explicitly, linked to a FILE or linked to a OFile
+<span class="lineNum">     205 </span>            :   OFile&amp; link(OFile&amp;);
+<span class="lineNum">     206 </span>            : /// Set the string name to be used for automatic backup
+<span class="lineNum">     207 </span>            :   void setBackupString( const std::string&amp; );
+<span class="lineNum">     208 </span>            : /// Backup a file by giving it a different name
+<span class="lineNum">     209 </span>            :   void backupFile( const std::string&amp; bstring, const std::string&amp; fname );
+<span class="lineNum">     210 </span>            : /// This backs up all the files that would have been created with the
+<span class="lineNum">     211 </span>            : /// name str.  It is used in analysis when you are not restarting.  Analysis
+<span class="lineNum">     212 </span>            : /// output files at different times, which are names analysis.0.&lt;filename&gt;,
+<span class="lineNum">     213 </span>            : /// analysis.1.&lt;filename&gt; and &lt;filename&gt;, are backed up to bck.0.analysis.0.&lt;filename&gt;,
+<span class="lineNum">     214 </span>            : /// bck.0.analysis.1.&lt;filename&gt; and bck.0.&lt;filename&gt;
+<a name="215"><span class="lineNum">     215 </span>            :   void backupAllFiles( const std::string&amp; str );</a>
+<span class="lineNum">     216 </span>            : /// Opens the file using automatic append/backup
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :   OFile&amp; open(const std::string&amp;name);</span>
+<span class="lineNum">     218 </span>            : /// Set the prefix for output.
+<span class="lineNum">     219 </span>            : /// Typically &quot;PLUMED: &quot;. Notice that lines with a prefix cannot
+<span class="lineNum">     220 </span>            : /// be parsed using fields in a IFile.
+<span class="lineNum">     221 </span>            :   OFile&amp; setLinePrefix(const std::string&amp;);
+<span class="lineNum">     222 </span>            : /// Set the format for writing double precision fields
+<span class="lineNum">     223 </span>            :   OFile&amp; fmtField(const std::string&amp;);
+<span class="lineNum">     224 </span>            : /// Reset the format for writing double precision fields to its default
+<span class="lineNum">     225 </span>            :   OFile&amp; fmtField();
+<span class="lineNum">     226 </span>            : /// Set the value of a double precision field
+<span class="lineNum">     227 </span>            :   OFile&amp; printField(const std::string&amp;,double);
+<span class="lineNum">     228 </span>            : /// Set the value of a int field
+<span class="lineNum">     229 </span>            :   OFile&amp; printField(const std::string&amp;,int);
+<span class="lineNum">     230 </span>            : /// Set the value of a string field
+<span class="lineNum">     231 </span>            :   OFile&amp; printField(const std::string&amp;,const std::string&amp;);
+<span class="lineNum">     232 </span>            : ///
+<span class="lineNum">     233 </span>            :   OFile&amp; addConstantField(const std::string&amp;);
+<span class="lineNum">     234 </span>            : /// Used to setup printing of values
+<span class="lineNum">     235 </span>            :   OFile&amp; setupPrintValue( Value *val );
+<span class="lineNum">     236 </span>            : /// Print a value
+<span class="lineNum">     237 </span>            :   OFile&amp; printField( Value* val, const double&amp; v );
+<span class="lineNum">     238 </span>            :   /** Close a line.
+<span class="lineNum">     239 </span>            :   Typically used as
+<span class="lineNum">     240 </span>            :   \verbatim
+<span class="lineNum">     241 </span>            :     of.printField(&quot;a&quot;,a).printField(&quot;b&quot;,b).printField();
+<span class="lineNum">     242 </span>            :   \endverbatim
+<span class="lineNum">     243 </span>            :   */
+<span class="lineNum">     244 </span>            :   OFile&amp; printField();
+<span class="lineNum">     245 </span>            :   /**
+<span class="lineNum">     246 </span>            :   Resets the list of fields.
+<span class="lineNum">     247 </span>            :   As it is only possible to add new constant fields (addConstantField()),
+<span class="lineNum">     248 </span>            :   this method can be used to clean the field list.
+<span class="lineNum">     249 </span>            :   */
+<span class="lineNum">     250 </span>            :   OFile&amp; clearFields();
+<span class="lineNum">     251 </span>            : /// Formatted output with explicit format - a la printf
+<span class="lineNum">     252 </span>            :   int printf(const char*fmt,...);
+<span class="lineNum">     253 </span>            : /// Formatted output with &lt;&lt; operator
+<span class="lineNum">     254 </span>            :   template &lt;class T&gt;
+<span class="lineNum">     255 </span>            :   friend OFile&amp; operator&lt;&lt;(OFile&amp;,const T &amp;);
+<span class="lineNum">     256 </span>            : /// Rewind a file
+<span class="lineNum">     257 </span>            :   OFile&amp;rewind();
+<span class="lineNum">     258 </span>            : /// Flush a file
+<span class="lineNum">     259 </span>            :   virtual FileBase&amp;flush();
+<span class="lineNum">     260 </span>            : /// Enforce restart, also if the attached plumed object is not restarting.
+<span class="lineNum">     261 </span>            : /// Useful for tests
+<span class="lineNum">     262 </span>            :   OFile&amp;enforceRestart();
+<span class="lineNum">     263 </span>            : /// Enforce backup, even if the attached plumed object is restarting.
+<span class="lineNum">     264 </span>            :   OFile&amp;enforceBackup();
+<span class="lineNum">     265 </span>            : };
+<span class="lineNum">     266 </span>            : 
+<a name="267"><span class="lineNum">     267 </span>            : /// Write using &lt;&lt; syntax</a>
+<span class="lineNum">     268 </span>            : template &lt;class T&gt;
+<span class="lineNum">     269 </span><span class="lineCov">      67205 : OFile&amp; operator&lt;&lt;(OFile&amp;of,const T &amp;t) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">      67205 :   of.oss&lt;&lt;t;</span>
+<span class="lineNum">     271 </span><span class="lineCov">     134410 :   of.printf(&quot;%s&quot;,of.oss.str().c_str());</span>
+<span class="lineNum">     272 </span><span class="lineCov">     134410 :   of.oss.str(&quot;&quot;);</span>
+<span class="lineNum">     273 </span><span class="lineCov">      67205 :   return of;</span>
+<span class="lineNum">     274 </span>            : }
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

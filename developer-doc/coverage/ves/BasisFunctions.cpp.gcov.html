@@ -1,0 +1,486 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/BasisFunctions.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - BasisFunctions.cpp<span style="font-size: 80%;"> (source / <a href="BasisFunctions.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">214</td>
+            <td class="headerCovTableEntry">234</td>
+            <td class="headerCovTableEntryHi">91.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;VesBias.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;VesTools.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;GridIntegrationWeights.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : namespace ves {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">        188 : void BasisFunctions::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">        188 :   Action::registerKeywords(keys);</span>
+<span class="lineNum">      38 </span><span class="lineCov">        752 :   keys.add(&quot;compulsory&quot;,&quot;ORDER&quot;,&quot;The order of the basis function expansion.&quot;);</span>
+<span class="lineNum">      39 </span><span class="lineCov">        752 :   keys.add(&quot;compulsory&quot;,&quot;MINIMUM&quot;,&quot;The minimum of the interval on which the basis functions are defined.&quot;);</span>
+<span class="lineNum">      40 </span><span class="lineCov">        752 :   keys.add(&quot;compulsory&quot;,&quot;MAXIMUM&quot;,&quot;The maximum of the interval on which the basis functions are defined.&quot;);</span>
+<span class="lineNum">      41 </span><span class="lineCov">        752 :   keys.add(&quot;hidden&quot;,&quot;NGRID_POINTS&quot;,&quot;The number of grid points used for numerical integrals&quot;);</span>
+<span class="lineNum">      42 </span><span class="lineCov">        564 :   keys.addFlag(&quot;DEBUG_INFO&quot;,false,&quot;Print out more detailed information about the basis set. Useful for debugging.&quot;);</span>
+<span class="lineNum">      43 </span><span class="lineCov">        564 :   keys.addFlag(&quot;NUMERICAL_INTEGRALS&quot;,false,&quot;Calculate basis function integral for the uniform distribution numerically. Useful for debugging.&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineCov">        188 : }</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">        180 : BasisFunctions::BasisFunctions(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      48 </span>            :   Action(ao),
+<span class="lineNum">      49 </span>            :   print_debug_info_(false),
+<span class="lineNum">      50 </span>            :   has_been_set(false),
+<span class="lineNum">      51 </span>            :   description_(&quot;Undefined&quot;),
+<span class="lineNum">      52 </span>            :   type_(&quot;Undefined&quot;),
+<span class="lineNum">      53 </span>            :   norder_(0),
+<span class="lineNum">      54 </span>            :   nbasis_(1),
+<span class="lineNum">      55 </span>            :   bf_label_prefix_(&quot;f&quot;),
+<span class="lineNum">      56 </span><span class="lineCov">        180 :   bf_labels_(nbasis_,&quot;f0&quot;),</span>
+<span class="lineNum">      57 </span>            :   periodic_(false),
+<span class="lineNum">      58 </span>            :   interval_bounded_(true),
+<span class="lineNum">      59 </span>            :   interval_intrinsic_min_str_(&quot;1.0&quot;),
+<span class="lineNum">      60 </span>            :   interval_intrinsic_max_str_(&quot;-1.0&quot;),
+<span class="lineNum">      61 </span>            :   interval_intrinsic_min_(1.0),
+<span class="lineNum">      62 </span>            :   interval_intrinsic_max_(-1.0),
+<span class="lineNum">      63 </span>            :   interval_intrinsic_range_(0.0),
+<span class="lineNum">      64 </span>            :   interval_intrinsic_mean_(0.0),
+<span class="lineNum">      65 </span>            :   interval_min_str_(&quot;&quot;),
+<span class="lineNum">      66 </span>            :   interval_max_str_(&quot;&quot;),
+<span class="lineNum">      67 </span>            :   interval_min_(0.0),
+<span class="lineNum">      68 </span>            :   interval_max_(0.0),
+<span class="lineNum">      69 </span>            :   interval_range_(0.0),
+<span class="lineNum">      70 </span>            :   interval_mean_(0.0),
+<span class="lineNum">      71 </span>            :   argT_derivf_(1.0),
+<span class="lineNum">      72 </span>            :   numerical_uniform_integrals_(false),
+<span class="lineNum">      73 </span>            :   nbins_(1001),
+<span class="lineNum">      74 </span><span class="lineCov">        180 :   uniform_integrals_(nbasis_,0.0),</span>
+<span class="lineNum">      75 </span>            :   vesbias_pntr_(NULL),
+<span class="lineNum">      76 </span><span class="lineCov">        900 :   action_pntr_(NULL)</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span><span class="lineCov">        180 :   bf_keywords_.push_back(getName());</span>
+<span class="lineNum">      79 </span><span class="lineCov">        360 :   if(keywords.exists(&quot;ORDER&quot;)) {</span>
+<span class="lineNum">      80 </span><span class="lineCov">        504 :     parse(&quot;ORDER&quot;,norder_); addKeywordToList(&quot;ORDER&quot;,norder_);</span>
+<span class="lineNum">      81 </span>            :   }
+<span class="lineNum">      82 </span><span class="lineCov">        180 :   nbasis_=norder_+1;</span>
+<span class="lineNum">      83 </span>            :   //
+<span class="lineNum">      84 </span>            :   std::string str_imin; std::string str_imax;
+<span class="lineNum">      85 </span><span class="lineCov">        540 :   if(keywords.exists(&quot;MINIMUM&quot;) &amp;&amp; keywords.exists(&quot;MAXIMUM&quot;)) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">        890 :     parse(&quot;MINIMUM&quot;,str_imin); addKeywordToList(&quot;MINIMUM&quot;,str_imin);</span>
+<span class="lineNum">      87 </span><span class="lineCov">        890 :     parse(&quot;MAXIMUM&quot;,str_imax); addKeywordToList(&quot;MAXIMUM&quot;,str_imax);</span>
+<span class="lineNum">      88 </span>            :   }
+<span class="lineNum">      89 </span>            :   else {
+<span class="lineNum">      90 </span>            :     str_imin = &quot;-1.0&quot;;
+<span class="lineNum">      91 </span>            :     str_imax = &quot;1.0&quot;;
+<span class="lineNum">      92 </span>            :   }
+<span class="lineNum">      93 </span>            :   interval_min_str_ = str_imin;
+<span class="lineNum">      94 </span>            :   interval_max_str_ = str_imax;
+<span class="lineNum">      95 </span><span class="lineCov">        180 :   if(!Tools::convert(str_imin,interval_min_)) {</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: cannot convert the value given in MINIMUM to a double&quot;);</span>
+<span class="lineNum">      97 </span>            :   }
+<span class="lineNum">      98 </span><span class="lineCov">        180 :   if(!Tools::convert(str_imax,interval_max_)) {</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     plumed_merror(getName()+&quot;: cannot convert the value given in MAXIMUM to a double&quot;);</span>
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span><span class="lineCov">        180 :   if(interval_min_&gt;interval_max_) {plumed_merror(getName()+&quot;: MINIMUM and MAXIMUM are not correctly defined&quot;);}</span>
+<span class="lineNum">     102 </span>            :   //
+<span class="lineNum">     103 </span><span class="lineCov">        360 :   parseFlag(&quot;DEBUG_INFO&quot;,print_debug_info_);</span>
+<span class="lineNum">     104 </span><span class="lineCov">        360 :   if(keywords.exists(&quot;NUMERICAL_INTEGRALS&quot;)) {</span>
+<span class="lineNum">     105 </span><span class="lineCov">        312 :     parseFlag(&quot;NUMERICAL_INTEGRALS&quot;,numerical_uniform_integrals_);</span>
+<span class="lineNum">     106 </span>            :   }
+<span class="lineNum">     107 </span><span class="lineCov">        360 :   if(keywords.exists(&quot;NGRID_POINTS&quot;)) {</span>
+<span class="lineNum">     108 </span><span class="lineCov">        356 :     parse(&quot;NGRID_POINTS&quot;,nbins_);</span>
+<span class="lineNum">     109 </span>            :   }
+<span class="lineNum">     110 </span>            :   // log.printf(&quot; %s \n&quot;,getKeywordString().c_str());
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">        180 : }</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">         22 : void BasisFunctions::setIntrinsicInterval(const double interval_intrinsic_min_in, const double interval_intrinsic_max_in) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">         22 :   interval_intrinsic_min_ = interval_intrinsic_min_in;</span>
+<span class="lineNum">     117 </span><span class="lineCov">         22 :   interval_intrinsic_max_ = interval_intrinsic_max_in;</span>
+<span class="lineNum">     118 </span><span class="lineCov">         22 :   VesTools::convertDbl2Str(interval_intrinsic_min_,interval_intrinsic_min_str_);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         22 :   VesTools::convertDbl2Str(interval_intrinsic_max_,interval_intrinsic_max_str_);</span>
+<span class="lineNum">     120 </span><span class="lineCov">         22 :   plumed_massert(interval_intrinsic_min_&lt;interval_intrinsic_max_,&quot;setIntrinsicInterval: intrinsic intervals are not defined correctly&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">         22 : }</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">        158 : void BasisFunctions::setIntrinsicInterval(const std::string&amp; interval_intrinsic_min_str_in, const std::string&amp; interval_intrinsic_max_str_in) {</span>
+<span class="lineNum">     125 </span><span class="lineCov">        158 :   interval_intrinsic_min_str_ = interval_intrinsic_min_str_in;</span>
+<span class="lineNum">     126 </span><span class="lineCov">        158 :   interval_intrinsic_max_str_ = interval_intrinsic_max_str_in;</span>
+<span class="lineNum">     127 </span><span class="lineCov">        158 :   if(!Tools::convert(interval_intrinsic_min_str_,interval_intrinsic_min_)) {</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;setIntrinsicInterval: cannot convert string value given for the minimum of the intrinsic interval to a double&quot;);</span>
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span><span class="lineCov">        158 :   if(!Tools::convert(interval_intrinsic_max_str_,interval_intrinsic_max_)) {</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;setIntrinsicInterval: cannot convert string value given for the maximum of the intrinsic interval to a double&quot;);</span>
+<span class="lineNum">     132 </span>            :   }
+<span class="lineNum">     133 </span><span class="lineCov">        158 :   plumed_massert(interval_intrinsic_min_&lt;interval_intrinsic_max_,&quot;setIntrinsicInterval: intrinsic intervals are not defined correctly&quot;);</span>
+<span class="lineNum">     134 </span><span class="lineCov">        158 : }</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : void BasisFunctions::setInterval(const double interval_min_in, const double interval_max_in) {</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :   interval_min_ = interval_min_in;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :   interval_max_ = interval_max_in;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :   VesTools::convertDbl2Str(interval_min_,interval_min_str_);</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :   VesTools::convertDbl2Str(interval_max_,interval_max_str_);</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   plumed_massert(interval_min_&lt;interval_max_,&quot;setInterval: intervals are not defined correctly&quot;);</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">          2 : void BasisFunctions::setInterval(const std::string&amp; interval_min_str_in, const std::string&amp; interval_max_str_in) {</span>
+<span class="lineNum">     147 </span><span class="lineCov">          2 :   interval_min_str_ = interval_min_str_in;</span>
+<span class="lineNum">     148 </span><span class="lineCov">          2 :   interval_max_str_ = interval_max_str_in;</span>
+<span class="lineNum">     149 </span><span class="lineCov">          2 :   if(!Tools::convert(interval_min_str_,interval_min_)) {</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;setInterval: cannot convert string value given for the minimum of the interval to a double&quot;);</span>
+<span class="lineNum">     151 </span>            :   }
+<span class="lineNum">     152 </span><span class="lineCov">          2 :   if(!Tools::convert(interval_max_str_,interval_max_)) {</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;setInterval: cannot convert string value given for the maximum of the interval to a double&quot;);</span>
+<span class="lineNum">     154 </span>            :   }
+<span class="lineNum">     155 </span><span class="lineCov">          2 :   plumed_massert(interval_min_&lt;interval_max_,&quot;setInterval: intervals are not defined correctly&quot;);</span>
+<span class="lineNum">     156 </span><span class="lineCov">          2 : }</span>
+<a name="157"><span class="lineNum">     157 </span>            : </a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">        180 : void BasisFunctions::setupInterval() {</span>
+<span class="lineNum">     160 </span>            :   // if(!intervalBounded()){plumed_merror(&quot;setupInterval() only works for bounded interval&quot;);}
+<span class="lineNum">     161 </span><span class="lineCov">        180 :   interval_intrinsic_range_ = interval_intrinsic_max_-interval_intrinsic_min_;</span>
+<span class="lineNum">     162 </span><span class="lineCov">        180 :   interval_intrinsic_mean_  = 0.5*(interval_intrinsic_max_+interval_intrinsic_min_);</span>
+<span class="lineNum">     163 </span><span class="lineCov">        180 :   interval_range_ = interval_max_-interval_min_;</span>
+<span class="lineNum">     164 </span><span class="lineCov">        180 :   interval_mean_  = 0.5*(interval_max_+interval_min_);</span>
+<span class="lineNum">     165 </span><span class="lineCov">        180 :   argT_derivf_ = interval_intrinsic_range_/interval_range_;</span>
+<span class="lineNum">     166 </span><span class="lineCov">        180 : }</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">         67 : void BasisFunctions::setupLabels() {</span>
+<span class="lineNum">     170 </span><span class="lineCov">       1385 :   for(unsigned int i=0; i &lt; nbasis_; i++) {</span>
+<span class="lineNum">     171 </span><span class="lineCov">        659 :     std::string is; Tools::convert(i,is);</span>
+<span class="lineNum">     172 </span><span class="lineCov">       2636 :     bf_labels_[i]=bf_label_prefix_+is+&quot;(s)&quot;;</span>
+<span class="lineNum">     173 </span>            :   }
+<span class="lineNum">     174 </span><span class="lineCov">         67 : }</span>
+<a name="175"><span class="lineNum">     175 </span>            : </a>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">         22 : void BasisFunctions::setupUniformIntegrals() {</span>
+<span class="lineNum">     178 </span><span class="lineCov">         22 :   numerical_uniform_integrals_=true;</span>
+<span class="lineNum">     179 </span><span class="lineCov">         22 :   numericalUniformIntegrals();</span>
+<span class="lineNum">     180 </span><span class="lineCov">         22 : }</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">        180 : void BasisFunctions::setupBF() {</span>
+<span class="lineNum">     184 </span><span class="lineCov">        180 :   if(interval_intrinsic_min_&gt;interval_intrinsic_max_) {plumed_merror(&quot;setupBF: default intervals are not correctly set&quot;);}</span>
+<span class="lineNum">     185 </span><span class="lineCov">        180 :   setupInterval();</span>
+<span class="lineNum">     186 </span><span class="lineCov">        180 :   setupLabels();</span>
+<span class="lineNum">     187 </span><span class="lineCov">        180 :   if(bf_labels_.size()==1) {plumed_merror(&quot;setupBF: the labels of the basis functions are not correct.&quot;);}</span>
+<span class="lineNum">     188 </span><span class="lineCov">        180 :   if(!numerical_uniform_integrals_) {setupUniformIntegrals();}</span>
+<span class="lineNum">     189 </span><span class="lineCov">          6 :   else {numericalUniformIntegrals();}</span>
+<span class="lineNum">     190 </span><span class="lineCov">        180 :   if(uniform_integrals_.size()==1) {plumed_merror(&quot;setupBF: the integrals of the basis functions is not correct.&quot;);}</span>
+<span class="lineNum">     191 </span><span class="lineCov">        360 :   if(type_==&quot;Undefined&quot;) {plumed_merror(&quot;setupBF: the type of the basis function is not defined.&quot;);}</span>
+<span class="lineNum">     192 </span><span class="lineCov">        360 :   if(description_==&quot;Undefined&quot;) {plumed_merror(&quot;setupBF: the description of the basis function is not defined.&quot;);}</span>
+<span class="lineNum">     193 </span><span class="lineCov">        180 :   has_been_set=true;</span>
+<span class="lineNum">     194 </span><span class="lineCov">        180 :   printInfo();</span>
+<span class="lineNum">     195 </span><span class="lineCov">        180 : }</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">        180 : void BasisFunctions::printInfo() const {</span>
+<span class="lineNum">     199 </span><span class="lineCov">        180 :   if(!has_been_set) {plumed_merror(&quot;the basis set has not be setup correctly&quot;);}</span>
+<span class="lineNum">     200 </span><span class="lineCov">        180 :   log.printf(&quot;  One-dimensional basis set\n&quot;);</span>
+<span class="lineNum">     201 </span><span class="lineCov">        360 :   log.printf(&quot;   Description: %s\n&quot;,description_.c_str());</span>
+<span class="lineNum">     202 </span><span class="lineCov">        360 :   log.printf(&quot;   Type: %s\n&quot;,type_.c_str());</span>
+<span class="lineNum">     203 </span><span class="lineCov">        180 :   if(periodic_) {log.printf(&quot;   The basis functions are periodic\n&quot;);}</span>
+<span class="lineNum">     204 </span><span class="lineCov">        180 :   log.printf(&quot;   Order of basis set: %u\n&quot;,norder_);</span>
+<span class="lineNum">     205 </span><span class="lineCov">        180 :   log.printf(&quot;   Number of basis functions: %u\n&quot;,nbasis_);</span>
+<span class="lineNum">     206 </span>            :   // log.printf(&quot;   Interval of basis set: %f to %f\n&quot;,interval_min_,interval_max_);
+<span class="lineNum">     207 </span><span class="lineCov">        360 :   log.printf(&quot;   Interval of basis set: %s to %s\n&quot;,interval_min_str_.c_str(),interval_max_str_.c_str());</span>
+<span class="lineNum">     208 </span><span class="lineCov">        180 :   log.printf(&quot;   Description of basis functions:\n&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">       3892 :   for(unsigned int i=0; i &lt; nbasis_; i++) {log.printf(&quot;    %2u       %10s\n&quot;,i,bf_labels_[i].c_str());}</span>
+<span class="lineNum">     210 </span>            :   //
+<span class="lineNum">     211 </span><span class="lineCov">        180 :   if(print_debug_info_) {</span>
+<span class="lineNum">     212 </span><span class="lineCov">         34 :     log.printf(&quot;  Debug information:\n&quot;);</span>
+<span class="lineNum">     213 </span>            :     // log.printf(&quot;   Default interval of basis set: [%f,%f]\n&quot;,interval_intrinsic_min_,interval_intrinsic_max_);
+<span class="lineNum">     214 </span><span class="lineCov">         68 :     log.printf(&quot;   Intrinsic interval of basis set: [%s,%s]\n&quot;,interval_intrinsic_min_str_.c_str(),interval_intrinsic_max_str_.c_str());</span>
+<span class="lineNum">     215 </span><span class="lineCov">         34 :     log.printf(&quot;   Intrinsic interval of basis set: range=%f,  mean=%f\n&quot;,interval_intrinsic_range_,interval_intrinsic_mean_);</span>
+<span class="lineNum">     216 </span>            :     // log.printf(&quot;   Defined interval of basis set: [%f,%f]\n&quot;,interval_min_,interval_max_);
+<span class="lineNum">     217 </span><span class="lineCov">         68 :     log.printf(&quot;   Defined interval of basis set: [%s,%s]\n&quot;,interval_min_str_.c_str(),interval_max_str_.c_str());</span>
+<span class="lineNum">     218 </span><span class="lineCov">         34 :     log.printf(&quot;   Defined interval of basis set: range=%f,  mean=%f\n&quot;,interval_range_,interval_mean_);</span>
+<span class="lineNum">     219 </span><span class="lineCov">         34 :     log.printf(&quot;   Derivative factor due to interval translation: %f\n&quot;,argT_derivf_);</span>
+<span class="lineNum">     220 </span><span class="lineCov">         34 :     log.printf(&quot;   Integral of basis functions over the interval:\n&quot;);</span>
+<span class="lineNum">     221 </span><span class="lineCov">         34 :     if(numerical_uniform_integrals_) {log.printf(&quot;   Note: calculated numerically\n&quot;);}</span>
+<span class="lineNum">     222 </span><span class="lineCov">        882 :     for(unsigned int i=0; i &lt; nbasis_; i++) {log.printf(&quot;    %2u       %16.10f\n&quot;,i,uniform_integrals_[i]);}</span>
+<span class="lineNum">     223 </span><span class="lineCov">         34 :     log.printf(&quot;   --------------------------\n&quot;);</span>
+<span class="lineNum">     224 </span>            :   }
+<span class="lineNum">     225 </span><span class="lineCov">        180 : }</span>
+<a name="226"><span class="lineNum">     226 </span>            : </a>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 : void BasisFunctions::linkVesBias(VesBias* vesbias_pntr_in) {</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :   vesbias_pntr_ = vesbias_pntr_in;</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :   action_pntr_ = static_cast&lt;Action*&gt;(vesbias_pntr_in);</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 : }</span>
+<a name="232"><span class="lineNum">     232 </span>            : </a>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 : void BasisFunctions::linkAction(Action* action_pntr_in) {</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :   action_pntr_ = action_pntr_in;</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineCov">         28 : void BasisFunctions::numericalUniformIntegrals() {</span>
+<span class="lineNum">     240 </span><span class="lineCov">        112 :   std::vector&lt;std::string&gt; grid_min(1); grid_min[0]=intervalMinStr();</span>
+<span class="lineNum">     241 </span><span class="lineCov">        112 :   std::vector&lt;std::string&gt; grid_max(1); grid_max[0]=intervalMaxStr();</span>
+<span class="lineNum">     242 </span><span class="lineCov">         56 :   std::vector&lt;unsigned int&gt; grid_bins(1); grid_bins[0]=nbins_;</span>
+<span class="lineNum">     243 </span><span class="lineCov">         84 :   std::vector&lt;Value*&gt; arguments(1); arguments[0]= new Value(NULL,&quot;arg&quot;,false);</span>
+<span class="lineNum">     244 </span><span class="lineCov">         44 :   if(arePeriodic()) {arguments[0]-&gt;setDomain(intervalMinStr(),intervalMaxStr());}</span>
+<span class="lineNum">     245 </span><span class="lineCov">         24 :   else {arguments[0]-&gt;setNotPeriodic();}</span>
+<span class="lineNum">     246 </span><span class="lineCov">         56 :   Grid* uniform_grid = new Grid(&quot;uniform&quot;,arguments,grid_min,grid_max,grid_bins,false,false);</span>
+<span class="lineNum">     247 </span>            :   //
+<span class="lineNum">     248 </span><span class="lineCov">         28 :   double inverse_normalization = 1.0/(intervalMax()-intervalMin());</span>
+<span class="lineNum">     249 </span><span class="lineCov">      56132 :   for(Grid::index_t l=0; l&lt;uniform_grid-&gt;getSize(); l++) {</span>
+<span class="lineNum">     250 </span><span class="lineCov">      28052 :     uniform_grid-&gt;setValue(l,inverse_normalization);</span>
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span><span class="lineCov">         56 :   uniform_integrals_ = numericalTargetDistributionIntegralsFromGrid(uniform_grid);</span>
+<span class="lineNum">     253 </span><span class="lineCov">         28 :   delete arguments[0]; arguments.clear();</span>
+<span class="lineNum">     254 </span><span class="lineCov">         28 :   delete uniform_grid;</span>
+<span class="lineNum">     255 </span><span class="lineCov">         28 : }</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">        144 : std::vector&lt;double&gt; BasisFunctions::numericalTargetDistributionIntegralsFromGrid(const Grid* grid_pntr) const {</span>
+<span class="lineNum">     259 </span><span class="lineCov">        144 :   plumed_massert(grid_pntr!=NULL,&quot;the grid is not defined&quot;);</span>
+<span class="lineNum">     260 </span><span class="lineCov">        144 :   plumed_massert(grid_pntr-&gt;getDimension()==1,&quot;the target distribution grid should be one dimensional&quot;);</span>
+<span class="lineNum">     261 </span>            :   //
+<span class="lineNum">     262 </span><span class="lineCov">        144 :   std::vector&lt;double&gt; targetdist_integrals(nbasis_,0.0);</span>
+<span class="lineNum">     263 </span><span class="lineCov">        432 :   std::vector&lt;double&gt; integration_weights = GridIntegrationWeights::getIntegrationWeights(grid_pntr);</span>
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span><span class="lineCov">     125998 :   for(Grid::index_t k=0; k &lt; grid_pntr-&gt;getSize(); k++) {</span>
+<span class="lineNum">     266 </span><span class="lineCov">     188781 :     double arg = grid_pntr-&gt;getPoint(k)[0];</span>
+<span class="lineNum">     267 </span><span class="lineCov">      62927 :     std::vector&lt;double&gt; bf_values(nbasis_);</span>
+<span class="lineNum">     268 </span><span class="lineCov">      62927 :     std::vector&lt;double&gt; bf_derivs(nbasis_);</span>
+<span class="lineNum">     269 </span><span class="lineCov">      62927 :     bool inside=true;</span>
+<span class="lineNum">     270 </span><span class="lineCov">      62927 :     double argT=0.0;</span>
+<span class="lineNum">     271 </span><span class="lineCov">      62927 :     getAllValues(arg,argT,inside,bf_values,bf_derivs);</span>
+<span class="lineNum">     272 </span><span class="lineCov">    1458925 :     for(unsigned int i=0; i &lt; nbasis_; i++) {</span>
+<span class="lineNum">     273 </span><span class="lineCov">    2093997 :       targetdist_integrals[i] += (integration_weights[k] * grid_pntr-&gt;getValue(k)) * bf_values[i];</span>
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span>            :   }
+<span class="lineNum">     276 </span>            :   // assume that the first function is the constant
+<span class="lineNum">     277 </span><span class="lineCov">        144 :   bool inside=true;</span>
+<span class="lineNum">     278 </span><span class="lineCov">        144 :   double argT=0.0;</span>
+<span class="lineNum">     279 </span><span class="lineCov">        144 :   targetdist_integrals[0] = getValue(0.0,0,argT,inside);</span>
+<span class="lineNum">     280 </span><span class="lineCov">        144 :   return targetdist_integrals;</span>
+<span class="lineNum">     281 </span>            : }
+<a name="282"><span class="lineNum">     282 </span>            : </a>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">        175 : std::vector&lt;double&gt; BasisFunctions::getTargetDistributionIntegrals(const TargetDistribution* targetdist_pntr) const {</span>
+<span class="lineNum">     285 </span><span class="lineCov">        175 :   if(targetdist_pntr==NULL) {</span>
+<span class="lineNum">     286 </span>            :     return getUniformIntegrals();
+<span class="lineNum">     287 </span>            :   }
+<span class="lineNum">     288 </span>            :   else {
+<span class="lineNum">     289 </span>            :     Grid* targetdist_grid = targetdist_pntr-&gt;getTargetDistGridPntr();
+<span class="lineNum">     290 </span><span class="lineCov">        116 :     return numericalTargetDistributionIntegralsFromGrid(targetdist_grid);</span>
+<span class="lineNum">     291 </span>            :   }
+<span class="lineNum">     292 </span>            : }
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">        118 : std::string BasisFunctions::getKeywordString() const {</span>
+<span class="lineNum">     296 </span>            :   std::string str_keywords=bf_keywords_[0];
+<span class="lineNum">     297 </span><span class="lineCov">       2300 :   for(unsigned int i=1; i&lt;bf_keywords_.size(); i++) {str_keywords+=&quot; &quot;+bf_keywords_[i];}</span>
+<span class="lineNum">     298 </span><span class="lineCov">        118 :   return str_keywords;</span>
+<span class="lineNum">     299 </span>            : }
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span><span class="lineCov">        144 : double BasisFunctions::getValue(const double arg, const unsigned int n, double&amp; argT, bool&amp; inside_range) const {</span>
+<span class="lineNum">     303 </span><span class="lineCov">        144 :   plumed_massert(n&lt;numberOfBasisFunctions(),&quot;getValue: n is outside range of the defined order of the basis set&quot;);</span>
+<span class="lineNum">     304 </span><span class="lineCov">        144 :   inside_range=true;</span>
+<span class="lineNum">     305 </span><span class="lineCov">        144 :   std::vector&lt;double&gt; tmp_values(numberOfBasisFunctions());</span>
+<span class="lineNum">     306 </span><span class="lineCov">        144 :   std::vector&lt;double&gt; tmp_derivs(numberOfBasisFunctions());</span>
+<span class="lineNum">     307 </span><span class="lineCov">        144 :   getAllValues(arg, argT, inside_range, tmp_values, tmp_derivs);</span>
+<span class="lineNum">     308 </span><span class="lineCov">        432 :   return tmp_values[n];</span>
+<span class="lineNum">     309 </span>            : }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">       3007 : void BasisFunctions::getAllValuesNumericalDerivs(const double arg, double&amp; argT, bool&amp; inside_range, std::vector&lt;double&gt;&amp; values, std::vector&lt;double&gt;&amp; derivs) const {</span>
+<span class="lineNum">     313 </span>            :   // use forward difference, unless very close to the boundary
+<span class="lineNum">     314 </span>            :   double delta = sqrt(epsilon);
+<span class="lineNum">     315 </span><span class="lineCov">       6014 :   if((arg+delta)&gt;intervalMax()) {</span>
+<span class="lineNum">     316 </span>            :     delta *= -1.0;
+<span class="lineNum">     317 </span>            :   }
+<span class="lineNum">     318 </span><span class="lineCov">       3007 :   inside_range=true;</span>
+<span class="lineNum">     319 </span><span class="lineCov">       3007 :   std::vector&lt;double&gt; values_delta(numberOfBasisFunctions());</span>
+<span class="lineNum">     320 </span><span class="lineCov">       3007 :   std::vector&lt;double&gt; derivs_dummy(numberOfBasisFunctions());</span>
+<span class="lineNum">     321 </span><span class="lineCov">       3007 :   getAllValues(arg+delta, argT, inside_range, values_delta, derivs_dummy);</span>
+<span class="lineNum">     322 </span><span class="lineCov">       3007 :   getAllValues(arg, argT, inside_range, values, derivs_dummy);</span>
+<span class="lineNum">     323 </span><span class="lineCov">      79977 :   for(unsigned int i=0; i&lt;numberOfBasisFunctions(); i++) {</span>
+<span class="lineNum">     324 </span><span class="lineCov">     153940 :     derivs[i] = (values_delta[i]-values[i])/delta;</span>
+<span class="lineNum">     325 </span>            :   }
+<span class="lineNum">     326 </span><span class="lineCov">       3007 : }</span>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineCov">         59 : void BasisFunctions::getMultipleValue(const std::vector&lt;double&gt;&amp; args, std::vector&lt;double&gt;&amp; argsT, std::vector&lt;std::vector&lt;double&gt; &gt;&amp; values, std::vector&lt;std::vector&lt;double&gt; &gt;&amp; derivs, const bool numerical_deriv) const {</span>
+<span class="lineNum">     330 </span><span class="lineCov">         59 :   argsT.resize(args.size());</span>
+<span class="lineNum">     331 </span><span class="lineCov">         59 :   values.clear();</span>
+<span class="lineNum">     332 </span><span class="lineCov">         59 :   derivs.clear();</span>
+<span class="lineNum">     333 </span><span class="lineCov">      56341 :   for(unsigned int i=0; i&lt;args.size(); i++) {</span>
+<span class="lineNum">     334 </span><span class="lineCov">      18741 :     std::vector&lt;double&gt; tmp_values(getNumberOfBasisFunctions());</span>
+<span class="lineNum">     335 </span><span class="lineCov">      18741 :     std::vector&lt;double&gt; tmp_derivs(getNumberOfBasisFunctions());</span>
+<span class="lineNum">     336 </span><span class="lineCov">      18741 :     bool inside_interval=true;</span>
+<span class="lineNum">     337 </span><span class="lineCov">      18741 :     if(!numerical_deriv) {</span>
+<span class="lineNum">     338 </span><span class="lineCov">      31468 :       getAllValues(args[i],argsT[i],inside_interval,tmp_values,tmp_derivs);</span>
+<span class="lineNum">     339 </span>            :     } else {
+<span class="lineNum">     340 </span><span class="lineCov">       3007 :       getAllValuesNumericalDerivs(args[i],argsT[i],inside_interval,tmp_values,tmp_derivs);</span>
+<span class="lineNum">     341 </span>            :     }
+<span class="lineNum">     342 </span><span class="lineCov">      18741 :     values.push_back(tmp_values);</span>
+<span class="lineNum">     343 </span><span class="lineCov">      18741 :     derivs.push_back(tmp_derivs);</span>
+<span class="lineNum">     344 </span>            :   }
+<span class="lineNum">     345 </span><span class="lineCov">         59 : }</span>
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span><span class="lineCov">         59 : void BasisFunctions::writeBasisFunctionsToFile(OFile&amp; ofile_values, OFile&amp; ofile_derivs, const std::string&amp; min_in, const std::string&amp; max_in, unsigned int nbins_in, const bool ignore_periodicity, const std::string&amp; output_fmt, const bool numerical_deriv) const {</span>
+<span class="lineNum">     349 </span><span class="lineCov">        118 :   std::vector&lt;std::string&gt; min(1); min[0]=min_in;</span>
+<span class="lineNum">     350 </span><span class="lineCov">        118 :   std::vector&lt;std::string&gt; max(1); max[0]=max_in;</span>
+<span class="lineNum">     351 </span><span class="lineCov">        118 :   std::vector&lt;unsigned int&gt; nbins(1); nbins[0]=nbins_in;</span>
+<span class="lineNum">     352 </span><span class="lineCov">         59 :   std::vector&lt;Value*&gt; value_pntr(1);</span>
+<span class="lineNum">     353 </span><span class="lineCov">        177 :   value_pntr[0]= new Value(NULL,&quot;arg&quot;,false);</span>
+<span class="lineNum">     354 </span><span class="lineCov">        131 :   if(arePeriodic() &amp;&amp; !ignore_periodicity) {value_pntr[0]-&gt;setDomain(intervalMinStr(),intervalMaxStr());}</span>
+<span class="lineNum">     355 </span><span class="lineCov">         41 :   else {value_pntr[0]-&gt;setNotPeriodic();}</span>
+<span class="lineNum">     356 </span><span class="lineCov">        177 :   Grid args_grid = Grid(&quot;grid&quot;,value_pntr,min,max,nbins,false,false);</span>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineCov">         59 :   std::vector&lt;double&gt; args(args_grid.getSize(),0.0);</span>
+<span class="lineNum">     359 </span><span class="lineCov">      56341 :   for(unsigned int i=0; i&lt;args.size(); i++) {</span>
+<span class="lineNum">     360 </span><span class="lineCov">      56223 :     args[i] = args_grid.getPoint(i)[0];</span>
+<span class="lineNum">     361 </span>            :   }
+<span class="lineNum">     362 </span>            :   std::vector&lt;double&gt; argsT;
+<span class="lineNum">     363 </span><span class="lineCov">         59 :   std::vector&lt;std::vector&lt;double&gt; &gt; values;</span>
+<span class="lineNum">     364 </span><span class="lineCov">         59 :   std::vector&lt;std::vector&lt;double&gt; &gt; derivs;</span>
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span><span class="lineCov">        354 :   ofile_values.addConstantField(&quot;bf_keywords&quot;).printField(&quot;bf_keywords&quot;,&quot;{&quot;+getKeywordString()+&quot;}&quot;);</span>
+<span class="lineNum">     367 </span><span class="lineCov">        354 :   ofile_derivs.addConstantField(&quot;bf_keywords&quot;).printField(&quot;bf_keywords&quot;,&quot;{&quot;+getKeywordString()+&quot;}&quot;);</span>
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span><span class="lineCov">        295 :   ofile_values.addConstantField(&quot;min&quot;).printField(&quot;min&quot;,intervalMinStr());</span>
+<span class="lineNum">     370 </span><span class="lineCov">        295 :   ofile_values.addConstantField(&quot;max&quot;).printField(&quot;max&quot;,intervalMaxStr());</span>
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span><span class="lineCov">        295 :   ofile_derivs.addConstantField(&quot;min&quot;).printField(&quot;min&quot;,intervalMinStr());</span>
+<span class="lineNum">     373 </span><span class="lineCov">        295 :   ofile_derivs.addConstantField(&quot;max&quot;).printField(&quot;max&quot;,intervalMaxStr());</span>
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span><span class="lineCov">        295 :   ofile_values.addConstantField(&quot;nbins&quot;).printField(&quot;nbins&quot;,static_cast&lt;int&gt;(args_grid.getNbin()[0]));</span>
+<span class="lineNum">     376 </span><span class="lineCov">        295 :   ofile_derivs.addConstantField(&quot;nbins&quot;).printField(&quot;nbins&quot;,static_cast&lt;int&gt;(args_grid.getNbin()[0]));</span>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineCov">         59 :   if(arePeriodic()) {</span>
+<span class="lineNum">     379 </span><span class="lineCov">         84 :     ofile_values.addConstantField(&quot;periodic&quot;).printField(&quot;periodic&quot;,&quot;true&quot;);</span>
+<span class="lineNum">     380 </span><span class="lineCov">         84 :     ofile_derivs.addConstantField(&quot;periodic&quot;).printField(&quot;periodic&quot;,&quot;true&quot;);</span>
+<span class="lineNum">     381 </span>            :   }
+<span class="lineNum">     382 </span>            :   else {
+<span class="lineNum">     383 </span><span class="lineCov">        152 :     ofile_values.addConstantField(&quot;periodic&quot;).printField(&quot;periodic&quot;,&quot;false&quot;);</span>
+<span class="lineNum">     384 </span><span class="lineCov">        152 :     ofile_derivs.addConstantField(&quot;periodic&quot;).printField(&quot;periodic&quot;,&quot;false&quot;);</span>
+<span class="lineNum">     385 </span>            :   }
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineCov">         59 :   getMultipleValue(args,argsT,values,derivs,numerical_deriv);</span>
+<span class="lineNum">     388 </span><span class="lineCov">         59 :   ofile_values.fmtField(output_fmt);</span>
+<span class="lineNum">     389 </span><span class="lineCov">         59 :   ofile_derivs.fmtField(output_fmt);</span>
+<span class="lineNum">     390 </span><span class="lineCov">      56341 :   for(unsigned int i=0; i&lt;args.size(); i++) {</span>
+<span class="lineNum">     391 </span><span class="lineCov">      37482 :     ofile_values.printField(&quot;arg&quot;,args[i]);</span>
+<span class="lineNum">     392 </span><span class="lineCov">      37482 :     ofile_derivs.printField(&quot;arg&quot;,args[i]);</span>
+<span class="lineNum">     393 </span><span class="lineCov">     528451 :     for(unsigned int k=0; k&lt;getNumberOfBasisFunctions(); k++) {</span>
+<span class="lineNum">     394 </span><span class="lineCov">    1019420 :       ofile_values.printField(getBasisFunctionLabel(k),values[i][k]);</span>
+<span class="lineNum">     395 </span><span class="lineCov">    1019420 :       ofile_derivs.printField(&quot;d_&quot;+getBasisFunctionLabel(k),derivs[i][k]);</span>
+<span class="lineNum">     396 </span>            :     }
+<span class="lineNum">     397 </span><span class="lineCov">      18741 :     ofile_values.printField();</span>
+<span class="lineNum">     398 </span><span class="lineCov">      18741 :     ofile_derivs.printField();</span>
+<span class="lineNum">     399 </span>            :   }
+<span class="lineNum">     400 </span><span class="lineCov">         59 :   ofile_values.fmtField();</span>
+<span class="lineNum">     401 </span><span class="lineCov">         59 :   ofile_derivs.fmtField();</span>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineCov">         59 :   delete value_pntr[0]; value_pntr.clear();</span>
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span><span class="lineCov">         59 : }</span>
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span>            : }
+<span class="lineNum">     409 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

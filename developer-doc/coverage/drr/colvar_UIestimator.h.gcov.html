@@ -1,0 +1,932 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - drr/colvar_UIestimator.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">drr</a> - colvar_UIestimator.h<span style="font-size: 80%;"> (source / <a href="colvar_UIestimator.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">291</td>
+            <td class="headerCovTableEntry">294</td>
+            <td class="headerCovTableEntryHi">99.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2017 of Haochuan Chen (excluding colvar_UIestimator.h)
+<span class="lineNum">       3 </span>            :     Copyright (c) 2017 of Haohao Fu (colvar_UIestimator.h)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       6 </span>            :     it under the terms of the GNU Lesser General Public License as published
+<span class="lineNum">       7 </span>            :     by the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       8 </span>            :     (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      13 </span>            :     GNU Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :     You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      16 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      17 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      18 </span>            : #ifndef __PLUMED_drr_colvar_UIestimator_h
+<span class="lineNum">      19 </span>            : #define __PLUMED_drr_colvar_UIestimator_h
+<span class="lineNum">      20 </span>            : // The original code(https://github.com/fhh2626/colvars/blob/master/src/colvar_UIestimator.h) has been modified by Haochuan Chen.
+<span class="lineNum">      21 </span>            : // Modifications:
+<span class="lineNum">      22 </span>            : // 1. Disable colvars related code.
+<span class="lineNum">      23 </span>            : // 2. Change boltzmann constant.
+<span class="lineNum">      24 </span>            : // 3. Change output precision.
+<span class="lineNum">      25 </span>            : // I(Haochuan Chen) don't know how to maintain this code and how it runs. If you are interested in it, please contact Haohao Fu.
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      28 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      29 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      30 </span>            : #include &lt;string&gt;
+<span class="lineNum">      31 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      32 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;typeinfo&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : // only for colvar module!
+<span class="lineNum">      37 </span>            : // when integrated into other code, just remove this line and &quot;...cvm::backup_file(...)&quot;
+<span class="lineNum">      38 </span>            : // #include &quot;colvarmodule.h&quot;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace PLMD {
+<span class="lineNum">      41 </span>            : namespace drr {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace UIestimator
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            : const int Y_SIZE = 21;
+<span class="lineNum">      46 </span>            : const int HALF_Y_SIZE = 10;
+<span class="lineNum">      47 </span>            : const double BOLTZMANN = 0.0083144621;
+<a name="48"><span class="lineNum">      48 </span>            : const int EXTENDED_X_SIZE = HALF_Y_SIZE;</a>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">         68 : class n_matrix    // spare matrix, stores the distribution matrix of n(x,y)</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            : public:
+<span class="lineNum">      53 </span><span class="lineCov">          8 :   n_matrix() {}</span>
+<span class="lineNum">      54 </span><span class="lineCov">          4 :   n_matrix(const std::vector&lt;double&gt; &amp; lowerboundary_p,   // lowerboundary of x</span>
+<span class="lineNum">      55 </span>            :            const std::vector&lt;double&gt; &amp; upperboundary_p,   // upperboundary of
+<span class="lineNum">      56 </span>            :            const std::vector&lt;double&gt; &amp; width_p,           // width of x
+<span class="lineNum">      57 </span>            :            const int y_size)           // size of y, for example, ysize=7, then when x=1, the distribution of y in [-2,4] is considered
+<span class="lineNum">      58 </span><span class="lineCov">         12 :     : lowerboundary(lowerboundary_p), upperboundary(upperboundary_p), width(width_p)</span>
+<span class="lineNum">      59 </span>            :   {
+<span class="lineNum">      60 </span><span class="lineCov">          4 :     this-&gt;dimension = lowerboundary.size();</span>
+<span class="lineNum">      61 </span><span class="lineCov">          4 :     this-&gt;y_size = y_size;     // keep in mind the internal (spare) matrix is stored in diagonal form</span>
+<span class="lineNum">      62 </span><span class="lineCov">          4 :     this-&gt;y_total_size = int(pow(y_size, dimension) + 0.000001);</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :     // the range of the matrix is [lowerboundary, upperboundary]
+<span class="lineNum">      65 </span><span class="lineCov">          4 :     x_total_size = 1;</span>
+<span class="lineNum">      66 </span><span class="lineCov">         16 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">      67 </span>            :     {
+<span class="lineNum">      68 </span><span class="lineCov">         30 :       x_size.push_back(int((upperboundary[i] - lowerboundary[i]) / width[i] + 0.000001));</span>
+<span class="lineNum">      69 </span><span class="lineCov">          6 :       x_total_size *= x_size[i];</span>
+<span class="lineNum">      70 </span>            :     }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     // initialize the internal matrix
+<span class="lineNum">      73 </span><span class="lineCov">          4 :     matrix.reserve(x_total_size);</span>
+<span class="lineNum">      74 </span><span class="lineCov">         68 :     for (int i = 0; i &lt; x_total_size; i++)</span>
+<span class="lineNum">      75 </span>            :     {
+<span class="lineNum">      76 </span><span class="lineCov">         64 :       matrix.push_back(std::vector&lt;int&gt;(y_total_size, 0));</span>
+<span class="lineNum">      77 </span>            :     }
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">          4 :     temp.resize(dimension);</span>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          4 :   }</span></a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">      45034 :   int inline get_value(const std::vector&lt;double&gt; &amp; x, const std::vector&lt;double&gt; &amp; y)</span>
+<span class="lineNum">      83 </span>            :   {
+<span class="lineNum">      84 </span>            :     //if (matrix[convert_x(x)][convert_y(x, y)]!=0)
+<span class="lineNum">      85 </span>            :     //{
+<span class="lineNum">      86 </span>            :     //std::cout&lt;&lt;convert_x(x)&lt;&lt;&quot; &quot;&lt;&lt;convert_y(x, y)&lt;&lt;&quot; &quot;&lt;&lt;x[0]&lt;&lt;&quot; &quot;&lt;&lt;x[1]&lt;&lt;&quot; &quot;&lt;&lt;y[0]&lt;&lt;&quot; &quot;&lt;&lt;y[1]&lt;&lt;&quot; &quot;;
+<span class="lineNum">      87 </span>            :     //std::cout&lt;&lt;matrix[convert_x(x)][convert_y(x, y)]&lt;&lt;&quot;sadasfdasaaaaaaaa&quot;&lt;&lt;std::endl;
+<span class="lineNum">      88 </span>            :     //}
+<span class="lineNum">      89 </span><span class="lineCov">      90068 :     return matrix[convert_x(x)][convert_y(x, y)];</span>
+<span class="lineNum">      90 </span>            :   }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   void inline set_value(const std::vector&lt;double&gt; &amp; x, const std::vector&lt;double&gt; &amp; y, const int value)
+<span class="lineNum">      93 </span>            :   {
+<span class="lineNum">      94 </span>            :     matrix[convert_x(x)][convert_y(x,y)] = value;
+<a name="95"><span class="lineNum">      95 </span>            :   }</a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">         34 :   void inline increase_value(const std::vector&lt;double&gt; &amp; x, const std::vector&lt;double&gt; &amp; y, const int value)</span>
+<span class="lineNum">      98 </span>            :   {
+<span class="lineNum">      99 </span><span class="lineCov">         68 :     matrix[convert_x(x)][convert_y(x,y)] += value;</span>
+<span class="lineNum">     100 </span><span class="lineCov">         34 :   }</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : private:
+<span class="lineNum">     103 </span>            :   std::vector&lt;double&gt; lowerboundary;
+<span class="lineNum">     104 </span>            :   std::vector&lt;double&gt; upperboundary;
+<span class="lineNum">     105 </span>            :   std::vector&lt;double&gt; width;
+<span class="lineNum">     106 </span>            :   int dimension;
+<span class="lineNum">     107 </span>            :   std::vector&lt;int&gt; x_size;       // the size of x in each dimension
+<span class="lineNum">     108 </span>            :   int x_total_size;              // the size of x of the internal matrix
+<span class="lineNum">     109 </span>            :   int y_size;                    // the size of y in each dimension
+<span class="lineNum">     110 </span>            :   int y_total_size;              // the size of y of the internal matrix
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :   std::vector&lt;std::vector&lt;int&gt; &gt; matrix;  // the internal matrix
+<span class="lineNum">     113 </span>            : 
+<a name="114"><span class="lineNum">     114 </span>            :   std::vector&lt;int&gt; temp;         // this vector is used in convert_x and convert_y to save computational resource</a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">      45068 :   int convert_x(const std::vector&lt;double&gt; &amp; x)        // convert real x value to its interal index</span>
+<span class="lineNum">     117 </span>            :   {
+<span class="lineNum">     118 </span><span class="lineCov">     221904 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     119 </span>            :     {
+<span class="lineNum">     120 </span><span class="lineCov">     442090 :       temp[i] = int((x[i] - lowerboundary[i]) / width[i] + 0.000001);</span>
+<span class="lineNum">     121 </span>            :     }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :     int index = 0;
+<span class="lineNum">     124 </span><span class="lineCov">     133486 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     125 </span>            :     {
+<span class="lineNum">     126 </span><span class="lineCov">      88418 :       if (i + 1 &lt; dimension)</span>
+<span class="lineNum">     127 </span>            :       {
+<span class="lineNum">     128 </span>            :         int x_temp = 1;
+<span class="lineNum">     129 </span><span class="lineCov">     130050 :         for (int j = i + 1; j &lt; dimension; j++)</span>
+<span class="lineNum">     130 </span><span class="lineCov">      86700 :           x_temp *= x_size[j];</span>
+<span class="lineNum">     131 </span><span class="lineCov">      86700 :         index += temp[i] * x_temp;</span>
+<span class="lineNum">     132 </span>            :       }
+<span class="lineNum">     133 </span>            :       else
+<span class="lineNum">     134 </span><span class="lineCov">      90136 :         index += temp[i];</span>
+<span class="lineNum">     135 </span>            :     }
+<span class="lineNum">     136 </span><span class="lineCov">      45068 :     return index;</span>
+<a name="137"><span class="lineNum">     137 </span>            :   }</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">      45068 :   int convert_y(const std::vector&lt;double&gt; &amp; x, const std::vector&lt;double&gt; &amp; y)        // convert real y value to its interal index</span>
+<span class="lineNum">     140 </span>            :   {
+<span class="lineNum">     141 </span><span class="lineCov">     221904 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     142 </span>            :     {
+<span class="lineNum">     143 </span><span class="lineCov">     442090 :       temp[i] = round((round(y[i] / width[i] + 0.000001) - round(x[i] / width[i] + 0.000001)) + (y_size - 1) / 2 + 0.000001);</span>
+<span class="lineNum">     144 </span>            :     }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :     int index = 0;
+<span class="lineNum">     147 </span><span class="lineCov">     133486 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     148 </span>            :     {
+<span class="lineNum">     149 </span><span class="lineCov">      88418 :       if (i + 1 &lt; dimension)</span>
+<span class="lineNum">     150 </span><span class="lineCov">      86700 :         index += temp[i] * int(pow(y_size, dimension - i - 1) + 0.000001);</span>
+<span class="lineNum">     151 </span>            :       else
+<span class="lineNum">     152 </span><span class="lineCov">      90136 :         index += temp[i];</span>
+<span class="lineNum">     153 </span>            :     }
+<span class="lineNum">     154 </span><span class="lineCov">      45068 :     return index;</span>
+<a name="155"><span class="lineNum">     155 </span>            :   }</a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">     265254 :   double round(double r)</span>
+<span class="lineNum">     158 </span>            :   {
+<span class="lineNum">     159 </span><span class="lineCov">     265254 :     return (r &gt; 0.0) ? floor(r + 0.5) : ceil(r - 0.5);</span>
+<span class="lineNum">     160 </span>            :   }
+<span class="lineNum">     161 </span>            : };
+<span class="lineNum">     162 </span>            : 
+<a name="163"><span class="lineNum">     163 </span>            : // vector, store the sum_x, sum_x_square, count_y</a>
+<span class="lineNum">     164 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     165 </span><span class="lineCov">        597 : class n_vector</span>
+<span class="lineNum">     166 </span>            : {
+<span class="lineNum">     167 </span>            : public:
+<span class="lineNum">     168 </span><span class="lineCov">         48 :   n_vector() {}</span>
+<span class="lineNum">     169 </span><span class="lineCov">         40 :   n_vector(const std::vector&lt;double&gt; &amp; lowerboundary,   // lowerboundary of x</span>
+<span class="lineNum">     170 </span>            :            const std::vector&lt;double&gt; &amp; upperboundary,   // upperboundary of
+<span class="lineNum">     171 </span>            :            const std::vector&lt;double&gt; &amp; width_p,                // width of x
+<span class="lineNum">     172 </span>            :            const int y_size,           // size of y, for example, ysize=7, then when x=1, the distribution of y in [-2,4] is considered
+<span class="lineNum">     173 </span>            :            const T &amp; default_value)          //   the default value of T
+<span class="lineNum">     174 </span><span class="lineCov">        200 :     :width(width_p)</span>
+<span class="lineNum">     175 </span>            :   {
+<span class="lineNum">     176 </span><span class="lineCov">         40 :     this-&gt;dimension = lowerboundary.size();</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">         40 :     x_total_size = 1;</span>
+<span class="lineNum">     179 </span><span class="lineCov">        168 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     180 </span>            :     {
+<span class="lineNum">     181 </span><span class="lineCov">        256 :       this-&gt;lowerboundary.push_back(lowerboundary[i] - (y_size - 1) / 2 * width[i] - 0.000001);</span>
+<span class="lineNum">     182 </span><span class="lineCov">        192 :       this-&gt;upperboundary.push_back(upperboundary[i] + (y_size - 1) / 2 * width[i] + 0.000001);</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineCov">        256 :       x_size.push_back(int((this-&gt;upperboundary[i] - this-&gt;lowerboundary[i]) / this-&gt;width[i] + 0.000001));</span>
+<span class="lineNum">     185 </span><span class="lineCov">         64 :       x_total_size *= x_size[i];</span>
+<span class="lineNum">     186 </span>            :     }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :     // initialize the internal vector
+<span class="lineNum">     189 </span><span class="lineCov">         40 :     vector.resize(x_total_size, default_value);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">         40 :     temp.resize(dimension);</span>
+<a name="192"><span class="lineNum">     192 </span><span class="lineCov">         40 :   }</span></a>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">        258 :   const T inline get_value(const std::vector&lt;double&gt; &amp; x)</span>
+<span class="lineNum">     195 </span>            :   {
+<span class="lineNum">     196 </span><span class="lineCov">     159900 :     return vector[convert_x(x)];</span>
+<a name="197"><span class="lineNum">     197 </span>            :   }</a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">        100 :   void inline set_value(const std::vector&lt;double&gt; &amp; x, const T &amp; value)</span>
+<span class="lineNum">     200 </span>            :   {
+<span class="lineNum">     201 </span><span class="lineCov">      18142 :     vector[convert_x(x)] = value;</span>
+<span class="lineNum">     202 </span><span class="lineCov">        100 :   }</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :   void inline increase_value(const std::vector&lt;double&gt; &amp; x, const T &amp; value)
+<span class="lineNum">     205 </span>            :   {
+<span class="lineNum">     206 </span><span class="lineCov">        308 :     vector[convert_x(x)] += value;</span>
+<span class="lineNum">     207 </span>            :   }
+<span class="lineNum">     208 </span>            : private:
+<span class="lineNum">     209 </span>            :   std::vector&lt;double&gt; lowerboundary;
+<span class="lineNum">     210 </span>            :   std::vector&lt;double&gt; upperboundary;
+<span class="lineNum">     211 </span>            :   std::vector&lt;double&gt; width;
+<span class="lineNum">     212 </span>            :   int dimension;
+<span class="lineNum">     213 </span>            :   std::vector&lt;int&gt; x_size;       // the size of x in each dimension
+<span class="lineNum">     214 </span>            :   int x_total_size;              // the size of x of the internal matrix
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :   std::vector&lt;T&gt; vector;  // the internal vector
+<span class="lineNum">     217 </span>            : 
+<a name="218"><span class="lineNum">     218 </span>            :   std::vector&lt;int&gt; temp;         // this vector is used in convert_x and convert_y to save computational resource</a>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">      89175 :   int convert_x(const std::vector&lt;double&gt; &amp; x)        // convert real x value to its interal index</span>
+<span class="lineNum">     221 </span>            :   {
+<span class="lineNum">     222 </span><span class="lineCov">     439151 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     223 </span>            :     {
+<span class="lineNum">     224 </span><span class="lineCov">     874940 :       temp[i] = int((x[i] - lowerboundary[i]) / width[i] + 0.000001);</span>
+<span class="lineNum">     225 </span>            :     }
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :     int index = 0;
+<span class="lineNum">     228 </span><span class="lineCov">     264163 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     229 </span>            :     {
+<span class="lineNum">     230 </span><span class="lineCov">     174988 :       if (i + 1 &lt; dimension)</span>
+<span class="lineNum">     231 </span>            :       {
+<span class="lineNum">     232 </span>            :         int x_temp = 1;
+<span class="lineNum">     233 </span><span class="lineCov">     257439 :         for (int j = i + 1; j &lt; dimension; j++)</span>
+<span class="lineNum">     234 </span><span class="lineCov">     171626 :           x_temp *= x_size[j];</span>
+<span class="lineNum">     235 </span><span class="lineCov">     171626 :         index += temp[i] * x_temp;</span>
+<span class="lineNum">     236 </span>            :       }
+<span class="lineNum">     237 </span>            :       else
+<span class="lineNum">     238 </span><span class="lineCov">     178350 :         index += temp[i];</span>
+<span class="lineNum">     239 </span>            :     }
+<span class="lineNum">     240 </span><span class="lineCov">      89175 :     return index;</span>
+<span class="lineNum">     241 </span>            :   }
+<a name="242"><span class="lineNum">     242 </span>            : };</a>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineCov">          8 : class UIestimator      // the implemension of UI estimator</span>
+<a name="245"><span class="lineNum">     245 </span>            : {</a>
+<span class="lineNum">     246 </span>            : public:
+<span class="lineNum">     247 </span><span class="lineCov">          8 :   UIestimator() {}</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :   //called when (re)start an eabf simulation
+<span class="lineNum">     250 </span><span class="lineCov">          4 :   UIestimator(const std::vector&lt;double&gt;&amp; lowerboundary_p,</span>
+<span class="lineNum">     251 </span>            :               const std::vector&lt;double&gt;&amp; upperboundary_p,
+<span class="lineNum">     252 </span>            :               const std::vector&lt;double&gt;&amp; width_p,
+<span class="lineNum">     253 </span>            :               const std::vector&lt;double&gt;&amp; krestr_p,                // force constant in eABF
+<span class="lineNum">     254 </span>            :               const std::string&amp; output_filename_p,              // the prefix of output files
+<span class="lineNum">     255 </span>            :               const int output_freq_p,
+<span class="lineNum">     256 </span>            :               const bool restart_p,                              // whether restart from a .count and a .grad file
+<span class="lineNum">     257 </span>            :               const std::vector&lt;std::string&gt;&amp; input_filename_p,   // the prefixes of input files
+<span class="lineNum">     258 </span>            :               const double temperature_p)
+<span class="lineNum">     259 </span><span class="lineCov">          4 :     : lowerboundary(lowerboundary_p), upperboundary(upperboundary_p),</span>
+<span class="lineNum">     260 </span>            :       width(width_p), krestr(krestr_p),
+<span class="lineNum">     261 </span>            :       output_filename(output_filename_p), output_freq(output_freq_p),
+<span class="lineNum">     262 </span>            :       restart(restart_p), input_filename(input_filename_p),
+<span class="lineNum">     263 </span><span class="lineCov">         48 :       temperature(temperature_p)</span>
+<span class="lineNum">     264 </span>            :   {
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineCov">          4 :     dimension = lowerboundary.size();</span>
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">         16 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     269 </span>            :     {
+<span class="lineNum">     270 </span><span class="lineCov">         12 :       sum_x.push_back(n_vector&lt;double&gt;(lowerboundary, upperboundary, width, Y_SIZE, 0.0));</span>
+<span class="lineNum">     271 </span><span class="lineCov">         12 :       sum_x_square.push_back(n_vector&lt;double&gt;(lowerboundary, upperboundary, width, Y_SIZE, 0.0));</span>
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">         12 :       x_av.push_back(n_vector&lt;double&gt;(lowerboundary, upperboundary, width, Y_SIZE, 0.0));</span>
+<span class="lineNum">     274 </span><span class="lineCov">         12 :       sigma_square.push_back(n_vector&lt;double&gt;(lowerboundary, upperboundary, width, Y_SIZE, 0.0));</span>
+<span class="lineNum">     275 </span>            :     }
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">          4 :     count_y = n_vector&lt;int&gt;(lowerboundary, upperboundary, width, Y_SIZE, 0);</span>
+<span class="lineNum">     278 </span><span class="lineCov">          4 :     distribution_x_y = n_matrix(lowerboundary, upperboundary, width, Y_SIZE);</span>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">          8 :     grad = n_vector&lt;std::vector&lt;double&gt; &gt;(lowerboundary, upperboundary, width, 1, std::vector&lt;double&gt;(dimension, 0.0));</span>
+<span class="lineNum">     281 </span><span class="lineCov">          4 :     count = n_vector&lt;int&gt;(lowerboundary, upperboundary, width, 1, 0);</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineCov">          4 :     written = false;</span>
+<span class="lineNum">     284 </span><span class="lineCov">          4 :     written_1D = false;</span>
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">          4 :     if (dimension == 1)</span>
+<span class="lineNum">     287 </span>            :     {
+<span class="lineNum">     288 </span><span class="lineCov">          2 :       std::vector&lt;double&gt; upperboundary_temp = upperboundary;</span>
+<span class="lineNum">     289 </span><span class="lineCov">          6 :       upperboundary_temp[0] = upperboundary[0] + width[0];</span>
+<span class="lineNum">     290 </span><span class="lineCov">          2 :       oneD_pmf = n_vector&lt;double&gt;(lowerboundary, upperboundary_temp, width, 1, 0.0);</span>
+<span class="lineNum">     291 </span>            :     }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span><span class="lineCov">          4 :     if (restart == true)</span>
+<span class="lineNum">     294 </span>            :     {
+<span class="lineNum">     295 </span><span class="lineCov">          2 :       input_grad = n_vector&lt;std::vector&lt;double&gt; &gt;(lowerboundary, upperboundary, width, 1, std::vector&lt;double&gt;(dimension, 0.0));</span>
+<span class="lineNum">     296 </span><span class="lineCov">          1 :       input_count = n_vector&lt;int&gt;(lowerboundary, upperboundary, width, 1, 0);</span>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :       // initialize input_Grad and input_count
+<span class="lineNum">     299 </span><span class="lineCov">          1 :       std::vector&lt;double&gt; loop_flag(dimension, 0);</span>
+<span class="lineNum">     300 </span><span class="lineCov">          5 :       for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     301 </span>            :       {
+<span class="lineNum">     302 </span><span class="lineCov">          4 :         loop_flag[i] = lowerboundary[i];</span>
+<span class="lineNum">     303 </span>            :       }
+<span class="lineNum">     304 </span>            :       while (true)
+<span class="lineNum">     305 </span>            :       {
+<span class="lineNum">     306 </span><span class="lineCov">         45 :         for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     307 </span>            :         {
+<span class="lineNum">     308 </span><span class="lineCov">         36 :           input_grad.set_value(loop_flag, std::vector&lt;double&gt;(dimension,0));</span>
+<span class="lineNum">     309 </span>            :         }
+<span class="lineNum">     310 </span>            :         input_count.set_value(loop_flag, 0);
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            :         // iterate over any dimensions
+<span class="lineNum">     313 </span><span class="lineCov">          9 :         int i = dimension - 1;</span>
+<span class="lineNum">     314 </span>            :         while (true)
+<span class="lineNum">     315 </span>            :         {
+<span class="lineNum">     316 </span><span class="lineCov">         36 :           loop_flag[i] += width[i];</span>
+<span class="lineNum">     317 </span><span class="lineCov">         36 :           if (loop_flag[i] &gt; upperboundary[i] - width[i] + 0.00001)</span>
+<span class="lineNum">     318 </span>            :           {
+<span class="lineNum">     319 </span><span class="lineCov">          4 :             loop_flag[i] = lowerboundary[i];</span>
+<span class="lineNum">     320 </span><span class="lineCov">          4 :             i--;</span>
+<span class="lineNum">     321 </span><span class="lineCov">          4 :             if (i &lt; 0)</span>
+<span class="lineNum">     322 </span>            :               goto INITIAL_LOOPEND;
+<span class="lineNum">     323 </span>            :           }
+<span class="lineNum">     324 </span>            :           else
+<span class="lineNum">     325 </span>            :             break;
+<span class="lineNum">     326 </span>            :         }
+<span class="lineNum">     327 </span>            :       }
+<span class="lineNum">     328 </span><span class="lineCov">          1 : INITIAL_LOOPEND:</span>
+<span class="lineNum">     329 </span><span class="lineCov">          1 :       read_inputfiles(input_filename);</span>
+<span class="lineNum">     330 </span>            :     }
+<span class="lineNum">     331 </span><span class="lineCov">          4 :   }</span>
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span><span class="lineCov">         16 :   ~UIestimator() {}</span>
+<a name="334"><span class="lineNum">     334 </span>            : </a>
+<span class="lineNum">     335 </span>            :   // called from MD engine every step
+<span class="lineNum">     336 </span><span class="lineCov">         34 :   bool update(const int step, std::vector&lt;double&gt; x, std::vector&lt;double&gt; y)</span>
+<span class="lineNum">     337 </span>            :   {
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            :     //std::cout&lt;&lt;&quot;weeeee: :&quot;&lt;&lt;std::endl;
+<span class="lineNum">     340 </span>            :     //for (int i = 0; i &lt; dimension; i++)
+<span class="lineNum">     341 </span>            :     //{
+<span class="lineNum">     342 </span>            :     //  std::cout&lt;&lt;x[i]&lt;&lt;&quot; &quot;&lt;&lt;y[i]&lt;&lt;&quot; &quot;;
+<span class="lineNum">     343 </span>            :     //}
+<span class="lineNum">     344 </span>            :     //std::cout&lt;&lt;std::endl;
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">         34 :     if (step % output_freq == 0)</span>
+<span class="lineNum">     347 </span>            :     {
+<span class="lineNum">     348 </span><span class="lineCov">         10 :       calc_pmf();</span>
+<span class="lineNum">     349 </span><span class="lineCov">         10 :       write_files();</span>
+<span class="lineNum">     350 </span>            :       //write_interal_data();
+<span class="lineNum">     351 </span>            :     }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineCov">        150 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     354 </span>            :     {
+<span class="lineNum">     355 </span>            :       // for dihedral RC, it is possible that x = 179 and y = -179, should correct it
+<span class="lineNum">     356 </span>            :       // may have problem, need to fix
+<span class="lineNum">     357 </span><span class="lineCov">        116 :       if (x[i] &gt; 150 &amp;&amp; y[i] &lt; -150)</span>
+<span class="lineNum">     358 </span>            :       {
+<span class="lineNum">     359 </span>            :         //std::vector&lt;double&gt; x_temp(x);
+<span class="lineNum">     360 </span>            :         //x_temp[i] -= 360;
+<span class="lineNum">     361 </span>            :         //update(7, x_temp, y);
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :         y[i] += 360;</span>
+<span class="lineNum">     363 </span>            :       }
+<span class="lineNum">     364 </span><span class="lineCov">         58 :       if (x[i] &lt; -150 &amp;&amp; y[i] &gt; 150)</span>
+<span class="lineNum">     365 </span>            :       {
+<span class="lineNum">     366 </span>            :         //std::vector&lt;double&gt; x_temp(x);
+<span class="lineNum">     367 </span>            :         //x_temp[i] += 360;
+<span class="lineNum">     368 </span>            :         //update(7, x_temp, y);
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :         y[i] -= 360;</span>
+<span class="lineNum">     370 </span>            :       }
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span><span class="lineCov">        232 :       if (x[i] &lt; lowerboundary[i] - EXTENDED_X_SIZE * width[i] + 0.00001 || x[i] &gt; upperboundary[i] + EXTENDED_X_SIZE * width[i] - 0.00001 \</span>
+<span class="lineNum">     373 </span><span class="lineCov">         58 :           || y[i] - x[i] &lt; -HALF_Y_SIZE * width[i] + 0.00001 || y[i] - x[i] &gt; HALF_Y_SIZE * width[i] - 0.00001 \</span>
+<span class="lineNum">     374 </span><span class="lineCov">        116 :           || y[i] - lowerboundary[i] &lt; -HALF_Y_SIZE * width[i] + 0.00001 || y[i] - upperboundary[i] &gt; HALF_Y_SIZE * width[i] - 0.00001)</span>
+<span class="lineNum">     375 </span>            :         return false;
+<span class="lineNum">     376 </span>            :     }
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :     //for (int i = 0; i &lt; dimension; i++)
+<span class="lineNum">     379 </span>            :     //{
+<span class="lineNum">     380 </span>            :     //  std::cout&lt;&lt;x[i]&lt;&lt;&quot; &quot;&lt;&lt;y[i]&lt;&lt;&quot; &quot;;
+<span class="lineNum">     381 </span>            :     //}
+<span class="lineNum">     382 </span>            :     //std::cout&lt;&lt;std::endl;
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span><span class="lineCov">        150 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     385 </span>            :     {
+<span class="lineNum">     386 </span><span class="lineCov">         58 :       sum_x[i].increase_value(y, x[i]);</span>
+<span class="lineNum">     387 </span><span class="lineCov">         58 :       sum_x_square[i].increase_value(y, x[i] * x[i]);</span>
+<span class="lineNum">     388 </span>            :     }
+<span class="lineNum">     389 </span><span class="lineCov">         34 :     count_y.increase_value(y, 1);</span>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span><span class="lineCov">        150 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     392 </span>            :     {
+<span class="lineNum">     393 </span>            :       //if (x[i] &lt; lowerboundary[i] + 0.000001 || x[i] &gt; upperboundary[i] - 0.000001)
+<span class="lineNum">     394 </span>            :       // adapt colvars precision
+<span class="lineNum">     395 </span><span class="lineCov">        232 :       if (x[i] &lt; lowerboundary[i] + 0.00001 || x[i] &gt; upperboundary[i] - 0.00001)</span>
+<span class="lineNum">     396 </span>            :         return false;
+<span class="lineNum">     397 </span>            :     }
+<span class="lineNum">     398 </span><span class="lineCov">         34 :     distribution_x_y.increase_value(x, y, 1);</span>
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span><span class="lineCov">         34 :     return true;</span>
+<span class="lineNum">     401 </span>            :   }
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            :   // update the output_filename
+<span class="lineNum">     404 </span>            :   void update_output_filename(const std::string&amp; filename)
+<span class="lineNum">     405 </span>            :   {
+<span class="lineNum">     406 </span><span class="lineCov">         34 :     output_filename = filename;</span>
+<span class="lineNum">     407 </span>            :   }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            : private:
+<span class="lineNum">     410 </span>            :   std::vector&lt;n_vector&lt;double&gt; &gt; sum_x;                        // the sum of x in each y bin
+<span class="lineNum">     411 </span>            :   std::vector&lt;n_vector&lt;double&gt; &gt; sum_x_square;                 // the sum of x in each y bin
+<span class="lineNum">     412 </span>            :   n_vector&lt;int&gt; count_y;                              // the distribution of y
+<span class="lineNum">     413 </span>            :   n_matrix distribution_x_y;   // the distribution of &lt;x, y&gt; pair
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            :   int dimension;
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span>            :   std::vector&lt;double&gt; lowerboundary;
+<span class="lineNum">     418 </span>            :   std::vector&lt;double&gt; upperboundary;
+<span class="lineNum">     419 </span>            :   std::vector&lt;double&gt; width;
+<span class="lineNum">     420 </span>            :   std::vector&lt;double&gt; krestr;
+<span class="lineNum">     421 </span>            :   std::string output_filename;
+<span class="lineNum">     422 </span>            :   int output_freq;
+<span class="lineNum">     423 </span>            :   bool restart;
+<span class="lineNum">     424 </span>            :   std::vector&lt;std::string&gt; input_filename;
+<span class="lineNum">     425 </span>            :   double temperature;
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            :   n_vector&lt;std::vector&lt;double&gt; &gt; grad;
+<span class="lineNum">     428 </span>            :   n_vector&lt;int&gt; count;
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span>            :   n_vector&lt;double&gt; oneD_pmf;
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :   n_vector&lt;std::vector&lt;double&gt; &gt; input_grad;
+<span class="lineNum">     433 </span>            :   n_vector&lt;int&gt; input_count;
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :   // used in double integration
+<span class="lineNum">     436 </span>            :   std::vector&lt;n_vector&lt;double&gt; &gt; x_av;
+<span class="lineNum">     437 </span>            :   std::vector&lt;n_vector&lt;double&gt; &gt; sigma_square;
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            :   bool written;
+<span class="lineNum">     440 </span>            :   bool written_1D;
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            :   // calculate gradients from the internal variables
+<span class="lineNum">     443 </span><span class="lineCov">         10 :   void calc_pmf()</span>
+<span class="lineNum">     444 </span>            :   {
+<span class="lineNum">     445 </span>            :     int norm;
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span><span class="lineCov">         10 :     std::vector&lt;double&gt; loop_flag(dimension, 0);</span>
+<span class="lineNum">     448 </span><span class="lineCov">         38 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     449 </span>            :     {
+<span class="lineNum">     450 </span><span class="lineCov">         56 :       loop_flag[i] = lowerboundary[i] - HALF_Y_SIZE * width[i];</span>
+<span class="lineNum">     451 </span>            :     }
+<span class="lineNum">     452 </span>            : 
+<span class="lineNum">     453 </span>            :     while (true)
+<span class="lineNum">     454 </span>            :     {
+<span class="lineNum">     455 </span><span class="lineCov">       4556 :       norm = count_y.get_value(loop_flag) &gt; 0 ? count_y.get_value(loop_flag) : 1;</span>
+<span class="lineNum">     456 </span><span class="lineCov">      11066 :       for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     457 </span>            :       {
+<span class="lineNum">     458 </span><span class="lineCov">       8788 :         x_av[i].set_value(loop_flag, sum_x[i].get_value(loop_flag) / norm);</span>
+<span class="lineNum">     459 </span><span class="lineCov">       8788 :         sigma_square[i].set_value(loop_flag, sum_x_square[i].get_value(loop_flag) / norm - x_av[i].get_value(loop_flag) * x_av[i].get_value(loop_flag));</span>
+<span class="lineNum">     460 </span>            :       }
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            :       // iterate over any dimensions
+<span class="lineNum">     463 </span><span class="lineCov">       2278 :       int i = dimension - 1;</span>
+<span class="lineNum">     464 </span>            :       while (true)
+<span class="lineNum">     465 </span>            :       {
+<span class="lineNum">     466 </span><span class="lineCov">       7110 :         loop_flag[i] += width[i];</span>
+<span class="lineNum">     467 </span><span class="lineCov">       7110 :         if (loop_flag[i] &gt; upperboundary[i] + HALF_Y_SIZE * width[i] - width[i] + 0.00001)</span>
+<span class="lineNum">     468 </span>            :         {
+<span class="lineNum">     469 </span><span class="lineCov">        102 :           loop_flag[i] = lowerboundary[i] - HALF_Y_SIZE * width[i];</span>
+<span class="lineNum">     470 </span><span class="lineCov">        102 :           i--;</span>
+<span class="lineNum">     471 </span><span class="lineCov">        102 :           if (i &lt; 0)</span>
+<span class="lineNum">     472 </span>            :             goto LOOPEND;
+<span class="lineNum">     473 </span>            :         }
+<span class="lineNum">     474 </span>            :         else
+<span class="lineNum">     475 </span>            :           break;
+<span class="lineNum">     476 </span>            :       }
+<span class="lineNum">     477 </span>            :     }
+<span class="lineNum">     478 </span><span class="lineCov">         10 : LOOPEND:</span>
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            :     // double integration
+<span class="lineNum">     481 </span><span class="lineCov">         10 :     std::vector&lt;double&gt; av(dimension, 0);</span>
+<span class="lineNum">     482 </span><span class="lineCov">         10 :     std::vector&lt;double&gt; diff_av(dimension, 0);</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineCov">         10 :     std::vector&lt;double&gt; loop_flag_x(dimension, 0);</span>
+<span class="lineNum">     485 </span><span class="lineCov">         10 :     std::vector&lt;double&gt; loop_flag_y(dimension, 0);</span>
+<span class="lineNum">     486 </span><span class="lineCov">         38 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     487 </span>            :     {
+<span class="lineNum">     488 </span><span class="lineCov">         28 :       loop_flag_x[i] = lowerboundary[i];</span>
+<span class="lineNum">     489 </span><span class="lineCov">         42 :       loop_flag_y[i] = loop_flag_x[i] - HALF_Y_SIZE * width[i];</span>
+<span class="lineNum">     490 </span>            :     }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            :     while (true)
+<span class="lineNum">     493 </span>            :     {
+<span class="lineNum">     494 </span>            :       norm = 0;
+<span class="lineNum">     495 </span><span class="lineCov">        306 :       for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     496 </span>            :       {
+<span class="lineNum">     497 </span><span class="lineCov">        228 :         av[i] = 0;</span>
+<span class="lineNum">     498 </span><span class="lineCov">        114 :         diff_av[i] = 0;</span>
+<span class="lineNum">     499 </span><span class="lineCov">        342 :         loop_flag_y[i] = loop_flag_x[i] - HALF_Y_SIZE * width[i];</span>
+<span class="lineNum">     500 </span>            :       }
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            :       while (true)
+<span class="lineNum">     503 </span>            :       {
+<span class="lineNum">     504 </span>            :         //std::cout&lt;&lt;&quot;pppppppppppppppppppppp &quot;&lt;&lt;loop_flag_x[0]&lt;&lt;&quot; &quot;&lt;&lt;loop_flag_x[1]&lt;&lt;&quot; &quot;&lt;&lt;loop_flag_y[0]&lt;&lt;&quot; &quot;&lt;&lt;loop_flag_y[1]&lt;&lt;std::endl;
+<span class="lineNum">     505 </span><span class="lineCov">      15240 :         norm += distribution_x_y.get_value(loop_flag_x, loop_flag_y);</span>
+<span class="lineNum">     506 </span><span class="lineCov">      74520 :         for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     507 </span>            :         {
+<span class="lineNum">     508 </span><span class="lineCov">      88766 :           if (sigma_square[i].get_value(loop_flag_y) &gt; 0.00001 || sigma_square[i].get_value(loop_flag_y) &lt; -0.00001)</span>
+<span class="lineNum">     509 </span><span class="lineCov">        924 :             av[i] += distribution_x_y.get_value(loop_flag_x, loop_flag_y) * ( (loop_flag_x[i] + 0.5 * width[i]) - x_av[i].get_value(loop_flag_y)) / sigma_square[i].get_value(loop_flag_y);</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span><span class="lineCov">     118560 :           diff_av[i] += distribution_x_y.get_value(loop_flag_x, loop_flag_y) * (loop_flag_x[i] - loop_flag_y[i]);</span>
+<span class="lineNum">     512 </span>            :         }
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :         // iterate over any dimensions
+<span class="lineNum">     515 </span><span class="lineCov">      15240 :         int i = dimension - 1;</span>
+<span class="lineNum">     516 </span>            :         while (true)
+<span class="lineNum">     517 </span>            :         {
+<span class="lineNum">     518 </span><span class="lineCov">      47880 :           loop_flag_y[i] += width[i];</span>
+<span class="lineNum">     519 </span><span class="lineCov">      47880 :           if (loop_flag_y[i] &gt; loop_flag_x[i] + HALF_Y_SIZE * width[i] - width[i] + 0.00001)</span>
+<span class="lineNum">     520 </span>            :           {
+<span class="lineNum">     521 </span><span class="lineCov">        798 :             loop_flag_y[i] = loop_flag_x[i] - HALF_Y_SIZE * width[i];</span>
+<span class="lineNum">     522 </span><span class="lineCov">        798 :             i--;</span>
+<span class="lineNum">     523 </span><span class="lineCov">        798 :             if (i &lt; 0)</span>
+<span class="lineNum">     524 </span>            :               goto LOOPEND2;
+<span class="lineNum">     525 </span>            :           }
+<span class="lineNum">     526 </span>            :           else
+<span class="lineNum">     527 </span>            :             break;
+<span class="lineNum">     528 </span>            :         }
+<span class="lineNum">     529 </span>            :       }
+<span class="lineNum">     530 </span><span class="lineCov">         78 : LOOPEND2:</span>
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span><span class="lineCov">         78 :       std::vector&lt;double&gt; grad_temp(dimension, 0);</span>
+<span class="lineNum">     533 </span><span class="lineCov">        306 :       for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     534 </span>            :       {
+<span class="lineNum">     535 </span><span class="lineCov">        228 :         diff_av[i] /= (norm &gt; 0 ? norm : 1);</span>
+<span class="lineNum">     536 </span><span class="lineCov">        228 :         av[i] = BOLTZMANN * temperature * av[i] / (norm &gt; 0 ? norm : 1);</span>
+<span class="lineNum">     537 </span><span class="lineCov">        456 :         grad_temp[i] = av[i] - krestr[i] * diff_av[i];</span>
+<span class="lineNum">     538 </span>            :       }
+<span class="lineNum">     539 </span><span class="lineCov">         78 :       grad.set_value(loop_flag_x, grad_temp);</span>
+<span class="lineNum">     540 </span><span class="lineCov">         78 :       count.set_value(loop_flag_x, norm);</span>
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            :       // iterate over any dimensions
+<span class="lineNum">     543 </span><span class="lineCov">         78 :       int i = dimension - 1;</span>
+<span class="lineNum">     544 </span>            :       while (true)
+<span class="lineNum">     545 </span>            :       {
+<span class="lineNum">     546 </span><span class="lineCov">        270 :         loop_flag_x[i] += width[i];</span>
+<span class="lineNum">     547 </span><span class="lineCov">        270 :         if (loop_flag_x[i] &gt; upperboundary[i] - width[i] + 0.00001)</span>
+<span class="lineNum">     548 </span>            :         {
+<span class="lineNum">     549 </span><span class="lineCov">         22 :           loop_flag_x[i] = lowerboundary[i];</span>
+<span class="lineNum">     550 </span><span class="lineCov">         22 :           i--;</span>
+<span class="lineNum">     551 </span><span class="lineCov">         22 :           if (i &lt; 0)</span>
+<span class="lineNum">     552 </span>            :             goto LOOPEND3;
+<span class="lineNum">     553 </span>            :         }
+<span class="lineNum">     554 </span>            :         else
+<span class="lineNum">     555 </span>            :           break;
+<span class="lineNum">     556 </span>            :       }
+<span class="lineNum">     557 </span>            :     }
+<span class="lineNum">     558 </span>            : LOOPEND3:;
+<span class="lineNum">     559 </span><span class="lineCov">         10 :   }</span>
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span>            :   // calculate 1D pmf
+<span class="lineNum">     563 </span><span class="lineCov">          6 :   void calc_1D_pmf()</span>
+<span class="lineNum">     564 </span>            :   {
+<span class="lineNum">     565 </span><span class="lineCov">          6 :     std::vector&lt;double&gt; last_position(1, 0);</span>
+<span class="lineNum">     566 </span><span class="lineCov">          6 :     std::vector&lt;double&gt; position(1, 0);</span>
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span>            :     double min = 0;
+<span class="lineNum">     569 </span>            :     double dG = 0;
+<span class="lineNum">     570 </span>            : 
+<span class="lineNum">     571 </span><span class="lineCov">          6 :     oneD_pmf.set_value(lowerboundary, 0);</span>
+<span class="lineNum">     572 </span><span class="lineCov">          6 :     last_position = lowerboundary;</span>
+<span class="lineNum">     573 </span><span class="lineCov">        102 :     for (double i = lowerboundary[0] + width[0]; i &lt; upperboundary[0] + 0.000001; i += width[0])</span>
+<span class="lineNum">     574 </span>            :     {
+<span class="lineNum">     575 </span><span class="lineCov">         42 :       position[0] = i + 0.000001;</span>
+<span class="lineNum">     576 </span><span class="lineCov">         42 :       if (restart == false || input_count.get_value(last_position) == 0)</span>
+<span class="lineNum">     577 </span>            :       {
+<span class="lineNum">     578 </span><span class="lineCov">        168 :         dG = oneD_pmf.get_value(last_position) + grad.get_value(last_position)[0] * width[0];</span>
+<span class="lineNum">     579 </span>            :       }
+<span class="lineNum">     580 </span>            :       else
+<span class="lineNum">     581 </span>            :       {
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 :         dG = oneD_pmf.get_value(last_position) + ((grad.get_value(last_position)[0] * count.get_value(last_position) + input_grad.get_value(last_position)[0] * input_count.get_value(last_position)) / (count.get_value(last_position) + input_count.get_value(last_position))) * width[0];</span>
+<span class="lineNum">     583 </span>            :       }
+<span class="lineNum">     584 </span><span class="lineCov">         42 :       if (dG &lt; min)</span>
+<span class="lineNum">     585 </span>            :         min = dG;
+<span class="lineNum">     586 </span>            :       oneD_pmf.set_value(position, dG);
+<span class="lineNum">     587 </span><span class="lineCov">         42 :       last_position[0] = i + 0.000001;</span>
+<span class="lineNum">     588 </span>            :     }
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span><span class="lineCov">        108 :     for (double i = lowerboundary[0]; i &lt; upperboundary[0] + 0.000001; i += width[0])</span>
+<span class="lineNum">     591 </span>            :     {
+<span class="lineNum">     592 </span><span class="lineCov">         48 :       position[0] = i + 0.000001;</span>
+<span class="lineNum">     593 </span><span class="lineCov">         48 :       oneD_pmf.set_value(position, oneD_pmf.get_value(position) - min);</span>
+<span class="lineNum">     594 </span>            :     }
+<span class="lineNum">     595 </span><span class="lineCov">          6 :   }</span>
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span>            :   // write 1D pmf
+<span class="lineNum">     598 </span><span class="lineCov">          6 :   void write_1D_pmf()</span>
+<span class="lineNum">     599 </span>            :   {
+<span class="lineNum">     600 </span><span class="lineCov">          6 :     std::string pmf_filename = output_filename + &quot;.UI.pmf&quot;;</span>
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span>            :     // only for colvars module!
+<span class="lineNum">     603 </span>            : //                      if (written_1D) cvm::backup_file(pmf_filename.c_str());
+<span class="lineNum">     604 </span>            : 
+<span class="lineNum">     605 </span><span class="lineCov">         12 :     std::ofstream ofile_pmf(pmf_filename.c_str());</span>
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span><span class="lineCov">          6 :     std::vector&lt;double&gt; position(1, 0);</span>
+<span class="lineNum">     608 </span><span class="lineCov">        108 :     for (double i = lowerboundary[0]; i &lt; upperboundary[0] + 0.000001; i += width[0])</span>
+<span class="lineNum">     609 </span>            :     {
+<span class="lineNum">     610 </span><span class="lineCov">         48 :       ofile_pmf &lt;&lt; i &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     611 </span><span class="lineCov">         48 :       position[0] = i + 0.000001;</span>
+<span class="lineNum">     612 </span><span class="lineCov">         48 :       ofile_pmf &lt;&lt; oneD_pmf.get_value(position) &lt;&lt; std::endl;</span>
+<span class="lineNum">     613 </span>            :     }
+<span class="lineNum">     614 </span><span class="lineCov">          6 :     ofile_pmf.close();</span>
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span><span class="lineCov">          6 :     written_1D = true;</span>
+<span class="lineNum">     617 </span><span class="lineCov">          6 :   }</span>
+<a name="618"><span class="lineNum">     618 </span>            : </a>
+<span class="lineNum">     619 </span>            :   // write heads of the output files
+<span class="lineNum">     620 </span><span class="lineCov">         30 :   void writehead(std::ofstream&amp; os) const</span>
+<span class="lineNum">     621 </span>            :   {
+<span class="lineNum">     622 </span><span class="lineCov">         60 :     os &lt;&lt; &quot;# &quot; &lt;&lt; dimension &lt;&lt; std::endl;</span>
+<span class="lineNum">     623 </span><span class="lineCov">        114 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     624 </span>            :     {
+<span class="lineNum">     625 </span><span class="lineCov">         42 :       os.precision(std::numeric_limits&lt;double&gt;::max_digits10);</span>
+<span class="lineNum">     626 </span><span class="lineCov">        294 :       os &lt;&lt; &quot;# &quot; &lt;&lt; std::fixed &lt;&lt; lowerboundary[i] &lt;&lt; &quot; &quot; &lt;&lt; width[i] &lt;&lt; &quot; &quot; &lt;&lt; int((upperboundary[i] - lowerboundary[i]) / width[i] + 0.000001) &lt;&lt; &quot; &quot; &lt;&lt; 0 &lt;&lt; std::endl;</span>
+<span class="lineNum">     627 </span>            :     }
+<span class="lineNum">     628 </span>            :     os &lt;&lt; std::endl;
+<span class="lineNum">     629 </span><span class="lineCov">         30 :   }</span>
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span>            :   // write interal data, used for testing
+<span class="lineNum">     632 </span>            : //   void write_interal_data()
+<span class="lineNum">     633 </span>            : //   {
+<span class="lineNum">     634 </span>            : //     std::string internal_filaname = output_filename + &quot;.UI.internal&quot;;
+<span class="lineNum">     635 </span>            : //
+<span class="lineNum">     636 </span>            : //     std::ofstream ofile_internal(internal_filaname.c_str());
+<span class="lineNum">     637 </span>            : //
+<span class="lineNum">     638 </span>            : //     std::vector&lt;double&gt; loop_flag(dimension, 0);
+<span class="lineNum">     639 </span>            : //     for (int i = 0; i &lt; dimension; i++)
+<span class="lineNum">     640 </span>            : //     {
+<span class="lineNum">     641 </span>            : //       loop_flag[i] = lowerboundary[i];
+<span class="lineNum">     642 </span>            : //     }
+<span class="lineNum">     643 </span>            : //     while (true)
+<span class="lineNum">     644 </span>            : //     {
+<span class="lineNum">     645 </span>            : //       for (int i = 0; i &lt; dimension; i++)
+<span class="lineNum">     646 </span>            : //       {
+<span class="lineNum">     647 </span>            : //         ofile_internal &lt;&lt; loop_flag[i] + 0.5 * width[i] &lt;&lt; &quot; &quot;;
+<span class="lineNum">     648 </span>            : //       }
+<span class="lineNum">     649 </span>            : //
+<span class="lineNum">     650 </span>            : //       for (int i = 0; i &lt; dimension; i++)
+<span class="lineNum">     651 </span>            : //       {
+<span class="lineNum">     652 </span>            : //         ofile_internal &lt;&lt; grad.get_value(loop_flag)[i] &lt;&lt; &quot; &quot;;
+<span class="lineNum">     653 </span>            : //       }
+<span class="lineNum">     654 </span>            : //
+<span class="lineNum">     655 </span>            : //       std::vector&lt;double&gt; ii(dimension,0);
+<span class="lineNum">     656 </span>            : //       for (double i = loop_flag[0] - 10; i &lt; loop_flag[0] + 10 + 0.00001; i+= width[0])
+<span class="lineNum">     657 </span>            : //       {
+<span class="lineNum">     658 </span>            : //         for (double j = loop_flag[1] - 10; j&lt; loop_flag[1] + 10 +0.00001; j+=width[1])
+<span class="lineNum">     659 </span>            : //         {
+<span class="lineNum">     660 </span>            : //           ii[0] = i;
+<span class="lineNum">     661 </span>            : //           ii[1] = j;
+<span class="lineNum">     662 </span>            : //           ofile_internal &lt;&lt; i &lt;&lt;&quot; &quot;&lt;&lt;j&lt;&lt;&quot; &quot;&lt;&lt; distribution_x_y.get_value(loop_flag,ii)&lt;&lt; &quot; &quot;;
+<span class="lineNum">     663 </span>            : //         }
+<span class="lineNum">     664 </span>            : //       }
+<span class="lineNum">     665 </span>            : //       ofile_internal &lt;&lt; std::endl;
+<span class="lineNum">     666 </span>            : //
+<span class="lineNum">     667 </span>            : //       // iterate over any dimensions
+<span class="lineNum">     668 </span>            : //       int i = dimension - 1;
+<span class="lineNum">     669 </span>            : //       while (true)
+<span class="lineNum">     670 </span>            : //       {
+<span class="lineNum">     671 </span>            : //         loop_flag[i] += width[i];
+<span class="lineNum">     672 </span>            : //         if (loop_flag[i] &gt; upperboundary[i] - width[i] + 0.00001)
+<span class="lineNum">     673 </span>            : //         {
+<span class="lineNum">     674 </span>            : //           loop_flag[i] = lowerboundary[i];
+<span class="lineNum">     675 </span>            : //           i--;
+<span class="lineNum">     676 </span>            : //           if (i &lt; 0)
+<span class="lineNum">     677 </span>            : //             goto LOOPEND5;
+<span class="lineNum">     678 </span>            : //         }
+<span class="lineNum">     679 </span>            : //         else
+<span class="lineNum">     680 </span>            : //           break;
+<span class="lineNum">     681 </span>            : //       }
+<span class="lineNum">     682 </span>            : //     }
+<span class="lineNum">     683 </span>            : // LOOPEND5:
+<span class="lineNum">     684 </span>            : //     ofile_internal.close();
+<span class="lineNum">     685 </span>            : //   }
+<span class="lineNum">     686 </span>            : 
+<span class="lineNum">     687 </span>            :   // write output files
+<span class="lineNum">     688 </span><span class="lineCov">         10 :   void write_files()</span>
+<span class="lineNum">     689 </span>            :   {
+<span class="lineNum">     690 </span><span class="lineCov">         10 :     std::string grad_filename = output_filename + &quot;.UI.grad&quot;;</span>
+<span class="lineNum">     691 </span><span class="lineCov">         10 :     std::string hist_filename = output_filename + &quot;.UI.hist.grad&quot;;</span>
+<span class="lineNum">     692 </span><span class="lineCov">         10 :     std::string count_filename = output_filename + &quot;.UI.count&quot;;</span>
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            :     // only for colvars module!
+<span class="lineNum">     695 </span>            : //                      if (written) cvm::backup_file(grad_filename.c_str());
+<span class="lineNum">     696 </span>            :     //if (written) cvm::backup_file(hist_filename.c_str());
+<span class="lineNum">     697 </span>            : //                      if (written) cvm::backup_file(count_filename.c_str());
+<span class="lineNum">     698 </span>            : 
+<span class="lineNum">     699 </span><span class="lineCov">         20 :     std::ofstream ofile(grad_filename.c_str());</span>
+<span class="lineNum">     700 </span><span class="lineCov">         20 :     std::ofstream ofile_hist(hist_filename.c_str(), std::ios::app);</span>
+<span class="lineNum">     701 </span><span class="lineCov">         20 :     std::ofstream ofile_count(count_filename.c_str());</span>
+<span class="lineNum">     702 </span>            : 
+<span class="lineNum">     703 </span><span class="lineCov">         10 :     writehead(ofile);</span>
+<span class="lineNum">     704 </span><span class="lineCov">         10 :     writehead(ofile_hist);</span>
+<span class="lineNum">     705 </span><span class="lineCov">         10 :     writehead(ofile_count);</span>
+<span class="lineNum">     706 </span>            : 
+<span class="lineNum">     707 </span><span class="lineCov">         10 :     if (dimension == 1)</span>
+<span class="lineNum">     708 </span>            :     {
+<span class="lineNum">     709 </span><span class="lineCov">          6 :       calc_1D_pmf();</span>
+<span class="lineNum">     710 </span><span class="lineCov">          6 :       write_1D_pmf();</span>
+<span class="lineNum">     711 </span>            :     }
+<span class="lineNum">     712 </span>            : 
+<span class="lineNum">     713 </span><span class="lineCov">         10 :     std::vector&lt;double&gt; loop_flag(dimension, 0);</span>
+<span class="lineNum">     714 </span><span class="lineCov">         38 :     for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     715 </span>            :     {
+<span class="lineNum">     716 </span><span class="lineCov">         28 :       loop_flag[i] = lowerboundary[i];</span>
+<span class="lineNum">     717 </span>            :     }
+<span class="lineNum">     718 </span>            :     while (true)
+<span class="lineNum">     719 </span>            :     {
+<span class="lineNum">     720 </span><span class="lineCov">        306 :       for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     721 </span>            :       {
+<span class="lineNum">     722 </span><span class="lineCov">        456 :         ofile &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; loop_flag[i] + 0.5 * width[i] &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     723 </span><span class="lineCov">        342 :         ofile_hist &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; loop_flag[i] + 0.5 * width[i] &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     724 </span><span class="lineCov">        342 :         ofile_count &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; loop_flag[i] + 0.5 * width[i] &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     725 </span>            :       }
+<span class="lineNum">     726 </span>            : 
+<span class="lineNum">     727 </span><span class="lineCov">         78 :       if (restart == false)</span>
+<span class="lineNum">     728 </span>            :       {
+<span class="lineNum">     729 </span><span class="lineCov">        216 :         for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     730 </span>            :         {
+<span class="lineNum">     731 </span><span class="lineCov">        312 :           ofile &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; grad.get_value(loop_flag)[i] &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     732 </span><span class="lineCov">        312 :           ofile_hist &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; grad.get_value(loop_flag)[i] &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     733 </span>            :         }
+<span class="lineNum">     734 </span>            :         ofile &lt;&lt; std::endl;
+<span class="lineNum">     735 </span>            :         ofile_hist &lt;&lt; std::endl;
+<span class="lineNum">     736 </span><span class="lineCov">        120 :         ofile_count &lt;&lt; count.get_value(loop_flag) &lt;&lt; &quot; &quot; &lt;&lt;std::endl;</span>
+<span class="lineNum">     737 </span>            :       }
+<span class="lineNum">     738 </span>            :       else
+<span class="lineNum">     739 </span>            :       {
+<span class="lineNum">     740 </span>            :         double final_grad = 0;
+<span class="lineNum">     741 </span><span class="lineCov">         90 :         for (int i = 0; i &lt; dimension; i++)</span>
+<span class="lineNum">     742 </span>            :         {
+<span class="lineNum">     743 </span><span class="lineCov">        108 :           int total_count_temp = (count.get_value(loop_flag) + input_count.get_value(loop_flag));</span>
+<span class="lineNum">     744 </span><span class="lineCov">         36 :           if (input_count.get_value(loop_flag) == 0)</span>
+<span class="lineNum">     745 </span><span class="lineCov">         60 :             final_grad = grad.get_value(loop_flag)[i];</span>
+<span class="lineNum">     746 </span>            :           else
+<span class="lineNum">     747 </span><span class="lineCov">        112 :             final_grad = ((grad.get_value(loop_flag)[i] * count.get_value(loop_flag) + input_grad.get_value(loop_flag)[i] * input_count.get_value(loop_flag)) / total_count_temp);</span>
+<span class="lineNum">     748 </span><span class="lineCov">         36 :           ofile &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; final_grad &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     749 </span><span class="lineCov">         36 :           ofile_hist &lt;&lt; std::fixed &lt;&lt; std::setprecision(9) &lt;&lt; final_grad &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     750 </span>            :         }
+<span class="lineNum">     751 </span>            :         ofile &lt;&lt; std::endl;
+<span class="lineNum">     752 </span>            :         ofile_hist &lt;&lt; std::endl;
+<span class="lineNum">     753 </span><span class="lineCov">         54 :         ofile_count &lt;&lt; (count.get_value(loop_flag) + input_count.get_value(loop_flag)) &lt;&lt; &quot; &quot; &lt;&lt;std::endl;</span>
+<span class="lineNum">     754 </span>            :       }
+<span class="lineNum">     755 </span>            : 
+<span class="lineNum">     756 </span>            :       // iterate over any dimensions
+<span class="lineNum">     757 </span><span class="lineCov">         78 :       int i = dimension - 1;</span>
+<span class="lineNum">     758 </span>            :       while (true)
+<span class="lineNum">     759 </span>            :       {
+<span class="lineNum">     760 </span><span class="lineCov">        270 :         loop_flag[i] += width[i];</span>
+<span class="lineNum">     761 </span><span class="lineCov">        270 :         if (loop_flag[i] &gt; upperboundary[i] - width[i] + 0.00001)</span>
+<span class="lineNum">     762 </span>            :         {
+<span class="lineNum">     763 </span><span class="lineCov">         22 :           loop_flag[i] = lowerboundary[i];</span>
+<span class="lineNum">     764 </span><span class="lineCov">         22 :           i--;</span>
+<span class="lineNum">     765 </span>            :           ofile &lt;&lt; std::endl;
+<span class="lineNum">     766 </span>            :           ofile_hist &lt;&lt; std::endl;
+<span class="lineNum">     767 </span>            :           ofile_count &lt;&lt; std::endl;
+<span class="lineNum">     768 </span><span class="lineCov">         22 :           if (i &lt; 0)</span>
+<span class="lineNum">     769 </span>            :             goto LOOPEND4;
+<span class="lineNum">     770 </span>            :         }
+<span class="lineNum">     771 </span>            :         else
+<span class="lineNum">     772 </span>            :           break;
+<span class="lineNum">     773 </span>            :       }
+<span class="lineNum">     774 </span>            :     }
+<span class="lineNum">     775 </span><span class="lineCov">         10 : LOOPEND4:</span>
+<span class="lineNum">     776 </span><span class="lineCov">         10 :     ofile.close();</span>
+<span class="lineNum">     777 </span><span class="lineCov">         10 :     ofile_count.close();</span>
+<span class="lineNum">     778 </span><span class="lineCov">         10 :     ofile_hist.close();</span>
+<span class="lineNum">     779 </span>            : 
+<span class="lineNum">     780 </span><span class="lineCov">         10 :     written = true;</span>
+<span class="lineNum">     781 </span><span class="lineCov">         10 :   }</span>
+<span class="lineNum">     782 </span>            : 
+<span class="lineNum">     783 </span>            :   // read input files
+<span class="lineNum">     784 </span><span class="lineCov">          1 :   void read_inputfiles(const std::vector&lt;std::string&gt;&amp; input_filename)</span>
+<span class="lineNum">     785 </span>            :   {
+<span class="lineNum">     786 </span>            :     char sharp;
+<span class="lineNum">     787 </span>            :     double nothing;
+<span class="lineNum">     788 </span>            :     int dimension_temp;
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span><span class="lineCov">          1 :     std::vector&lt;double&gt; loop_bin_size(dimension, 0);</span>
+<span class="lineNum">     791 </span><span class="lineCov">          1 :     std::vector&lt;double&gt; position_temp(dimension, 0);</span>
+<span class="lineNum">     792 </span><span class="lineCov">          1 :     std::vector&lt;double&gt; grad_temp(dimension, 0);</span>
+<span class="lineNum">     793 </span><span class="lineCov">          1 :     int count_temp = 0;</span>
+<span class="lineNum">     794 </span><span class="lineCov">          5 :     for (unsigned int i = 0; i &lt; input_filename.size(); i++)</span>
+<span class="lineNum">     795 </span>            :     {
+<span class="lineNum">     796 </span><span class="lineCov">          1 :       int size = 1, size_temp = 0;</span>
+<span class="lineNum">     797 </span>            : 
+<span class="lineNum">     798 </span><span class="lineCov">          1 :       std::string count_filename = input_filename[i] + &quot;.UI.count&quot;;</span>
+<span class="lineNum">     799 </span><span class="lineCov">          1 :       std::string grad_filename = input_filename[i] + &quot;.UI.grad&quot;;</span>
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span><span class="lineCov">          2 :       std::ifstream count_file(count_filename.c_str(), std::ios::in);</span>
+<span class="lineNum">     802 </span><span class="lineCov">          2 :       std::ifstream grad_file(grad_filename.c_str(), std::ios::in);</span>
+<span class="lineNum">     803 </span>            : 
+<span class="lineNum">     804 </span><span class="lineCov">          1 :       count_file &gt;&gt; sharp &gt;&gt; dimension_temp;</span>
+<span class="lineNum">     805 </span><span class="lineCov">          1 :       grad_file &gt;&gt; sharp &gt;&gt; dimension_temp;</span>
+<span class="lineNum">     806 </span>            : 
+<span class="lineNum">     807 </span><span class="lineCov">          5 :       for (int j = 0; j &lt; dimension; j++)</span>
+<span class="lineNum">     808 </span>            :       {
+<span class="lineNum">     809 </span><span class="lineCov">          4 :         count_file &gt;&gt; sharp &gt;&gt; nothing &gt;&gt; nothing &gt;&gt; size_temp &gt;&gt; nothing;</span>
+<span class="lineNum">     810 </span><span class="lineCov">          2 :         grad_file &gt;&gt; sharp &gt;&gt; nothing &gt;&gt; nothing &gt;&gt; nothing &gt;&gt; nothing;</span>
+<span class="lineNum">     811 </span><span class="lineCov">          2 :         size *= size_temp;</span>
+<span class="lineNum">     812 </span>            :       }
+<span class="lineNum">     813 </span>            : 
+<span class="lineNum">     814 </span><span class="lineCov">         19 :       for (int j = 0; j &lt; size; j++)</span>
+<span class="lineNum">     815 </span>            :       {
+<span class="lineNum">     816 </span>            :         do
+<span class="lineNum">     817 </span>            :         {
+<span class="lineNum">     818 </span><span class="lineCov">         45 :           for (int k = 0; k &lt; dimension; k++)</span>
+<span class="lineNum">     819 </span>            :           {
+<span class="lineNum">     820 </span><span class="lineCov">         18 :             count_file &gt;&gt; position_temp[k];</span>
+<span class="lineNum">     821 </span>            :             grad_file &gt;&gt; nothing;
+<span class="lineNum">     822 </span>            :           }
+<span class="lineNum">     823 </span>            : 
+<span class="lineNum">     824 </span><span class="lineCov">         45 :           for (int l = 0; l &lt; dimension; l++)</span>
+<span class="lineNum">     825 </span>            :           {
+<span class="lineNum">     826 </span><span class="lineCov">         18 :             grad_file &gt;&gt; grad_temp[l];</span>
+<span class="lineNum">     827 </span>            :           }
+<span class="lineNum">     828 </span><span class="lineCov">          9 :           count_file &gt;&gt; count_temp;</span>
+<span class="lineNum">     829 </span>            :         }
+<span class="lineNum">     830 </span><span class="lineCov">         27 :         while (position_temp[i] &lt; lowerboundary[i] - 0.000001 || position_temp[i] &gt; upperboundary[i] + 0.000001);</span>
+<span class="lineNum">     831 </span>            : 
+<span class="lineNum">     832 </span><span class="lineCov">          9 :         if (count_temp == 0)</span>
+<span class="lineNum">     833 </span>            :         {
+<span class="lineNum">     834 </span><span class="lineCov">          5 :           continue;</span>
+<span class="lineNum">     835 </span>            :         }
+<span class="lineNum">     836 </span>            : 
+<span class="lineNum">     837 </span><span class="lineCov">         20 :         for (int m = 0; m &lt; dimension; m++)</span>
+<span class="lineNum">     838 </span>            :         {
+<span class="lineNum">     839 </span><span class="lineCov">         56 :           grad_temp[m] = (grad_temp[m] * count_temp + input_grad.get_value(position_temp)[m] * input_count.get_value(position_temp)) / (count_temp + input_count.get_value(position_temp));</span>
+<span class="lineNum">     840 </span>            :         }
+<span class="lineNum">     841 </span><span class="lineCov">          4 :         input_grad.set_value(position_temp, grad_temp);</span>
+<span class="lineNum">     842 </span><span class="lineCov">          4 :         input_count.increase_value(position_temp, count_temp);</span>
+<span class="lineNum">     843 </span>            :       }
+<span class="lineNum">     844 </span>            : 
+<span class="lineNum">     845 </span><span class="lineCov">          1 :       count_file.close();</span>
+<span class="lineNum">     846 </span><span class="lineCov">          1 :       grad_file.close();</span>
+<span class="lineNum">     847 </span>            :     }
+<span class="lineNum">     848 </span><span class="lineCov">          1 :   }</span>
+<span class="lineNum">     849 </span>            : };
+<span class="lineNum">     850 </span>            : }
+<span class="lineNum">     851 </span>            : 
+<span class="lineNum">     852 </span>            : }
+<span class="lineNum">     853 </span>            : }
+<span class="lineNum">     854 </span>            : 
+<span class="lineNum">     855 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

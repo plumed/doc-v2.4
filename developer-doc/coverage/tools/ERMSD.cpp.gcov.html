@@ -1,0 +1,408 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/ERMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - ERMSD.cpp<span style="font-size: 80%;"> (source / <a href="ERMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">120</td>
+            <td class="headerCovTableEntry">122</td>
+            <td class="headerCovTableEntryHi">98.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : /*
+<span class="lineNum">      24 </span>            :  This vast majority of the source code in this file was writting by
+<span class="lineNum">      25 </span>            :  Sandro Bottaro with some help from Giovanni Bussi
+<span class="lineNum">      26 </span>            : */
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &quot;ERMSD.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;PDB.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;Matrix.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;Tensor.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &quot;Pbc.h&quot;
+<span class="lineNum">      34 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      35 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : using namespace std;
+<span class="lineNum">      39 </span>            : namespace PLMD {
+<a name="40"><span class="lineNum">      40 </span>            : </a>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 : void ERMSD::clear() {</span>
+<span class="lineNum">      43 </span>            :   reference_mat.clear();
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      45 </span>            : 
+<a name="46"><span class="lineNum">      46 </span>            : //void ERMSD::calcLcs(const vector&lt;Vector&gt; &amp; positions, vector&lt;Vector&gt; &amp;)</a>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">          4 : void ERMSD::setReference(const vector&lt;Vector&gt; &amp; reference, const std::vector&lt;unsigned&gt; &amp; pairs_vec, double mycutoff) {</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">          4 :   natoms = reference.size();</span>
+<span class="lineNum">      52 </span><span class="lineCov">          4 :   nresidues = natoms/3;</span>
+<span class="lineNum">      53 </span><span class="lineCov">          4 :   unsigned npairs = pairs_vec.size()/2;</span>
+<span class="lineNum">      54 </span><span class="lineCov">          4 :   pairs.resize(npairs);</span>
+<span class="lineNum">      55 </span>            :   //for(unsigned i=0;i&lt;2*npairs;++i) {
+<span class="lineNum">      56 </span>            :   //     std::cout &lt;&lt; &quot;CCC &quot; &lt;&lt; pairs_vec[i] &lt;&lt; &quot; &quot;;
+<span class="lineNum">      57 </span>            :   //}
+<span class="lineNum">      58 </span><span class="lineCov">         28 :   for(unsigned i=0; i&lt;npairs; ++i) {</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">         36 :     pairs[i].first = pairs_vec[2*i];</span>
+<span class="lineNum">      61 </span><span class="lineCov">         24 :     pairs[i].second = pairs_vec[2*i+1];</span>
+<span class="lineNum">      62 </span>            :   }
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          4 :   cutoff = mycutoff;</span>
+<span class="lineNum">      65 </span>            :   std::vector&lt;TensorGeneric&lt;4,3&gt; &gt; deri;
+<span class="lineNum">      66 </span><span class="lineCov">          4 :   deri.resize(natoms*natoms);</span>
+<span class="lineNum">      67 </span><span class="lineCov">          4 :   reference_mat.resize(nresidues*nresidues);</span>
+<span class="lineNum">      68 </span><span class="lineCov">          4 :   Pbc fake_pbc;</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">          4 :   calcMat(reference,fake_pbc,reference_mat,deri);</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">          4 : }</span>
+<a name="74"><span class="lineNum">      74 </span>            : </a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">    1139266 : bool ERMSD::inPair(unsigned i, unsigned j) {</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :   //return true;
+<span class="lineNum">      79 </span><span class="lineCov">    1139266 :   if(pairs.size()==0) return true;</span>
+<span class="lineNum">      80 </span><span class="lineCov">    7395737 :   for(unsigned idx=0; idx&lt;pairs.size(); idx++) {</span>
+<span class="lineNum">      81 </span>            :     //std::cout &lt;&lt; &quot;AAA &quot; &lt;&lt; pairs[idx][0] &lt;&lt; &quot; &quot; &lt;&lt; pairs[idx][1] &lt;&lt; &quot;\n&quot;;
+<span class="lineNum">      82 </span><span class="lineCov">    3414408 :     if(pairs[idx].first == i &amp;&amp; pairs[idx].second == j) return true;</span>
+<span class="lineNum">      83 </span><span class="lineCov">    3413730 :     if(pairs[idx].second == i &amp;&amp; pairs[idx].first == j) return true;</span>
+<span class="lineNum">      84 </span>            :   }
+<span class="lineNum">      85 </span>            :   return false;
+<span class="lineNum">      86 </span>            : }
+<span class="lineNum">      87 </span>            : //double ERMSD::calculate(const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">      88 </span>            : //                        std::vector&lt;Vector&gt; &amp;derivatives, Tensor&amp; virial) const {
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : // Pbc fake_pbc;
+<span class="lineNum">      91 </span>            : // return ERMSD::calculate(positions,fake_pbc,derivatives,virial,false);
+<span class="lineNum">      92 </span>            : // }
+<span class="lineNum">      93 </span>            : 
+<a name="94"><span class="lineNum">      94 </span>            : </a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">        226 : void ERMSD::calcMat(const std::vector&lt;Vector&gt; &amp; positions,const Pbc&amp; pbc, std::vector&lt;Vector4d&gt; &amp;mat, std::vector&lt;TensorGeneric&lt;4,3&gt; &gt; &amp;Gderi) {</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :   std::vector&lt;Vector3d&gt; pos;
+<span class="lineNum">      99 </span><span class="lineCov">        226 :   pos.resize(3*nresidues);</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :   std::vector&lt;Tensor3d&gt; deri;
+<span class="lineNum">     102 </span><span class="lineCov">        226 :   deri.resize(nresidues*9);</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :   std::vector&lt;Vector&gt; centers;
+<span class="lineNum">     105 </span><span class="lineCov">        226 :   centers.resize(nresidues);</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :   unsigned idx_deri = 0;
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">        226 :   Tensor da_dxa = (2./3.)*Tensor::identity();</span>
+<span class="lineNum">     110 </span><span class="lineCov">        226 :   Tensor da_dxb = -(1./3.)*Tensor::identity();</span>
+<span class="lineNum">     111 </span><span class="lineCov">        226 :   Tensor da_dxc = -(1./3.)*Tensor::identity();</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">        226 :   Tensor db_dxa = -(1./3.)*Tensor::identity();</span>
+<span class="lineNum">     114 </span><span class="lineCov">        226 :   Tensor db_dxb = (2./3.)*Tensor::identity();</span>
+<span class="lineNum">     115 </span><span class="lineCov">        226 :   Tensor db_dxc = -(1./3.)*Tensor::identity();</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   // Form factors - should this be somewhere else?
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :   double w = 1./3.;
+<span class="lineNum">     120 </span>            :   Vector form_factor = Vector(2.0,2.0,1.0/0.3);
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">      32318 :   for(unsigned res_idx=0; res_idx&lt;natoms/3; res_idx++) {</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">      16046 :     const unsigned at_idx = 3*res_idx;</span>
+<span class="lineNum">     126 </span>            :     //center
+<span class="lineNum">     127 </span><span class="lineCov">     112322 :     for (unsigned j=0; j&lt;3; j++) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">     144414 :       centers[res_idx] += w*positions[at_idx+j];</span>
+<span class="lineNum">     129 </span>            :     }
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">      48138 :     Vector3d a = delta(centers[res_idx],positions[at_idx]);</span>
+<span class="lineNum">     132 </span><span class="lineCov">      32092 :     Vector3d b = delta(centers[res_idx],positions[at_idx+1]);</span>
+<span class="lineNum">     133 </span><span class="lineCov">      16046 :     Vector3d d = crossProduct(a,b);</span>
+<span class="lineNum">     134 </span><span class="lineCov">      16046 :     double ianorm = 1./a.modulo();</span>
+<span class="lineNum">     135 </span><span class="lineCov">      16046 :     double idnorm = 1./d.modulo();</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :     // X vector: COM-C2
+<span class="lineNum">     138 </span><span class="lineCov">      16046 :     pos[at_idx] = a*ianorm;</span>
+<span class="lineNum">     139 </span>            :     // Z versor: C2 x (COM-C4/C6)
+<span class="lineNum">     140 </span><span class="lineCov">      32092 :     pos[at_idx+2] = d*idnorm;</span>
+<span class="lineNum">     141 </span>            :     // Y versor: Z x Y
+<span class="lineNum">     142 </span><span class="lineCov">      16046 :     pos[at_idx+1] = crossProduct(pos[at_idx+2],pos[at_idx]);</span>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :     // Derivatives ////////
+<span class="lineNum">     145 </span><span class="lineCov">      16046 :     Tensor3d t1 = ianorm*(Tensor::identity()-extProduct(pos[at_idx],pos[at_idx]));</span>
+<span class="lineNum">     146 </span>            :     // dv1/dxa
+<span class="lineNum">     147 </span><span class="lineCov">      32092 :     deri[idx_deri] = (2./3. )*t1;</span>
+<span class="lineNum">     148 </span>            :     // dv1/dxb
+<span class="lineNum">     149 </span><span class="lineCov">      32092 :     deri[idx_deri+3] = -(1./3.)*t1;</span>
+<span class="lineNum">     150 </span>            :     // dv1/dxc
+<span class="lineNum">     151 </span><span class="lineCov">      32092 :     deri[idx_deri+6] = -(1./3.)*t1;</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">      16046 :     Tensor dd_dxa =  VcrossTensor(a,db_dxa) -VcrossTensor(b,da_dxa);</span>
+<span class="lineNum">     154 </span><span class="lineCov">      16046 :     Tensor dd_dxb =  VcrossTensor(a,db_dxb)-VcrossTensor(b,da_dxb);</span>
+<span class="lineNum">     155 </span><span class="lineCov">      16046 :     Tensor dd_dxc =  VcrossTensor(a,db_dxc)-VcrossTensor(b,da_dxc);</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :     // dv3/dxa
+<span class="lineNum">     158 </span><span class="lineCov">      32092 :     deri[idx_deri+2] = deriNorm(d,dd_dxa);</span>
+<span class="lineNum">     159 </span>            :     // dv3/dxb
+<span class="lineNum">     160 </span><span class="lineCov">      32092 :     deri[idx_deri+5] = deriNorm(d,dd_dxb);</span>
+<span class="lineNum">     161 </span>            :     // dv3/dxc
+<span class="lineNum">     162 </span><span class="lineCov">      32092 :     deri[idx_deri+8] = deriNorm(d,dd_dxc);</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :     // dv2/dxa = dv3/dxa cross v1 + v3 cross dv1/dxa
+<span class="lineNum">     165 </span><span class="lineCov">      32092 :     deri[idx_deri+1] =  (VcrossTensor(deri[idx_deri+2],pos[at_idx]) + \</span>
+<span class="lineNum">     166 </span><span class="lineCov">      32092 :                          VcrossTensor(pos[at_idx+2],deri[idx_deri]));</span>
+<span class="lineNum">     167 </span>            :     // dv2/dxb
+<span class="lineNum">     168 </span><span class="lineCov">      32092 :     deri[idx_deri+4] =  (VcrossTensor(deri[idx_deri+5],pos[at_idx]) + \</span>
+<span class="lineNum">     169 </span><span class="lineCov">      32092 :                          VcrossTensor(pos[at_idx+2],deri[idx_deri+3]));</span>
+<span class="lineNum">     170 </span>            :     // dv2/dxc
+<span class="lineNum">     171 </span><span class="lineCov">      32092 :     deri[idx_deri+7] =  (VcrossTensor(deri[idx_deri+8],pos[at_idx]) + \</span>
+<span class="lineNum">     172 </span><span class="lineCov">      32092 :                          VcrossTensor(pos[at_idx+2],deri[idx_deri+6]));</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">      16046 :     idx_deri += 9;</span>
+<span class="lineNum">     175 </span>            :     // End derivatives ///////
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :   }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :   // Initialization (unnecessary?)
+<span class="lineNum">     181 </span><span class="lineCov">    2278758 :   for (unsigned i1=0; i1&lt;nresidues*nresidues; i1++) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">   10253394 :     for (unsigned i2=0; i2&lt;4; i2++) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">    9114128 :       mat[i1][i2] = 0.0;</span>
+<span class="lineNum">     184 </span>            :     }
+<span class="lineNum">     185 </span>            :   }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">        226 :   double maxdist = cutoff/form_factor[0];</span>
+<span class="lineNum">     188 </span><span class="lineCov">        226 :   double gamma = pi/cutoff;</span>
+<span class="lineNum">     189 </span>            :   unsigned idx;
+<span class="lineNum">     190 </span>            :   unsigned idx1 = 0;
+<span class="lineNum">     191 </span>            :   // Calculate mat
+<span class="lineNum">     192 </span><span class="lineCov">      32318 :   for (unsigned i=0; i&lt;nresidues; i++) {</span>
+<span class="lineNum">     193 </span><span class="lineCov">    2294578 :     for (unsigned j=0; j&lt;nresidues; j++) {</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :       // skip i==j
+<span class="lineNum">     196 </span><span class="lineCov">    1139266 :       if(inPair(i,j) and i != j) {</span>
+<span class="lineNum">     197 </span>            :         //if(i!=j){
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :         // Calculate normal distance first
+<span class="lineNum">     201 </span><span class="lineCov">    1688898 :         Vector diff = delta(centers[i],centers[j]);</span>
+<span class="lineNum">     202 </span><span class="lineCov">     562966 :         double d1 = diff.modulo();</span>
+<span class="lineNum">     203 </span>            :         //std::cout &lt;&lt; inPair(i,j) &lt;&lt; &quot; &quot; &lt;&lt; i &lt;&lt; &quot; &quot; &lt;&lt; j &lt;&lt; &quot; &quot;&lt;&lt; d1 &lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     204 </span>            :         //std::cout &lt;&lt; inPair(i,j) &lt;&lt; &quot; &quot; &lt;&lt; i &lt;&lt; &quot; &quot; &lt;&lt; j &lt;&lt; &quot; &quot;&lt;&lt; d1 &lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     205 </span><span class="lineCov">     562966 :         if(d1&lt;maxdist) {</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :           // calculate r_tilde_ij
+<span class="lineNum">     208 </span><span class="lineCov">      85382 :           Vector3d rtilde;</span>
+<span class="lineNum">     209 </span><span class="lineCov">     597674 :           for (unsigned k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">    1793022 :             for (unsigned l=0; l&lt;3; l++) {</span>
+<span class="lineNum">     211 </span><span class="lineCov">    1536876 :               rtilde[l] += pos[3*i+l][k]*diff[k]*form_factor[l];</span>
+<span class="lineNum">     212 </span>            :             }
+<span class="lineNum">     213 </span>            :           }
+<span class="lineNum">     214 </span><span class="lineCov">      85382 :           double rtilde_norm = rtilde.modulo();</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">      85382 :           double irnorm = 1./rtilde_norm;</span>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :           // ellipsoidal cutoff
+<span class="lineNum">     219 </span><span class="lineCov">      85382 :           if(rtilde_norm &lt; cutoff) {</span>
+<span class="lineNum">     220 </span><span class="lineCov">      53822 :             idx = i*nresidues + j;</span>
+<span class="lineNum">     221 </span>            :             //std::cout &lt;&lt; i &lt;&lt; &quot; &quot; &lt;&lt; j &lt;&lt; &quot; &quot; &lt;&lt; rtilde_norm &lt;&lt; &quot; &quot; &lt;&lt; idx &lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :             // fill 4d matrix
+<span class="lineNum">     225 </span><span class="lineCov">      53822 :             double dummy = sin(gamma*rtilde_norm)/(rtilde_norm*gamma);</span>
+<span class="lineNum">     226 </span><span class="lineCov">     107644 :             mat[idx][0] = dummy*rtilde[0];</span>
+<span class="lineNum">     227 </span><span class="lineCov">     107644 :             mat[idx][1] = dummy*rtilde[1];</span>
+<span class="lineNum">     228 </span><span class="lineCov">     107644 :             mat[idx][2] = dummy*rtilde[2];</span>
+<span class="lineNum">     229 </span><span class="lineCov">     107644 :             mat[idx][3] = (1.+ cos(gamma*rtilde_norm))/gamma;</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :             // Derivative (drtilde_dx)
+<span class="lineNum">     232 </span>            :             std::vector&lt;Tensor3d&gt; drtilde_dx;
+<span class="lineNum">     233 </span><span class="lineCov">      53822 :             drtilde_dx.resize(6);</span>
+<span class="lineNum">     234 </span><span class="lineCov">      53822 :             unsigned pos_idx = 3*i;</span>
+<span class="lineNum">     235 </span><span class="lineCov">      53822 :             unsigned deri_idx = 9*i;</span>
+<span class="lineNum">     236 </span><span class="lineCov">     376754 :             for (unsigned at=0; at&lt;3; at++) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">    1130262 :               for (unsigned l=0; l&lt;3; l++) {</span>
+<span class="lineNum">     238 </span><span class="lineCov">     968796 :                 Vector3d rvec = form_factor[l]*((pos[pos_idx+l])/3.);</span>
+<span class="lineNum">     239 </span><span class="lineCov">     968796 :                 Vector3d vvec = form_factor[l]*(matmul(deri[deri_idx+3*at+l],diff));</span>
+<span class="lineNum">     240 </span><span class="lineCov">     968796 :                 drtilde_dx[at].setRow(l,vvec-rvec);</span>
+<span class="lineNum">     241 </span><span class="lineCov">     968796 :                 drtilde_dx[at+3].setRow(l,rvec);</span>
+<span class="lineNum">     242 </span>            :               }
+<span class="lineNum">     243 </span>            :             }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :             //std::vector&lt;TensorGeneric&lt;4,3&gt; &gt; dG_dx;
+<span class="lineNum">     246 </span>            :             //dG_dx.resize(6);
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">      53822 :             double dummy1 = (cos(gamma*rtilde_norm) - dummy);</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineCov">      53822 :             idx1 = i*nresidues*6 + j*6;</span>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">     699686 :             for (unsigned l=0; l&lt;6; l++) {</span>
+<span class="lineNum">     253 </span>            :               //std::cout &lt;&lt; i &lt;&lt; &quot; &quot; &lt;&lt; j &lt;&lt; &quot; &quot; &lt;&lt; idx1 &lt;&lt; &quot; &quot; &lt;&lt; idx1+l &lt;&lt; &quot;\n&quot;;
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :               // components 1,2,3
+<span class="lineNum">     256 </span>            :               // sin(gamma*|rtilde|)/gamma*|rtilde|*d_rtilde +
+<span class="lineNum">     257 </span>            :               // + ((d_rtilde*r_tilde/r_tilde^2) out r_tilde)*
+<span class="lineNum">     258 </span>            :               // (cos(gamma*|rtilde| - sin(gamma*|rtilde|)/gamma*|rtilde|))
+<span class="lineNum">     259 </span><span class="lineCov">     645864 :               Vector3d rdr = matmul(rtilde,drtilde_dx[l]);</span>
+<span class="lineNum">     260 </span><span class="lineCov">     645864 :               Tensor tt = dummy*drtilde_dx[l] + (dummy1*irnorm*irnorm)*Tensor(rtilde,rdr);</span>
+<span class="lineNum">     261 </span><span class="lineCov">    2260524 :               for (unsigned m=0; m&lt;3; m++) {</span>
+<span class="lineNum">     262 </span>            :                 // Transpose here
+<span class="lineNum">     263 </span>            :                 //dG_dx[l].setRow(m,tt.getRow(m));
+<span class="lineNum">     264 </span><span class="lineCov">    1937592 :                 Gderi[idx1+l].setRow(m,tt.getRow(m));</span>
+<span class="lineNum">     265 </span>            :               }
+<span class="lineNum">     266 </span>            :               // component 4
+<span class="lineNum">     267 </span>            :               // - sin(gamma*|rtilde|)/|rtilde|*(r_tilde*d_rtilde)
+<span class="lineNum">     268 </span>            :               //dG_dx[l].setRow(3,-dummy*gamma*rdr);
+<span class="lineNum">     269 </span><span class="lineCov">     645864 :               Gderi[idx1+l].setRow(3,-dummy*gamma*rdr);</span>
+<span class="lineNum">     270 </span>            :             }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :           }
+<span class="lineNum">     276 </span>            :         }
+<span class="lineNum">     277 </span>            :       }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :     }
+<span class="lineNum">     280 </span>            :   }
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">        226 : }</span>
+<a name="283"><span class="lineNum">     283 </span>            : </a>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">        222 : double ERMSD::calculate(const std::vector&lt;Vector&gt; &amp; positions,const Pbc&amp; pbc,\</span>
+<span class="lineNum">     286 </span>            :                         std::vector&lt;Vector&gt; &amp;derivatives, Tensor&amp; virial) {
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :   double ermsd=0.;
+<span class="lineNum">     290 </span>            :   std::vector&lt;Vector4d&gt; mat;
+<span class="lineNum">     291 </span><span class="lineCov">        222 :   mat.resize(nresidues*nresidues);</span>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :   std::vector&lt;TensorGeneric&lt;4,3&gt; &gt; Gderi;
+<span class="lineNum">     294 </span><span class="lineCov">        222 :   Gderi.resize(natoms*natoms);</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">        222 :   calcMat(positions,pbc,mat,Gderi);</span>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :   unsigned idx1 = 0;
+<span class="lineNum">     299 </span><span class="lineCov">      31746 :   for(unsigned i=0; i&lt;nresidues; i++) {</span>
+<span class="lineNum">     300 </span><span class="lineCov">    2253966 :     for(unsigned j=0; j&lt;nresidues; j++) {</span>
+<span class="lineNum">     301 </span><span class="lineCov">    1119102 :       unsigned ii = i*nresidues + j;</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineCov">    2238204 :       Vector4d dd = delta(reference_mat[ii],mat[ii]);</span>
+<span class="lineNum">     304 </span><span class="lineCov">    1119102 :       double val = dd.modulo2();</span>
+<span class="lineNum">     305 </span>            :       //std::cout &lt;&lt; &quot;AAA &quot; &lt;&lt; i &lt;&lt; &quot; &quot; &lt;&lt; j &lt;&lt; &quot; &quot; &lt;&lt; ii &lt;&lt; &quot; &quot;&lt;&lt; val &lt;&lt; &quot;\n&quot;;
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">    1119102 :       if(val&gt;0.0 &amp;&amp; i!=j) {</span>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineCov">     449043 :         for(unsigned k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     310 </span><span class="lineCov">     192447 :           idx1 = i*nresidues*6 + j*6 + k;</span>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">     577341 :           derivatives[3*i+k] += matmul(dd,Gderi[idx1]);</span>
+<span class="lineNum">     313 </span><span class="lineCov">     577341 :           derivatives[3*j+k] += matmul(dd,Gderi[idx1+3]);</span>
+<span class="lineNum">     314 </span>            :         }
+<span class="lineNum">     315 </span><span class="lineCov">      64149 :         ermsd += val;</span>
+<span class="lineNum">     316 </span>            :       }
+<span class="lineNum">     317 </span>            :     }
+<span class="lineNum">     318 </span>            :   }
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :   //std::cout &lt;&lt; ermsd &lt;&lt; &quot; &quot;;
+<span class="lineNum">     321 </span>            :   //if(pairs.size()!=0) nresidues=pairs.size();
+<span class="lineNum">     322 </span>            :   //std::cout &lt;&lt; ermsd &lt;&lt; &quot; &quot; &lt;&lt; nresidues;
+<span class="lineNum">     323 </span><span class="lineCov">        222 :   ermsd = sqrt(ermsd/nresidues);</span>
+<span class="lineNum">     324 </span><span class="lineCov">        222 :   double iermsd = 1.0/(ermsd*nresidues);</span>
+<span class="lineNum">     325 </span><span class="lineCov">      94794 :   for(unsigned i=0; i&lt;natoms; ++i) {derivatives[i] *= iermsd;}</span>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineCov">        222 :   return ermsd;</span>
+<span class="lineNum">     328 </span>            : }
+<a name="329"><span class="lineNum">     329 </span>            : </a>
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

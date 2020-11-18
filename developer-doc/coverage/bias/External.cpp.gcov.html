@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - bias/External.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">bias</a> - External.cpp<span style="font-size: 80%;"> (source / <a href="External.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Bias.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace bias {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC BIAS EXTERNAL
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Calculate a restraint that is defined on a grid that is read during start up
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \par Examples
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : The following is an input for a calculation with an external potential that is
+<span class="lineNum">      42 </span>            : defined in the file bias.dat and that acts on the distance between atoms 3 and 5.
+<span class="lineNum">      43 </span>            : \plumedfile
+<span class="lineNum">      44 </span>            : DISTANCE ATOMS=3,5 LABEL=d1
+<span class="lineNum">      45 </span>            : EXTERNAL ARG=d1 FILE=bias.dat LABEL=external
+<span class="lineNum">      46 </span>            : \endplumedfile
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : The header in the file bias.dat should read:
+<span class="lineNum">      49 </span>            : \verbatim
+<span class="lineNum">      50 </span>            : #! FIELDS d1 external.bias der_d1
+<span class="lineNum">      51 </span>            : #! SET min_d1 0.0
+<span class="lineNum">      52 </span>            : #! SET max_d1 1.0
+<span class="lineNum">      53 </span>            : #! SET nbins_d1 100
+<span class="lineNum">      54 </span>            : #! SET periodic_d1 false
+<span class="lineNum">      55 </span>            : \endverbatim
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : This should then be followed by the value of the potential and its derivative
+<span class="lineNum">      58 </span>            : at 100 equally spaced points along the distance between 0 and 1.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : You can also include grids that are a function of more than one collective
+<span class="lineNum">      61 </span>            : variable.  For instance the following would be the input for an external
+<span class="lineNum">      62 </span>            : potential acting on two torsional angles:
+<span class="lineNum">      63 </span>            : \plumedfile
+<span class="lineNum">      64 </span>            : TORSION ATOMS=4,5,6,7 LABEL=t1
+<span class="lineNum">      65 </span>            : TORSION ATOMS=6,7,8,9 LABEL=t2
+<span class="lineNum">      66 </span>            : EXTERNAL ARG=t1,t2 FILE=bias.dat LABEL=ext
+<span class="lineNum">      67 </span>            : \endplumedfile
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : The header in the file bias.dat for this calculation would read:
+<span class="lineNum">      70 </span>            : \verbatim
+<span class="lineNum">      71 </span>            : #! FIELDS t1 t2 ext.bias der_t1 der_t2
+<span class="lineNum">      72 </span>            : #! SET min_t1 -pi
+<span class="lineNum">      73 </span>            : #! SET max_t1 +pi
+<span class="lineNum">      74 </span>            : #! SET nbins_t1 100
+<span class="lineNum">      75 </span>            : #! SET periodic_t1 true
+<span class="lineNum">      76 </span>            : #! SET min_t2 -pi
+<span class="lineNum">      77 </span>            : #! SET max_t2 +pi
+<span class="lineNum">      78 </span>            : #! SET nbins_t2 100
+<span class="lineNum">      79 </span>            : #! SET periodic_t2 true
+<span class="lineNum">      80 </span>            : \endverbatim
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : This would be then followed by 100 blocks of data.  In the first block of data the
+<span class="lineNum">      83 </span>            : value of t1 (the value in the first column) is kept fixed and the value of
+<span class="lineNum">      84 </span>            : the function is given at 100 equally spaced values for t2 between \f$-pi\f$ and \f$+pi\f$.  In the
+<span class="lineNum">      85 </span>            : second block of data t1 is fixed at \f$-pi + \frac{2pi}{100}\f$ and the value of the function is
+<span class="lineNum">      86 </span>            : given at 100 equally spaced values for t2 between \f$-pi\f$ and \f$+pi\f$. In the third block of
+<span class="lineNum">      87 </span>            : data the same is done but t1 is fixed at \f$-pi + \frac{4pi}{100}\f$ and so on untill you get to
+<span class="lineNum">      88 </span>            : the 100th block of data where t1 is fixed at \f$+pi\f$.
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : Please note the order that the order of arguments in the plumed.dat file must be the same as
+<span class="lineNum">      91 </span>            : the order of arguments in the header of the grid file.
+<span class="lineNum">      92 </span>            : */
+<span class="lineNum">      93 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : class External : public Bias {
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : private:
+<span class="lineNum">      98 </span>            :   Grid* BiasGrid_;
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : public:
+<span class="lineNum">     101 </span>            :   explicit External(const ActionOptions&amp;);
+<span class="lineNum">     102 </span>            :   ~External();
+<span class="lineNum">     103 </span>            :   void calculate();
+<span class="lineNum">     104 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="105"><span class="lineNum">     105 </span>            : };</a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(External,&quot;EXTERNAL&quot;)</span>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">          3 : void External::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">          3 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          6 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;FILE&quot;,&quot;the name of the file containing the external potential.&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          9 :   keys.addFlag(&quot;NOSPLINE&quot;,false,&quot;specifies that no spline interpolation is to be used when calculating the energy and forces due to the external potential&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          9 :   keys.addFlag(&quot;SPARSE&quot;,false,&quot;specifies that the external potential uses a sparse grid&quot;);</span>
+<a name="115"><span class="lineNum">     115 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">          3 : External::~External() {</span>
+<span class="lineNum">     118 </span><span class="lineCov">          1 :   delete BiasGrid_;</span>
+<span class="lineNum">     119 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">          2 : External::External(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     122 </span>            :   PLUMED_BIAS_INIT(ao),
+<span class="lineNum">     123 </span><span class="lineCov">          3 :   BiasGrid_(NULL)</span>
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span>            :   string filename;
+<span class="lineNum">     126 </span><span class="lineCov">          4 :   parse(&quot;FILE&quot;,filename);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          2 :   if( filename.length()==0 ) error(&quot;No external potential file was specified&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">          2 :   bool sparsegrid=false;</span>
+<span class="lineNum">     129 </span><span class="lineCov">          4 :   parseFlag(&quot;SPARSE&quot;,sparsegrid);</span>
+<span class="lineNum">     130 </span><span class="lineCov">          2 :   bool nospline=false;</span>
+<span class="lineNum">     131 </span><span class="lineCov">          4 :   parseFlag(&quot;NOSPLINE&quot;,nospline);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          2 :   bool spline=!nospline;</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">          4 :   log.printf(&quot;  External potential from file %s\n&quot;,filename.c_str());</span>
+<span class="lineNum">     137 </span><span class="lineCov">          2 :   if(spline) {log.printf(&quot;  External potential uses spline interpolation\n&quot;);}</span>
+<span class="lineNum">     138 </span><span class="lineCov">          2 :   if(sparsegrid) {log.printf(&quot;  External potential uses sparse grid\n&quot;);}</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : // read grid
+<span class="lineNum">     141 </span><span class="lineCov">          4 :   IFile gridfile; gridfile.open(filename);</span>
+<span class="lineNum">     142 </span><span class="lineCov">          1 :   std::string funcl=getLabel() + &quot;.bias&quot;;</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :   BiasGrid_=Grid::create(funcl,getArguments(),gridfile,sparsegrid,spline,true);</span>
+<span class="lineNum">     144 </span><span class="lineCov">          1 :   gridfile.close();</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :   if(BiasGrid_-&gt;getDimension()!=getNumberOfArguments()) error(&quot;mismatch between dimensionality of input grid and number of arguments&quot;);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          5 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     147 </span><span class="lineCov">          4 :     if( getPntrToArgument(i)-&gt;isPeriodic()!=BiasGrid_-&gt;getIsPeriodic()[i] ) error(&quot;periodicity mismatch between arguments and input bias&quot;);</span>
+<span class="lineNum">     148 </span>            :   }
+<a name="149"><span class="lineNum">     149 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">          5 : void External::calculate()</span>
+<span class="lineNum">     152 </span>            : {
+<span class="lineNum">     153 </span><span class="lineCov">          5 :   unsigned ncv=getNumberOfArguments();</span>
+<span class="lineNum">     154 </span><span class="lineCov">          5 :   vector&lt;double&gt; cv(ncv), der(ncv);</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">         25 :   for(unsigned i=0; i&lt;ncv; ++i) {cv[i]=getArgument(i);}</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">          5 :   double ene=BiasGrid_-&gt;getValueAndDerivatives(cv,der);</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :   setBias(ene);
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">         25 :   for(unsigned i=0; i&lt;ncv; ++i) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">         20 :     const double f=-der[i];</span>
+<span class="lineNum">     164 </span><span class="lineCov">         10 :     setOutputForce(i,f);</span>
+<span class="lineNum">     165 </span>            :   }
+<span class="lineNum">     166 </span><span class="lineCov">          5 : }</span>
+<a name="167"><span class="lineNum">     167 </span>            : </a>
+<span class="lineNum">     168 </span>            : }
+<span class="lineNum">     169 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

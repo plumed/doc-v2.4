@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/ClusterProperties.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - ClusterProperties.cpp<span style="font-size: 80%;"> (source / <a href="ClusterProperties.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ClusterAnalysisBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AdjacencyMatrixVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC CONCOMP CLUSTER_PROPERTIES
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : Calculate properties of the distribution of some quantities that are part of a connected component
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : This collective variable was developed for looking at nucleation phenomena, where you are
+<span class="lineNum">      31 </span>            : interested in using studying the behavior of atoms in small aggregates or nuclei.  In these sorts of
+<span class="lineNum">      32 </span>            : problems you might be interested in the degree the atoms in a nucleus have adopted their crystalline
+<span class="lineNum">      33 </span>            : structure or (in the case of heterogenous nucleation of a solute from a solvent) you might be
+<span class="lineNum">      34 </span>            : interested in how many atoms are present in the largest cluster \cite tribello-clustering.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : \par Examples
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : The input below calculates the coordination numbers of atoms 1-100 and then computes the an adjacency
+<span class="lineNum">      39 </span>            : matrix whose elements measures whether atoms \f$i\f$ and \f$j\f$ are within 0.55 nm of each other.  The action
+<span class="lineNum">      40 </span>            : labelled dfs then treats the elements of this matrix as zero or ones and thus thinks of the matrix as defining
+<span class="lineNum">      41 </span>            : a graph.  This dfs action then finds the largest connected component in this graph.  The sum of the coordination
+<span class="lineNum">      42 </span>            : numbers for the atoms in this largest connected component are then computed and this quantity is output to a colvar
+<span class="lineNum">      43 </span>            : file.  The way this input can be used is described in detail in \cite tribello-clustering.
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \plumedfile
+<span class="lineNum">      46 </span>            : lq: COORDINATIONNUMBER SPECIES=1-100 SWITCH={CUBIC D_0=0.45  D_MAX=0.55} LOWMEM
+<span class="lineNum">      47 </span>            : cm: CONTACT_MATRIX ATOMS=lq  SWITCH={CUBIC D_0=0.45  D_MAX=0.55}
+<span class="lineNum">      48 </span>            : dfs: DFSCLUSTERING MATRIX=cm
+<span class="lineNum">      49 </span>            : clust1: CLUSTER_PROPERTIES CLUSTERS=dfs CLUSTER=1 SUM
+<span class="lineNum">      50 </span>            : PRINT ARG=clust1.* FILE=colvar
+<span class="lineNum">      51 </span>            : \endplumedfile
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : */
+<span class="lineNum">      54 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : namespace PLMD {
+<a name="57"><span class="lineNum">      57 </span>            : namespace adjmat {</a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">         54 : class ClusterProperties : public ClusterAnalysisBase {</span>
+<span class="lineNum">      60 </span>            : private:
+<span class="lineNum">      61 </span>            : /// The cluster we are looking for
+<span class="lineNum">      62 </span>            :   unsigned clustr;
+<span class="lineNum">      63 </span>            : public:
+<span class="lineNum">      64 </span>            : /// Create manual
+<span class="lineNum">      65 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      66 </span>            : /// Constructor
+<span class="lineNum">      67 </span>            :   explicit ClusterProperties(const ActionOptions&amp;);
+<span class="lineNum">      68 </span>            : /// Do the calculation
+<span class="lineNum">      69 </span>            :   void calculate();
+<span class="lineNum">      70 </span>            : /// We can use ActionWithVessel to run all the calculation
+<span class="lineNum">      71 </span>            :   void performTask( const unsigned&amp;, const unsigned&amp;, MultiValue&amp; ) const ;
+<a name="72"><span class="lineNum">      72 </span>            : };</a>
+<span class="lineNum">      73 </span>            : 
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">       6479 : PLUMED_REGISTER_ACTION(ClusterProperties,&quot;CLUSTER_PROPERTIES&quot;)</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">         28 : void ClusterProperties::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">         28 :   ClusterAnalysisBase::registerKeywords( keys );</span>
+<span class="lineNum">      78 </span><span class="lineCov">        140 :   keys.add(&quot;compulsory&quot;,&quot;CLUSTER&quot;,&quot;1&quot;,&quot;which cluster would you like to look at 1 is the largest cluster, 2 is the second largest, 3 is the the third largest and so on.&quot;);</span>
+<span class="lineNum">      79 </span><span class="lineCov">        112 :   keys.use(&quot;MEAN&quot;); keys.use(&quot;MORE_THAN&quot;); keys.use(&quot;LESS_THAN&quot;);</span>
+<span class="lineNum">      80 </span><span class="lineCov">         84 :   if( keys.reserved(&quot;VMEAN&quot;) ) keys.use(&quot;VMEAN&quot;);</span>
+<span class="lineNum">      81 </span><span class="lineCov">         84 :   if( keys.reserved(&quot;VSUM&quot;) ) keys.use(&quot;VSUM&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineCov">        140 :   keys.use(&quot;BETWEEN&quot;); keys.use(&quot;HISTOGRAM&quot;); keys.use(&quot;MOMENTS&quot;); keys.use(&quot;ALT_MIN&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">        168 :   keys.use(&quot;MIN&quot;); keys.use(&quot;MAX&quot;); keys.use(&quot;SUM&quot;); keys.use(&quot;LOWEST&quot;); keys.use(&quot;HIGHEST&quot;);</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">         28 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         27 : ClusterProperties::ClusterProperties(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      87 </span>            :   Action(ao),
+<span class="lineNum">      88 </span><span class="lineCov">         27 :   ClusterAnalysisBase(ao)</span>
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span>            :   // Find out which cluster we want
+<span class="lineNum">      91 </span><span class="lineCov">         54 :   parse(&quot;CLUSTER&quot;,clustr);</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">         27 :   if( clustr&lt;1 ) error(&quot;cannot look for a cluster larger than the largest cluster&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">         27 :   if( clustr&gt;getNumberOfNodes() ) error(&quot;cluster selected is invalid - too few atoms in system&quot;);</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :   // Create all tasks by copying those from underlying DFS object (which is actually MultiColvar)
+<span class="lineNum">      97 </span><span class="lineCov">         27 :   for(unsigned i=0; i&lt;getNumberOfNodes(); ++i) addTaskToList(i);</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   // And now finish the setup of everything in the base
+<span class="lineNum">     100 </span><span class="lineCov">         27 :   std::vector&lt;AtomNumber&gt; fake_atoms; setupMultiColvarBase( fake_atoms );</span>
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">         27 : }</span></a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">         34 : void ClusterProperties::calculate() {</span>
+<span class="lineNum">     104 </span>            :   // Retrieve the atoms in the largest cluster
+<span class="lineNum">     105 </span><span class="lineCov">         34 :   std::vector&lt;unsigned&gt; myatoms; retrieveAtomsInCluster( clustr, myatoms );</span>
+<span class="lineNum">     106 </span>            :   // Activate the relevant tasks
+<span class="lineNum">     107 </span><span class="lineCov">         34 :   deactivateAllTasks();</span>
+<span class="lineNum">     108 </span><span class="lineCov">       5424 :   for(unsigned i=0; i&lt;myatoms.size(); ++i) taskFlags[myatoms[i]]=1;</span>
+<span class="lineNum">     109 </span><span class="lineCov">         34 :   lockContributors();</span>
+<span class="lineNum">     110 </span>            :   // Now do the calculation
+<span class="lineNum">     111 </span><span class="lineCov">         34 :   runAllTasks();</span>
+<a name="112"><span class="lineNum">     112 </span><span class="lineCov">         34 : }</span></a>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">       1795 : void ClusterProperties::performTask( const unsigned&amp; task_index, const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     115 </span><span class="lineCov">       1795 :   std::vector&lt;double&gt; vals( myvals.getNumberOfValues() ); getPropertiesOfNode( current, vals );</span>
+<span class="lineNum">     116 </span><span class="lineCov">       1795 :   if( !doNotCalculateDerivatives() ) getNodePropertyDerivatives( current, myvals );</span>
+<span class="lineNum">     117 </span><span class="lineCov">      14360 :   for(unsigned k=0; k&lt;vals.size(); ++k) myvals.setValue( k, vals[k] );</span>
+<span class="lineNum">     118 </span><span class="lineCov">       1795 : }</span>
+<a name="119"><span class="lineNum">     119 </span>            : </a>
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,1003 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - isdb/SAXS.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">isdb</a> - SAXS.cpp<span style="font-size: 80%;"> (source / <a href="SAXS.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">527</td>
+            <td class="headerCovTableEntry">685</td>
+            <td class="headerCovTableEntryMed">76.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryMed">86.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2017-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : /*
+<span class="lineNum">      23 </span>            :  This class was originally written by Alexander Jussupow and
+<span class="lineNum">      24 </span>            :  Carlo Camilloni
+<span class="lineNum">      25 </span>            : */
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &quot;MetainferenceBase.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;string&gt;
+<span class="lineNum">      35 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      36 </span>            : #include &lt;map&gt;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #ifndef M_PI
+<span class="lineNum">      39 </span>            : #define M_PI           3.14159265358979323846
+<span class="lineNum">      40 </span>            : #endif
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : using namespace std;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace PLMD {
+<span class="lineNum">      45 </span>            : namespace isdb {
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : //+PLUMEDOC ISDB_COLVAR SAXS
+<span class="lineNum">      48 </span>            : /*
+<span class="lineNum">      49 </span>            : Calculates SAXS scattered intensity using the Debye equation.
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : Intensities are calculated for a set of scattering lenght set using QVALUES numbered keywords, QVALUE cannot be 0.
+<span class="lineNum">      52 </span>            : Structure factors can be either assigned using a polynomial expansion to any order using the PARAMETERS keywords;
+<span class="lineNum">      53 </span>            : automatically assigned to atoms using the ATOMISTIC flag reading a PDB file, a correction for the water density is automatically added;
+<span class="lineNum">      54 </span>            : automatically assigned to Martini pseudoatoms usign the MARTINI flag.
+<span class="lineNum">      55 </span>            : The calculated intensities can be scaled using the SCEXP keywords. This is applied by rescaling the structure factors.
+<span class="lineNum">      56 </span>            : Experimental reference intensities can be added using the ADDEXP and EXPINT flag and keywords.
+<span class="lineNum">      57 </span>            : \ref METAINFERENCE can be activated using DOSCORE and the other relevant keywords.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : \par Examples
+<span class="lineNum">      60 </span>            : in the following example the saxs intensities for a martini model are calculated. structure factors
+<span class="lineNum">      61 </span>            : are obtained from the pdb file indicated in the MOLINFO.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : \plumedfile
+<span class="lineNum">      64 </span>            : MOLINFO STRUCTURE=template.pdb
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : SAXS ...
+<span class="lineNum">      67 </span>            : LABEL=saxs
+<span class="lineNum">      68 </span>            : ATOMS=1-355
+<span class="lineNum">      69 </span>            : ADDEXP
+<span class="lineNum">      70 </span>            : SCEXP=3920000
+<span class="lineNum">      71 </span>            : MARTINI
+<span class="lineNum">      72 </span>            : QVALUE1=0.02 EXPINT1=1.0902
+<span class="lineNum">      73 </span>            : QVALUE2=0.05 EXPINT2=0.790632
+<span class="lineNum">      74 </span>            : QVALUE3=0.08 EXPINT3=0.453808
+<span class="lineNum">      75 </span>            : QVALUE4=0.11 EXPINT4=0.254737
+<span class="lineNum">      76 </span>            : QVALUE5=0.14 EXPINT5=0.154928
+<span class="lineNum">      77 </span>            : QVALUE6=0.17 EXPINT6=0.0921503
+<span class="lineNum">      78 </span>            : QVALUE7=0.2 EXPINT7=0.052633
+<span class="lineNum">      79 </span>            : QVALUE8=0.23 EXPINT8=0.0276557
+<span class="lineNum">      80 </span>            : QVALUE9=0.26 EXPINT9=0.0122775
+<span class="lineNum">      81 </span>            : QVALUE10=0.29 EXPINT10=0.00880634
+<span class="lineNum">      82 </span>            : QVALUE11=0.32 EXPINT11=0.0137301
+<span class="lineNum">      83 </span>            : QVALUE12=0.35 EXPINT12=0.0180036
+<span class="lineNum">      84 </span>            : QVALUE13=0.38 EXPINT13=0.0193374
+<span class="lineNum">      85 </span>            : QVALUE14=0.41 EXPINT14=0.0210131
+<span class="lineNum">      86 </span>            : QVALUE15=0.44 EXPINT15=0.0220506
+<span class="lineNum">      87 </span>            : ... SAXS
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : PRINT ARG=(saxs\.q_.*),(saxs\.exp_.*) FILE=colvar STRIDE=1
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : \endplumedfile
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : */
+<a name="94"><span class="lineNum">      94 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">         24 : class SAXS :</span>
+<span class="lineNum">      97 </span>            :   public MetainferenceBase
+<span class="lineNum">      98 </span>            : {
+<span class="lineNum">      99 </span>            : private:
+<span class="lineNum">     100 </span>            :   bool                     pbc;
+<span class="lineNum">     101 </span>            :   bool                     serial;
+<span class="lineNum">     102 </span>            :   vector&lt;double&gt;           q_list;
+<span class="lineNum">     103 </span>            :   vector&lt;double&gt;           FF_rank;
+<span class="lineNum">     104 </span>            :   vector&lt;vector&lt;double&gt; &gt;  FF_value;
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   void getMartiniSFparam(const vector&lt;AtomNumber&gt; &amp;atoms, vector&lt;vector&lt;long double&gt; &gt; &amp;parameter);
+<span class="lineNum">     107 </span>            :   void calculateASF(const vector&lt;AtomNumber&gt; &amp;atoms, vector&lt;vector&lt;long double&gt; &gt; &amp;FF_tmp, const double rho);
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : public:
+<span class="lineNum">     110 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     111 </span>            :   explicit SAXS(const ActionOptions&amp;);
+<span class="lineNum">     112 </span>            :   virtual void calculate();
+<span class="lineNum">     113 </span>            :   void update();
+<a name="114"><span class="lineNum">     114 </span>            : };</a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">       6460 : PLUMED_REGISTER_ACTION(SAXS,&quot;SAXS&quot;)</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">          9 : void SAXS::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">          9 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     120 </span><span class="lineCov">          9 :   useCustomisableComponents(keys);</span>
+<span class="lineNum">     121 </span><span class="lineCov">          9 :   MetainferenceBase::registerKeywords(keys);</span>
+<span class="lineNum">     122 </span><span class="lineCov">         27 :   keys.addFlag(&quot;NOPBC&quot;,false,&quot;ignore the periodic boundary conditions when calculating distances&quot;);</span>
+<span class="lineNum">     123 </span><span class="lineCov">         27 :   keys.addFlag(&quot;SERIAL&quot;,false,&quot;Perform the calculation in serial - for debug purpose&quot;);</span>
+<span class="lineNum">     124 </span><span class="lineCov">         27 :   keys.addFlag(&quot;ATOMISTIC&quot;,false,&quot;calculate SAXS for an atomistic model&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         27 :   keys.addFlag(&quot;MARTINI&quot;,false,&quot;calculate SAXS for a Martini model&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         36 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;The atoms to be included in the calculation, e.g. the whole protein.&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         36 :   keys.add(&quot;numbered&quot;,&quot;QVALUE&quot;,&quot;Selected scattering lenghts in Angstrom are given as QVALUE1, QVALUE2, ... .&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">         36 :   keys.add(&quot;numbered&quot;,&quot;PARAMETERS&quot;,&quot;Used parameter Keywords like PARAMETERS1, PARAMETERS2. These are used to calculate the structure factor for the i-th atom/bead.&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;WATERDENS&quot;,&quot;0.334&quot;,&quot;Density of the water to be used for the correction of atomistic structure factors.&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">         27 :   keys.addFlag(&quot;ADDEXP&quot;,false,&quot;Set to TRUE if you want to have fixed components with the experimental values.&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineCov">         36 :   keys.add(&quot;numbered&quot;,&quot;EXPINT&quot;,&quot;Add an experimental value for each q value.&quot;);</span>
+<span class="lineNum">     132 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;SCEXP&quot;,&quot;1.0&quot;,&quot;SCALING value of the experimental data. Usefull to simplify the comparison.&quot;);</span>
+<span class="lineNum">     133 </span><span class="lineCov">         36 :   keys.addOutputComponent(&quot;q&quot;,&quot;default&quot;,&quot;the # SAXS of q&quot;);</span>
+<span class="lineNum">     134 </span><span class="lineCov">         36 :   keys.addOutputComponent(&quot;exp&quot;,&quot;ADDEXP&quot;,&quot;the # experimental intensity&quot;);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          9 : }</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineCov">          8 : SAXS::SAXS(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     138 </span>            :   PLUMED_METAINF_INIT(ao),
+<span class="lineNum">     139 </span>            :   pbc(true),
+<span class="lineNum">     140 </span><span class="lineCov">         24 :   serial(false)</span>
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     143 </span><span class="lineCov">         16 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     144 </span><span class="lineCov">          8 :   const unsigned size = atoms.size();</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">         16 :   parseFlag(&quot;SERIAL&quot;,serial);</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">          8 :   bool nopbc=!pbc;</span>
+<span class="lineNum">     149 </span><span class="lineCov">         16 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     150 </span><span class="lineCov">          8 :   pbc=!nopbc;</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">          8 :   double scexp = 0;</span>
+<span class="lineNum">     153 </span><span class="lineCov">         16 :   parse(&quot;SCEXP&quot;,scexp);</span>
+<span class="lineNum">     154 </span><span class="lineCov">          8 :   if(scexp==0) scexp=1.0;</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   unsigned ntarget=0;
+<span class="lineNum">     157 </span>            :   for(unsigned i=0;; ++i) {
+<span class="lineNum">     158 </span>            :     double t_list;
+<span class="lineNum">     159 </span><span class="lineCov">        256 :     if( !parseNumbered( &quot;QVALUE&quot;, i+1, t_list) ) break;</span>
+<span class="lineNum">     160 </span><span class="lineCov">        120 :     q_list.push_back(t_list);</span>
+<span class="lineNum">     161 </span>            :     ntarget++;
+<span class="lineNum">     162 </span><span class="lineCov">        120 :   }</span>
+<span class="lineNum">     163 </span>            :   const unsigned numq = ntarget;
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">          8 :   bool atomistic=false;</span>
+<span class="lineNum">     167 </span><span class="lineCov">         16 :   parseFlag(&quot;ATOMISTIC&quot;,atomistic);</span>
+<span class="lineNum">     168 </span><span class="lineCov">          8 :   bool martini=false;</span>
+<span class="lineNum">     169 </span><span class="lineCov">         16 :   parseFlag(&quot;MARTINI&quot;,martini);</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">          8 :   if(martini&amp;&amp;atomistic) error(&quot;You cannot use martini and atomistic at the same time&quot;);</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineCov">          8 :   double rho = 0.334;</span>
+<span class="lineNum">     174 </span><span class="lineCov">         16 :   parse(&quot;WATERDENS&quot;, rho);</span>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">          8 :   vector&lt;vector&lt;long double&gt; &gt;  FF_tmp;</span>
+<span class="lineNum">     177 </span><span class="lineCov">         16 :   FF_tmp.resize(numq,vector&lt;long double&gt;(size));</span>
+<span class="lineNum">     178 </span><span class="lineCov">          8 :   if(!atomistic&amp;&amp;!martini) {</span>
+<span class="lineNum">     179 </span>            :     //read in parameter vector
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :     vector&lt;vector&lt;long double&gt; &gt; parameter;</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     parameter.resize(size);</span>
+<span class="lineNum">     182 </span>            :     ntarget=0;
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;size; ++i) {</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :       if( !parseNumberedVector( &quot;PARAMETERS&quot;, i+1, parameter[i]) ) break;</span>
+<span class="lineNum">     185 </span>            :       ntarget++;
+<span class="lineNum">     186 </span>            :     }
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :     if( ntarget!=size ) error(&quot;found wrong number of parameter vectors&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;size; ++i) {</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :       for(unsigned k=0; k&lt;numq; ++k) {</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         for(unsigned j=0; j&lt;parameter[i].size(); ++j) {</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :           FF_tmp[k][i]+= parameter[i][j]*powl(static_cast&lt;long double&gt;(q_list[k]),j);</span>
+<span class="lineNum">     192 </span>            :         }
+<span class="lineNum">     193 </span>            :       }
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     195 </span><span class="lineCov">          8 :   } else if(martini) {</span>
+<span class="lineNum">     196 </span>            :     //read in parameter vector
+<span class="lineNum">     197 </span><span class="lineCov">          8 :     vector&lt;vector&lt;long double&gt; &gt; parameter;</span>
+<span class="lineNum">     198 </span><span class="lineCov">          8 :     parameter.resize(size);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          8 :     getMartiniSFparam(atoms, parameter);</span>
+<span class="lineNum">     200 </span><span class="lineCov">       5688 :     for(unsigned i=0; i&lt;size; ++i) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">      88040 :       for(unsigned k=0; k&lt;numq; ++k) {</span>
+<span class="lineNum">     202 </span><span class="lineCov">     979800 :         for(unsigned j=0; j&lt;parameter[i].size(); ++j) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">     894600 :           FF_tmp[k][i]+= parameter[i][j]*powl(static_cast&lt;long double&gt;(q_list[k]),j);</span>
+<span class="lineNum">     204 </span>            :         }
+<span class="lineNum">     205 </span>            :       }
+<span class="lineNum">     206 </span>            :     }
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :   } else if(atomistic) {</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :     calculateASF(atoms, FF_tmp, rho);</span>
+<span class="lineNum">     209 </span>            :   }
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :   // Calculate Rank of FF_matrix
+<span class="lineNum">     212 </span><span class="lineCov">          8 :   FF_rank.resize(numq);</span>
+<span class="lineNum">     213 </span><span class="lineCov">         16 :   FF_value.resize(numq,vector&lt;double&gt;(size));</span>
+<span class="lineNum">     214 </span><span class="lineCov">        248 :   for(unsigned k=0; k&lt;numq; ++k) {</span>
+<span class="lineNum">     215 </span><span class="lineCov">      85320 :     for(unsigned i=0; i&lt;size; i++) {</span>
+<span class="lineNum">     216 </span><span class="lineCov">     127800 :       FF_value[k][i] = static_cast&lt;double&gt;(FF_tmp[k][i])/sqrt(scexp);</span>
+<span class="lineNum">     217 </span><span class="lineCov">      85200 :       FF_rank[k]+=FF_value[k][i]*FF_value[k][i];</span>
+<span class="lineNum">     218 </span>            :     }
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">          8 :   bool exp=false;</span>
+<span class="lineNum">     222 </span><span class="lineCov">         16 :   parseFlag(&quot;ADDEXP&quot;,exp);</span>
+<span class="lineNum">     223 </span><span class="lineCov">          8 :   if(getDoScore()) exp=true;</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :   vector&lt;double&gt; expint;
+<span class="lineNum">     226 </span><span class="lineCov">          8 :   expint.resize( numq );</span>
+<span class="lineNum">     227 </span>            :   ntarget=0;
+<span class="lineNum">     228 </span><span class="lineCov">        128 :   for(unsigned i=0; i&lt;numq; ++i) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">        360 :     if( !parseNumbered( &quot;EXPINT&quot;, i+1, expint[i] ) ) break;</span>
+<span class="lineNum">     230 </span>            :     ntarget++;
+<span class="lineNum">     231 </span>            :   }
+<span class="lineNum">     232 </span><span class="lineCov">          8 :   if( ntarget!=numq &amp;&amp; exp==true) error(&quot;found wrong number of EXPINT values&quot;);</span>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineCov">          8 :   if(pbc)      log.printf(&quot;  using periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :   else         log.printf(&quot;  without periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     236 </span><span class="lineCov">        248 :   for(unsigned i=0; i&lt;numq; i++) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">        240 :     if(q_list[i]==0.) error(&quot;it is not possible to set q=0\n&quot;);</span>
+<span class="lineNum">     238 </span><span class="lineCov">        240 :     log.printf(&quot;  my q: %lf \n&quot;,q_list[i]);</span>
+<span class="lineNum">     239 </span>            :   }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span><span class="lineCov">          8 :   if(!getDoScore()) {</span>
+<span class="lineNum">     242 </span><span class="lineCov">        124 :     for(unsigned i=0; i&lt;numq; i++) {</span>
+<span class="lineNum">     243 </span><span class="lineCov">         60 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     244 </span><span class="lineCov">        120 :       addComponentWithDerivatives(&quot;q_&quot;+num);</span>
+<span class="lineNum">     245 </span><span class="lineCov">        120 :       componentIsNotPeriodic(&quot;q_&quot;+num);</span>
+<span class="lineNum">     246 </span>            :     }
+<span class="lineNum">     247 </span><span class="lineCov">          4 :     if(exp) {</span>
+<span class="lineNum">     248 </span><span class="lineCov">        124 :       for(unsigned i=0; i&lt;numq; i++) {</span>
+<span class="lineNum">     249 </span><span class="lineCov">         60 :         std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     250 </span><span class="lineCov">        120 :         addComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     251 </span><span class="lineCov">        120 :         componentIsNotPeriodic(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     252 </span><span class="lineCov">        120 :         Value* comp=getPntrToComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     253 </span><span class="lineCov">        120 :         comp-&gt;set(expint[i]);</span>
+<span class="lineNum">     254 </span>            :       }
+<span class="lineNum">     255 </span>            :     }
+<span class="lineNum">     256 </span>            :   } else {
+<span class="lineNum">     257 </span><span class="lineCov">        124 :     for(unsigned i=0; i&lt;numq; i++) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">         60 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     259 </span><span class="lineCov">        120 :       addComponent(&quot;q_&quot;+num);</span>
+<span class="lineNum">     260 </span><span class="lineCov">        120 :       componentIsNotPeriodic(&quot;q_&quot;+num);</span>
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span><span class="lineCov">        124 :     for(unsigned i=0; i&lt;numq; i++) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">         60 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     264 </span><span class="lineCov">        120 :       addComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     265 </span><span class="lineCov">        120 :       componentIsNotPeriodic(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     266 </span><span class="lineCov">        120 :       Value* comp=getPntrToComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     267 </span><span class="lineCov">        120 :       comp-&gt;set(expint[i]);</span>
+<span class="lineNum">     268 </span>            :     }
+<span class="lineNum">     269 </span>            :   }
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :   // convert units to nm^-1
+<span class="lineNum">     272 </span><span class="lineCov">        248 :   for(unsigned i=0; i&lt;numq; ++i) {</span>
+<span class="lineNum">     273 </span><span class="lineCov">        240 :     q_list[i]=q_list[i]*10.0;    //factor 10 to convert from A^-1 to nm^-1</span>
+<span class="lineNum">     274 </span>            :   }
+<span class="lineNum">     275 </span><span class="lineCov">          8 :   log&lt;&lt;&quot;  Bibliography &quot;;</span>
+<span class="lineNum">     276 </span><span class="lineCov">         24 :   log&lt;&lt;plumed.cite(&quot;Jussupow, et al. (in preparation)&quot;);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         24 :   if(martini)   log&lt;&lt;plumed.cite(&quot;Niebling, Björling, Westenhoff, J Appl Crystallogr 47, 1190–1198 (2014).&quot;);</span>
+<span class="lineNum">     278 </span><span class="lineCov">          8 :   if(atomistic) {</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :     log&lt;&lt;plumed.cite(&quot;Fraser, MacRae, Suzuki, J. Appl. Crystallogr., 11, 693–694 (1978).&quot;);</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :     log&lt;&lt;plumed.cite(&quot;Brown, Fox, Maslen, O'Keefe, Willis, International Tables for Crystallography C, 554–595 (International Union of Crystallography, 2006).&quot;);</span>
+<span class="lineNum">     281 </span>            :   }
+<span class="lineNum">     282 </span><span class="lineCov">         24 :   log&lt;&lt; plumed.cite(&quot;Bonomi, Camilloni, Bioinformatics, 33, 3999 (2017)&quot;);</span>
+<span class="lineNum">     283 </span><span class="lineCov">          8 :   log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">          8 :   requestAtoms(atoms);</span>
+<span class="lineNum">     286 </span><span class="lineCov">          8 :   if(getDoScore()) {</span>
+<span class="lineNum">     287 </span><span class="lineCov">          4 :     setParameters(expint);</span>
+<span class="lineNum">     288 </span><span class="lineCov">          4 :     Initialise(numq);</span>
+<span class="lineNum">     289 </span>            :   }
+<span class="lineNum">     290 </span><span class="lineCov">          8 :   setDerivatives();</span>
+<span class="lineNum">     291 </span><span class="lineCov">          8 :   checkRead();</span>
+<span class="lineNum">     292 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineCov">         88 : void SAXS::calculate() {</span>
+<span class="lineNum">     295 </span><span class="lineCov">         88 :   if(pbc) makeWhole();</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :   const unsigned size = getNumberOfAtoms();
+<span class="lineNum">     298 </span><span class="lineCov">         88 :   const unsigned numq = q_list.size();</span>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span><span class="lineCov">         88 :   unsigned stride = comm.Get_size();</span>
+<span class="lineNum">     301 </span><span class="lineCov">         88 :   unsigned rank   = comm.Get_rank();</span>
+<span class="lineNum">     302 </span><span class="lineCov">         88 :   if(serial) {</span>
+<span class="lineNum">     303 </span>            :     stride = 1;
+<span class="lineNum">     304 </span>            :     rank   = 0;
+<span class="lineNum">     305 </span>            :   }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">         88 :   vector&lt;Vector&gt; deriv(numq*size);</span>
+<a name="308"><span class="lineNum">     308 </span><span class="lineCov">         88 :   vector&lt;double&gt; sum(numq,0);</span></a>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span><span class="lineCov">        264 :   #pragma omp parallel for num_threads(OpenMP::getNumThreads())</span>
+<span class="lineNum">     311 </span>            :   for (unsigned k=0; k&lt;numq; k++) {
+<span class="lineNum">     312 </span><span class="lineCov">       1320 :     const unsigned kdx=k*size;</span>
+<span class="lineNum">     313 </span><span class="lineCov">     457980 :     for (unsigned i=rank; i&lt;size-1; i+=stride) {</span>
+<span class="lineNum">     314 </span><span class="lineCov">     456660 :       const double FF=2.*FF_value[k][i];</span>
+<span class="lineNum">     315 </span><span class="lineCov">     456660 :       const Vector posi=getPosition(i);</span>
+<span class="lineNum">     316 </span><span class="lineCov">     228330 :       Vector dsum;</span>
+<span class="lineNum">     317 </span><span class="lineCov">   40756905 :       for (unsigned j=i+1; j&lt;size ; j++) {</span>
+<span class="lineNum">     318 </span><span class="lineCov">   81057150 :         const Vector c_distances = delta(posi,getPosition(j));</span>
+<span class="lineNum">     319 </span><span class="lineCov">   40528575 :         const double m_distances = c_distances.modulo();</span>
+<span class="lineNum">     320 </span><span class="lineCov">   40528575 :         const double qdist       = q_list[k]*m_distances;</span>
+<span class="lineNum">     321 </span><span class="lineCov">   81057150 :         const double FFF = FF*FF_value[k][j];</span>
+<span class="lineNum">     322 </span><span class="lineCov">   40528575 :         const double tsq = FFF*sin(qdist)/qdist;</span>
+<span class="lineNum">     323 </span><span class="lineCov">   40528575 :         const double tcq = FFF*cos(qdist);</span>
+<span class="lineNum">     324 </span><span class="lineCov">   40528575 :         const double tmp = (tcq-tsq)/(m_distances*m_distances);</span>
+<span class="lineNum">     325 </span><span class="lineCov">   40528575 :         const Vector dd  = c_distances*tmp;</span>
+<span class="lineNum">     326 </span><span class="lineCov">   40528575 :         dsum         += dd;</span>
+<span class="lineNum">     327 </span><span class="lineCov">   81057150 :         deriv[kdx+j] += dd;</span>
+<span class="lineNum">     328 </span><span class="lineCov">   81057150 :         sum[k]       += tsq;</span>
+<span class="lineNum">     329 </span>            :       }
+<span class="lineNum">     330 </span><span class="lineCov">     456660 :       deriv[kdx+i] -= dsum;</span>
+<span class="lineNum">     331 </span>            :     }
+<span class="lineNum">     332 </span>            :   }
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span><span class="lineCov">         88 :   if(!serial) {</span>
+<span class="lineNum">     335 </span><span class="lineCov">        176 :     comm.Sum(&amp;deriv[0][0], 3*deriv.size());</span>
+<span class="lineNum">     336 </span><span class="lineCov">        176 :     comm.Sum(&amp;sum[0], numq);</span>
+<span class="lineNum">     337 </span>            :   }
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">       2728 :   for (unsigned k=0; k&lt;numq; k++) {</span>
+<span class="lineNum">     340 </span><span class="lineCov">       3960 :     sum[k]+=FF_rank[k];</span>
+<span class="lineNum">     341 </span><span class="lineCov">       1320 :     string num; Tools::convert(k,num);</span>
+<span class="lineNum">     342 </span><span class="lineCov">       2640 :     Value* val=getPntrToComponent(&quot;q_&quot;+num);</span>
+<span class="lineNum">     343 </span><span class="lineCov">       1320 :     val-&gt;set(sum[k]);</span>
+<span class="lineNum">     344 </span><span class="lineCov">       2580 :     if(getDoScore()) setCalcData(k, sum[k]);</span>
+<span class="lineNum">     345 </span>            :   }
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span><span class="lineCov">         88 :   if(getDoScore()) {</span>
+<span class="lineNum">     348 </span>            :     /* Metainference */
+<span class="lineNum">     349 </span><span class="lineCov">         84 :     double score = getScore();</span>
+<span class="lineNum">     350 </span>            :     setScore(score);
+<span class="lineNum">     351 </span>            :   }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineCov">       2728 :   for (unsigned k=0; k&lt;numq; k++) {</span>
+<span class="lineNum">     354 </span><span class="lineCov">       1320 :     const unsigned kdx=k*size;</span>
+<span class="lineNum">     355 </span><span class="lineCov">       1320 :     Tensor deriv_box;</span>
+<span class="lineNum">     356 </span>            :     Value* val;
+<span class="lineNum">     357 </span><span class="lineCov">       1320 :     if(!getDoScore()) {</span>
+<span class="lineNum">     358 </span><span class="lineCov">         60 :       string num; Tools::convert(k,num);</span>
+<span class="lineNum">     359 </span><span class="lineCov">        120 :       val=getPntrToComponent(&quot;q_&quot;+num);</span>
+<span class="lineNum">     360 </span><span class="lineCov">      42660 :       for(unsigned i=0; i&lt;size; i++) {</span>
+<span class="lineNum">     361 </span><span class="lineCov">      42600 :         setAtomsDerivatives(val, i, deriv[kdx+i]);</span>
+<span class="lineNum">     362 </span><span class="lineCov">      42600 :         deriv_box += Tensor(getPosition(i),deriv[kdx+i]);</span>
+<span class="lineNum">     363 </span>            :       }
+<span class="lineNum">     364 </span>            :     } else {
+<span class="lineNum">     365 </span><span class="lineCov">       2520 :       val=getPntrToComponent(&quot;score&quot;);</span>
+<span class="lineNum">     366 </span><span class="lineCov">     895860 :       for(unsigned i=0; i&lt;size; i++) {</span>
+<span class="lineNum">     367 </span><span class="lineCov">    1341900 :         setAtomsDerivatives(val, i, deriv[kdx+i]*getMetaDer(k));</span>
+<span class="lineNum">     368 </span><span class="lineCov">     894600 :         deriv_box += Tensor(getPosition(i),deriv[kdx+i]*getMetaDer(k));</span>
+<span class="lineNum">     369 </span>            :       }
+<span class="lineNum">     370 </span>            :     }
+<span class="lineNum">     371 </span><span class="lineCov">       1320 :     setBoxDerivatives(val, -deriv_box);</span>
+<span class="lineNum">     372 </span>            :   }
+<a name="373"><span class="lineNum">     373 </span><span class="lineCov">         88 : }</span></a>
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span><span class="lineCov">         88 : void SAXS::update() {</span>
+<span class="lineNum">     376 </span>            :   // write status file
+<span class="lineNum">     377 </span><span class="lineCov">        176 :   if(getWstride()&gt;0&amp;&amp; (getStep()%getWstride()==0 || getCPT()) ) writeStatus();</span>
+<span class="lineNum">     378 </span><span class="lineCov">         88 : }</span>
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span><span class="lineCov">          8 : void SAXS::getMartiniSFparam(const vector&lt;AtomNumber&gt; &amp;atoms, vector&lt;vector&lt;long double&gt; &gt; &amp;parameter)</span>
+<span class="lineNum">     381 </span>            : {
+<span class="lineNum">     382 </span><span class="lineCov">         16 :   vector&lt;SetupMolInfo*&gt; moldat=plumed.getActionSet().select&lt;SetupMolInfo*&gt;();</span>
+<span class="lineNum">     383 </span><span class="lineCov">          8 :   if( moldat.size()==1 ) {</span>
+<span class="lineNum">     384 </span><span class="lineCov">          8 :     log&lt;&lt;&quot;  MOLINFO DATA found, using proper atom names\n&quot;;</span>
+<span class="lineNum">     385 </span><span class="lineCov">       8536 :     for(unsigned i=0; i&lt;atoms.size(); ++i) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">       5680 :       string Aname = moldat[0]-&gt;getAtomName(atoms[i]);</span>
+<span class="lineNum">     387 </span><span class="lineCov">       5680 :       string Rname = moldat[0]-&gt;getResidueName(atoms[i]);</span>
+<span class="lineNum">     388 </span><span class="lineCov">       2840 :       if(Rname==&quot;ALA&quot;) {</span>
+<span class="lineNum">     389 </span><span class="lineCov">         48 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     390 </span><span class="lineCov">         96 :           parameter[i].push_back(9.045);</span>
+<span class="lineNum">     391 </span><span class="lineCov">         96 :           parameter[i].push_back(-0.098114);</span>
+<span class="lineNum">     392 </span><span class="lineCov">         96 :           parameter[i].push_back(7.54281);</span>
+<span class="lineNum">     393 </span><span class="lineCov">         96 :           parameter[i].push_back(-1.97438);</span>
+<span class="lineNum">     394 </span><span class="lineCov">         96 :           parameter[i].push_back(-8.32689);</span>
+<span class="lineNum">     395 </span><span class="lineCov">         96 :           parameter[i].push_back(6.09318);</span>
+<span class="lineNum">     396 </span><span class="lineCov">         96 :           parameter[i].push_back(-1.18913);</span>
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     398 </span><span class="lineCov">       2792 :       } else if(Rname==&quot;ARG&quot;) {</span>
+<span class="lineNum">     399 </span><span class="lineCov">        192 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     400 </span><span class="lineCov">        128 :           parameter[i].push_back(10.729);</span>
+<span class="lineNum">     401 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.0392574);</span>
+<span class="lineNum">     402 </span><span class="lineCov">        128 :           parameter[i].push_back(1.15382);</span>
+<span class="lineNum">     403 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.155999);</span>
+<span class="lineNum">     404 </span><span class="lineCov">        128 :           parameter[i].push_back(-2.43619);</span>
+<span class="lineNum">     405 </span><span class="lineCov">        128 :           parameter[i].push_back(1.72922);</span>
+<span class="lineNum">     406 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.33799);</span>
+<span class="lineNum">     407 </span><span class="lineCov">        128 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     408 </span><span class="lineCov">        128 :           parameter[i].push_back(-2.796);</span>
+<span class="lineNum">     409 </span><span class="lineCov">        128 :           parameter[i].push_back(0.472403);</span>
+<span class="lineNum">     410 </span><span class="lineCov">        128 :           parameter[i].push_back(8.07424);</span>
+<span class="lineNum">     411 </span><span class="lineCov">        128 :           parameter[i].push_back(4.37299);</span>
+<span class="lineNum">     412 </span><span class="lineCov">        128 :           parameter[i].push_back(-10.7398);</span>
+<span class="lineNum">     413 </span><span class="lineCov">        128 :           parameter[i].push_back(4.95677);</span>
+<span class="lineNum">     414 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.725797);</span>
+<span class="lineNum">     415 </span><span class="lineCov">         64 :         } else if(Aname==&quot;SC2&quot;) {</span>
+<span class="lineNum">     416 </span><span class="lineCov">        128 :           parameter[i].push_back(15.396);</span>
+<span class="lineNum">     417 </span><span class="lineCov">        128 :           parameter[i].push_back(0.0636736);</span>
+<span class="lineNum">     418 </span><span class="lineCov">        128 :           parameter[i].push_back(-1.258);</span>
+<span class="lineNum">     419 </span><span class="lineCov">        128 :           parameter[i].push_back(1.93135);</span>
+<span class="lineNum">     420 </span><span class="lineCov">        128 :           parameter[i].push_back(-4.45031);</span>
+<span class="lineNum">     421 </span><span class="lineCov">        128 :           parameter[i].push_back(2.49356);</span>
+<span class="lineNum">     422 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.410721);</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     424 </span><span class="lineCov">       2600 :       } else if(Rname==&quot;ASN&quot;) {</span>
+<span class="lineNum">     425 </span><span class="lineCov">         64 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     426 </span><span class="lineCov">         64 :           parameter[i].push_back(10.738);</span>
+<span class="lineNum">     427 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.0402162);</span>
+<span class="lineNum">     428 </span><span class="lineCov">         64 :           parameter[i].push_back(1.03007);</span>
+<span class="lineNum">     429 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.254174);</span>
+<span class="lineNum">     430 </span><span class="lineCov">         64 :           parameter[i].push_back(-2.12015);</span>
+<span class="lineNum">     431 </span><span class="lineCov">         64 :           parameter[i].push_back(1.55535);</span>
+<span class="lineNum">     432 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.30963);</span>
+<span class="lineNum">     433 </span><span class="lineCov">         32 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     434 </span><span class="lineCov">         64 :           parameter[i].push_back(9.249);</span>
+<span class="lineNum">     435 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.0148678);</span>
+<span class="lineNum">     436 </span><span class="lineCov">         64 :           parameter[i].push_back(5.52169);</span>
+<span class="lineNum">     437 </span><span class="lineCov">         64 :           parameter[i].push_back(0.00853212);</span>
+<span class="lineNum">     438 </span><span class="lineCov">         64 :           parameter[i].push_back(-6.71992);</span>
+<span class="lineNum">     439 </span><span class="lineCov">         64 :           parameter[i].push_back(3.93622);</span>
+<span class="lineNum">     440 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.64973);</span>
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     442 </span><span class="lineCov">       2536 :       } else if(Rname==&quot;ASP&quot;) {</span>
+<span class="lineNum">     443 </span><span class="lineCov">        160 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     444 </span><span class="lineCov">        160 :           parameter[i].push_back(10.695);</span>
+<span class="lineNum">     445 </span><span class="lineCov">        160 :           parameter[i].push_back(-0.0410247);</span>
+<span class="lineNum">     446 </span><span class="lineCov">        160 :           parameter[i].push_back(1.03656);</span>
+<span class="lineNum">     447 </span><span class="lineCov">        160 :           parameter[i].push_back(-0.298558);</span>
+<span class="lineNum">     448 </span><span class="lineCov">        160 :           parameter[i].push_back(-2.06064);</span>
+<span class="lineNum">     449 </span><span class="lineCov">        160 :           parameter[i].push_back(1.53495);</span>
+<span class="lineNum">     450 </span><span class="lineCov">        160 :           parameter[i].push_back(-0.308365);</span>
+<span class="lineNum">     451 </span><span class="lineCov">         80 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     452 </span><span class="lineCov">        160 :           parameter[i].push_back(9.476);</span>
+<span class="lineNum">     453 </span><span class="lineCov">        160 :           parameter[i].push_back(-0.0254664);</span>
+<span class="lineNum">     454 </span><span class="lineCov">        160 :           parameter[i].push_back(5.57899);</span>
+<span class="lineNum">     455 </span><span class="lineCov">        160 :           parameter[i].push_back(-0.395027);</span>
+<span class="lineNum">     456 </span><span class="lineCov">        160 :           parameter[i].push_back(-5.9407);</span>
+<span class="lineNum">     457 </span><span class="lineCov">        160 :           parameter[i].push_back(3.48836);</span>
+<span class="lineNum">     458 </span><span class="lineCov">        160 :           parameter[i].push_back(-0.569402);</span>
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     460 </span><span class="lineCov">       2376 :       } else if(Rname==&quot;CYS&quot;) {</span>
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :           parameter[i].push_back(10.698);</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.0233493);</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.18257);</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.0684464);</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-2.792);</span>
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.88995);</span>
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.360229);</span>
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :           parameter[i].push_back(8.199);</span>
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.0261569);</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :           parameter[i].push_back(6.79677);</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.343845);</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-5.03578);</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :           parameter[i].push_back(2.7076);</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.420714);</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     478 </span><span class="lineCov">       2376 :       } else if(Rname==&quot;GLN&quot;) {</span>
+<span class="lineNum">     479 </span><span class="lineCov">        192 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     480 </span><span class="lineCov">        192 :           parameter[i].push_back(10.728);</span>
+<span class="lineNum">     481 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.0391984);</span>
+<span class="lineNum">     482 </span><span class="lineCov">        192 :           parameter[i].push_back(1.09264);</span>
+<span class="lineNum">     483 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.261555);</span>
+<span class="lineNum">     484 </span><span class="lineCov">        192 :           parameter[i].push_back(-2.21245);</span>
+<span class="lineNum">     485 </span><span class="lineCov">        192 :           parameter[i].push_back(1.62071);</span>
+<span class="lineNum">     486 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.322325);</span>
+<span class="lineNum">     487 </span><span class="lineCov">         96 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     488 </span><span class="lineCov">        192 :           parameter[i].push_back(8.317);</span>
+<span class="lineNum">     489 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.229045);</span>
+<span class="lineNum">     490 </span><span class="lineCov">        192 :           parameter[i].push_back(12.6338);</span>
+<span class="lineNum">     491 </span><span class="lineCov">        192 :           parameter[i].push_back(-7.6719);</span>
+<span class="lineNum">     492 </span><span class="lineCov">        192 :           parameter[i].push_back(-5.8376);</span>
+<span class="lineNum">     493 </span><span class="lineCov">        192 :           parameter[i].push_back(5.53784);</span>
+<span class="lineNum">     494 </span><span class="lineCov">        192 :           parameter[i].push_back(-1.12604);</span>
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     496 </span><span class="lineCov">       2184 :       } else if(Rname==&quot;GLU&quot;) {</span>
+<span class="lineNum">     497 </span><span class="lineCov">        192 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     498 </span><span class="lineCov">        192 :           parameter[i].push_back(10.694);</span>
+<span class="lineNum">     499 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.0521961);</span>
+<span class="lineNum">     500 </span><span class="lineCov">        192 :           parameter[i].push_back(1.11153);</span>
+<span class="lineNum">     501 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.491995);</span>
+<span class="lineNum">     502 </span><span class="lineCov">        192 :           parameter[i].push_back(-1.86236);</span>
+<span class="lineNum">     503 </span><span class="lineCov">        192 :           parameter[i].push_back(1.45332);</span>
+<span class="lineNum">     504 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.29708);</span>
+<span class="lineNum">     505 </span><span class="lineCov">         96 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     506 </span><span class="lineCov">        192 :           parameter[i].push_back(8.544);</span>
+<span class="lineNum">     507 </span><span class="lineCov">        192 :           parameter[i].push_back(-0.249555);</span>
+<span class="lineNum">     508 </span><span class="lineCov">        192 :           parameter[i].push_back(12.8031);</span>
+<span class="lineNum">     509 </span><span class="lineCov">        192 :           parameter[i].push_back(-8.42696);</span>
+<span class="lineNum">     510 </span><span class="lineCov">        192 :           parameter[i].push_back(-4.66486);</span>
+<span class="lineNum">     511 </span><span class="lineCov">        192 :           parameter[i].push_back(4.90004);</span>
+<span class="lineNum">     512 </span><span class="lineCov">        192 :           parameter[i].push_back(-1.01204);</span>
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     514 </span><span class="lineCov">       1992 :       } else if(Rname==&quot;GLY&quot;) {</span>
+<span class="lineNum">     515 </span><span class="lineCov">        104 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     516 </span><span class="lineCov">        208 :           parameter[i].push_back(9.977);</span>
+<span class="lineNum">     517 </span><span class="lineCov">        208 :           parameter[i].push_back(-0.0285799);</span>
+<span class="lineNum">     518 </span><span class="lineCov">        208 :           parameter[i].push_back(1.84236);</span>
+<span class="lineNum">     519 </span><span class="lineCov">        208 :           parameter[i].push_back(-0.0315192);</span>
+<span class="lineNum">     520 </span><span class="lineCov">        208 :           parameter[i].push_back(-2.88326);</span>
+<span class="lineNum">     521 </span><span class="lineCov">        208 :           parameter[i].push_back(1.87323);</span>
+<span class="lineNum">     522 </span><span class="lineCov">        208 :           parameter[i].push_back(-0.345773);</span>
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     524 </span><span class="lineCov">       1888 :       } else if(Rname==&quot;HIS&quot;) {</span>
+<span class="lineNum">     525 </span><span class="lineCov">        256 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     526 </span><span class="lineCov">        128 :           parameter[i].push_back(10.721);</span>
+<span class="lineNum">     527 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.0379337);</span>
+<span class="lineNum">     528 </span><span class="lineCov">        128 :           parameter[i].push_back(1.06028);</span>
+<span class="lineNum">     529 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.236143);</span>
+<span class="lineNum">     530 </span><span class="lineCov">        128 :           parameter[i].push_back(-2.17819);</span>
+<span class="lineNum">     531 </span><span class="lineCov">        128 :           parameter[i].push_back(1.58357);</span>
+<span class="lineNum">     532 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.31345);</span>
+<span class="lineNum">     533 </span><span class="lineCov">        192 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     534 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.424);</span>
+<span class="lineNum">     535 </span><span class="lineCov">        128 :           parameter[i].push_back(0.665176);</span>
+<span class="lineNum">     536 </span><span class="lineCov">        128 :           parameter[i].push_back(3.4369);</span>
+<span class="lineNum">     537 </span><span class="lineCov">        128 :           parameter[i].push_back(2.93795);</span>
+<span class="lineNum">     538 </span><span class="lineCov">        128 :           parameter[i].push_back(-5.18288);</span>
+<span class="lineNum">     539 </span><span class="lineCov">        128 :           parameter[i].push_back(2.12381);</span>
+<span class="lineNum">     540 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.284224);</span>
+<span class="lineNum">     541 </span><span class="lineCov">        128 :         } else if(Aname==&quot;SC2&quot;) {</span>
+<span class="lineNum">     542 </span><span class="lineCov">        128 :           parameter[i].push_back(5.363);</span>
+<span class="lineNum">     543 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.0176945);</span>
+<span class="lineNum">     544 </span><span class="lineCov">        128 :           parameter[i].push_back(2.9506);</span>
+<span class="lineNum">     545 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.387018);</span>
+<span class="lineNum">     546 </span><span class="lineCov">        128 :           parameter[i].push_back(-1.83951);</span>
+<span class="lineNum">     547 </span><span class="lineCov">        128 :           parameter[i].push_back(0.9703);</span>
+<span class="lineNum">     548 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.1458);</span>
+<span class="lineNum">     549 </span><span class="lineCov">         64 :         } else if(Aname==&quot;SC3&quot;) {</span>
+<span class="lineNum">     550 </span><span class="lineCov">        128 :           parameter[i].push_back(5.784);</span>
+<span class="lineNum">     551 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.0293129);</span>
+<span class="lineNum">     552 </span><span class="lineCov">        128 :           parameter[i].push_back(2.74167);</span>
+<span class="lineNum">     553 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.520875);</span>
+<span class="lineNum">     554 </span><span class="lineCov">        128 :           parameter[i].push_back(-1.62949);</span>
+<span class="lineNum">     555 </span><span class="lineCov">        128 :           parameter[i].push_back(0.902379);</span>
+<span class="lineNum">     556 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.139957);</span>
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     558 </span><span class="lineCov">       1632 :       } else if(Rname==&quot;ILE&quot;) {</span>
+<span class="lineNum">     559 </span><span class="lineCov">        224 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     560 </span><span class="lineCov">        224 :           parameter[i].push_back(10.699);</span>
+<span class="lineNum">     561 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.0188962);</span>
+<span class="lineNum">     562 </span><span class="lineCov">        224 :           parameter[i].push_back(1.217);</span>
+<span class="lineNum">     563 </span><span class="lineCov">        224 :           parameter[i].push_back(0.242481);</span>
+<span class="lineNum">     564 </span><span class="lineCov">        224 :           parameter[i].push_back(-3.13898);</span>
+<span class="lineNum">     565 </span><span class="lineCov">        224 :           parameter[i].push_back(2.07916);</span>
+<span class="lineNum">     566 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.392574);</span>
+<span class="lineNum">     567 </span><span class="lineCov">        112 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     568 </span><span class="lineCov">        224 :           parameter[i].push_back(-4.448);</span>
+<span class="lineNum">     569 </span><span class="lineCov">        224 :           parameter[i].push_back(1.20996);</span>
+<span class="lineNum">     570 </span><span class="lineCov">        224 :           parameter[i].push_back(11.5141);</span>
+<span class="lineNum">     571 </span><span class="lineCov">        224 :           parameter[i].push_back(6.98895);</span>
+<span class="lineNum">     572 </span><span class="lineCov">        224 :           parameter[i].push_back(-19.1948);</span>
+<span class="lineNum">     573 </span><span class="lineCov">        224 :           parameter[i].push_back(9.89207);</span>
+<span class="lineNum">     574 </span><span class="lineCov">        224 :           parameter[i].push_back(-1.60877);</span>
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     576 </span><span class="lineCov">       1408 :       } else if(Rname==&quot;LEU&quot;) {</span>
+<span class="lineNum">     577 </span><span class="lineCov">        288 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     578 </span><span class="lineCov">        288 :           parameter[i].push_back(10.692);</span>
+<span class="lineNum">     579 </span><span class="lineCov">        288 :           parameter[i].push_back(-0.0414917);</span>
+<span class="lineNum">     580 </span><span class="lineCov">        288 :           parameter[i].push_back(1.1077);</span>
+<span class="lineNum">     581 </span><span class="lineCov">        288 :           parameter[i].push_back(-0.288062);</span>
+<span class="lineNum">     582 </span><span class="lineCov">        288 :           parameter[i].push_back(-2.17187);</span>
+<span class="lineNum">     583 </span><span class="lineCov">        288 :           parameter[i].push_back(1.59879);</span>
+<span class="lineNum">     584 </span><span class="lineCov">        288 :           parameter[i].push_back(-0.318545);</span>
+<span class="lineNum">     585 </span><span class="lineCov">        144 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     586 </span><span class="lineCov">        288 :           parameter[i].push_back(-4.448);</span>
+<span class="lineNum">     587 </span><span class="lineCov">        288 :           parameter[i].push_back(2.1063);</span>
+<span class="lineNum">     588 </span><span class="lineCov">        288 :           parameter[i].push_back(6.72381);</span>
+<span class="lineNum">     589 </span><span class="lineCov">        288 :           parameter[i].push_back(14.6954);</span>
+<span class="lineNum">     590 </span><span class="lineCov">        288 :           parameter[i].push_back(-23.7197);</span>
+<span class="lineNum">     591 </span><span class="lineCov">        288 :           parameter[i].push_back(10.7247);</span>
+<span class="lineNum">     592 </span><span class="lineCov">        288 :           parameter[i].push_back(-1.59146);</span>
+<span class="lineNum">     593 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     594 </span><span class="lineCov">       1120 :       } else if(Rname==&quot;LYS&quot;) {</span>
+<span class="lineNum">     595 </span><span class="lineCov">        336 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     596 </span><span class="lineCov">        224 :           parameter[i].push_back(10.706);</span>
+<span class="lineNum">     597 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.0468629);</span>
+<span class="lineNum">     598 </span><span class="lineCov">        224 :           parameter[i].push_back(1.09477);</span>
+<span class="lineNum">     599 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.432751);</span>
+<span class="lineNum">     600 </span><span class="lineCov">        224 :           parameter[i].push_back(-1.94335);</span>
+<span class="lineNum">     601 </span><span class="lineCov">        224 :           parameter[i].push_back(1.49109);</span>
+<span class="lineNum">     602 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.302589);</span>
+<span class="lineNum">     603 </span><span class="lineCov">        224 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     604 </span><span class="lineCov">        224 :           parameter[i].push_back(-2.796);</span>
+<span class="lineNum">     605 </span><span class="lineCov">        224 :           parameter[i].push_back(0.508044);</span>
+<span class="lineNum">     606 </span><span class="lineCov">        224 :           parameter[i].push_back(7.91436);</span>
+<span class="lineNum">     607 </span><span class="lineCov">        224 :           parameter[i].push_back(4.54097);</span>
+<span class="lineNum">     608 </span><span class="lineCov">        224 :           parameter[i].push_back(-10.8051);</span>
+<span class="lineNum">     609 </span><span class="lineCov">        224 :           parameter[i].push_back(4.96204);</span>
+<span class="lineNum">     610 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.724414);</span>
+<span class="lineNum">     611 </span><span class="lineCov">        112 :         } else if(Aname==&quot;SC2&quot;) {</span>
+<span class="lineNum">     612 </span><span class="lineCov">        224 :           parameter[i].push_back(3.070);</span>
+<span class="lineNum">     613 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.0101448);</span>
+<span class="lineNum">     614 </span><span class="lineCov">        224 :           parameter[i].push_back(4.67994);</span>
+<span class="lineNum">     615 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.792529);</span>
+<span class="lineNum">     616 </span><span class="lineCov">        224 :           parameter[i].push_back(-2.09142);</span>
+<span class="lineNum">     617 </span><span class="lineCov">        224 :           parameter[i].push_back(1.02933);</span>
+<span class="lineNum">     618 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.137787);</span>
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     620 </span><span class="lineCov">        784 :       } else if(Rname==&quot;MET&quot;) {</span>
+<span class="lineNum">     621 </span><span class="lineCov">         32 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     622 </span><span class="lineCov">         32 :           parameter[i].push_back(10.671);</span>
+<span class="lineNum">     623 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.0433724);</span>
+<span class="lineNum">     624 </span><span class="lineCov">         32 :           parameter[i].push_back(1.13784);</span>
+<span class="lineNum">     625 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.40768);</span>
+<span class="lineNum">     626 </span><span class="lineCov">         32 :           parameter[i].push_back(-2.00555);</span>
+<span class="lineNum">     627 </span><span class="lineCov">         32 :           parameter[i].push_back(1.51673);</span>
+<span class="lineNum">     628 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.305547);</span>
+<span class="lineNum">     629 </span><span class="lineCov">         16 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     630 </span><span class="lineCov">         32 :           parameter[i].push_back(5.85);</span>
+<span class="lineNum">     631 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.0485798);</span>
+<span class="lineNum">     632 </span><span class="lineCov">         32 :           parameter[i].push_back(17.0391);</span>
+<span class="lineNum">     633 </span><span class="lineCov">         32 :           parameter[i].push_back(-3.65327);</span>
+<span class="lineNum">     634 </span><span class="lineCov">         32 :           parameter[i].push_back(-13.174);</span>
+<span class="lineNum">     635 </span><span class="lineCov">         32 :           parameter[i].push_back(8.68286);</span>
+<span class="lineNum">     636 </span><span class="lineCov">         32 :           parameter[i].push_back(-1.56095);</span>
+<span class="lineNum">     637 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     638 </span><span class="lineCov">        752 :       } else if(Rname==&quot;PHE&quot;) {</span>
+<span class="lineNum">     639 </span><span class="lineCov">        128 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     640 </span><span class="lineCov">         64 :           parameter[i].push_back(10.741);</span>
+<span class="lineNum">     641 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.0317275);</span>
+<span class="lineNum">     642 </span><span class="lineCov">         64 :           parameter[i].push_back(1.15599);</span>
+<span class="lineNum">     643 </span><span class="lineCov">         64 :           parameter[i].push_back(0.0276187);</span>
+<span class="lineNum">     644 </span><span class="lineCov">         64 :           parameter[i].push_back(-2.74757);</span>
+<span class="lineNum">     645 </span><span class="lineCov">         64 :           parameter[i].push_back(1.88783);</span>
+<span class="lineNum">     646 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.363525);</span>
+<span class="lineNum">     647 </span><span class="lineCov">         96 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     648 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.636);</span>
+<span class="lineNum">     649 </span><span class="lineCov">         64 :           parameter[i].push_back(0.527882);</span>
+<span class="lineNum">     650 </span><span class="lineCov">         64 :           parameter[i].push_back(6.77612);</span>
+<span class="lineNum">     651 </span><span class="lineCov">         64 :           parameter[i].push_back(3.18508);</span>
+<span class="lineNum">     652 </span><span class="lineCov">         64 :           parameter[i].push_back(-8.92826);</span>
+<span class="lineNum">     653 </span><span class="lineCov">         64 :           parameter[i].push_back(4.29752);</span>
+<span class="lineNum">     654 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.65187);</span>
+<span class="lineNum">     655 </span><span class="lineCov">         64 :         } else if(Aname==&quot;SC2&quot;) {</span>
+<span class="lineNum">     656 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.424);</span>
+<span class="lineNum">     657 </span><span class="lineCov">         64 :           parameter[i].push_back(0.389174);</span>
+<span class="lineNum">     658 </span><span class="lineCov">         64 :           parameter[i].push_back(4.11761);</span>
+<span class="lineNum">     659 </span><span class="lineCov">         64 :           parameter[i].push_back(2.29527);</span>
+<span class="lineNum">     660 </span><span class="lineCov">         64 :           parameter[i].push_back(-4.7652);</span>
+<span class="lineNum">     661 </span><span class="lineCov">         64 :           parameter[i].push_back(1.97023);</span>
+<span class="lineNum">     662 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.262318);</span>
+<span class="lineNum">     663 </span><span class="lineCov">         32 :         } else if(Aname==&quot;SC3&quot;) {</span>
+<span class="lineNum">     664 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.424);</span>
+<span class="lineNum">     665 </span><span class="lineCov">         64 :           parameter[i].push_back(0.38927);</span>
+<span class="lineNum">     666 </span><span class="lineCov">         64 :           parameter[i].push_back(4.11708);</span>
+<span class="lineNum">     667 </span><span class="lineCov">         64 :           parameter[i].push_back(2.29623);</span>
+<span class="lineNum">     668 </span><span class="lineCov">         64 :           parameter[i].push_back(-4.76592);</span>
+<span class="lineNum">     669 </span><span class="lineCov">         64 :           parameter[i].push_back(1.97055);</span>
+<span class="lineNum">     670 </span><span class="lineCov">         64 :           parameter[i].push_back(-0.262381);</span>
+<span class="lineNum">     671 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     672 </span><span class="lineCov">        624 :       } else if(Rname==&quot;PRO&quot;) {</span>
+<span class="lineNum">     673 </span><span class="lineCov">         96 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     674 </span><span class="lineCov">         96 :           parameter[i].push_back(11.434);</span>
+<span class="lineNum">     675 </span><span class="lineCov">         96 :           parameter[i].push_back(-0.033323);</span>
+<span class="lineNum">     676 </span><span class="lineCov">         96 :           parameter[i].push_back(0.472014);</span>
+<span class="lineNum">     677 </span><span class="lineCov">         96 :           parameter[i].push_back(-0.290854);</span>
+<span class="lineNum">     678 </span><span class="lineCov">         96 :           parameter[i].push_back(-1.81409);</span>
+<span class="lineNum">     679 </span><span class="lineCov">         96 :           parameter[i].push_back(1.39751);</span>
+<span class="lineNum">     680 </span><span class="lineCov">         96 :           parameter[i].push_back(-0.280407);</span>
+<span class="lineNum">     681 </span><span class="lineCov">         48 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     682 </span><span class="lineCov">         96 :           parameter[i].push_back(-2.796);</span>
+<span class="lineNum">     683 </span><span class="lineCov">         96 :           parameter[i].push_back(0.95668);</span>
+<span class="lineNum">     684 </span><span class="lineCov">         96 :           parameter[i].push_back(6.84197);</span>
+<span class="lineNum">     685 </span><span class="lineCov">         96 :           parameter[i].push_back(6.43774);</span>
+<span class="lineNum">     686 </span><span class="lineCov">         96 :           parameter[i].push_back(-12.5068);</span>
+<span class="lineNum">     687 </span><span class="lineCov">         96 :           parameter[i].push_back(5.64597);</span>
+<span class="lineNum">     688 </span><span class="lineCov">         96 :           parameter[i].push_back(-0.825206);</span>
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     690 </span><span class="lineCov">        528 :       } else if(Rname==&quot;SER&quot;) {</span>
+<span class="lineNum">     691 </span><span class="lineCov">        112 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     692 </span><span class="lineCov">        112 :           parameter[i].push_back(10.699);</span>
+<span class="lineNum">     693 </span><span class="lineCov">        112 :           parameter[i].push_back(-0.0325828);</span>
+<span class="lineNum">     694 </span><span class="lineCov">        112 :           parameter[i].push_back(1.20329);</span>
+<span class="lineNum">     695 </span><span class="lineCov">        112 :           parameter[i].push_back(-0.0674351);</span>
+<span class="lineNum">     696 </span><span class="lineCov">        112 :           parameter[i].push_back(-2.60749);</span>
+<span class="lineNum">     697 </span><span class="lineCov">        112 :           parameter[i].push_back(1.80318);</span>
+<span class="lineNum">     698 </span><span class="lineCov">        112 :           parameter[i].push_back(-0.346803);</span>
+<span class="lineNum">     699 </span><span class="lineCov">         56 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     700 </span><span class="lineCov">        112 :           parameter[i].push_back(3.298);</span>
+<span class="lineNum">     701 </span><span class="lineCov">        112 :           parameter[i].push_back(-0.0366801);</span>
+<span class="lineNum">     702 </span><span class="lineCov">        112 :           parameter[i].push_back(5.11077);</span>
+<span class="lineNum">     703 </span><span class="lineCov">        112 :           parameter[i].push_back(-1.46774);</span>
+<span class="lineNum">     704 </span><span class="lineCov">        112 :           parameter[i].push_back(-1.48421);</span>
+<span class="lineNum">     705 </span><span class="lineCov">        112 :           parameter[i].push_back(0.800326);</span>
+<span class="lineNum">     706 </span><span class="lineCov">        112 :           parameter[i].push_back(-0.108314);</span>
+<span class="lineNum">     707 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     708 </span><span class="lineCov">        416 :       } else if(Rname==&quot;THR&quot;) {</span>
+<span class="lineNum">     709 </span><span class="lineCov">        224 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     710 </span><span class="lineCov">        224 :           parameter[i].push_back(10.697);</span>
+<span class="lineNum">     711 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.0242955);</span>
+<span class="lineNum">     712 </span><span class="lineCov">        224 :           parameter[i].push_back(1.24671);</span>
+<span class="lineNum">     713 </span><span class="lineCov">        224 :           parameter[i].push_back(0.146423);</span>
+<span class="lineNum">     714 </span><span class="lineCov">        224 :           parameter[i].push_back(-2.97429);</span>
+<span class="lineNum">     715 </span><span class="lineCov">        224 :           parameter[i].push_back(1.97513);</span>
+<span class="lineNum">     716 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.371479);</span>
+<span class="lineNum">     717 </span><span class="lineCov">        112 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     718 </span><span class="lineCov">        224 :           parameter[i].push_back(2.366);</span>
+<span class="lineNum">     719 </span><span class="lineCov">        224 :           parameter[i].push_back(0.0297604);</span>
+<span class="lineNum">     720 </span><span class="lineCov">        224 :           parameter[i].push_back(11.9216);</span>
+<span class="lineNum">     721 </span><span class="lineCov">        224 :           parameter[i].push_back(-9.32503);</span>
+<span class="lineNum">     722 </span><span class="lineCov">        224 :           parameter[i].push_back(1.9396);</span>
+<span class="lineNum">     723 </span><span class="lineCov">        224 :           parameter[i].push_back(0.0804861);</span>
+<span class="lineNum">     724 </span><span class="lineCov">        224 :           parameter[i].push_back(-0.0302721);</span>
+<span class="lineNum">     725 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     726 </span><span class="lineCov">        192 :       } else if(Rname==&quot;TRP&quot;) {</span>
+<span class="lineNum">     727 </span><span class="lineNoCov">          0 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     728 </span><span class="lineNoCov">          0 :           parameter[i].push_back(10.689);</span>
+<span class="lineNum">     729 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.0265879);</span>
+<span class="lineNum">     730 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.17819);</span>
+<span class="lineNum">     731 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.0386457);</span>
+<span class="lineNum">     732 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-2.75634);</span>
+<span class="lineNum">     733 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.88065);</span>
+<span class="lineNum">     734 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.360217);</span>
+<span class="lineNum">     735 </span><span class="lineNoCov">          0 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     736 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.084);</span>
+<span class="lineNum">     737 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.752407);</span>
+<span class="lineNum">     738 </span><span class="lineNoCov">          0 :           parameter[i].push_back(5.3802);</span>
+<span class="lineNum">     739 </span><span class="lineNoCov">          0 :           parameter[i].push_back(4.09281);</span>
+<span class="lineNum">     740 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-9.28029);</span>
+<span class="lineNum">     741 </span><span class="lineNoCov">          0 :           parameter[i].push_back(4.45923);</span>
+<span class="lineNum">     742 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.689008);</span>
+<span class="lineNum">     743 </span><span class="lineNoCov">          0 :         } else if(Aname==&quot;SC2&quot;) {</span>
+<span class="lineNum">     744 </span><span class="lineNoCov">          0 :           parameter[i].push_back(5.739);</span>
+<span class="lineNum">     745 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.0298492);</span>
+<span class="lineNum">     746 </span><span class="lineNoCov">          0 :           parameter[i].push_back(4.60446);</span>
+<span class="lineNum">     747 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.34463);</span>
+<span class="lineNum">     748 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-5.69968);</span>
+<span class="lineNum">     749 </span><span class="lineNoCov">          0 :           parameter[i].push_back(2.84924);</span>
+<span class="lineNum">     750 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.433781);</span>
+<span class="lineNum">     751 </span><span class="lineNoCov">          0 :         } else if(Aname==&quot;SC3&quot;) {</span>
+<span class="lineNum">     752 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.424);</span>
+<span class="lineNum">     753 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.388576);</span>
+<span class="lineNum">     754 </span><span class="lineNoCov">          0 :           parameter[i].push_back(4.11859);</span>
+<span class="lineNum">     755 </span><span class="lineNoCov">          0 :           parameter[i].push_back(2.29485);</span>
+<span class="lineNum">     756 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-4.76255);</span>
+<span class="lineNum">     757 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.96849);</span>
+<span class="lineNum">     758 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.262015);</span>
+<span class="lineNum">     759 </span><span class="lineNoCov">          0 :         } else if(Aname==&quot;SC4&quot;) {</span>
+<span class="lineNum">     760 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.424);</span>
+<span class="lineNum">     761 </span><span class="lineNoCov">          0 :           parameter[i].push_back(0.387685);</span>
+<span class="lineNum">     762 </span><span class="lineNoCov">          0 :           parameter[i].push_back(4.12153);</span>
+<span class="lineNum">     763 </span><span class="lineNoCov">          0 :           parameter[i].push_back(2.29144);</span>
+<span class="lineNum">     764 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-4.7589);</span>
+<span class="lineNum">     765 </span><span class="lineNoCov">          0 :           parameter[i].push_back(1.96686);</span>
+<span class="lineNum">     766 </span><span class="lineNoCov">          0 :           parameter[i].push_back(-0.261786);</span>
+<span class="lineNum">     767 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     768 </span><span class="lineCov">        192 :       } else if(Rname==&quot;TYR&quot;) {</span>
+<span class="lineNum">     769 </span><span class="lineCov">         64 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     770 </span><span class="lineCov">         32 :           parameter[i].push_back(10.689);</span>
+<span class="lineNum">     771 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.0193526);</span>
+<span class="lineNum">     772 </span><span class="lineCov">         32 :           parameter[i].push_back(1.18241);</span>
+<span class="lineNum">     773 </span><span class="lineCov">         32 :           parameter[i].push_back(0.207318);</span>
+<span class="lineNum">     774 </span><span class="lineCov">         32 :           parameter[i].push_back(-3.0041);</span>
+<span class="lineNum">     775 </span><span class="lineCov">         32 :           parameter[i].push_back(1.99335);</span>
+<span class="lineNum">     776 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.376482);</span>
+<span class="lineNum">     777 </span><span class="lineCov">         48 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     778 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.636);</span>
+<span class="lineNum">     779 </span><span class="lineCov">         32 :           parameter[i].push_back(0.528902);</span>
+<span class="lineNum">     780 </span><span class="lineCov">         32 :           parameter[i].push_back(6.78168);</span>
+<span class="lineNum">     781 </span><span class="lineCov">         32 :           parameter[i].push_back(3.17769);</span>
+<span class="lineNum">     782 </span><span class="lineCov">         32 :           parameter[i].push_back(-8.93667);</span>
+<span class="lineNum">     783 </span><span class="lineCov">         32 :           parameter[i].push_back(4.30692);</span>
+<span class="lineNum">     784 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.653993);</span>
+<span class="lineNum">     785 </span><span class="lineCov">         32 :         } else if(Aname==&quot;SC2&quot;) {</span>
+<span class="lineNum">     786 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.424);</span>
+<span class="lineNum">     787 </span><span class="lineCov">         32 :           parameter[i].push_back(0.388811);</span>
+<span class="lineNum">     788 </span><span class="lineCov">         32 :           parameter[i].push_back(4.11851);</span>
+<span class="lineNum">     789 </span><span class="lineCov">         32 :           parameter[i].push_back(2.29545);</span>
+<span class="lineNum">     790 </span><span class="lineCov">         32 :           parameter[i].push_back(-4.7668);</span>
+<span class="lineNum">     791 </span><span class="lineCov">         32 :           parameter[i].push_back(1.97131);</span>
+<span class="lineNum">     792 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.262534);</span>
+<span class="lineNum">     793 </span><span class="lineCov">         16 :         } else if(Aname==&quot;SC3&quot;) {</span>
+<span class="lineNum">     794 </span><span class="lineCov">         32 :           parameter[i].push_back(4.526);</span>
+<span class="lineNum">     795 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.00381305);</span>
+<span class="lineNum">     796 </span><span class="lineCov">         32 :           parameter[i].push_back(5.8567);</span>
+<span class="lineNum">     797 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.214086);</span>
+<span class="lineNum">     798 </span><span class="lineCov">         16 :           parameter[i].push_back(-4.63649);</span>
+<span class="lineNum">     799 </span><span class="lineCov">         32 :           parameter[i].push_back(2.52869);</span>
+<span class="lineNum">     800 </span><span class="lineCov">         32 :           parameter[i].push_back(-0.39894);</span>
+<span class="lineNum">     801 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     802 </span><span class="lineCov">        128 :       } else if(Rname==&quot;VAL&quot;) {</span>
+<span class="lineNum">     803 </span><span class="lineCov">        128 :         if(Aname==&quot;BB&quot;) {</span>
+<span class="lineNum">     804 </span><span class="lineCov">        128 :           parameter[i].push_back(10.691);</span>
+<span class="lineNum">     805 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.0162929);</span>
+<span class="lineNum">     806 </span><span class="lineCov">        128 :           parameter[i].push_back(1.24446);</span>
+<span class="lineNum">     807 </span><span class="lineCov">        128 :           parameter[i].push_back(0.307914);</span>
+<span class="lineNum">     808 </span><span class="lineCov">        128 :           parameter[i].push_back(-3.27446);</span>
+<span class="lineNum">     809 </span><span class="lineCov">        128 :           parameter[i].push_back(2.14788);</span>
+<span class="lineNum">     810 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.403259);</span>
+<span class="lineNum">     811 </span><span class="lineCov">         64 :         } else if(Aname==&quot;SC1&quot;) {</span>
+<span class="lineNum">     812 </span><span class="lineCov">        128 :           parameter[i].push_back(-3.516);</span>
+<span class="lineNum">     813 </span><span class="lineCov">        128 :           parameter[i].push_back(1.62307);</span>
+<span class="lineNum">     814 </span><span class="lineCov">        128 :           parameter[i].push_back(5.43064);</span>
+<span class="lineNum">     815 </span><span class="lineCov">        128 :           parameter[i].push_back(9.28809);</span>
+<span class="lineNum">     816 </span><span class="lineCov">        128 :           parameter[i].push_back(-14.9927);</span>
+<span class="lineNum">     817 </span><span class="lineCov">        128 :           parameter[i].push_back(6.6133);</span>
+<span class="lineNum">     818 </span><span class="lineCov">        128 :           parameter[i].push_back(-0.964977);</span>
+<span class="lineNum">     819 </span><span class="lineNoCov">          0 :         } else error(&quot;Atom name not known&quot;);</span>
+<span class="lineNum">     820 </span><span class="lineNoCov">          0 :       } else error(&quot;Residue not known&quot;);</span>
+<span class="lineNum">     821 </span>            :     }
+<span class="lineNum">     822 </span>            :   } else {
+<span class="lineNum">     823 </span><span class="lineNoCov">          0 :     error(&quot;MOLINFO DATA not found\n&quot;);</span>
+<span class="lineNum">     824 </span>            :   }
+<span class="lineNum">     825 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     826 </span>            : 
+<span class="lineNum">     827 </span><span class="lineNoCov">          0 : void SAXS::calculateASF(const vector&lt;AtomNumber&gt; &amp;atoms, vector&lt;vector&lt;long double&gt; &gt; &amp;FF_tmp, const double rho)</span>
+<span class="lineNum">     828 </span>            : {
+<span class="lineNum">     829 </span>            :   enum { H, C, N, O, P, S, NTT };
+<span class="lineNum">     830 </span>            :   map&lt;string, unsigned&gt; AA_map;
+<span class="lineNum">     831 </span><span class="lineNoCov">          0 :   AA_map[&quot;H&quot;] = H;</span>
+<span class="lineNum">     832 </span><span class="lineNoCov">          0 :   AA_map[&quot;C&quot;] = C;</span>
+<span class="lineNum">     833 </span><span class="lineNoCov">          0 :   AA_map[&quot;N&quot;] = N;</span>
+<span class="lineNum">     834 </span><span class="lineNoCov">          0 :   AA_map[&quot;O&quot;] = O;</span>
+<span class="lineNum">     835 </span><span class="lineNoCov">          0 :   AA_map[&quot;P&quot;] = P;</span>
+<span class="lineNum">     836 </span><span class="lineNoCov">          0 :   AA_map[&quot;S&quot;] = S;</span>
+<span class="lineNum">     837 </span>            : 
+<span class="lineNum">     838 </span><span class="lineNoCov">          0 :   vector&lt;vector&lt;double&gt; &gt; param_a;</span>
+<span class="lineNum">     839 </span><span class="lineNoCov">          0 :   vector&lt;vector&lt;double&gt; &gt; param_b;</span>
+<span class="lineNum">     840 </span>            :   vector&lt;double&gt; param_c;
+<span class="lineNum">     841 </span>            :   vector&lt;double&gt; param_v;
+<span class="lineNum">     842 </span>            : 
+<span class="lineNum">     843 </span><span class="lineNoCov">          0 :   param_a.resize(NTT, vector&lt;double&gt;(5));</span>
+<span class="lineNum">     844 </span><span class="lineNoCov">          0 :   param_b.resize(NTT, vector&lt;double&gt;(5));</span>
+<span class="lineNum">     845 </span><span class="lineNoCov">          0 :   param_c.resize(NTT);</span>
+<span class="lineNum">     846 </span><span class="lineNoCov">          0 :   param_v.resize(NTT);</span>
+<span class="lineNum">     847 </span>            : 
+<span class="lineNum">     848 </span><span class="lineNoCov">          0 :   param_a[H][0] = 0.493002; param_b[H][0] = 10.5109; param_c[H] = 0.003038;</span>
+<span class="lineNum">     849 </span><span class="lineNoCov">          0 :   param_a[H][1] = 0.322912; param_b[H][1] = 26.1257; param_v[H] = 5.15;</span>
+<span class="lineNum">     850 </span><span class="lineNoCov">          0 :   param_a[H][2] = 0.140191; param_b[H][2] = 3.14236;</span>
+<span class="lineNum">     851 </span><span class="lineNoCov">          0 :   param_a[H][3] = 0.040810; param_b[H][3] = 57.7997;</span>
+<span class="lineNum">     852 </span><span class="lineNoCov">          0 :   param_a[H][4] = 0.0;      param_b[H][4] = 1.0;</span>
+<span class="lineNum">     853 </span>            : 
+<span class="lineNum">     854 </span><span class="lineNoCov">          0 :   param_a[C][0] = 2.31000; param_b[C][0] = 20.8439; param_c[C] = 0.215600;</span>
+<span class="lineNum">     855 </span><span class="lineNoCov">          0 :   param_a[C][1] = 1.02000; param_b[C][1] = 10.2075; param_v[C] = 16.44;</span>
+<span class="lineNum">     856 </span><span class="lineNoCov">          0 :   param_a[C][2] = 1.58860; param_b[C][2] = 0.56870;</span>
+<span class="lineNum">     857 </span><span class="lineNoCov">          0 :   param_a[C][3] = 0.86500; param_b[C][3] = 51.6512;</span>
+<span class="lineNum">     858 </span><span class="lineNoCov">          0 :   param_a[C][4] = 0.0;     param_b[C][4] = 1.0;</span>
+<span class="lineNum">     859 </span>            : 
+<span class="lineNum">     860 </span><span class="lineNoCov">          0 :   param_a[N][0] = 12.2126; param_b[N][0] = 0.00570; param_c[N] = -11.529;</span>
+<span class="lineNum">     861 </span><span class="lineNoCov">          0 :   param_a[N][1] = 3.13220; param_b[N][1] = 9.89330; param_v[N] = 2.49;</span>
+<span class="lineNum">     862 </span><span class="lineNoCov">          0 :   param_a[N][2] = 2.01250; param_b[N][2] = 28.9975;</span>
+<span class="lineNum">     863 </span><span class="lineNoCov">          0 :   param_a[N][3] = 1.16630; param_b[N][3] = 0.58260;</span>
+<span class="lineNum">     864 </span><span class="lineNoCov">          0 :   param_a[N][4] = 0.0;     param_b[N][4] = 1.0;</span>
+<span class="lineNum">     865 </span>            : 
+<span class="lineNum">     866 </span><span class="lineNoCov">          0 :   param_a[O][0] = 3.04850; param_b[O][0] = 13.2771; param_c[O] = 0.250800 ;</span>
+<span class="lineNum">     867 </span><span class="lineNoCov">          0 :   param_a[O][1] = 2.28680; param_b[O][1] = 5.70110; param_v[O] = 9.13;</span>
+<span class="lineNum">     868 </span><span class="lineNoCov">          0 :   param_a[O][2] = 1.54630; param_b[O][2] = 0.32390;</span>
+<span class="lineNum">     869 </span><span class="lineNoCov">          0 :   param_a[O][3] = 0.86700; param_b[O][3] = 32.9089;</span>
+<span class="lineNum">     870 </span><span class="lineNoCov">          0 :   param_a[O][4] = 0.0;     param_b[O][4] = 1.0;</span>
+<span class="lineNum">     871 </span>            : 
+<span class="lineNum">     872 </span><span class="lineNoCov">          0 :   param_a[P][0] = 6.43450; param_b[P][0] = 1.90670; param_c[P] = 1.11490;</span>
+<span class="lineNum">     873 </span><span class="lineNoCov">          0 :   param_a[P][1] = 4.17910; param_b[P][1] = 27.1570; param_v[P] = 5.73;</span>
+<span class="lineNum">     874 </span><span class="lineNoCov">          0 :   param_a[P][2] = 1.78000; param_b[P][2] = 0.52600;</span>
+<span class="lineNum">     875 </span><span class="lineNoCov">          0 :   param_a[P][3] = 1.49080; param_b[P][3] = 68.1645;</span>
+<span class="lineNum">     876 </span><span class="lineNoCov">          0 :   param_a[P][4] = 0.0;     param_b[P][4] = 1.0;</span>
+<span class="lineNum">     877 </span>            : 
+<span class="lineNum">     878 </span><span class="lineNoCov">          0 :   param_a[S][0] = 6.90530; param_b[S][0] = 1.46790; param_c[S] = 0.866900;</span>
+<span class="lineNum">     879 </span><span class="lineNoCov">          0 :   param_a[S][1] = 5.20340; param_b[S][1] = 22.2151; param_v[S] = 19.86;</span>
+<span class="lineNum">     880 </span><span class="lineNoCov">          0 :   param_a[S][2] = 1.43790; param_b[S][2] = 0.25360;</span>
+<span class="lineNum">     881 </span><span class="lineNoCov">          0 :   param_a[S][3] = 1.58630; param_b[S][3] = 56.1720;</span>
+<span class="lineNum">     882 </span><span class="lineNoCov">          0 :   param_a[S][4] = 0.0;     param_b[S][4] = 1.0;</span>
+<span class="lineNum">     883 </span>            : 
+<span class="lineNum">     884 </span><span class="lineNoCov">          0 :   vector&lt;SetupMolInfo*&gt; moldat=plumed.getActionSet().select&lt;SetupMolInfo*&gt;();</span>
+<span class="lineNum">     885 </span>            : 
+<span class="lineNum">     886 </span><span class="lineNoCov">          0 :   if( moldat.size()==1 ) {</span>
+<span class="lineNum">     887 </span><span class="lineNoCov">          0 :     log&lt;&lt;&quot;  MOLINFO DATA found, using proper atom names\n&quot;;</span>
+<span class="lineNum">     888 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;atoms.size(); ++i) {</span>
+<span class="lineNum">     889 </span>            :       // get atom name
+<span class="lineNum">     890 </span><span class="lineNoCov">          0 :       string name = moldat[0]-&gt;getAtomName(atoms[i]);</span>
+<span class="lineNum">     891 </span>            :       char type;
+<span class="lineNum">     892 </span>            :       // get atom type
+<span class="lineNum">     893 </span><span class="lineNoCov">          0 :       char first = name.at(0);</span>
+<span class="lineNum">     894 </span>            :       // GOLDEN RULE: type is first letter, if not a number
+<span class="lineNum">     895 </span><span class="lineNoCov">          0 :       if (!isdigit(first)) {</span>
+<span class="lineNum">     896 </span>            :         type = first;
+<span class="lineNum">     897 </span>            :         // otherwise is the second
+<span class="lineNum">     898 </span>            :       } else {
+<span class="lineNum">     899 </span><span class="lineNoCov">          0 :         type = name.at(1);</span>
+<span class="lineNum">     900 </span>            :       }
+<span class="lineNum">     901 </span><span class="lineNoCov">          0 :       std::string type_s = std::string(1,type);</span>
+<span class="lineNum">     902 </span><span class="lineNoCov">          0 :       if(AA_map.find(type_s) != AA_map.end()) {</span>
+<span class="lineNum">     903 </span><span class="lineNoCov">          0 :         const unsigned index=AA_map[type_s];</span>
+<span class="lineNum">     904 </span><span class="lineNoCov">          0 :         const double volr = pow(param_v[index], (2.0/3.0)) /(4. * M_PI);</span>
+<span class="lineNum">     905 </span><span class="lineNoCov">          0 :         for(unsigned k=0; k&lt;q_list.size(); ++k) {</span>
+<span class="lineNum">     906 </span><span class="lineNoCov">          0 :           const double q = q_list[k];</span>
+<span class="lineNum">     907 </span><span class="lineNoCov">          0 :           const double s = q / (4. * M_PI);</span>
+<span class="lineNum">     908 </span><span class="lineNoCov">          0 :           FF_tmp[k][i] = param_c[index];</span>
+<span class="lineNum">     909 </span>            :           // SUM [a_i * EXP( - b_i * (q/4pi)^2 )] Waasmaier and Kirfel (1995)
+<span class="lineNum">     910 </span><span class="lineNoCov">          0 :           for(unsigned j=0; j&lt;4; j++) {</span>
+<span class="lineNum">     911 </span><span class="lineNoCov">          0 :             FF_tmp[k][i] += param_a[index][j]*exp(-param_b[index][j]*s*s);</span>
+<span class="lineNum">     912 </span>            :           }
+<span class="lineNum">     913 </span>            :           // subtract solvation: rho * v_i * EXP( (- v_i^(2/3) / (4pi)) * q^2  ) // since  D in Fraser 1978 is 2*s
+<span class="lineNum">     914 </span><span class="lineNoCov">          0 :           FF_tmp[k][i] -= rho*param_v[index]*exp(-volr*q*q);</span>
+<span class="lineNum">     915 </span>            :         }
+<span class="lineNum">     916 </span>            :       } else {
+<span class="lineNum">     917 </span><span class="lineNoCov">          0 :         error(&quot;Wrong atom type &quot;+type_s+&quot; from atom name &quot;+name+&quot;\n&quot;);</span>
+<span class="lineNum">     918 </span>            :       }
+<span class="lineNum">     919 </span>            :     }
+<span class="lineNum">     920 </span>            :   } else {
+<span class="lineNum">     921 </span><span class="lineNoCov">          0 :     error(&quot;MOLINFO DATA not found\n&quot;);</span>
+<span class="lineNum">     922 </span>            :   }
+<span class="lineNum">     923 </span><span class="lineNoCov">          0 : }</span>
+<a name="924"><span class="lineNum">     924 </span>            : </a>
+<span class="lineNum">     925 </span>            : }
+<span class="lineNum">     926 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

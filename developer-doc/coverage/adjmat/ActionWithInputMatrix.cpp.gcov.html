@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/ActionWithInputMatrix.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - ActionWithInputMatrix.cpp<span style="font-size: 80%;"> (source / <a href="ActionWithInputMatrix.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">72</td>
+            <td class="headerCovTableEntry">72</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryHi">94.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ActionWithInputMatrix.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AdjacencyMatrixVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;AdjacencyMatrixBase.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;vesselbase/ActionWithVessel.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<a name="30"><span class="lineNum">      30 </span>            : namespace adjmat {</a>
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">         30 : void ActionWithInputMatrix::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      33 </span><span class="lineCov">         30 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">      34 </span><span class="lineCov">        120 :   keys.add(&quot;compulsory&quot;,&quot;MATRIX&quot;,&quot;the action that calcualtes the adjacency matrix vessel we would like to analyse&quot;);</span>
+<span class="lineNum">      35 </span><span class="lineCov">         30 : }</span>
+<a name="36"><span class="lineNum">      36 </span>            : </a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">         25 : ActionWithInputMatrix::ActionWithInputMatrix(const ActionOptions&amp; ao):</span>
+<span class="lineNum">      39 </span>            :   Action(ao),
+<span class="lineNum">      40 </span>            :   MultiColvarBase(ao),
+<span class="lineNum">      41 </span><span class="lineCov">         25 :   mymatrix(NULL)</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineCov">         25 :   matsums=true;</span>
+<span class="lineNum">      44 </span><span class="lineCov">         50 :   if( keywords.exists(&quot;MATRIX&quot;) ) {</span>
+<span class="lineNum">      45 </span>            :     std::vector&lt;AtomNumber&gt; fake_atoms;
+<span class="lineNum">      46 </span><span class="lineCov">         46 :     if( !parseMultiColvarAtomList(&quot;MATRIX&quot;,-1,fake_atoms ) ) error(&quot;unable to interpret input matrix&quot;);</span>
+<span class="lineNum">      47 </span><span class="lineCov">         23 :     if( mybasemulticolvars.size()!=1 ) error(&quot;should be exactly one matrix input&quot;);</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :     // Retrieve the adjacency matrix of interest
+<span class="lineNum">      50 </span><span class="lineCov">         46 :     for(unsigned i=0; i&lt;mybasemulticolvars[0]-&gt;getNumberOfVessels(); ++i) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">         23 :       mymatrix = dynamic_cast&lt;AdjacencyMatrixVessel*&gt;( mybasemulticolvars[0]-&gt;getPntrToVessel(i) );</span>
+<span class="lineNum">      52 </span><span class="lineCov">         23 :       if( mymatrix ) break ;</span>
+<span class="lineNum">      53 </span>            :     }
+<span class="lineNum">      54 </span><span class="lineCov">         23 :     if( !mymatrix ) error( mybasemulticolvars[0]-&gt;getLabel() + &quot; does not calculate an adjacency matrix&quot;);</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">         23 :     atom_lab.resize(0); unsigned nnodes; // Delete all the atom labels that have been created</span>
+<span class="lineNum">      57 </span><span class="lineCov">         44 :     if( mymatrix-&gt;undirectedGraph() ) nnodes = (mymatrix-&gt;function)-&gt;ablocks[0].size();</span>
+<span class="lineNum">      58 </span><span class="lineCov">          6 :     else nnodes = (mymatrix-&gt;function)-&gt;ablocks[0].size() + (mymatrix-&gt;function)-&gt;ablocks[1].size();</span>
+<span class="lineNum">      59 </span><span class="lineCov">      13349 :     for(unsigned i=0; i&lt;nnodes; ++i) atom_lab.push_back( std::pair&lt;unsigned,unsigned&gt;( 1, i ) );</span>
+<span class="lineNum">      60 </span>            :   }
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">         25 : }</span></a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">      13240 : unsigned ActionWithInputMatrix::getNumberOfDerivatives() {</span>
+<span class="lineNum">      64 </span><span class="lineCov">      13240 :   return (mymatrix-&gt;function)-&gt;getNumberOfDerivatives();</span>
+<a name="65"><span class="lineNum">      65 </span>            : }</a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">   16261547 : unsigned ActionWithInputMatrix::getNumberOfNodes() const {</span>
+<span class="lineNum">      68 </span><span class="lineCov">   32523094 :   return (mymatrix-&gt;function)-&gt;ablocks[0].size();</span>
+<a name="69"><span class="lineNum">      69 </span>            : }</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">      53354 : AdjacencyMatrixVessel* ActionWithInputMatrix::getAdjacencyVessel() const {</span>
+<span class="lineNum">      72 </span><span class="lineCov">      53354 :   return mymatrix;</span>
+<a name="73"><span class="lineNum">      73 </span>            : }</a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">        504 : AtomNumber ActionWithInputMatrix::getAbsoluteIndexOfCentralAtom(const unsigned&amp; i) const {</span>
+<span class="lineNum">      76 </span><span class="lineCov">        504 :   return (mymatrix-&gt;function)-&gt;getAbsoluteIndexOfCentralAtom(i);</span>
+<a name="77"><span class="lineNum">      77 </span>            : }</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">      38388 : double ActionWithInputMatrix::retrieveConnectionValue( const unsigned&amp; i, const unsigned&amp; j, std::vector&lt;double&gt;&amp; vals ) const {</span>
+<span class="lineNum">      80 </span><span class="lineCov">      38388 :   if( !mymatrix-&gt;matrixElementIsActive( i, j ) ) return 0;</span>
+<span class="lineNum">      81 </span><span class="lineCov">      17296 :   unsigned myelem = mymatrix-&gt;getStoreIndexFromMatrixIndices( i, j );</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   // unsigned vi; double df;
+<span class="lineNum">      84 </span><span class="lineCov">      17296 :   mymatrix-&gt;retrieveValueWithIndex( myelem, false, vals );</span>
+<span class="lineNum">      85 </span><span class="lineCov">      17296 :   return vals[0]*vals[1];       // (mymatrix-&gt;function)-&gt;transformStoredValues( vals, vi, df );</span>
+<a name="86"><span class="lineNum">      86 </span>            : }</a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">       1940 : void ActionWithInputMatrix::getInputData( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms, std::vector&lt;double&gt;&amp; orient0 ) const {</span>
+<span class="lineNum">      89 </span><span class="lineCov">       3880 :   if( (mymatrix-&gt;function)-&gt;mybasemulticolvars.size()==0  ) {</span>
+<span class="lineNum">      90 </span><span class="lineCov">        482 :     std::vector&lt;double&gt; tvals( mymatrix-&gt;getNumberOfComponents() ); orient0.assign(orient0.size(),0);</span>
+<span class="lineNum">      91 </span><span class="lineCov">      34103 :     for(unsigned i=0; i&lt;mymatrix-&gt;getNumberOfColumns(); ++i) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">      33862 :       if( mymatrix-&gt;undirectedGraph() &amp;&amp; ind==i ) continue;</span>
+<span class="lineNum">      93 </span><span class="lineCov">      67292 :       orient0[1]+=retrieveConnectionValue( ind, i, tvals );</span>
+<span class="lineNum">      94 </span>            :     }
+<span class="lineNum">      95 </span><span class="lineCov">        241 :     orient0[0]=1.0; return;</span>
+<span class="lineNum">      96 </span>            :   }
+<span class="lineNum">      97 </span><span class="lineCov">       1699 :   (mymatrix-&gt;function)-&gt;getInputData( ind, normed, myatoms, orient0 );</span>
+<a name="98"><span class="lineNum">      98 </span>            : }</a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">       1440 : void ActionWithInputMatrix::addConnectionDerivatives( const unsigned&amp; i, const unsigned&amp; j, MultiValue&amp; myvals, MultiValue&amp; myvout ) const {</span>
+<span class="lineNum">     101 </span><span class="lineCov">       1440 :   if( !mymatrix-&gt;matrixElementIsActive( i, j ) ) return;</span>
+<span class="lineNum">     102 </span><span class="lineCov">       1440 :   unsigned myelem = mymatrix-&gt;getStoreIndexFromMatrixIndices( i, j );</span>
+<span class="lineNum">     103 </span>            :   // Get derivatives and add
+<span class="lineNum">     104 </span><span class="lineCov">       1440 :   mymatrix-&gt;retrieveDerivatives( myelem, false, myvals );</span>
+<span class="lineNum">     105 </span><span class="lineCov">      60732 :   for(unsigned jd=0; jd&lt;myvals.getNumberActive(); ++jd) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">      29646 :     unsigned ider=myvals.getActiveIndex(jd);</span>
+<span class="lineNum">     107 </span><span class="lineCov">      29646 :     myvout.addDerivative( 1, ider, myvals.getDerivative( 1, ider ) );</span>
+<span class="lineNum">     108 </span>            :   }
+<a name="109"><span class="lineNum">     109 </span>            : }</a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">       1679 : MultiValue&amp; ActionWithInputMatrix::getInputDerivatives( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     112 </span><span class="lineCov">       3358 :   if( (mymatrix-&gt;function)-&gt;mybasemulticolvars.size()==0  ) {</span>
+<span class="lineNum">     113 </span><span class="lineCov">         90 :     MultiValue&amp; myder=mymatrix-&gt;getTemporyMultiValue(0);</span>
+<span class="lineNum">     114 </span><span class="lineCov">        177 :     if( myder.getNumberOfValues()!=2 || myder.getNumberOfDerivatives()!=(mymatrix-&gt;function)-&gt;getNumberOfDerivatives() ) {</span>
+<span class="lineNum">     115 </span><span class="lineCov">          3 :       myder.resize( 2, (mymatrix-&gt;function)-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span><span class="lineCov">         90 :     myder.clearAll();</span>
+<span class="lineNum">     118 </span><span class="lineCov">        180 :     MultiValue myvals( (mymatrix-&gt;function)-&gt;getNumberOfQuantities(), (mymatrix-&gt;function)-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     119 </span><span class="lineCov">        885 :     for(unsigned i=0; i&lt;mymatrix-&gt;getNumberOfColumns(); ++i) {</span>
+<span class="lineNum">     120 </span><span class="lineCov">        860 :       if( mymatrix-&gt;undirectedGraph() &amp;&amp; ind==i ) continue;</span>
+<span class="lineNum">     121 </span><span class="lineCov">        730 :       addConnectionDerivatives( ind, i, myvals, myder );</span>
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            :     myder.updateDynamicList(); return myder;
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span><span class="lineCov">       1589 :   return (mymatrix-&gt;function)-&gt;getInputDerivatives( ind, normed, myatoms );</span>
+<a name="126"><span class="lineNum">     126 </span>            : }</a>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">         66 : unsigned ActionWithInputMatrix::getNumberOfNodeTypes() const {</span>
+<span class="lineNum">     129 </span><span class="lineCov">        132 :   unsigned size = (mymatrix-&gt;function)-&gt;mybasemulticolvars.size();</span>
+<span class="lineNum">     130 </span><span class="lineCov">         66 :   if( size==0 ) return 1;</span>
+<span class="lineNum">     131 </span><span class="lineCov">         61 :   return size;</span>
+<a name="132"><span class="lineNum">     132 </span>            : }</a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">       2171 : unsigned ActionWithInputMatrix::getNumberOfQuantities() const {</span>
+<span class="lineNum">     135 </span><span class="lineCov">       4342 :   if( (mymatrix-&gt;function)-&gt;mybasemulticolvars.size()==0 ) return 2;</span>
+<span class="lineNum">     136 </span><span class="lineCov">       2082 :   return (mymatrix-&gt;function)-&gt;mybasemulticolvars[0]-&gt;getNumberOfQuantities();</span>
+<a name="137"><span class="lineNum">     137 </span>            : }</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">         34 : unsigned ActionWithInputMatrix::getNumberOfAtomsInGroup( const unsigned&amp; igrp ) const {</span>
+<span class="lineNum">     140 </span>            :   plumed_dbg_assert( igrp&lt;(mymatrix-&gt;function)-&gt;mybasemulticolvars.size() );
+<span class="lineNum">     141 </span><span class="lineCov">        102 :   return (mymatrix-&gt;function)-&gt;mybasemulticolvars[igrp]-&gt;getFullNumberOfTasks();</span>
+<a name="142"><span class="lineNum">     142 </span>            : }</a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">          7 : multicolvar::MultiColvarBase* ActionWithInputMatrix::getBaseMultiColvar( const unsigned&amp; igrp ) const {</span>
+<span class="lineNum">     145 </span>            :   plumed_dbg_assert( igrp&lt;(mymatrix-&gt;function)-&gt;mybasemulticolvars.size() );
+<span class="lineNum">     146 </span><span class="lineCov">         14 :   return (mymatrix-&gt;function)-&gt;mybasemulticolvars[igrp];</span>
+<a name="147"><span class="lineNum">     147 </span>            : }</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">      30059 : Vector ActionWithInputMatrix::getPositionOfAtomForLinkCells( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">     150 </span><span class="lineCov">      30059 :   return (getAdjacencyVessel()-&gt;function)-&gt;getPositionOfAtomForLinkCells( iatom );</span>
+<span class="lineNum">     151 </span>            : }
+<a name="152"><span class="lineNum">     152 </span>            : </a>
+<span class="lineNum">     153 </span>            : }
+<span class="lineNum">     154 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

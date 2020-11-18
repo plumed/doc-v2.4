@@ -1,0 +1,324 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - analysis/ClassicalMultiDimensionalScaling.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">analysis</a> - ClassicalMultiDimensionalScaling.cpp<span style="font-size: 80%;"> (source / <a href="ClassicalMultiDimensionalScaling.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntryHi">97.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;AnalysisWithLandmarks.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ClassicalScaling.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;reference/PointWiseMapping.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<span class="lineNum">      28 </span>            : namespace analysis {
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //+PLUMEDOC DIMRED CLASSICAL_MDS
+<span class="lineNum">      31 </span>            : /*
+<span class="lineNum">      32 </span>            : Create a low-dimensional projection of a trajectory using the classical multidimensional
+<span class="lineNum">      33 </span>            : scaling algorithm.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : Multidimensional scaling (MDS) is similar to what is done when you make a map. You start with distances
+<span class="lineNum">      36 </span>            : between London, Belfast, Paris and Dublin and then you try to arrange points on a piece of paper so that the (suitably scaled)
+<span class="lineNum">      37 </span>            : distances between the points in your map representing each of those cities are related to the true distances between the cities.
+<span class="lineNum">      38 </span>            : Stating this more mathematically MDS endeavors to find an &lt;a href=&quot;http://en.wikipedia.org/wiki/Isometry&quot;&gt;isometry&lt;/a&gt;
+<span class="lineNum">      39 </span>            : between points distributed in a high-dimensional space and a set of points distributed in a low-dimensional plane.
+<span class="lineNum">      40 </span>            : In other words, if we have \f$M\f$ \f$D\f$-dimensional points, \f$\mathbf{X}\f$,
+<span class="lineNum">      41 </span>            : and we can calculate dissimilarities between pairs them, \f$D_{ij}\f$, we can, with an MDS calculation, try to create \f$M\f$ projections,
+<span class="lineNum">      42 </span>            : \f$\mathbf{x}\f$, of the high dimensionality points in a \f$d\f$-dimensional linear space by trying to arrange the projections so that the
+<span class="lineNum">      43 </span>            : Euclidean distances between pairs of them, \f$d_{ij}\f$, resemble the dissimilarities between the high dimensional points.  In short we minimize:
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \f[
+<span class="lineNum">      46 </span>            : \chi^2 = \sum_{i \ne j} \left( D_{ij} - d_{ij} \right)^2
+<span class="lineNum">      47 </span>            : \f]
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : where \f$D_{ij}\f$ is the distance between point \f$X^{i}\f$ and point \f$X^{j}\f$ and \f$d_{ij}\f$ is the distance between the projection
+<span class="lineNum">      50 </span>            : of \f$X^{i}\f$, \f$x^i\f$, and the projection of \f$X^{j}\f$, \f$x^j\f$.  A tutorial on this approach can be used to analyse simulations
+<span class="lineNum">      51 </span>            : can be found in the tutorial \ref belfast-3 and in the following &lt;a href=&quot;https://www.youtube.com/watch?v=ofC2qz0_9_A&amp;feature=youtu.be&quot; &gt; short video.&lt;/a&gt;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : \par Examples
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : The following command instructs plumed to construct a classical multidimensional scaling projection of a trajectory.
+<span class="lineNum">      56 </span>            : The RMSD distance between atoms 1-256 have moved is used to measure the distances in the high-dimensional space.
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : \plumedfile
+<span class="lineNum">      59 </span>            : CLASSICAL_MDS ...
+<span class="lineNum">      60 </span>            :   ATOMS=1-256
+<span class="lineNum">      61 </span>            :   METRIC=OPTIMAL-FAST
+<span class="lineNum">      62 </span>            :   NLOW_DIM=2
+<span class="lineNum">      63 </span>            :   OUTPUT_FILE=rmsd-embed
+<span class="lineNum">      64 </span>            : ... CLASSICAL_MDS
+<span class="lineNum">      65 </span>            : \endplumedfile
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : The following section is for people who are interested in how this method works in detail. A solid understanding of this material is
+<span class="lineNum">      68 </span>            : not necessary to use MDS.
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : \section dim-sec Method of optimisation
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : The stress function can be minimized using a standard optimization algorithm such as conjugate gradients or steepest descent.
+<span class="lineNum">      73 </span>            : However, it is more common to do this minimization using a technique known as classical scaling.  Classical scaling works by
+<span class="lineNum">      74 </span>            : recognizing that each of the distances $D_{ij}$ in the above sum can be written as:
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : \f[
+<span class="lineNum">      77 </span>            : D_{ij}^2 = \sum_{\alpha} (X^i_\alpha - X^j_\alpha)^2 = \sum_\alpha (X^i_\alpha)^2 + (X^j_\alpha)^2 - 2X^i_\alpha X^j_\alpha
+<span class="lineNum">      78 </span>            : \f]
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : We can use this expression and matrix algebra to calculate multiple distances at once.  For instance if we have three points,
+<span class="lineNum">      81 </span>            : \f$\mathbf{X}\f$, we can write distances between them as:
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : \f{eqnarray*}{
+<span class="lineNum">      84 </span>            : D^2(\mathbf{X}) &amp;=&amp; \left[ \begin{array}{ccc}
+<span class="lineNum">      85 </span>            : 0 &amp; d_{12}^2 &amp; d_{13}^2 \\
+<span class="lineNum">      86 </span>            : d_{12}^2 &amp; 0 &amp; d_{23}^2 \\
+<span class="lineNum">      87 </span>            : d_{13}^2 &amp; d_{23}^2 &amp; 0
+<span class="lineNum">      88 </span>            : \end{array}\right] \\
+<span class="lineNum">      89 </span>            : &amp;=&amp;
+<span class="lineNum">      90 </span>            : \sum_\alpha \left[ \begin{array}{ccc}
+<span class="lineNum">      91 </span>            : (X^1_\alpha)^2 &amp; (X^1_\alpha)^2 &amp; (X^1_\alpha)^2 \\
+<span class="lineNum">      92 </span>            : (X^2_\alpha)^2 &amp; (X^2_\alpha)^2 &amp; (X^2_\alpha)^2 \\
+<span class="lineNum">      93 </span>            : (X^3_\alpha)^2 &amp; (X^3_\alpha)^2 &amp; (X^3_\alpha)^2 \\
+<span class="lineNum">      94 </span>            : \end{array}\right]
+<span class="lineNum">      95 </span>            :  + \sum_\alpha \left[ \begin{array}{ccc}
+<span class="lineNum">      96 </span>            : (X^1_\alpha)^2 &amp; (X^2_\alpha)^2 &amp; (X^3_\alpha)^2 \\
+<span class="lineNum">      97 </span>            : (X^1_\alpha)^2 &amp; (X^2_\alpha)^2 &amp; (X^3_\alpha)^2 \\
+<span class="lineNum">      98 </span>            : (X^1_\alpha)^2 &amp; (X^2_\alpha)^2 &amp; (X^3_\alpha)^2 \\
+<span class="lineNum">      99 </span>            : \end{array}\right]
+<span class="lineNum">     100 </span>            : - 2 \sum_\alpha \left[ \begin{array}{ccc}
+<span class="lineNum">     101 </span>            : X^1_\alpha X^1_\alpha &amp; X^1_\alpha X^2_\alpha &amp; X^1_\alpha X^3_\alpha \\
+<span class="lineNum">     102 </span>            : X^2_\alpha X^1_\alpha &amp; X^2_\alpha X^2_\alpha &amp; X^2_\alpha X^3_\alpha \\
+<span class="lineNum">     103 </span>            : X^1_\alpha X^3_\alpha &amp; X^3_\alpha X^2_\alpha &amp; X^3_\alpha X^3_\alpha
+<span class="lineNum">     104 </span>            : \end{array}\right] \nonumber \\
+<span class="lineNum">     105 </span>            : &amp;=&amp; \mathbf{c 1^T} + \mathbf{1 c^T} - 2 \sum_\alpha \mathbf{x}_a \mathbf{x}^T_a =  \mathbf{c 1^T} + \mathbf{1 c^T} - 2\mathbf{X X^T}
+<span class="lineNum">     106 </span>            : \f}
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : This last equation can be extended to situations when we have more than three points.  In it \f$\mathbf{X}\f$ is a matrix that has
+<span class="lineNum">     109 </span>            : one high-dimensional point on each of its rows and \f$\mathbf{X^T}\f$ is its transpose.  \f$\mathbf{1}\f$ is an \f$M \times 1\f$ vector
+<span class="lineNum">     110 </span>            : of ones and \f$\mathbf{c}\f$ is a vector with components given by:
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : \f[
+<span class="lineNum">     113 </span>            : c_i = \sum_\alpha (x_\alpha^i)^2
+<span class="lineNum">     114 </span>            : \f]
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : These quantities are the diagonal elements of \f$\mathbf{X X^T}\f$, which is a dot product or Gram Matrix that contains the
+<span class="lineNum">     117 </span>            : dot product of the vector \f$X_i\f$ with the vector \f$X_j\f$ in element \f$i,j\f$.
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : In classical scaling we introduce a centering matrix \f$\mathbf{J}\f$ that is given by:
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : \f[
+<span class="lineNum">     122 </span>            : \mathbf{J} = \mathbf{I} - \frac{1}{M} \mathbf{11^T}
+<span class="lineNum">     123 </span>            : \f]
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : where \f$\mathbf{I}\f$ is the identity.  Multiplying the equations above from the front and back by this matrix and a factor of a \f$-\frac{1}{2}\f$ gives:
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : \f{eqnarray*}{
+<span class="lineNum">     128 </span>            :  -\frac{1}{2} \mathbf{J} \mathbf{D}^2(\mathbf{X}) \mathbf{J} &amp;=&amp; -\frac{1}{2}\mathbf{J}( \mathbf{c 1^T} + \mathbf{1 c^T} - 2\mathbf{X X^T})\mathbf{J} \\
+<span class="lineNum">     129 </span>            :  &amp;=&amp; -\frac{1}{2}\mathbf{J c 1^T J} - \frac{1}{2} \mathbf{J 1 c^T J} + \frac{1}{2} \mathbf{J}(2\mathbf{X X^T})\mathbf{J} \\
+<span class="lineNum">     130 </span>            :  &amp;=&amp; \mathbf{ J X X^T J } = \mathbf{X X^T } \label{eqn:scaling}
+<span class="lineNum">     131 </span>            : \f}
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : The fist two terms in this expression disappear because \f$\mathbf{1^T J}=\mathbf{J 1} =\mathbf{0}\f$, where \f$\mathbf{0}\f$
+<span class="lineNum">     134 </span>            : is a matrix containing all zeros.  In the final step meanwhile we use the fact that the matrix of squared distances will not
+<span class="lineNum">     135 </span>            : change when we translate all the points.  We can thus assume that the mean value, \f$\mu\f$, for each of the components, \f$\alpha\f$:
+<span class="lineNum">     136 </span>            : \f[
+<span class="lineNum">     137 </span>            : \mu_\alpha = \frac{1}{M} \sum_{i=1}^N \mathbf{X}^i_\alpha
+<span class="lineNum">     138 </span>            : \f]
+<span class="lineNum">     139 </span>            : is equal to 0 so the columns of \f$\mathbf{X}\f$ add up to 0.  This in turn means that each of the columns of
+<span class="lineNum">     140 </span>            : \f$\mathbf{X X^T}\f$ adds up to zero, which is what allows us to write \f$\mathbf{ J X X^T J } = \mathbf{X X^T }\f$.
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : The matrix of squared distances is symmetric and positive-definite we can thus use the spectral decomposition to decompose it as:
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : \f[
+<span class="lineNum">     145 </span>            : \Phi= \mathbf{V} \Lambda \mathbf{V}^T
+<span class="lineNum">     146 </span>            : \f]
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : Furthermore, because the matrix we are diagonalizing, \f$\mathbf{X X^T}\f$, is the product of a matrix and its transpose
+<span class="lineNum">     149 </span>            : we can use this decomposition to write:
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : \f[
+<span class="lineNum">     152 </span>            : \mathbf{X} =\mathbf{V} \Lambda^\frac{1}{2}
+<span class="lineNum">     153 </span>            : \f]
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : Much as in PCA there are generally a small number of large eigenvalues in \f$\Lambda\f$ and many small eigenvalues.
+<span class="lineNum">     156 </span>            : We can safely use only the large eigenvalues and their corresponding eigenvectors to express the relationship between
+<span class="lineNum">     157 </span>            : the coordinates \f$\mathbf{X}\f$.  This gives us our set of low-dimensional projections.
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : This derivation makes a number of assumptions about the how the low dimensional points should best be arranged to minimise
+<span class="lineNum">     160 </span>            : the stress. If you use an interative optimization algorithm such as SMACOF you may thus be able to find a better
+<span class="lineNum">     161 </span>            : (lower-stress) projection of the points.  For more details on the assumptions made
+<span class="lineNum">     162 </span>            : see &lt;a href=&quot;http://quest4rigor.com/tag/multidimensional-scaling/&quot;&gt; this website.&lt;/a&gt;
+<span class="lineNum">     163 </span>            : */
+<span class="lineNum">     164 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : class ClassicalMultiDimensionalScaling : public AnalysisWithLandmarks {
+<span class="lineNum">     167 </span>            : private:
+<span class="lineNum">     168 </span>            :   unsigned nlow;
+<span class="lineNum">     169 </span>            :   std::string ofilename;
+<span class="lineNum">     170 </span>            :   std::string efilename;
+<span class="lineNum">     171 </span>            :   PointWiseMapping* myembedding;
+<span class="lineNum">     172 </span>            : public:
+<span class="lineNum">     173 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     174 </span>            :   explicit ClassicalMultiDimensionalScaling( const ActionOptions&amp; ao );
+<span class="lineNum">     175 </span>            :   ~ClassicalMultiDimensionalScaling();
+<span class="lineNum">     176 </span>            :   void analyzeLandmarks();
+<a name="177"><span class="lineNum">     177 </span>            : };</a>
+<span class="lineNum">     178 </span>            : 
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(ClassicalMultiDimensionalScaling,&quot;CLASSICAL_MDS&quot;)</span></a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">          2 : void ClassicalMultiDimensionalScaling::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">          2 :   AnalysisWithLandmarks::registerKeywords( keys );</span>
+<span class="lineNum">     183 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;NLOW_DIM&quot;,&quot;number of low-dimensional coordinates required&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;OUTPUT_FILE&quot;,&quot;file on which to output the final embedding coordinates&quot;);</span>
+<span class="lineNum">     185 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;EMBEDDING_OFILE&quot;,&quot;dont output&quot;,&quot;file on which to output the embedding in plumed input format&quot;);</span>
+<a name="186"><span class="lineNum">     186 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">          1 : ClassicalMultiDimensionalScaling::ClassicalMultiDimensionalScaling( const ActionOptions&amp; ao ):</span>
+<span class="lineNum">     189 </span>            :   Action(ao),
+<span class="lineNum">     190 </span><span class="lineCov">          2 :   AnalysisWithLandmarks(ao)</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span><span class="lineCov">          2 :   myembedding = new PointWiseMapping( getMetricName(), false );</span>
+<span class="lineNum">     193 </span><span class="lineCov">          1 :   setDataToAnalyze( dynamic_cast&lt;MultiReferenceBase*&gt;(myembedding) );</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">          2 :   parse(&quot;NLOW_DIM&quot;,nlow);</span>
+<span class="lineNum">     196 </span><span class="lineCov">          1 :   if( nlow&lt;1 ) error(&quot;dimensionality of low dimensional space must be at least one&quot;);</span>
+<span class="lineNum">     197 </span><span class="lineCov">          2 :   std::vector&lt;std::string&gt; propnames( nlow ); std::string num;</span>
+<span class="lineNum">     198 </span><span class="lineCov">          8 :   for(unsigned i=0; i&lt;propnames.size(); ++i) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">          2 :     Tools::convert(i+1,num); std::string lab=getLabel();</span>
+<span class="lineNum">     200 </span><span class="lineCov">         10 :     if(lab.find(&quot;@&quot;)!=std::string::npos) propnames[i]=getName() + &quot;.&quot; + num;</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :     else propnames[i]=getLabel() + &quot;.&quot; + num;</span>
+<span class="lineNum">     202 </span>            :   }
+<span class="lineNum">     203 </span><span class="lineCov">          1 :   myembedding-&gt;setPropertyNames( propnames, false );</span>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">          2 :   parseOutputFile(&quot;EMBEDDING_OFILE&quot;,efilename);</span>
+<span class="lineNum">     206 </span><span class="lineCov">          2 :   parseOutputFile(&quot;OUTPUT_FILE&quot;,ofilename);</span>
+<a name="207"><span class="lineNum">     207 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">          3 : ClassicalMultiDimensionalScaling::~ClassicalMultiDimensionalScaling() {</span>
+<span class="lineNum">     210 </span><span class="lineCov">          1 :   delete myembedding;</span>
+<a name="211"><span class="lineNum">     211 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineCov">          2 : void ClassicalMultiDimensionalScaling::analyzeLandmarks() {</span>
+<span class="lineNum">     214 </span>            :   // Calculate all pairwise diatances
+<span class="lineNum">     215 </span><span class="lineCov">          6 :   myembedding-&gt;calculateAllDistances( getPbc(), getArguments(), comm, myembedding-&gt;modifyDmat(), true );</span>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :   // Run multidimensional scaling
+<span class="lineNum">     218 </span><span class="lineCov">          2 :   ClassicalScaling::run( myembedding );</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :   // Output the embedding as long lists of data
+<span class="lineNum">     221 </span>            : //  std::string gfname=saveResultsFromPreviousAnalyses( ofilename );
+<span class="lineNum">     222 </span><span class="lineCov">          4 :   OFile gfile; gfile.link(*this);</span>
+<span class="lineNum">     223 </span><span class="lineCov">          4 :   gfile.setBackupString(&quot;analysis&quot;);</span>
+<span class="lineNum">     224 </span><span class="lineCov">          6 :   gfile.fmtField(getOutputFormat()+&quot; &quot;);</span>
+<span class="lineNum">     225 </span><span class="lineCov">          4 :   gfile.open( ofilename.c_str() );</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :   // Print embedding coordinates
+<span class="lineNum">     228 </span><span class="lineCov">        604 :   for(unsigned i=0; i&lt;myembedding-&gt;getNumberOfReferenceFrames(); ++i) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">       1000 :     for(unsigned j=0; j&lt;nlow; ++j) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">        400 :       std::string num; Tools::convert(j+1,num);</span>
+<span class="lineNum">     231 </span><span class="lineCov">       2000 :       gfile.printField( getLabel() + &quot;.&quot; + num, myembedding-&gt;getProjectionCoordinate(i,j) );</span>
+<span class="lineNum">     232 </span>            :     }
+<span class="lineNum">     233 </span><span class="lineCov">        200 :     gfile.printField();</span>
+<span class="lineNum">     234 </span>            :   }
+<span class="lineNum">     235 </span><span class="lineCov">          2 :   gfile.close();</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   // Output the embedding in plumed format
+<span class="lineNum">     238 </span><span class="lineCov">          4 :   if( efilename!=&quot;dont output&quot;) {</span>
+<span class="lineNum">     239 </span><span class="lineCov">          6 :     OFile afile; afile.link(*this); afile.setBackupString(&quot;analysis&quot;);</span>
+<span class="lineNum">     240 </span><span class="lineCov">          4 :     afile.open( efilename.c_str() );</span>
+<span class="lineNum">     241 </span><span class="lineCov">          8 :     myembedding-&gt;print( &quot;classical mds&quot;, getTime(), afile, getOutputFormat(), atoms.getUnits().getLength()/0.1 );</span>
+<span class="lineNum">     242 </span><span class="lineCov">          2 :     afile.close();</span>
+<span class="lineNum">     243 </span>            :   }
+<span class="lineNum">     244 </span><span class="lineCov">          2 : }</span>
+<a name="245"><span class="lineNum">     245 </span>            : </a>
+<span class="lineNum">     246 </span>            : }
+<span class="lineNum">     247 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/FileBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - FileBase.cpp<span style="font-size: 80%;"> (source / <a href="FileBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryHi">94.1 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;FileBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/Action.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Communicator.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      29 </span>            : #include &lt;cstdarg&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      31 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      34 </span>            : #include &lt;string&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">      37 </span>            : #include &lt;zlib.h&gt;
+<span class="lineNum">      38 </span>            : #endif
+<span class="lineNum">      39 </span>            : 
+<a name="40"><span class="lineNum">      40 </span>            : namespace PLMD {</a>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">        592 : FileBase&amp; FileBase::link(FILE*fp) {</span>
+<span class="lineNum">      43 </span><span class="lineCov">        592 :   plumed_massert(!this-&gt;fp,&quot;cannot link an already open file&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineCov">        592 :   this-&gt;fp=fp;</span>
+<span class="lineNum">      45 </span><span class="lineCov">        592 :   cloned=true;</span>
+<span class="lineNum">      46 </span><span class="lineCov">        592 :   return *this;</span>
+<a name="47"><span class="lineNum">      47 </span>            : }</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">       3542 : FileBase&amp; FileBase::flush() {</span>
+<span class="lineNum">      50 </span><span class="lineCov">       3542 :   if(fp) fflush(fp);</span>
+<span class="lineNum">      51 </span><span class="lineCov">       3542 :   return *this;</span>
+<a name="52"><span class="lineNum">      52 </span>            : }</a>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineCov">       5978 : FileBase&amp; FileBase::link(Communicator&amp;comm) {</span>
+<span class="lineNum">      55 </span><span class="lineCov">       5978 :   plumed_massert(!fp,&quot;cannot link an already open file&quot;);</span>
+<span class="lineNum">      56 </span><span class="lineCov">       5978 :   this-&gt;comm=&amp;comm;</span>
+<span class="lineNum">      57 </span><span class="lineCov">       5978 :   return *this;</span>
+<a name="58"><span class="lineNum">      58 </span>            : }</a>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">       3553 : FileBase&amp; FileBase::link(PlumedMain&amp;plumed) {</span>
+<span class="lineNum">      61 </span><span class="lineCov">       3553 :   plumed_massert(!fp,&quot;cannot link an already open file&quot;);</span>
+<span class="lineNum">      62 </span><span class="lineCov">       3553 :   this-&gt;plumed=&amp;plumed;</span>
+<span class="lineNum">      63 </span><span class="lineCov">       3553 :   link(plumed.comm);</span>
+<span class="lineNum">      64 </span><span class="lineCov">       3553 :   return *this;</span>
+<a name="65"><span class="lineNum">      65 </span>            : }</a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">       2981 : FileBase&amp; FileBase::link(Action&amp;action) {</span>
+<span class="lineNum">      68 </span><span class="lineCov">       2981 :   plumed_massert(!fp,&quot;cannot link an already open file&quot;);</span>
+<span class="lineNum">      69 </span><span class="lineCov">       2981 :   this-&gt;action=&amp;action;</span>
+<span class="lineNum">      70 </span><span class="lineCov">       2981 :   link(action.plumed);</span>
+<span class="lineNum">      71 </span><span class="lineCov">       2981 :   return *this;</span>
+<a name="72"><span class="lineNum">      72 </span>            : }</a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">       1235 : bool FileBase::FileExist(const std::string&amp; path) {</span>
+<span class="lineNum">      75 </span>            :   bool do_exist=false;
+<span class="lineNum">      76 </span><span class="lineCov">       3705 :   this-&gt;path=appendSuffix(path,getSuffix());</span>
+<span class="lineNum">      77 </span><span class="lineCov">       1235 :   mode=&quot;r&quot;;</span>
+<span class="lineNum">      78 </span><span class="lineCov">       1235 :   FILE *ff=std::fopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;r&quot;);</span>
+<span class="lineNum">      79 </span><span class="lineCov">       1235 :   if(!ff) {</span>
+<span class="lineNum">      80 </span>            :     this-&gt;path=path;
+<span class="lineNum">      81 </span><span class="lineCov">        401 :     ff=std::fopen(const_cast&lt;char*&gt;(this-&gt;path.c_str()),&quot;r&quot;);</span>
+<span class="lineNum">      82 </span>            :     mode=&quot;r&quot;;
+<span class="lineNum">      83 </span>            :   }
+<span class="lineNum">      84 </span><span class="lineCov">       1235 :   if(ff) {do_exist=true; fclose(ff);}</span>
+<span class="lineNum">      85 </span><span class="lineCov">       1235 :   if(comm) comm-&gt;Barrier();</span>
+<span class="lineNum">      86 </span><span class="lineCov">       1235 :   return do_exist;</span>
+<a name="87"><span class="lineNum">      87 </span>            : }</a>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">       6950 : bool FileBase::isOpen() {</span>
+<span class="lineNum">      90 </span>            :   bool isopen=false;
+<span class="lineNum">      91 </span><span class="lineCov">       6950 :   if(fp) isopen=true;</span>
+<span class="lineNum">      92 </span><span class="lineCov">       6950 :   return isopen;</span>
+<a name="93"><span class="lineNum">      93 </span>            : }</a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">       2056 : void        FileBase::close() {</span>
+<span class="lineNum">      96 </span><span class="lineCov">       2056 :   plumed_assert(!cloned);</span>
+<span class="lineNum">      97 </span><span class="lineCov">       2056 :   eof=false;</span>
+<span class="lineNum">      98 </span><span class="lineCov">       2056 :   err=false;</span>
+<span class="lineNum">      99 </span><span class="lineCov">       2056 :   if(fp)   std::fclose(fp);</span>
+<span class="lineNum">     100 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     101 </span><span class="lineCov">       2056 :   if(gzfp) gzclose(gzFile(gzfp));</span>
+<span class="lineNum">     102 </span>            : #endif
+<span class="lineNum">     103 </span><span class="lineCov">       2056 :   fp=NULL;</span>
+<span class="lineNum">     104 </span><span class="lineCov">       2056 :   gzfp=NULL;</span>
+<a name="105"><span class="lineNum">     105 </span><span class="lineCov">       2056 : }</span></a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">       6695 : FileBase::FileBase():</span>
+<span class="lineNum">     108 </span>            :   fp(NULL),
+<span class="lineNum">     109 </span>            :   gzfp(NULL),
+<span class="lineNum">     110 </span>            :   comm(NULL),
+<span class="lineNum">     111 </span>            :   plumed(NULL),
+<span class="lineNum">     112 </span>            :   action(NULL),
+<span class="lineNum">     113 </span>            :   cloned(false),
+<span class="lineNum">     114 </span>            :   eof(false),
+<span class="lineNum">     115 </span>            :   err(false),
+<span class="lineNum">     116 </span>            :   heavyFlush(false),
+<span class="lineNum">     117 </span><span class="lineCov">      20085 :   enforcedSuffix_(false)</span>
+<span class="lineNum">     118 </span>            : {
+<a name="119"><span class="lineNum">     119 </span><span class="lineCov">       6695 : }</span></a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">      13390 : FileBase::~FileBase()</span>
+<span class="lineNum">     122 </span>            : {
+<span class="lineNum">     123 </span><span class="lineCov">       6695 :   if(plumed) plumed-&gt;eraseFile(*this);</span>
+<span class="lineNum">     124 </span><span class="lineCov">       6695 :   if(!cloned &amp;&amp; fp)   fclose(fp);</span>
+<span class="lineNum">     125 </span>            : #ifdef __PLUMED_HAS_ZLIB
+<span class="lineNum">     126 </span><span class="lineCov">       6695 :   if(!cloned &amp;&amp; gzfp) gzclose(gzFile(gzfp));</span>
+<span class="lineNum">     127 </span>            : #endif
+<a name="128"><span class="lineNum">     128 </span><span class="lineCov">       6695 : }</span></a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">    2265785 : FileBase::operator bool()const {</span>
+<span class="lineNum">     131 </span><span class="lineCov">    2265785 :   return !eof;</span>
+<a name="132"><span class="lineNum">     132 </span>            : }</a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">       5009 : std::string FileBase::appendSuffix(const std::string&amp;path,const std::string&amp;suffix) {</span>
+<span class="lineNum">     135 </span><span class="lineCov">       5009 :   if(path==&quot;/dev/null&quot;) return path; // do not append a suffix to /dev/null</span>
+<span class="lineNum">     136 </span>            :   std::string ret=path;
+<span class="lineNum">     137 </span><span class="lineCov">       4847 :   std::string ext=Tools::extension(path);</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : // These are the recognized extensions so far:
+<span class="lineNum">     140 </span>            : // gz xtc trr
+<span class="lineNum">     141 </span>            : // If a file name ends with one of these extensions, the suffix is added *before*
+<span class="lineNum">     142 </span>            : // the extension. This is useful when extensions are conventionally used
+<span class="lineNum">     143 </span>            : // to detect file type, so as to allow easier file manipulation.
+<span class="lineNum">     144 </span>            : // Removing this line, any extension recognized by Tools::extension() would be considered
+<span class="lineNum">     145 </span>            : //  if(ext!=&quot;gz&quot; &amp;&amp; ext!=&quot;xtc&quot; &amp;&amp; ext!=&quot;trr&quot;) ext=&quot;&quot;;
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">       4847 :   if(ext.length()&gt;0) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">       3554 :     int l=path.length()-(ext.length()+1);</span>
+<span class="lineNum">     149 </span><span class="lineCov">       3554 :     plumed_assert(l&gt;=0);</span>
+<span class="lineNum">     150 </span><span class="lineCov">       7108 :     ret=ret.substr(0,l);</span>
+<span class="lineNum">     151 </span>            :   }
+<span class="lineNum">     152 </span>            :   ret+=suffix;
+<span class="lineNum">     153 </span><span class="lineCov">       8401 :   if(ext.length()&gt;0)ret+=&quot;.&quot;+ext;</span>
+<span class="lineNum">     154 </span>            :   return ret;
+<a name="155"><span class="lineNum">     155 </span>            : }</a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">        204 : FileBase&amp; FileBase::enforceSuffix(const std::string&amp;suffix) {</span>
+<span class="lineNum">     158 </span><span class="lineCov">        204 :   enforcedSuffix_=true;</span>
+<span class="lineNum">     159 </span><span class="lineCov">        204 :   enforcedSuffix=suffix;</span>
+<span class="lineNum">     160 </span><span class="lineCov">        204 :   return *this;</span>
+<a name="161"><span class="lineNum">     161 </span>            : }</a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">       3982 : std::string FileBase::getSuffix()const {</span>
+<span class="lineNum">     164 </span><span class="lineCov">       3982 :   if(enforcedSuffix_) return enforcedSuffix;</span>
+<span class="lineNum">     165 </span><span class="lineCov">       3774 :   if(plumed) return plumed-&gt;getSuffix();</span>
+<span class="lineNum">     166 </span><span class="lineCov">        320 :   return &quot;&quot;;</span>
+<a name="167"><span class="lineNum">     167 </span>            : }</a>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

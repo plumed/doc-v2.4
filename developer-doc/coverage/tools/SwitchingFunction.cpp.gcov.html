@@ -1,0 +1,694 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/SwitchingFunction.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - SwitchingFunction.cpp<span style="font-size: 80%;"> (source / <a href="SwitchingFunction.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">251</td>
+            <td class="headerCovTableEntry">305</td>
+            <td class="headerCovTableEntryMed">82.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryHi">94.1 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;SwitchingFunction.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Keywords.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;OpenMP.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      27 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">      30 </span>            : #include &lt;matheval.h&gt;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : using namespace std;
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">       3226 : static std::map&lt;string, double&gt; leptonConstants= {</span>
+<span class="lineNum">      37 </span>            :   {&quot;e&quot;, std::exp(1.0)},
+<span class="lineNum">      38 </span>            :   {&quot;log2e&quot;, 1.0/std::log(2.0)},
+<span class="lineNum">      39 </span>            :   {&quot;log10e&quot;, 1.0/std::log(10.0)},
+<span class="lineNum">      40 </span>            :   {&quot;ln2&quot;, std::log(2.0)},
+<span class="lineNum">      41 </span>            :   {&quot;ln10&quot;, std::log(10.0)},
+<span class="lineNum">      42 </span>            :   {&quot;pi&quot;, pi},
+<span class="lineNum">      43 </span>            :   {&quot;pi_2&quot;, pi*0.5},
+<span class="lineNum">      44 </span>            :   {&quot;pi_4&quot;, pi*0.25},
+<span class="lineNum">      45 </span>            : //  {&quot;1_pi&quot;, 1.0/pi},
+<span class="lineNum">      46 </span>            : //  {&quot;2_pi&quot;, 2.0/pi},
+<span class="lineNum">      47 </span>            : //  {&quot;2_sqrtpi&quot;, 2.0/std::sqrt(pi)},
+<span class="lineNum">      48 </span>            :   {&quot;sqrt2&quot;, std::sqrt(2.0)},
+<span class="lineNum">      49 </span>            :   {&quot;sqrt1_2&quot;, std::sqrt(0.5)}
+<span class="lineNum">      50 </span>            : };
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : //+PLUMEDOC INTERNAL switchingfunction
+<span class="lineNum">      53 </span>            : /*
+<span class="lineNum">      54 </span>            : Functions that measure whether values are less than a certain quantity.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : Switching functions \f$s(r)\f$ take a minimum of one input parameter \f$d_0\f$.
+<span class="lineNum">      57 </span>            : For \f$r \le d_0 \quad s(r)=1.0\f$ while for \f$r &gt; d_0\f$ the function decays smoothly to 0.
+<span class="lineNum">      58 </span>            : The various switching functions available in plumed differ in terms of how this decay is performed.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : Where there is an accepted convention in the literature (e.g. \ref COORDINATION) on the form of the
+<span class="lineNum">      61 </span>            : switching function we use the convention as the default.  However, the flexibility to use different
+<span class="lineNum">      62 </span>            : switching functions is always present generally through a single keyword. This keyword generally
+<span class="lineNum">      63 </span>            : takes an input with the following form:
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : \verbatim
+<span class="lineNum">      66 </span>            : KEYWORD={TYPE &lt;list of parameters&gt;}
+<span class="lineNum">      67 </span>            : \endverbatim
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : The following table contains a list of the various switching functions that are available in plumed 2
+<span class="lineNum">      70 </span>            : together with an example input.
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : &lt;table align=center frame=void width=95%% cellpadding=5%%&gt;
+<span class="lineNum">      73 </span>            : &lt;tr&gt;
+<span class="lineNum">      74 </span>            : &lt;td&gt; TYPE &lt;/td&gt; &lt;td&gt; FUNCTION &lt;/td&gt; &lt;td&gt; EXAMPLE INPUT &lt;/td&gt; &lt;td&gt; DEFAULT PARAMETERS &lt;/td&gt;
+<span class="lineNum">      75 </span>            : &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;RATIONAL &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">      76 </span>            : \f$
+<span class="lineNum">      77 </span>            : s(r)=\frac{ 1 - \left(\frac{ r - d_0 }{ r_0 }\right)^{n} }{ 1 - \left(\frac{ r - d_0 }{ r_0 }\right)^{m} }
+<span class="lineNum">      78 </span>            : \f$
+<span class="lineNum">      79 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">      80 </span>            : {RATIONAL R_0=\f$r_0\f$ D_0=\f$d_0\f$ NN=\f$n\f$ MM=\f$m\f$}
+<span class="lineNum">      81 </span>            : &lt;/td&gt; &lt;td&gt; \f$d_0=0.0\f$, \f$n=6\f$, \f$m=2n\f$ &lt;/td&gt;
+<span class="lineNum">      82 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      83 </span>            : &lt;td&gt; EXP &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">      84 </span>            : \f$
+<span class="lineNum">      85 </span>            : s(r)=\exp\left(-\frac{ r - d_0 }{ r_0 }\right)
+<span class="lineNum">      86 </span>            : \f$
+<span class="lineNum">      87 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">      88 </span>            : {EXP  R_0=\f$r_0\f$ D_0=\f$d_0\f$}
+<span class="lineNum">      89 </span>            : &lt;/td&gt; &lt;td&gt; \f$d_0=0.0\f$ &lt;/td&gt;
+<span class="lineNum">      90 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      91 </span>            : &lt;td&gt; GAUSSIAN &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">      92 </span>            : \f$
+<span class="lineNum">      93 </span>            : s(r)=\exp\left(-\frac{ (r - d_0)^2 }{ 2r_0^2 }\right)
+<span class="lineNum">      94 </span>            : \f$
+<span class="lineNum">      95 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">      96 </span>            : {GAUSSIAN R_0=\f$r_0\f$ D_0=\f$d_0\f$}
+<span class="lineNum">      97 </span>            : &lt;/td&gt; &lt;td&gt; \f$d_0=0.0\f$ &lt;/td&gt;
+<span class="lineNum">      98 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      99 </span>            : &lt;td&gt; SMAP &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     100 </span>            : \f$
+<span class="lineNum">     101 </span>            : s(r) = \left[ 1 + ( 2^{a/b} -1 )\left( \frac{r-d_0}{r_0} \right)^a \right]^{-b/a}
+<span class="lineNum">     102 </span>            : \f$
+<span class="lineNum">     103 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     104 </span>            : {SMAP R_0=\f$r_0\f$ D_0=\f$d_0\f$ A=\f$a\f$ B=\f$b\f$}
+<span class="lineNum">     105 </span>            : &lt;/td&gt; &lt;td&gt; \f$d_0=0.0\f$ &lt;/td&gt;
+<span class="lineNum">     106 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">     107 </span>            : &lt;td&gt; Q &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     108 </span>            : \f$
+<span class="lineNum">     109 </span>            : s(r) = \frac{1}{1 + \exp(\beta(r_{ij} - \lambda r_{ij}^0))}
+<span class="lineNum">     110 </span>            : \f$
+<span class="lineNum">     111 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     112 </span>            : {Q REF=\f$r_{ij}^0\f$ BETA=\f$\beta\f$ LAMBDA=\f$\lambda\f$ }
+<span class="lineNum">     113 </span>            : &lt;/td&gt; &lt;td&gt; \f$\lambda=1.8\f$,  \f$\beta=50 nm^-1\f$ (all-atom)&lt;br/&gt;\f$\lambda=1.5\f$,  \f$\beta=50 nm^-1\f$ (coarse-grained)  &lt;/td&gt;
+<span class="lineNum">     114 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">     115 </span>            : &lt;td&gt; CUBIC &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     116 </span>            : \f$
+<span class="lineNum">     117 </span>            : s(r) = (y-1)^2(1+2y) \qquad \textrm{where} \quad y = \frac{r - r_1}{r_0-r_1}
+<span class="lineNum">     118 </span>            : \f$
+<span class="lineNum">     119 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     120 </span>            : {CUBIC D_0=\f$r_1\f$ D_MAX=\f$r_0\f$}
+<span class="lineNum">     121 </span>            : &lt;/td&gt; &lt;td&gt; &lt;/td&gt;
+<span class="lineNum">     122 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">     123 </span>            : &lt;td&gt; TANH &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     124 </span>            : \f$
+<span class="lineNum">     125 </span>            : s(r) = 1 - \tanh\left( \frac{ r - d_0 }{ r_0 } \right)
+<span class="lineNum">     126 </span>            : \f$
+<span class="lineNum">     127 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     128 </span>            : {TANH R_0=\f$r_0\f$ D_0=\f$d_0\f$}
+<span class="lineNum">     129 </span>            : &lt;/td&gt; &lt;td&gt; &lt;/td&gt;
+<span class="lineNum">     130 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">     131 </span>            : &lt;td&gt; MATHEVAL &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     132 </span>            : \f$
+<span class="lineNum">     133 </span>            : s(r) = FUNC
+<span class="lineNum">     134 </span>            : \f$
+<span class="lineNum">     135 </span>            : &lt;/td&gt; &lt;td&gt;
+<span class="lineNum">     136 </span>            : {MATHEVAL FUNC=1/(1+x^6) R_0=\f$r_0\f$ D_0=\f$d_0\f$}
+<span class="lineNum">     137 </span>            : &lt;/td&gt; &lt;td&gt; &lt;/td&gt;
+<span class="lineNum">     138 </span>            : &lt;/tr&gt;
+<span class="lineNum">     139 </span>            : &lt;/table&gt;
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : \attention
+<span class="lineNum">     142 </span>            : Similarly to the \ref MATHEVAL function, the MATHEVAL switching function
+<span class="lineNum">     143 </span>            : only works if one of these two conditions is satisfied:
+<span class="lineNum">     144 </span>            : (a) libmatheval is installed on the system and PLUMED has been linked to it or
+<span class="lineNum">     145 </span>            : (b) the environment variable `PLUMED_USE_LEPTON` is set equal to `yes` at runtime
+<span class="lineNum">     146 </span>            : (in this case, the internal lepton library will be used).
+<span class="lineNum">     147 </span>            : Notice that in version v2.5 the internal lepton library will be used by default.
+<span class="lineNum">     148 </span>            : Also notice that using MATHEVAL is much slower than using e.g. RATIONAL.
+<span class="lineNum">     149 </span>            : Thus, the MATHEVAL switching function is useful to perform quick
+<span class="lineNum">     150 </span>            : tests on switching functions with arbitrary form before proceeding to their
+<span class="lineNum">     151 </span>            : implementation in C++.
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : For all the switching functions in the above table one can also specify a further (optional) parameter using the parameter
+<span class="lineNum">     154 </span>            : keyword D_MAX to assert that for \f$r&gt;d_{\textrm{max}}\f$ the switching function can be assumed equal to zero.
+<span class="lineNum">     155 </span>            : In this case the function is brought smoothly to zero by stretching and shifting it.
+<span class="lineNum">     156 </span>            : \verbatim
+<span class="lineNum">     157 </span>            : KEYWORD={RATIONAL R_0=1 D_MAX=3}
+<span class="lineNum">     158 </span>            : \endverbatim
+<span class="lineNum">     159 </span>            : the resulting switching function will be
+<span class="lineNum">     160 </span>            : \f$
+<span class="lineNum">     161 </span>            : s(r) = \frac{s'(r)-s'(d_{max})}{s'(0)-s'(d_{max})}
+<span class="lineNum">     162 </span>            : \f$
+<span class="lineNum">     163 </span>            : where
+<span class="lineNum">     164 </span>            : \f$
+<span class="lineNum">     165 </span>            : s'(r)=\frac{1-r^6}{1-r^{12}}
+<span class="lineNum">     166 </span>            : \f$
+<span class="lineNum">     167 </span>            : Since PLUMED 2.2 this is the default. The old behavior (no stretching) can be obtained with the
+<span class="lineNum">     168 </span>            : NOSTRETCH flag. The NOSTRETCH keyword is only provided for backward compatibility and might be
+<span class="lineNum">     169 </span>            : removed in the future. Similarly, the STRETCH keyword is still allowed but has no effect.
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : Notice that switching functions defined with the simplified syntax are never stretched
+<span class="lineNum">     172 </span>            : for backward compatibility. This might change in the future.
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : */
+<span class="lineNum">     175 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">         84 : void SwitchingFunction::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     178 </span><span class="lineCov">        336 :   keys.add(&quot;compulsory&quot;,&quot;R_0&quot;,&quot;the value of R_0 in the switching function&quot;);</span>
+<span class="lineNum">     179 </span><span class="lineCov">        420 :   keys.add(&quot;compulsory&quot;,&quot;D_0&quot;,&quot;0.0&quot;,&quot;the value of D_0 in the switching function&quot;);</span>
+<span class="lineNum">     180 </span><span class="lineCov">        336 :   keys.add(&quot;optional&quot;,&quot;D_MAX&quot;,&quot;the value at which the switching function can be assumed equal to zero&quot;);</span>
+<span class="lineNum">     181 </span><span class="lineCov">        420 :   keys.add(&quot;compulsory&quot;,&quot;NN&quot;,&quot;6&quot;,&quot;the value of n in the switching function (only needed for TYPE=RATIONAL)&quot;);</span>
+<span class="lineNum">     182 </span><span class="lineCov">        420 :   keys.add(&quot;compulsory&quot;,&quot;MM&quot;,&quot;0&quot;,&quot;the value of m in the switching function (only needed for TYPE=RATIONAL); 0 implies 2*NN&quot;);</span>
+<span class="lineNum">     183 </span><span class="lineCov">        336 :   keys.add(&quot;compulsory&quot;,&quot;A&quot;,&quot;the value of a in the switching funciton (only needed for TYPE=SMAP)&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineCov">        336 :   keys.add(&quot;compulsory&quot;,&quot;B&quot;,&quot;the value of b in the switching funciton (only needed for TYPE=SMAP)&quot;);</span>
+<span class="lineNum">     185 </span><span class="lineCov">         84 : }</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">        659 : void SwitchingFunction::set(const std::string &amp; definition,std::string&amp; errormsg) {</span>
+<span class="lineNum">     188 </span><span class="lineCov">       1318 :   vector&lt;string&gt; data=Tools::getWords(definition);</span>
+<span class="lineNum">     189 </span><span class="lineCov">        659 :   if( data.size()&lt;1 ) {</span>
+<span class="lineNum">     190 </span>            :     errormsg=&quot;missing all input for switching function&quot;;
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span>            :   string name=data[0];
+<span class="lineNum">     194 </span>            :   data.erase(data.begin());
+<span class="lineNum">     195 </span><span class="lineCov">        659 :   invr0=0.0;</span>
+<span class="lineNum">     196 </span><span class="lineCov">        659 :   invr0_2=0.0;</span>
+<span class="lineNum">     197 </span><span class="lineCov">        659 :   d0=0.0;</span>
+<span class="lineNum">     198 </span><span class="lineCov">        659 :   dmax=std::numeric_limits&lt;double&gt;::max();</span>
+<span class="lineNum">     199 </span><span class="lineCov">        659 :   dmax_2=std::numeric_limits&lt;double&gt;::max();</span>
+<span class="lineNum">     200 </span><span class="lineCov">        659 :   stretch=1.0;</span>
+<span class="lineNum">     201 </span><span class="lineCov">        659 :   shift=0.0;</span>
+<span class="lineNum">     202 </span><span class="lineCov">        659 :   init=true;</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :   bool present;
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">       1318 :   present=Tools::findKeyword(data,&quot;D_0&quot;);</span>
+<span class="lineNum">     207 </span><span class="lineCov">       1318 :   if(present &amp;&amp; !Tools::parse(data,&quot;D_0&quot;,d0)) errormsg=&quot;could not parse D_0&quot;;</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">       1318 :   present=Tools::findKeyword(data,&quot;D_MAX&quot;);</span>
+<span class="lineNum">     210 </span><span class="lineCov">       1318 :   if(present &amp;&amp; !Tools::parse(data,&quot;D_MAX&quot;,dmax)) errormsg=&quot;could not parse D_MAX&quot;;</span>
+<span class="lineNum">     211 </span><span class="lineCov">        659 :   if(dmax&lt;std::sqrt(std::numeric_limits&lt;double&gt;::max())) dmax_2=dmax*dmax;</span>
+<span class="lineNum">     212 </span><span class="lineCov">        659 :   bool dostretch=false;</span>
+<span class="lineNum">     213 </span><span class="lineCov">       1318 :   Tools::parseFlag(data,&quot;STRETCH&quot;,dostretch); // this is ignored now</span>
+<span class="lineNum">     214 </span><span class="lineCov">        659 :   dostretch=true;</span>
+<span class="lineNum">     215 </span><span class="lineCov">        659 :   bool dontstretch=false;</span>
+<span class="lineNum">     216 </span><span class="lineCov">       1318 :   Tools::parseFlag(data,&quot;NOSTRETCH&quot;,dontstretch); // this is ignored now</span>
+<span class="lineNum">     217 </span><span class="lineCov">        659 :   if(dontstretch) dostretch=false;</span>
+<span class="lineNum">     218 </span>            :   double r0;
+<span class="lineNum">     219 </span><span class="lineCov">        659 :   if(name==&quot;CUBIC&quot;) {</span>
+<span class="lineNum">     220 </span><span class="lineCov">         17 :     r0 = dmax - d0;</span>
+<span class="lineNum">     221 </span>            :   } else {
+<span class="lineNum">     222 </span><span class="lineCov">       1284 :     bool found_r0=Tools::parse(data,&quot;R_0&quot;,r0);</span>
+<span class="lineNum">     223 </span><span class="lineCov">        642 :     if(!found_r0) errormsg=&quot;R_0 is required&quot;;</span>
+<span class="lineNum">     224 </span>            :   }
+<span class="lineNum">     225 </span><span class="lineCov">        659 :   invr0=1.0/r0;</span>
+<span class="lineNum">     226 </span><span class="lineCov">        659 :   invr0_2=invr0*invr0;</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">        659 :   if(name==&quot;RATIONAL&quot;) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">        252 :     type=rational;</span>
+<span class="lineNum">     230 </span><span class="lineCov">        252 :     nn=6;</span>
+<span class="lineNum">     231 </span><span class="lineCov">        252 :     mm=0;</span>
+<span class="lineNum">     232 </span><span class="lineCov">        504 :     present=Tools::findKeyword(data,&quot;NN&quot;);</span>
+<span class="lineNum">     233 </span><span class="lineCov">        504 :     if(present &amp;&amp; !Tools::parse(data,&quot;NN&quot;,nn)) errormsg=&quot;could not parse NN&quot;;</span>
+<span class="lineNum">     234 </span><span class="lineCov">        504 :     present=Tools::findKeyword(data,&quot;MM&quot;);</span>
+<span class="lineNum">     235 </span><span class="lineCov">        504 :     if(present &amp;&amp; !Tools::parse(data,&quot;MM&quot;,mm)) errormsg=&quot;could not parse MM&quot;;</span>
+<span class="lineNum">     236 </span><span class="lineCov">        252 :     if(mm==0) mm=2*nn;</span>
+<span class="lineNum">     237 </span><span class="lineCov">        407 :   } else if(name==&quot;SMAP&quot;) {</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :     type=smap;</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :     present=Tools::findKeyword(data,&quot;A&quot;);</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :     if(present &amp;&amp; !Tools::parse(data,&quot;A&quot;,a)) errormsg=&quot;could not parse A&quot;;</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :     present=Tools::findKeyword(data,&quot;B&quot;);</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :     if(present &amp;&amp; !Tools::parse(data,&quot;B&quot;,b)) errormsg=&quot;could not parse B&quot;;</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :     c=pow(2., static_cast&lt;double&gt;(a)/static_cast&lt;double&gt;(b) ) - 1;</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :     d = -static_cast&lt;double&gt;(b) / static_cast&lt;double&gt;(a);</span>
+<span class="lineNum">     245 </span>            :   }
+<span class="lineNum">     246 </span><span class="lineCov">        407 :   else if(name==&quot;Q&quot;) {</span>
+<span class="lineNum">     247 </span><span class="lineCov">        278 :     type=nativeq;</span>
+<span class="lineNum">     248 </span><span class="lineCov">        278 :     beta = 50.0;  // nm-1</span>
+<span class="lineNum">     249 </span><span class="lineCov">        278 :     lambda = 1.8; // unitless</span>
+<span class="lineNum">     250 </span><span class="lineCov">        556 :     present=Tools::findKeyword(data,&quot;BETA&quot;);</span>
+<span class="lineNum">     251 </span><span class="lineCov">        556 :     if(present &amp;&amp; !Tools::parse(data, &quot;BETA&quot;, beta)) errormsg=&quot;could not parse BETA&quot;;</span>
+<span class="lineNum">     252 </span><span class="lineCov">        556 :     present=Tools::findKeyword(data,&quot;LAMBDA&quot;);</span>
+<span class="lineNum">     253 </span><span class="lineCov">        556 :     if(present &amp;&amp; !Tools::parse(data, &quot;LAMBDA&quot;, lambda)) errormsg=&quot;could not parse LAMBDA&quot;;</span>
+<span class="lineNum">     254 </span><span class="lineCov">        556 :     bool found_ref=Tools::parse(data,&quot;REF&quot;,ref); // nm</span>
+<span class="lineNum">     255 </span><span class="lineCov">        278 :     if(!found_ref) errormsg=&quot;REF (reference disatance) is required for native Q&quot;;</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :   }
+<span class="lineNum">     258 </span><span class="lineCov">        129 :   else if(name==&quot;EXP&quot;) type=exponential;</span>
+<span class="lineNum">     259 </span><span class="lineCov">         69 :   else if(name==&quot;GAUSSIAN&quot;) type=gaussian;</span>
+<span class="lineNum">     260 </span><span class="lineCov">         25 :   else if(name==&quot;CUBIC&quot;) type=cubic;</span>
+<span class="lineNum">     261 </span><span class="lineCov">          8 :   else if(name==&quot;TANH&quot;) type=tanh;</span>
+<span class="lineNum">     262 </span><span class="lineCov">          8 :   else if((name==&quot;MATHEVAL&quot; || name==&quot;CUSTOM&quot;) &amp;&amp; std::getenv(&quot;PLUMED_USE_LEPTON&quot;)) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">          2 :     type=leptontype;</span>
+<span class="lineNum">     264 </span>            :     std::string func;
+<span class="lineNum">     265 </span><span class="lineCov">          6 :     Tools::parse(data,&quot;FUNC&quot;,func);</span>
+<span class="lineNum">     266 </span><span class="lineCov">          4 :     lepton::ParsedExpression pe=lepton::Parser::parse(func).optimize(leptonConstants);</span>
+<span class="lineNum">     267 </span><span class="lineCov">          2 :     lepton_func=func;</span>
+<span class="lineNum">     268 </span><span class="lineCov">          2 :     expression.resize(OpenMP::getNumThreads());</span>
+<span class="lineNum">     269 </span><span class="lineCov">          6 :     for(auto &amp; e : expression) e=pe.createCompiledExpression();</span>
+<span class="lineNum">     270 </span><span class="lineCov">          8 :     lepton::ParsedExpression ped=lepton::Parser::parse(func).differentiate(&quot;x&quot;).optimize(leptonConstants);</span>
+<span class="lineNum">     271 </span><span class="lineCov">          2 :     expression_deriv.resize(OpenMP::getNumThreads());</span>
+<span class="lineNum">     272 </span><span class="lineCov">          6 :     for(auto &amp; e : expression_deriv) e=ped.createCompiledExpression();</span>
+<span class="lineNum">     273 </span>            :   }
+<span class="lineNum">     274 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     275 </span><span class="lineCov">          5 :   else if(name==&quot;MATHEVAL&quot; || name==&quot;CUSTOM&quot;) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">          3 :     type=matheval;</span>
+<span class="lineNum">     277 </span>            :     std::string func;
+<span class="lineNum">     278 </span><span class="lineCov">          6 :     Tools::parse(data,&quot;FUNC&quot;,func);</span>
+<span class="lineNum">     279 </span><span class="lineCov">          3 :     const unsigned nt=OpenMP::getNumThreads();</span>
+<span class="lineNum">     280 </span><span class="lineCov">          3 :     plumed_assert(nt&gt;0);</span>
+<span class="lineNum">     281 </span><span class="lineCov">          3 :     evaluator.resize(nt);</span>
+<span class="lineNum">     282 </span><span class="lineCov">         15 :     for(unsigned i=0; i&lt;nt; i++) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">         12 :       evaluator[i]=evaluator_create(const_cast&lt;char*&gt;(func.c_str()));</span>
+<span class="lineNum">     284 </span>            :     }
+<span class="lineNum">     285 </span>            :     char **check_names;
+<span class="lineNum">     286 </span>            :     int    check_count;
+<span class="lineNum">     287 </span><span class="lineCov">          3 :     evaluator_get_variables(evaluator[0],&amp;check_names,&amp;check_count);</span>
+<span class="lineNum">     288 </span><span class="lineCov">          3 :     if(check_count!=1) {</span>
+<span class="lineNum">     289 </span>            :       errormsg=&quot;wrong number of arguments in MATHEVAL switching function&quot;;
+<span class="lineNum">     290 </span>            :       return;
+<span class="lineNum">     291 </span>            :     }
+<span class="lineNum">     292 </span><span class="lineCov">          6 :     if(std::string(check_names[0])!=&quot;x&quot;) {</span>
+<span class="lineNum">     293 </span>            :       errormsg =&quot;argument should be named 'x'&quot;;
+<span class="lineNum">     294 </span>            :       return;
+<span class="lineNum">     295 </span>            :     }
+<span class="lineNum">     296 </span><span class="lineCov">          3 :     evaluator_deriv.resize(nt);</span>
+<span class="lineNum">     297 </span><span class="lineCov">         15 :     for(unsigned i=0; i&lt;nt; i++) {</span>
+<span class="lineNum">     298 </span><span class="lineCov">         18 :       evaluator_deriv[i]=evaluator_derivative(evaluator[i],const_cast&lt;char*&gt;(&quot;x&quot;));</span>
+<span class="lineNum">     299 </span>            :     }
+<span class="lineNum">     300 </span>            :   }
+<span class="lineNum">     301 </span>            : #endif
+<span class="lineNum">     302 </span><span class="lineCov">          4 :   else errormsg=&quot;cannot understand switching function type '&quot;+name+&quot;'&quot;;</span>
+<span class="lineNum">     303 </span><span class="lineCov">        659 :   if( !data.empty() ) {</span>
+<span class="lineNum">     304 </span>            :     errormsg=&quot;found the following rogue keywords in switching function input : &quot;;
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;data.size(); ++i) errormsg = errormsg + data[i] + &quot; &quot;;</span>
+<span class="lineNum">     306 </span>            :   }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineCov">        659 :   if(dostretch &amp;&amp; dmax!=std::numeric_limits&lt;double&gt;::max()) {</span>
+<span class="lineNum">     309 </span>            :     double dummy;
+<span class="lineNum">     310 </span><span class="lineCov">         91 :     double s0=calculate(0.0,dummy);</span>
+<span class="lineNum">     311 </span><span class="lineCov">         91 :     double sd=calculate(dmax,dummy);</span>
+<span class="lineNum">     312 </span><span class="lineCov">         91 :     stretch=1.0/(s0-sd);</span>
+<span class="lineNum">     313 </span><span class="lineCov">         91 :     shift=-sd*stretch;</span>
+<span class="lineNum">     314 </span>            :   }
+<span class="lineNum">     315 </span>            : }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">        704 : std::string SwitchingFunction::description() const {</span>
+<span class="lineNum">     318 </span><span class="lineCov">       1408 :   std::ostringstream ostr;</span>
+<span class="lineNum">     319 </span><span class="lineCov">       1408 :   ostr&lt;&lt;1./invr0&lt;&lt;&quot;.  Using &quot;;</span>
+<span class="lineNum">     320 </span><span class="lineCov">        704 :   if(type==rational) {</span>
+<span class="lineNum">     321 </span><span class="lineCov">        302 :     ostr&lt;&lt;&quot;rational&quot;;</span>
+<span class="lineNum">     322 </span><span class="lineCov">        402 :   } else if(type==exponential) {</span>
+<span class="lineNum">     323 </span><span class="lineCov">         56 :     ostr&lt;&lt;&quot;exponential&quot;;</span>
+<span class="lineNum">     324 </span><span class="lineCov">        346 :   } else if(type==nativeq) {</span>
+<span class="lineNum">     325 </span><span class="lineCov">        278 :     ostr&lt;&lt;&quot;nativeq&quot;;</span>
+<span class="lineNum">     326 </span><span class="lineCov">         68 :   } else if(type==gaussian) {</span>
+<span class="lineNum">     327 </span><span class="lineCov">         44 :     ostr&lt;&lt;&quot;gaussian&quot;;</span>
+<span class="lineNum">     328 </span><span class="lineCov">         24 :   } else if(type==smap) {</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :     ostr&lt;&lt;&quot;smap&quot;;</span>
+<span class="lineNum">     330 </span><span class="lineCov">         24 :   } else if(type==cubic) {</span>
+<span class="lineNum">     331 </span><span class="lineCov">         17 :     ostr&lt;&lt;&quot;cubic&quot;;</span>
+<span class="lineNum">     332 </span><span class="lineCov">          7 :   } else if(type==tanh) {</span>
+<span class="lineNum">     333 </span><span class="lineCov">          2 :     ostr&lt;&lt;&quot;tanh&quot;;</span>
+<span class="lineNum">     334 </span><span class="lineCov">          5 :   } else if(type==leptontype) {</span>
+<span class="lineNum">     335 </span><span class="lineCov">          2 :     ostr&lt;&lt;&quot;lepton&quot;;</span>
+<span class="lineNum">     336 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     337 </span><span class="lineCov">          3 :   } else if(type==matheval) {</span>
+<span class="lineNum">     338 </span><span class="lineCov">          3 :     ostr&lt;&lt;&quot;matheval&quot;;</span>
+<span class="lineNum">     339 </span>            : #endif
+<span class="lineNum">     340 </span>            :   } else {
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;Unknown switching function type&quot;);</span>
+<span class="lineNum">     342 </span>            :   }
+<span class="lineNum">     343 </span><span class="lineCov">        704 :   ostr&lt;&lt;&quot; swiching function with parameters d0=&quot;&lt;&lt;d0;</span>
+<span class="lineNum">     344 </span><span class="lineCov">        704 :   if(type==rational) {</span>
+<span class="lineNum">     345 </span><span class="lineCov">        604 :     ostr&lt;&lt;&quot; nn=&quot;&lt;&lt;nn&lt;&lt;&quot; mm=&quot;&lt;&lt;mm;</span>
+<span class="lineNum">     346 </span><span class="lineCov">        402 :   } else if(type==nativeq) {</span>
+<span class="lineNum">     347 </span><span class="lineCov">        834 :     ostr&lt;&lt;&quot; beta=&quot;&lt;&lt;beta&lt;&lt;&quot; lambda=&quot;&lt;&lt;lambda&lt;&lt;&quot; ref=&quot;&lt;&lt;ref;</span>
+<span class="lineNum">     348 </span><span class="lineCov">        124 :   } else if(type==smap) {</span>
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :     ostr&lt;&lt;&quot; a=&quot;&lt;&lt;a&lt;&lt;&quot; b=&quot;&lt;&lt;b;</span>
+<span class="lineNum">     350 </span><span class="lineCov">        124 :   } else if(type==cubic) {</span>
+<span class="lineNum">     351 </span><span class="lineCov">         17 :     ostr&lt;&lt;&quot; dmax=&quot;&lt;&lt;dmax;</span>
+<span class="lineNum">     352 </span><span class="lineCov">        107 :   } else if(type==leptontype) {</span>
+<span class="lineNum">     353 </span>            :     ostr&lt;&lt;&quot; func=&quot;&lt;&lt;lepton_func;
+<span class="lineNum">     354 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     355 </span><span class="lineCov">        105 :   } else if(type==matheval) {</span>
+<span class="lineNum">     356 </span><span class="lineCov">          3 :     ostr&lt;&lt;&quot; func=&quot;&lt;&lt;evaluator_get_string(evaluator[0]);</span>
+<span class="lineNum">     357 </span>            : #endif
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            :   }
+<span class="lineNum">     360 </span><span class="lineCov">        704 :   return ostr.str();</span>
+<a name="361"><span class="lineNum">     361 </span>            : }</a>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span><span class="lineCov">   12031290 : double SwitchingFunction::do_rational(double rdist,double&amp;dfunc,int nn,int mm)const {</span>
+<span class="lineNum">     364 </span>            :   double result;
+<span class="lineNum">     365 </span><span class="lineCov">   12031290 :   if(2*nn==mm) {</span>
+<span class="lineNum">     366 </span>            : // if 2*N==M, then (1.0-rdist^N)/(1.0-rdist^M) = 1.0/(1.0+rdist^N)
+<span class="lineNum">     367 </span><span class="lineCov">   11992172 :     double rNdist=Tools::fastpow(rdist,nn-1);</span>
+<span class="lineNum">     368 </span><span class="lineCov">   11992172 :     double iden=1.0/(1+rNdist*rdist);</span>
+<span class="lineNum">     369 </span><span class="lineCov">   11992172 :     dfunc = -nn*rNdist*iden*iden;</span>
+<span class="lineNum">     370 </span>            :     result = iden;
+<span class="lineNum">     371 </span>            :   } else {
+<span class="lineNum">     372 </span><span class="lineCov">      39118 :     if(rdist&gt;(1.-100.0*epsilon) &amp;&amp; rdist&lt;(1+100.0*epsilon)) {</span>
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :       result=nn/mm;</span>
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :       dfunc=0.5*nn*(nn-mm)/mm;</span>
+<span class="lineNum">     375 </span>            :     } else {
+<span class="lineNum">     376 </span><span class="lineCov">      39118 :       double rNdist=Tools::fastpow(rdist,nn-1);</span>
+<span class="lineNum">     377 </span><span class="lineCov">      39118 :       double rMdist=Tools::fastpow(rdist,mm-1);</span>
+<span class="lineNum">     378 </span><span class="lineCov">      39118 :       double num = 1.-rNdist*rdist;</span>
+<span class="lineNum">     379 </span><span class="lineCov">      39118 :       double iden = 1./(1.-rMdist*rdist);</span>
+<span class="lineNum">     380 </span><span class="lineCov">      39118 :       double func = num*iden;</span>
+<span class="lineNum">     381 </span>            :       result = func;
+<span class="lineNum">     382 </span><span class="lineCov">      39118 :       dfunc = ((-nn*rNdist*iden)+(func*(iden*mm)*rMdist));</span>
+<span class="lineNum">     383 </span>            :     }
+<span class="lineNum">     384 </span>            :   }
+<span class="lineNum">     385 </span><span class="lineCov">   12031290 :   return result;</span>
+<a name="386"><span class="lineNum">     386 </span>            : }</a>
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span><span class="lineCov">   11522409 : double SwitchingFunction::calculateSqr(double distance2,double&amp;dfunc)const {</span>
+<span class="lineNum">     389 </span><span class="lineCov">   11522409 :   if(type==rational &amp;&amp; nn%2==0 &amp;&amp; mm%2==0 &amp;&amp; d0==0.0) {</span>
+<span class="lineNum">     390 </span><span class="lineCov">    8270429 :     if(distance2&gt;dmax_2) {</span>
+<span class="lineNum">     391 </span><span class="lineCov">     118214 :       dfunc=0.0;</span>
+<span class="lineNum">     392 </span><span class="lineCov">     118214 :       return 0.0;</span>
+<span class="lineNum">     393 </span>            :     }
+<span class="lineNum">     394 </span><span class="lineCov">    8152215 :     const double rdist_2 = distance2*invr0_2;</span>
+<span class="lineNum">     395 </span><span class="lineCov">    8152215 :     double result=do_rational(rdist_2,dfunc,nn/2,mm/2);</span>
+<span class="lineNum">     396 </span>            : // chain rule:
+<span class="lineNum">     397 </span><span class="lineCov">    8152215 :     dfunc*=2*invr0_2;</span>
+<span class="lineNum">     398 </span>            : // stretch:
+<span class="lineNum">     399 </span><span class="lineCov">    8152215 :     result=result*stretch+shift;</span>
+<span class="lineNum">     400 </span><span class="lineCov">    8152215 :     dfunc*=stretch;</span>
+<span class="lineNum">     401 </span><span class="lineCov">    8152215 :     return result;</span>
+<span class="lineNum">     402 </span>            :   } else {
+<span class="lineNum">     403 </span><span class="lineCov">    3251980 :     double distance=std::sqrt(distance2);</span>
+<span class="lineNum">     404 </span><span class="lineCov">    3251980 :     return calculate(distance,dfunc);</span>
+<span class="lineNum">     405 </span>            :   }
+<span class="lineNum">     406 </span>            : }
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span><span class="lineCov">   30596499 : double SwitchingFunction::calculate(double distance,double&amp;dfunc)const {</span>
+<span class="lineNum">     409 </span><span class="lineCov">   30596499 :   plumed_massert(init,&quot;you are trying to use an unset SwitchingFunction&quot;);</span>
+<span class="lineNum">     410 </span><span class="lineCov">   30596499 :   if(distance&gt;dmax) {</span>
+<span class="lineNum">     411 </span><span class="lineCov">     155450 :     dfunc=0.0;</span>
+<span class="lineNum">     412 </span><span class="lineCov">     155450 :     return 0.0;</span>
+<span class="lineNum">     413 </span>            :   }
+<span class="lineNum">     414 </span><span class="lineCov">   30441049 :   const double rdist = (distance-d0)*invr0;</span>
+<span class="lineNum">     415 </span>            :   double result;
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span><span class="lineCov">   30441049 :   if(rdist&lt;=0.) {</span>
+<span class="lineNum">     418 </span>            :     result=1.;
+<span class="lineNum">     419 </span><span class="lineCov">   23808145 :     dfunc=0.0;</span>
+<span class="lineNum">     420 </span>            :   } else {
+<span class="lineNum">     421 </span><span class="lineCov">    6632904 :     if(type==smap) {</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :       double sx=c*pow( rdist, a );</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :       result=pow( 1.0 + sx, d );</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :       dfunc=-b*sx/rdist*result/(1.0+sx);</span>
+<span class="lineNum">     425 </span><span class="lineCov">    6632904 :     } else if(type==rational) {</span>
+<span class="lineNum">     426 </span><span class="lineCov">    3879075 :       result=do_rational(rdist,dfunc,nn,mm);</span>
+<span class="lineNum">     427 </span><span class="lineCov">    2753829 :     } else if(type==exponential) {</span>
+<span class="lineNum">     428 </span><span class="lineCov">    1206975 :       result=exp(-rdist);</span>
+<span class="lineNum">     429 </span><span class="lineCov">    1206975 :       dfunc=-result;</span>
+<span class="lineNum">     430 </span><span class="lineCov">    1546854 :     } else if(type==nativeq) {</span>
+<span class="lineNum">     431 </span><span class="lineCov">        278 :       double rdist2 = beta*(distance - lambda * ref);</span>
+<span class="lineNum">     432 </span><span class="lineCov">        278 :       double exprdist=exp(rdist2);</span>
+<span class="lineNum">     433 </span><span class="lineCov">        278 :       double exprmdist=1.0/exprdist;</span>
+<span class="lineNum">     434 </span><span class="lineCov">        278 :       result=1./(1.+exprdist);</span>
+<span class="lineNum">     435 </span><span class="lineCov">        278 :       dfunc=-1.0/(exprmdist+1.0)/(1.+exprdist);</span>
+<span class="lineNum">     436 </span><span class="lineCov">    1546576 :     } else if(type==gaussian) {</span>
+<span class="lineNum">     437 </span><span class="lineCov">     163430 :       result=exp(-0.5*rdist*rdist);</span>
+<span class="lineNum">     438 </span><span class="lineCov">     163430 :       dfunc=-rdist*result;</span>
+<span class="lineNum">     439 </span><span class="lineCov">    1383146 :     } else if(type==cubic) {</span>
+<span class="lineNum">     440 </span><span class="lineCov">     126996 :       double tmp1=rdist-1, tmp2=(1+2*rdist);</span>
+<span class="lineNum">     441 </span><span class="lineCov">     126996 :       result=tmp1*tmp1*tmp2;</span>
+<span class="lineNum">     442 </span><span class="lineCov">     126996 :       dfunc=2*tmp1*tmp2 + 2*tmp1*tmp1;</span>
+<span class="lineNum">     443 </span><span class="lineCov">    1256150 :     } else if(type==tanh) {</span>
+<span class="lineNum">     444 </span><span class="lineCov">       8000 :       double tmp1=std::tanh(rdist);</span>
+<span class="lineNum">     445 </span><span class="lineCov">       8000 :       result = 1.0 - tmp1;</span>
+<span class="lineNum">     446 </span><span class="lineCov">       8000 :       dfunc=-(1-tmp1*tmp1);</span>
+<span class="lineNum">     447 </span><span class="lineCov">    1248150 :     } else if(type==leptontype) {</span>
+<span class="lineNum">     448 </span><span class="lineCov">         51 :       const unsigned t=OpenMP::getThreadNum();</span>
+<span class="lineNum">     449 </span><span class="lineCov">        102 :       plumed_assert(t&lt;expression.size());</span>
+<span class="lineNum">     450 </span>            :       try {
+<span class="lineNum">     451 </span><span class="lineCov">        102 :         const_cast&lt;lepton::CompiledExpression*&gt;(&amp;expression[t])-&gt;getVariableReference(&quot;x&quot;)=rdist;</span>
+<span class="lineNum">     452 </span><span class="lineCov">        102 :         const_cast&lt;lepton::CompiledExpression*&gt;(&amp;expression_deriv[t])-&gt;getVariableReference(&quot;x&quot;)=rdist;</span>
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :       } catch(PLMD::lepton::Exception&amp; exc) {</span>
+<span class="lineNum">     454 </span>            : // this is necessary since in some cases lepton things a variable is not present even though it is present
+<span class="lineNum">     455 </span>            : // e.g. func=0*x
+<span class="lineNum">     456 </span>            :       }
+<span class="lineNum">     457 </span><span class="lineCov">         51 :       result=expression[t].evaluate();</span>
+<span class="lineNum">     458 </span><span class="lineCov">         51 :       dfunc=expression_deriv[t].evaluate();</span>
+<span class="lineNum">     459 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     460 </span><span class="lineCov">    1248099 :     } else if(type==matheval) {</span>
+<span class="lineNum">     461 </span><span class="lineCov">    1248099 :       const unsigned it=OpenMP::getThreadNum();</span>
+<span class="lineNum">     462 </span><span class="lineCov">    2496198 :       result=evaluator_evaluate_x(evaluator[it],rdist);</span>
+<span class="lineNum">     463 </span><span class="lineCov">    1248099 :       dfunc=evaluator_evaluate_x(evaluator_deriv[it],rdist);</span>
+<span class="lineNum">     464 </span>            : #endif
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :     } else plumed_merror(&quot;Unknown switching function type&quot;);</span>
+<span class="lineNum">     466 </span>            : // this is for the chain rule:
+<span class="lineNum">     467 </span><span class="lineCov">    6632904 :     dfunc*=invr0;</span>
+<span class="lineNum">     468 </span>            : // this is because calculate() sets dfunc to the derivative divided times the distance.
+<span class="lineNum">     469 </span>            : // (I think this is misleading and I would like to modify it - GB)
+<span class="lineNum">     470 </span><span class="lineCov">    6632904 :     dfunc/=distance;</span>
+<span class="lineNum">     471 </span>            :   }
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span><span class="lineCov">   30441049 :   result=result*stretch+shift;</span>
+<span class="lineNum">     474 </span><span class="lineCov">   30441049 :   dfunc*=stretch;</span>
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span><span class="lineCov">   30441049 :   return result;</span>
+<span class="lineNum">     477 </span>            : }
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span><span class="lineCov">        718 : SwitchingFunction::SwitchingFunction():</span>
+<span class="lineNum">     480 </span>            :   init(false),
+<span class="lineNum">     481 </span>            :   type(rational),
+<span class="lineNum">     482 </span>            :   invr0(0.0),
+<span class="lineNum">     483 </span>            :   d0(0.0),
+<span class="lineNum">     484 </span>            :   dmax(0.0),
+<span class="lineNum">     485 </span>            :   nn(6),
+<span class="lineNum">     486 </span>            :   mm(0),
+<span class="lineNum">     487 </span>            :   a(0.0),
+<span class="lineNum">     488 </span>            :   b(0.0),
+<span class="lineNum">     489 </span>            :   c(0.0),
+<span class="lineNum">     490 </span>            :   d(0.0),
+<span class="lineNum">     491 </span>            :   lambda(0.0),
+<span class="lineNum">     492 </span>            :   beta(0.0),
+<span class="lineNum">     493 </span>            :   ref(0.0),
+<span class="lineNum">     494 </span>            :   invr0_2(0.0),
+<span class="lineNum">     495 </span>            :   dmax_2(0.0),
+<span class="lineNum">     496 </span>            :   stretch(1.0),
+<span class="lineNum">     497 </span><span class="lineCov">        718 :   shift(0.0)</span>
+<span class="lineNum">     498 </span>            : {
+<span class="lineNum">     499 </span><span class="lineCov">        718 : }</span>
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineCov">  166741966 : SwitchingFunction::SwitchingFunction(const SwitchingFunction&amp;sf):</span>
+<span class="lineNum">     502 </span><span class="lineCov">  166741966 :   init(sf.init),</span>
+<span class="lineNum">     503 </span><span class="lineCov">  166741966 :   type(sf.type),</span>
+<span class="lineNum">     504 </span><span class="lineCov">  166741966 :   invr0(sf.invr0),</span>
+<span class="lineNum">     505 </span><span class="lineCov">  166741966 :   d0(sf.d0),</span>
+<span class="lineNum">     506 </span><span class="lineCov">  166741966 :   dmax(sf.dmax),</span>
+<span class="lineNum">     507 </span><span class="lineCov">  166741966 :   nn(sf.nn),</span>
+<span class="lineNum">     508 </span><span class="lineCov">  166741966 :   mm(sf.mm),</span>
+<span class="lineNum">     509 </span><span class="lineCov">  166741966 :   a(sf.a),</span>
+<span class="lineNum">     510 </span><span class="lineCov">  166741966 :   b(sf.b),</span>
+<span class="lineNum">     511 </span><span class="lineCov">  166741966 :   c(sf.c),</span>
+<span class="lineNum">     512 </span><span class="lineCov">  166741966 :   d(sf.d),</span>
+<span class="lineNum">     513 </span><span class="lineCov">  166741966 :   lambda(sf.lambda),</span>
+<span class="lineNum">     514 </span><span class="lineCov">  166741966 :   beta(sf.beta),</span>
+<span class="lineNum">     515 </span><span class="lineCov">  166741966 :   ref(sf.ref),</span>
+<span class="lineNum">     516 </span><span class="lineCov">  166741966 :   invr0_2(sf.invr0_2),</span>
+<span class="lineNum">     517 </span><span class="lineCov">  166741966 :   dmax_2(sf.dmax_2),</span>
+<span class="lineNum">     518 </span><span class="lineCov">  166741966 :   stretch(sf.stretch),</span>
+<span class="lineNum">     519 </span><span class="lineCov"> 3501581286 :   shift(sf.shift)</span>
+<span class="lineNum">     520 </span>            : {
+<span class="lineNum">     521 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     522 </span><span class="lineCov">  166741966 :   if(sf.evaluator.size()&gt;0) {</span>
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :     const unsigned nt=OpenMP::getNumThreads();</span>
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 :     plumed_assert(nt&gt;0);</span>
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :     evaluator.resize(nt);</span>
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :     evaluator_deriv.resize(nt);</span>
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;nt; i++) {</span>
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :       evaluator[i]=evaluator_create(evaluator_get_string(sf.evaluator[0]));</span>
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :       evaluator_deriv[i]=evaluator_create(evaluator_get_string(sf.evaluator_deriv[0]));</span>
+<span class="lineNum">     530 </span>            :     }
+<span class="lineNum">     531 </span>            :   }
+<span class="lineNum">     532 </span>            : #endif
+<span class="lineNum">     533 </span><span class="lineCov">  166741966 : }</span>
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 : SwitchingFunction &amp; SwitchingFunction::operator=(const SwitchingFunction&amp; sf) {</span>
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :   if(&amp;sf==this) return *this;</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :   init=sf.init;</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :   type=sf.type;</span>
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 :   invr0=sf.invr0;</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :   d0=sf.d0;</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :   dmax=sf.dmax;</span>
+<span class="lineNum">     542 </span><span class="lineNoCov">          0 :   nn=sf.nn;</span>
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :   mm=sf.mm;</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :   a=sf.a;</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :   b=sf.b;</span>
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :   c=sf.c;</span>
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :   d=sf.d;</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :   lambda=sf.lambda;</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :   beta=sf.beta;</span>
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :   ref=sf.ref;</span>
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :   invr0_2=sf.invr0_2;</span>
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :   dmax_2=sf.dmax_2;</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :   stretch=sf.stretch;</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :   shift=sf.shift;</span>
+<span class="lineNum">     555 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :   if(sf.evaluator.size()&gt;0) {</span>
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :     const unsigned nt=OpenMP::getNumThreads();</span>
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :     plumed_assert(nt&gt;0);</span>
+<span class="lineNum">     559 </span><span class="lineNoCov">          0 :     evaluator.resize(nt);</span>
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :     evaluator_deriv.resize(nt);</span>
+<span class="lineNum">     561 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;nt; i++) {</span>
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :       evaluator[i]=evaluator_create(evaluator_get_string(sf.evaluator[0]));</span>
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 :       evaluator_deriv[i]=evaluator_create(evaluator_get_string(sf.evaluator_deriv[0]));</span>
+<span class="lineNum">     564 </span>            :     }
+<span class="lineNum">     565 </span>            :   }
+<span class="lineNum">     566 </span>            : #endif
+<span class="lineNum">     567 </span>            :   return *this;
+<span class="lineNum">     568 </span>            : }
+<a name="569"><span class="lineNum">     569 </span>            : </a>
+<span class="lineNum">     570 </span>            : 
+<span class="lineNum">     571 </span><span class="lineCov">         54 : void SwitchingFunction::set(int nn,int mm,double r0,double d0) {</span>
+<span class="lineNum">     572 </span><span class="lineCov">         54 :   init=true;</span>
+<span class="lineNum">     573 </span><span class="lineCov">         54 :   type=rational;</span>
+<span class="lineNum">     574 </span><span class="lineCov">         54 :   if(mm==0) mm=2*nn;</span>
+<span class="lineNum">     575 </span><span class="lineCov">         54 :   this-&gt;nn=nn;</span>
+<span class="lineNum">     576 </span><span class="lineCov">         54 :   this-&gt;mm=mm;</span>
+<span class="lineNum">     577 </span><span class="lineCov">         54 :   this-&gt;invr0=1.0/r0;</span>
+<span class="lineNum">     578 </span><span class="lineCov">         54 :   this-&gt;invr0_2=this-&gt;invr0*this-&gt;invr0;</span>
+<span class="lineNum">     579 </span><span class="lineCov">         54 :   this-&gt;d0=d0;</span>
+<span class="lineNum">     580 </span><span class="lineCov">         54 :   this-&gt;dmax=d0+r0*pow(0.00001,1./(nn-mm));</span>
+<span class="lineNum">     581 </span><span class="lineCov">         54 :   this-&gt;dmax_2=this-&gt;dmax*this-&gt;dmax;</span>
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :   double dummy;
+<span class="lineNum">     584 </span><span class="lineCov">         54 :   double s0=calculate(0.0,dummy);</span>
+<span class="lineNum">     585 </span><span class="lineCov">         54 :   double sd=calculate(dmax,dummy);</span>
+<span class="lineNum">     586 </span><span class="lineCov">         54 :   stretch=1.0/(s0-sd);</span>
+<span class="lineNum">     587 </span><span class="lineCov">         54 :   shift=-sd*stretch;</span>
+<a name="588"><span class="lineNum">     588 </span><span class="lineCov">         54 : }</span></a>
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span><span class="lineCov">          6 : double SwitchingFunction::get_r0() const {</span>
+<span class="lineNum">     591 </span><span class="lineCov">          6 :   return 1./invr0;</span>
+<a name="592"><span class="lineNum">     592 </span>            : }</a>
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span><span class="lineCov">          6 : double SwitchingFunction::get_d0() const {</span>
+<span class="lineNum">     595 </span><span class="lineCov">          6 :   return d0;</span>
+<a name="596"><span class="lineNum">     596 </span>            : }</a>
+<span class="lineNum">     597 </span>            : 
+<span class="lineNum">     598 </span><span class="lineCov">  117918069 : double SwitchingFunction::get_dmax() const {</span>
+<span class="lineNum">     599 </span><span class="lineCov">  117918069 :   return dmax;</span>
+<a name="600"><span class="lineNum">     600 </span>            : }</a>
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span><span class="lineCov">   23893569 : double SwitchingFunction::get_dmax2() const {</span>
+<span class="lineNum">     603 </span><span class="lineCov">   23893569 :   return dmax_2;</span>
+<span class="lineNum">     604 </span>            : }
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span><span class="lineCov">  500228052 : SwitchingFunction::~SwitchingFunction() {</span>
+<span class="lineNum">     607 </span>            : #ifdef __PLUMED_HAS_MATHEVAL
+<span class="lineNum">     608 </span><span class="lineCov">  333485386 :   for(unsigned i=0; i&lt;evaluator.size(); i++) evaluator_destroy(evaluator[i]);</span>
+<span class="lineNum">     609 </span><span class="lineCov">  333485386 :   for(unsigned i=0; i&lt;evaluator_deriv.size(); i++) evaluator_destroy(evaluator_deriv[i]);</span>
+<span class="lineNum">     610 </span>            : #endif
+<span class="lineNum">     611 </span><span class="lineCov">  166742684 : }</span>
+<a name="612"><span class="lineNum">     612 </span>            : </a>
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span>            : 
+<span class="lineNum">     617 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

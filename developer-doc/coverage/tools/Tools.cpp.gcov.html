@@ -1,0 +1,449 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/Tools.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - Tools.cpp<span style="font-size: 80%;"> (source / <a href="Tools.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">174</td>
+            <td class="headerCovTableEntry">187</td>
+            <td class="headerCovTableEntryHi">93.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryMed">81.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomNumber.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;IFile.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;lepton/Lepton.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      28 </span>            : #include &lt;dirent.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      30 </span>            : #include &lt;map&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">       3226 : static std::map&lt;string, double&gt; leptonConstants= {</span>
+<span class="lineNum">      36 </span>            :   {&quot;e&quot;, std::exp(1.0)},
+<span class="lineNum">      37 </span>            :   {&quot;log2e&quot;, 1.0/std::log(2.0)},
+<span class="lineNum">      38 </span>            :   {&quot;log10e&quot;, 1.0/std::log(10.0)},
+<span class="lineNum">      39 </span>            :   {&quot;ln2&quot;, std::log(2.0)},
+<span class="lineNum">      40 </span>            :   {&quot;ln10&quot;, std::log(10.0)},
+<span class="lineNum">      41 </span>            :   {&quot;pi&quot;, pi},
+<span class="lineNum">      42 </span>            :   {&quot;pi_2&quot;, pi*0.5},
+<span class="lineNum">      43 </span>            :   {&quot;pi_4&quot;, pi*0.25},
+<span class="lineNum">      44 </span>            : //  {&quot;1_pi&quot;, 1.0/pi},
+<span class="lineNum">      45 </span>            : //  {&quot;2_pi&quot;, 2.0/pi},
+<span class="lineNum">      46 </span>            : //  {&quot;2_sqrtpi&quot;, 2.0/std::sqrt(pi)},
+<span class="lineNum">      47 </span>            :   {&quot;sqrt2&quot;, std::sqrt(2.0)},
+<span class="lineNum">      48 </span>            :   {&quot;sqrt1_2&quot;, std::sqrt(0.5)}
+<span class="lineNum">      49 </span>            : };
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : template&lt;class T&gt;
+<span class="lineNum">      52 </span><span class="lineCov">    3974712 : bool Tools::convertToAny(const string &amp; str,T &amp; t) {</span>
+<span class="lineNum">      53 </span><span class="lineCov">   11924136 :   istringstream istr(str.c_str());</span>
+<span class="lineNum">      54 </span><span class="lineCov">    3974712 :   bool ok=static_cast&lt;bool&gt;(istr&gt;&gt;t);</span>
+<span class="lineNum">      55 </span><span class="lineCov">    3974712 :   if(!ok) return false;</span>
+<span class="lineNum">      56 </span>            :   string remaining;
+<span class="lineNum">      57 </span><span class="lineCov">    1887317 :   istr&gt;&gt;remaining;</span>
+<span class="lineNum">      58 </span><span class="lineCov">    1887317 :   return remaining.length()==0;</span>
+<a name="59"><span class="lineNum">      59 </span>            : }</a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">     212337 : bool Tools::convert(const string &amp; str,int &amp; t) {</span>
+<span class="lineNum">      62 </span><span class="lineCov">     212337 :   return convertToAny(str,t);</span>
+<a name="63"><span class="lineNum">      63 </span>            : }</a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">         82 : bool Tools::convert(const string &amp; str,long int &amp; t) {</span>
+<span class="lineNum">      66 </span><span class="lineCov">         82 :   return convertToAny(str,t);</span>
+<a name="67"><span class="lineNum">      67 </span>            : }</a>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">     259856 : bool Tools::convert(const string &amp; str,unsigned &amp; t) {</span>
+<span class="lineNum">      70 </span><span class="lineCov">     259856 :   return convertToAny(str,t);</span>
+<a name="71"><span class="lineNum">      71 </span>            : }</a>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">     159413 : bool Tools::convert(const string &amp; str,AtomNumber &amp;a) {</span>
+<span class="lineNum">      74 </span>            :   unsigned i;
+<span class="lineNum">      75 </span><span class="lineCov">     159413 :   bool r=convert(str,i);</span>
+<span class="lineNum">      76 </span><span class="lineCov">     159413 :   if(r) a.setSerial(i);</span>
+<span class="lineNum">      77 </span><span class="lineCov">     159413 :   return r;</span>
+<span class="lineNum">      78 </span>            : }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : template&lt;class T&gt;
+<span class="lineNum">      81 </span><span class="lineCov">    3502437 : bool Tools::convertToReal(const string &amp; str,T &amp; t) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">    3502437 :   if(convertToAny(str,t)) return true;</span>
+<span class="lineNum">      83 </span><span class="lineCov">    8322138 :   if(str==&quot;PI&quot; || str==&quot;+PI&quot; || str==&quot;+pi&quot; || str==&quot;pi&quot;) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">    1040319 :     t=pi; return true;</span>
+<span class="lineNum">      85 </span><span class="lineCov">    2080512 :   } else if(str==&quot;-PI&quot; || str==&quot;-pi&quot;) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">    1040236 :     t=-pi; return true;</span>
+<span class="lineNum">      87 </span>            :   }
+<span class="lineNum">      88 </span>            :   try {
+<span class="lineNum">      89 </span><span class="lineCov">         42 :     t=lepton::Parser::parse(str).evaluate(leptonConstants);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          2 :     return true;</span>
+<span class="lineNum">      91 </span><span class="lineCov">         18 :   } catch(PLMD::lepton::Exception&amp; exc) {</span>
+<span class="lineNum">      92 </span>            :   }
+<span class="lineNum">      93 </span><span class="lineCov">         18 :   if( str.find(&quot;PI&quot;)!=std::string::npos ) {</span>
+<span class="lineNum">      94 </span>            :     std::size_t pi_start=str.find_first_of(&quot;PI&quot;);
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     if(str.substr(pi_start)!=&quot;PI&quot;) return false;</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :     istringstream nstr(str.substr(0,pi_start));</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     T ff=0.0; bool ok=static_cast&lt;bool&gt;(nstr&gt;&gt;ff);</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     if(!ok) return false;</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     t=ff*pi;</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     std::string remains; nstr&gt;&gt;remains;</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     return remains.length()==0;</span>
+<span class="lineNum">     102 </span><span class="lineCov">         18 :   } else if( str.find(&quot;pi&quot;)!=std::string::npos ) {</span>
+<span class="lineNum">     103 </span>            :     std::size_t pi_start=str.find_first_of(&quot;pi&quot;);
+<span class="lineNum">     104 </span><span class="lineCov">         28 :     if(str.substr(pi_start)!=&quot;pi&quot;) return false;</span>
+<span class="lineNum">     105 </span><span class="lineCov">         42 :     istringstream nstr(str.substr(0,pi_start));</span>
+<span class="lineNum">     106 </span><span class="lineCov">         28 :     T ff=0.0; bool ok=static_cast&lt;bool&gt;(nstr&gt;&gt;ff);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         14 :     if(!ok) return false;</span>
+<span class="lineNum">     108 </span><span class="lineCov">         14 :     t=ff*pi;</span>
+<span class="lineNum">     109 </span><span class="lineCov">         14 :     std::string remains; nstr&gt;&gt;remains;</span>
+<span class="lineNum">     110 </span><span class="lineCov">         14 :     return remains.length()==0;</span>
+<span class="lineNum">     111 </span><span class="lineCov">          4 :   } else if(str==&quot;NAN&quot;) {</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     t=NAN;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">     114 </span>            :   }
+<span class="lineNum">     115 </span>            :   return false;
+<a name="116"><span class="lineNum">     116 </span>            : }</a>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 : bool Tools::convert(const string &amp; str,float &amp; t) {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :   return convertToReal(str,t);</span>
+<a name="120"><span class="lineNum">     120 </span>            : }</a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">    3502437 : bool Tools::convert(const string &amp; str,double &amp; t) {</span>
+<span class="lineNum">     123 </span><span class="lineCov">    3502437 :   return convertToReal(str,t);</span>
+<a name="124"><span class="lineNum">     124 </span>            : }</a>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 : bool Tools::convert(const string &amp; str,long double &amp; t) {</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :   return convertToReal(str,t);</span>
+<span class="lineNum">     128 </span>            : }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">      26303 : bool Tools::convert(const string &amp; str,string &amp; t) {</span>
+<span class="lineNum">     131 </span>            :   t=str;
+<span class="lineNum">     132 </span><span class="lineCov">      26303 :   return true;</span>
+<span class="lineNum">     133 </span>            : }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">     570310 : vector&lt;string&gt; Tools::getWords(const string &amp; line,const char* separators,int * parlevel,const char* parenthesis) {</span>
+<span class="lineNum">     136 </span><span class="lineCov">     570310 :   plumed_massert(strlen(parenthesis)==1,&quot;multiple parenthesis type not available&quot;);</span>
+<span class="lineNum">     137 </span><span class="lineCov">     570310 :   plumed_massert(parenthesis[0]=='(' || parenthesis[0]=='[' || parenthesis[0]=='{',</span>
+<span class="lineNum">     138 </span>            :                  &quot;only ( [ { allowed as parenthesis&quot;);
+<span class="lineNum">     139 </span><span class="lineCov">     570310 :   if(!separators) separators=&quot; \t\n&quot;;</span>
+<span class="lineNum">     140 </span><span class="lineCov">     570310 :   const string sep(separators);</span>
+<span class="lineNum">     141 </span><span class="lineCov">     570310 :   char openpar=parenthesis[0];</span>
+<span class="lineNum">     142 </span>            :   char closepar;
+<span class="lineNum">     143 </span>            :   if(openpar=='(') closepar=')';
+<span class="lineNum">     144 </span><span class="lineCov">     570310 :   if(openpar=='[') closepar=']';</span>
+<span class="lineNum">     145 </span><span class="lineCov">     570310 :   if(openpar=='{') closepar='}';</span>
+<span class="lineNum">     146 </span>            :   vector&lt;string&gt; words;
+<span class="lineNum">     147 </span>            :   string word;
+<span class="lineNum">     148 </span>            :   int parenthesisLevel=0;
+<span class="lineNum">     149 </span><span class="lineCov">     570310 :   if(parlevel) parenthesisLevel=*parlevel;</span>
+<span class="lineNum">     150 </span><span class="lineCov">   61520408 :   for(unsigned i=0; i&lt;line.length(); i++) {</span>
+<span class="lineNum">     151 </span>            :     bool found=false;
+<span class="lineNum">     152 </span>            :     bool onParenthesis=false;
+<span class="lineNum">     153 </span><span class="lineCov">   20126596 :     if(line[i]==openpar || line[i]==closepar) onParenthesis=true;</span>
+<span class="lineNum">     154 </span><span class="lineCov">   20126596 :     if(line[i]==closepar) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">       1456 :       parenthesisLevel--;</span>
+<span class="lineNum">     156 </span><span class="lineCov">       1456 :       plumed_massert(parenthesisLevel&gt;=0,&quot;Extra closed parenthesis in '&quot; + line + &quot;'&quot;);</span>
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span><span class="lineCov">  160981124 :     if(parenthesisLevel==0) for(unsigned j=0; j&lt;sep.length(); j++) if(line[i]==sep[j]) found=true;</span>
+<span class="lineNum">     159 </span>            : // If at parenthesis level zero (outer)
+<span class="lineNum">     160 </span><span class="lineCov">   20126596 :     if(!(parenthesisLevel==0 &amp;&amp; (found||onParenthesis))) word.push_back(line[i]);</span>
+<span class="lineNum">     161 </span>            :     //if(onParenthesis) word.push_back(' ');
+<span class="lineNum">     162 </span><span class="lineCov">   20126596 :     if(line[i]==openpar) parenthesisLevel++;</span>
+<span class="lineNum">     163 </span><span class="lineCov">   25418579 :     if(found &amp;&amp; word.length()&gt;0) {</span>
+<span class="lineNum">     164 </span><span class="lineCov">    1063860 :       if(!parlevel) plumed_massert(parenthesisLevel==0,&quot;Unmatching parenthesis in '&quot; + line + &quot;'&quot;);</span>
+<span class="lineNum">     165 </span><span class="lineCov">    1063860 :       words.push_back(word);</span>
+<span class="lineNum">     166 </span>            :       word.clear();
+<span class="lineNum">     167 </span>            :     }
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span><span class="lineCov">     570310 :   if(word.length()&gt;0) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">     460664 :     if(!parlevel) plumed_massert(parenthesisLevel==0,&quot;Unmatching parenthesis in '&quot; + line + &quot;'&quot;);</span>
+<span class="lineNum">     171 </span><span class="lineCov">     460664 :     words.push_back(word);</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span><span class="lineCov">     570310 :   if(parlevel) *parlevel=parenthesisLevel;</span>
+<span class="lineNum">     174 </span><span class="lineCov">     570310 :   return words;</span>
+<span class="lineNum">     175 </span>            : }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">       5678 : bool Tools::getParsedLine(IFile&amp; ifile,vector&lt;string&gt; &amp; words) {</span>
+<span class="lineNum">     178 </span><span class="lineCov">       5678 :   string line(&quot;&quot;);</span>
+<span class="lineNum">     179 </span><span class="lineCov">       5678 :   words.clear();</span>
+<span class="lineNum">     180 </span>            :   bool stat;
+<span class="lineNum">     181 </span>            :   bool inside=false;
+<span class="lineNum">     182 </span><span class="lineCov">       5678 :   int parlevel=0;</span>
+<span class="lineNum">     183 </span>            :   bool mergenext=false;
+<span class="lineNum">     184 </span><span class="lineCov">      18499 :   while((stat=ifile.getline(line))) {</span>
+<span class="lineNum">     185 </span><span class="lineCov">      17943 :     trimComments(line);</span>
+<span class="lineNum">     186 </span><span class="lineCov">      17943 :     trim(line);</span>
+<span class="lineNum">     187 </span><span class="lineCov">      17943 :     if(line.length()==0) continue;</span>
+<span class="lineNum">     188 </span><span class="lineCov">      21918 :     vector&lt;string&gt; w=getWords(line,NULL,&amp;parlevel);</span>
+<span class="lineNum">     189 </span><span class="lineCov">      13520 :     if(!w.empty()) {</span>
+<span class="lineNum">     190 </span><span class="lineCov">      21916 :       if(inside &amp;&amp; *(w.begin())==&quot;...&quot;) {</span>
+<span class="lineNum">     191 </span>            :         inside=false;
+<span class="lineNum">     192 </span><span class="lineCov">       1791 :         if(w.size()==2) plumed_massert(w[1]==words[0],&quot;second word in terminating \&quot;...\&quot; &quot;+w[1]+&quot; line, if present, should be equal to first word of directive: &quot;+words[0]);</span>
+<span class="lineNum">     193 </span><span class="lineCov">        923 :         plumed_massert(w.size()&lt;=2,&quot;terminating \&quot;...\&quot; lines cannot consist of more than two words&quot;);</span>
+<span class="lineNum">     194 </span><span class="lineCov">        923 :         w.clear();</span>
+<span class="lineNum">     195 </span><span class="lineCov">      12596 :       } else if(*(w.end()-1)==&quot;...&quot;) {</span>
+<span class="lineNum">     196 </span>            :         inside=true;
+<span class="lineNum">     197 </span>            :         w.erase(w.end()-1);
+<span class="lineNum">     198 </span>            :       };
+<span class="lineNum">     199 </span>            :       int i0=0;
+<span class="lineNum">     200 </span><span class="lineCov">      13539 :       if(mergenext &amp;&amp; words.size()&gt;0 &amp;&amp; w.size()&gt;0) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">         30 :         words[words.size()-1]+=&quot; &quot;+w[0];</span>
+<span class="lineNum">     202 </span>            :         i0=1;
+<span class="lineNum">     203 </span>            :       }
+<span class="lineNum">     204 </span><span class="lineCov">      81076 :       for(unsigned i=i0; i&lt;w.size(); ++i) words.push_back(w[i]);</span>
+<span class="lineNum">     205 </span>            :     }
+<span class="lineNum">     206 </span><span class="lineCov">      13520 :     mergenext=(parlevel&gt;0);</span>
+<span class="lineNum">     207 </span><span class="lineCov">      13520 :     if(!inside)break;</span>
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span><span class="lineCov">       5678 :   plumed_massert(parlevel==0,&quot;non matching parenthesis&quot;);</span>
+<span class="lineNum">     210 </span><span class="lineCov">       5678 :   if(words.size()&gt;0) return true;</span>
+<span class="lineNum">     211 </span><span class="lineCov">        556 :   return stat;</span>
+<span class="lineNum">     212 </span>            : }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineCov">    1801118 : bool Tools::getline(FILE* fp,string &amp; line) {</span>
+<span class="lineNum">     216 </span>            :   line=&quot;&quot;;
+<span class="lineNum">     217 </span>            :   const int bufferlength=1024;
+<span class="lineNum">     218 </span>            :   char buffer[bufferlength];
+<span class="lineNum">     219 </span>            :   bool ret;
+<span class="lineNum">     220 </span><span class="lineCov"> 1846145950 :   for(int i=0; i&lt;bufferlength; i++) buffer[i]='\0';</span>
+<span class="lineNum">     221 </span><span class="lineCov">    1801118 :   while((ret=fgets(buffer,bufferlength,fp))) {</span>
+<span class="lineNum">     222 </span><span class="lineCov">    1800526 :     line.append(buffer);</span>
+<span class="lineNum">     223 </span><span class="lineCov">    1800526 :     unsigned ss=strlen(buffer);</span>
+<span class="lineNum">     224 </span><span class="lineCov">    1800526 :     if(ss&gt;0) if(buffer[ss-1]=='\n') break;</span>
+<span class="lineNum">     225 </span>            :   };
+<span class="lineNum">     226 </span><span class="lineCov">    3601644 :   if(line.length()&gt;0) if(*(line.end()-1)=='\n') line.erase(line.end()-1);</span>
+<span class="lineNum">     227 </span><span class="lineCov">    3601644 :   if(line.length()&gt;0) if(*(line.end()-1)=='\r') line.erase(line.end()-1);</span>
+<span class="lineNum">     228 </span><span class="lineCov">    1801118 :   return ret;</span>
+<span class="lineNum">     229 </span>            : }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">     214297 : void Tools::trim(string &amp; s) {</span>
+<span class="lineNum">     232 </span>            :   size_t n=s.find_last_not_of(&quot; \t&quot;);
+<span class="lineNum">     233 </span><span class="lineCov">     428594 :   s=s.substr(0,n+1);</span>
+<span class="lineNum">     234 </span><span class="lineCov">     214297 : }</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">     131443 : void Tools::trimComments(string &amp; s) {</span>
+<span class="lineNum">     237 </span>            :   size_t n=s.find_first_of(&quot;#&quot;);
+<span class="lineNum">     238 </span><span class="lineCov">     262886 :   s=s.substr(0,n);</span>
+<span class="lineNum">     239 </span><span class="lineCov">     131443 : }</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span><span class="lineCov">      52111 : bool Tools::getKey(vector&lt;string&gt;&amp; line,const string &amp; key,string &amp; s,int rep) {</span>
+<span class="lineNum">     242 </span>            :   s.clear();
+<span class="lineNum">     243 </span><span class="lineCov">     257036 :   for(auto p=line.begin(); p!=line.end(); ++p) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">     229990 :     if((*p).length()==0) continue;</span>
+<span class="lineNum">     245 </span><span class="lineCov">     229990 :     string x=(*p).substr(0,key.length());</span>
+<span class="lineNum">     246 </span><span class="lineCov">     229990 :     if(x==key) {</span>
+<span class="lineNum">     247 </span><span class="lineCov">      25065 :       if((*p).length()==key.length())return false;</span>
+<span class="lineNum">     248 </span><span class="lineCov">      25064 :       string tmp=(*p).substr(key.length(),(*p).length());</span>
+<span class="lineNum">     249 </span>            :       line.erase(p);
+<span class="lineNum">     250 </span>            :       s=tmp;
+<span class="lineNum">     251 </span><span class="lineCov">      25064 :       const std::string multi(&quot;@replicas:&quot;);</span>
+<span class="lineNum">     252 </span><span class="lineCov">      25064 :       if(rep&gt;=0 &amp;&amp; startWith(s,multi)) {</span>
+<span class="lineNum">     253 </span><span class="lineCov">         36 :         s=s.substr(multi.length(),s.length());</span>
+<span class="lineNum">     254 </span><span class="lineCov">         36 :         std::vector&lt;std::string&gt; words=getWords(s,&quot;\t\n ,&quot;);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         18 :         plumed_massert(rep&lt;static_cast&lt;int&gt;(words.size()),&quot;Number of fields in &quot; + s + &quot; not consistent with number of replicas&quot;);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         18 :         s=words[rep];</span>
+<span class="lineNum">     257 </span>            :       }
+<span class="lineNum">     258 </span>            :       return true;
+<span class="lineNum">     259 </span>            :     }
+<span class="lineNum">     260 </span>            :   };
+<span class="lineNum">     261 </span>            :   return false;
+<span class="lineNum">     262 </span>            : }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">       3353 : void Tools::interpretRanges(std::vector&lt;std::string&gt;&amp;s) {</span>
+<span class="lineNum">     265 </span><span class="lineCov">       3353 :   vector&lt;string&gt; news;</span>
+<span class="lineNum">     266 </span><span class="lineCov">      11117 :   for(const auto &amp; p :s) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">       7764 :     news.push_back(p);</span>
+<span class="lineNum">     268 </span>            :     size_t dash=p.find(&quot;-&quot;);
+<span class="lineNum">     269 </span><span class="lineCov">      14698 :     if(dash==string::npos) continue;</span>
+<span class="lineNum">     270 </span>            :     int first;
+<span class="lineNum">     271 </span><span class="lineCov">       2676 :     if(!Tools::convert(p.substr(0,dash),first)) continue;</span>
+<span class="lineNum">     272 </span><span class="lineCov">        830 :     int stride=1;</span>
+<span class="lineNum">     273 </span>            :     int second;
+<span class="lineNum">     274 </span><span class="lineCov">       1660 :     size_t colon=p.substr(dash+1).find(&quot;:&quot;);</span>
+<span class="lineNum">     275 </span><span class="lineCov">        830 :     if(colon!=string::npos) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">         44 :       if(!Tools::convert(p.substr(dash+1).substr(0,colon),second) ||</span>
+<span class="lineNum">     277 </span><span class="lineCov">         44 :           !Tools::convert(p.substr(dash+1).substr(colon+1),stride)) continue;</span>
+<span class="lineNum">     278 </span>            :     } else {
+<span class="lineNum">     279 </span><span class="lineCov">       1638 :       if(!Tools::convert(p.substr(dash+1),second)) continue;</span>
+<span class="lineNum">     280 </span>            :     }
+<span class="lineNum">     281 </span><span class="lineCov">        830 :     news.resize(news.size()-1);</span>
+<span class="lineNum">     282 </span><span class="lineCov">        830 :     if(first&lt;=second) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">        829 :       plumed_massert(stride&gt;0,&quot;interpreting ranges &quot;+ p + &quot;, stride should be positive&quot;);</span>
+<span class="lineNum">     284 </span><span class="lineCov">     307323 :       for(int i=first; i&lt;=second; i+=stride) {</span>
+<span class="lineNum">     285 </span>            :         string ss;
+<span class="lineNum">     286 </span><span class="lineCov">     153247 :         convert(i,ss);</span>
+<span class="lineNum">     287 </span><span class="lineCov">     153247 :         news.push_back(ss);</span>
+<span class="lineNum">     288 </span>            :       }
+<span class="lineNum">     289 </span>            :     } else {
+<span class="lineNum">     290 </span><span class="lineCov">          1 :       plumed_massert(stride&lt;0,&quot;interpreting ranges &quot;+ p + &quot;, stride should be positive&quot;);</span>
+<span class="lineNum">     291 </span><span class="lineCov">          5 :       for(int i=first; i&gt;=second; i+=stride) {</span>
+<span class="lineNum">     292 </span>            :         string ss;
+<span class="lineNum">     293 </span><span class="lineCov">          2 :         convert(i,ss);</span>
+<span class="lineNum">     294 </span><span class="lineCov">          2 :         news.push_back(ss);</span>
+<span class="lineNum">     295 </span>            :       }
+<span class="lineNum">     296 </span>            :     }
+<span class="lineNum">     297 </span>            :   }
+<span class="lineNum">     298 </span><span class="lineCov">       3353 :   s=news;</span>
+<span class="lineNum">     299 </span><span class="lineCov">       3353 : }</span>
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineCov">       5280 : void Tools::interpretLabel(vector&lt;string&gt;&amp;s) {</span>
+<span class="lineNum">     302 </span><span class="lineCov">       5510 :   if(s.size()&lt;2)return;</span>
+<span class="lineNum">     303 </span>            :   string s0=s[0];
+<span class="lineNum">     304 </span><span class="lineCov">       5050 :   unsigned l=s0.length();</span>
+<span class="lineNum">     305 </span><span class="lineCov">       5050 :   if(l&lt;1) return;</span>
+<span class="lineNum">     306 </span><span class="lineCov">      10100 :   if(s0[l-1]==':') {</span>
+<span class="lineNum">     307 </span>            :     s[0]=s[1];
+<span class="lineNum">     308 </span><span class="lineCov">      11028 :     s[1]=&quot;LABEL=&quot;+s0.substr(0,l-1);</span>
+<span class="lineNum">     309 </span>            :   }
+<span class="lineNum">     310 </span>            : }
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">       3168 : vector&lt;string&gt; Tools::ls(const string&amp;d) {</span>
+<span class="lineNum">     313 </span>            :   DIR*dir;
+<span class="lineNum">     314 </span>            :   vector&lt;string&gt; result;
+<span class="lineNum">     315 </span><span class="lineCov">       3168 :   if ((dir=opendir(d.c_str()))) {</span>
+<span class="lineNum">     316 </span>            : #if defined(__PLUMED_HAS_READDIR_R)
+<span class="lineNum">     317 </span>            :     struct dirent ent;
+<span class="lineNum">     318 </span>            : #endif
+<span class="lineNum">     319 </span>            :     while(true) {
+<span class="lineNum">     320 </span>            :       struct dirent *res;
+<span class="lineNum">     321 </span>            : #if defined(__PLUMED_HAS_READDIR_R)
+<span class="lineNum">     322 </span><span class="lineCov">      44752 :       readdir_r(dir,&amp;ent,&amp;res);</span>
+<span class="lineNum">     323 </span>            : #else
+<span class="lineNum">     324 </span>            : // cppcheck complains about this:
+<span class="lineNum">     325 </span>            : // (portability) Non reentrant function 'readdir' called. For threadsafe applications it is recommended to use the reentrant replacement function 'readdir_r'.
+<span class="lineNum">     326 </span>            : // since we use it only if readdir_r is not available, I suppress the warning
+<span class="lineNum">     327 </span>            : // GB
+<span class="lineNum">     328 </span>            : // cppcheck-suppress readdirCalled
+<span class="lineNum">     329 </span>            :       res=readdir(dir);
+<span class="lineNum">     330 </span>            : #endif
+<span class="lineNum">     331 </span><span class="lineCov">      44752 :       if(!res) break;</span>
+<span class="lineNum">     332 </span><span class="lineCov">     240000 :       if(string(res-&gt;d_name)!=&quot;.&quot; &amp;&amp; string(res-&gt;d_name)!=&quot;..&quot;) result.push_back(res-&gt;d_name);</span>
+<span class="lineNum">     333 </span><span class="lineCov">      41584 :     }</span>
+<span class="lineNum">     334 </span><span class="lineCov">       3168 :     closedir (dir);</span>
+<span class="lineNum">     335 </span>            :   }
+<span class="lineNum">     336 </span><span class="lineCov">       3168 :   return result;</span>
+<span class="lineNum">     337 </span>            : }
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">       1862 : void Tools::stripLeadingAndTrailingBlanks( std::string&amp; str ) {</span>
+<span class="lineNum">     340 </span><span class="lineCov">       1862 :   std::size_t first=str.find_first_not_of(' ');</span>
+<span class="lineNum">     341 </span><span class="lineCov">       1862 :   std::size_t last=str.find_last_not_of(' ');</span>
+<span class="lineNum">     342 </span><span class="lineCov">       3692 :   if( first&lt;=last &amp;&amp; first!=std::string::npos) str=str.substr(first,last+1);</span>
+<span class="lineNum">     343 </span><span class="lineCov">       1862 : }</span>
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">       8523 : std::string Tools::extension(const std::string&amp;s) {</span>
+<span class="lineNum">     346 </span>            :   size_t n=s.find_last_of(&quot;.&quot;);
+<span class="lineNum">     347 </span>            :   std::string ext;
+<span class="lineNum">     348 </span><span class="lineCov">      14969 :   if(n!=std::string::npos &amp;&amp; n+1&lt;s.length() &amp;&amp; n+5&gt;=s.length()) {</span>
+<span class="lineNum">     349 </span><span class="lineCov">      12580 :     ext=s.substr(n+1);</span>
+<span class="lineNum">     350 </span><span class="lineCov">       6290 :     if(ext.find(&quot;/&quot;)!=std::string::npos) ext=&quot;&quot;;</span>
+<span class="lineNum">     351 </span><span class="lineCov">       6290 :     string base=s.substr(0,n);</span>
+<span class="lineNum">     352 </span><span class="lineCov">       6290 :     if(base.length()==0) ext=&quot;&quot;;</span>
+<span class="lineNum">     353 </span><span class="lineCov">      12580 :     if(base.length()&gt;0 &amp;&amp; base[base.length()-1]=='/') ext=&quot;&quot;;</span>
+<span class="lineNum">     354 </span>            :   }
+<span class="lineNum">     355 </span><span class="lineCov">       8523 :   return ext;</span>
+<span class="lineNum">     356 </span>            : }
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineCov">     608680 : bool Tools::startWith(const std::string &amp; full,const std::string &amp;start) {</span>
+<span class="lineNum">     359 </span><span class="lineCov">    1217360 :   return (full.substr(0,start.length())==start);</span>
+<span class="lineNum">     360 </span>            : }
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span><span class="lineCov">      44791 : bool Tools::findKeyword(const std::vector&lt;std::string&gt;&amp;line,const std::string&amp;key) {</span>
+<span class="lineNum">     363 </span><span class="lineCov">      44791 :   const std::string search(key+&quot;=&quot;);</span>
+<span class="lineNum">     364 </span><span class="lineCov">     437112 :   for(const auto &amp; p : line) {</span>
+<span class="lineNum">     365 </span><span class="lineCov">     411338 :     if(startWith(p,search)) return true;</span>
+<span class="lineNum">     366 </span>            :   }
+<span class="lineNum">     367 </span>            :   return false;
+<span class="lineNum">     368 </span>            : }
+<span class="lineNum">     369 </span>            : 
+<a name="370"><span class="lineNum">     370 </span>            : </a>
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

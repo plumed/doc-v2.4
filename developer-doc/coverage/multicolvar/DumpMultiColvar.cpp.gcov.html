@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/DumpMultiColvar.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - DumpMultiColvar.cpp<span style="font-size: 80%;"> (source / <a href="DumpMultiColvar.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">67</td>
+            <td class="headerCovTableEntry">72</td>
+            <td class="headerCovTableEntryHi">93.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Units.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      31 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;vesselbase/ActionWithInputVessel.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;vesselbase/StoreDataVessel.h&quot;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : using namespace std;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace PLMD
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : namespace multicolvar {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : //+PLUMEDOC PRINTANALYSIS DUMPMULTICOLVAR
+<span class="lineNum">      44 </span>            : /*
+<span class="lineNum">      45 </span>            : Dump atom positions and multicolvar on a file.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \par Examples
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : In this examples we calculate the distances between the  atoms of the first and the second
+<span class="lineNum">      50 </span>            : group and we write them in the file MULTICOLVAR.xyz. For each couple it writes the
+<span class="lineNum">      51 </span>            : coordinates of their geometric center and their distance.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : \plumedfile
+<span class="lineNum">      54 </span>            : pos:   GROUP ATOMS=220,221,235,236,247,248,438,439,450,451,534,535
+<span class="lineNum">      55 </span>            : neg:   GROUP ATOMS=65,68,138,182,185,267,270,291,313,316,489,583,621,711
+<span class="lineNum">      56 </span>            : DISTANCES GROUPA=pos GROUPB=neg LABEL=slt
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : DUMPMULTICOLVAR DATA=slt FILE=MULTICOLVAR.xyz
+<span class="lineNum">      59 </span>            : \endplumedfile
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : (see also \ref DISTANCES)
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : */
+<span class="lineNum">      64 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : class DumpMultiColvar:
+<span class="lineNum">      67 </span>            :   public ActionPilot,
+<span class="lineNum">      68 </span>            :   public ActionAtomistic,
+<span class="lineNum">      69 </span>            :   public vesselbase::ActionWithInputVessel
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span>            :   OFile of;
+<span class="lineNum">      72 </span>            :   double lenunit;
+<span class="lineNum">      73 </span>            :   MultiColvarBase* mycolv;
+<span class="lineNum">      74 </span>            :   std::string fmt_xyz;
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span>            :   explicit DumpMultiColvar(const ActionOptions&amp;);
+<a name="77"><span class="lineNum">      77 </span>            :   ~DumpMultiColvar();</a>
+<a name="78"><span class="lineNum">      78 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<a name="79"><span class="lineNum">      79 </span><span class="lineCov">         59 :   void calculate() {}</span></a>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :   void calculateNumericalDerivatives( ActionWithValue* vv ) { plumed_error(); }</span>
+<span class="lineNum">      81 </span><span class="lineCov">         59 :   void apply() {}</span>
+<span class="lineNum">      82 </span>            :   void update();
+<a name="83"><span class="lineNum">      83 </span>            : };</a>
+<span class="lineNum">      84 </span>            : 
+<a name="85"><span class="lineNum">      85 </span><span class="lineCov">       6469 : PLUMED_REGISTER_ACTION(DumpMultiColvar,&quot;DUMPMULTICOLVAR&quot;)</span></a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">         18 : void DumpMultiColvar::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      88 </span><span class="lineCov">         18 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">      89 </span><span class="lineCov">         18 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">      90 </span><span class="lineCov">         18 :   ActionPilot::registerKeywords( keys );</span>
+<span class="lineNum">      91 </span><span class="lineCov">         18 :   ActionWithInputVessel::registerKeywords( keys );</span>
+<span class="lineNum">      92 </span><span class="lineCov">         90 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which the atoms should be output&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">         72 :   keys.add(&quot;compulsory&quot;, &quot;FILE&quot;, &quot;file on which to output coordinates&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">         90 :   keys.add(&quot;compulsory&quot;, &quot;UNITS&quot;,&quot;PLUMED&quot;,&quot;the units in which to print out the coordinates. PLUMED means internal PLUMED units&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         72 :   keys.add(&quot;optional&quot;,&quot;PRECISION&quot;,&quot;The number of digits in trajectory file&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">         72 :   keys.add(&quot;atoms&quot;,&quot;ORIGIN&quot;,&quot;You can use this keyword to specify the position of an atom as an origin. The positions output will then be displayed relative to that origin&quot;);</span>
+<a name="97"><span class="lineNum">      97 </span><span class="lineCov">         18 : }</span></a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">         17 : DumpMultiColvar::DumpMultiColvar(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     100 </span>            :   Action(ao),
+<span class="lineNum">     101 </span>            :   ActionPilot(ao),
+<span class="lineNum">     102 </span>            :   ActionAtomistic(ao),
+<span class="lineNum">     103 </span><span class="lineCov">         17 :   ActionWithInputVessel(ao)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineCov">         34 :   readArgument(&quot;store&quot;);</span>
+<span class="lineNum">     106 </span><span class="lineCov">         17 :   mycolv = dynamic_cast&lt;MultiColvarBase*&gt;( getDependencies()[0] );</span>
+<span class="lineNum">     107 </span><span class="lineCov">         17 :   plumed_assert( getDependencies().size()==1 );</span>
+<span class="lineNum">     108 </span><span class="lineCov">         17 :   if(!mycolv) error(&quot;action labeled &quot; + mycolv-&gt;getLabel() + &quot; is not a multicolvar&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         34 :   log.printf(&quot;  printing colvars calculated by action %s \n&quot;,mycolv-&gt;getLabel().c_str() );</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :   std::vector&lt;AtomNumber&gt; atom;
+<span class="lineNum">     112 </span><span class="lineCov">         34 :   parseAtomList(&quot;ORIGIN&quot;,atom);</span>
+<span class="lineNum">     113 </span><span class="lineCov">         17 :   if( atom.size()&gt;1 ) error(&quot;should only be one atom specified&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">         19 :   if( atom.size()==1 ) log.printf(&quot;  origin is at position of atom : %d\n&quot;,atom[0].serial() );</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         34 :   string file; parse(&quot;FILE&quot;,file);</span>
+<span class="lineNum">     117 </span><span class="lineCov">         17 :   if(file.length()==0) error(&quot;name out output file was not specified&quot;);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         17 :   std::string type=Tools::extension(file);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         17 :   log&lt;&lt;&quot;  file name &quot;&lt;&lt;file&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     120 </span><span class="lineCov">         17 :   if(type!=&quot;xyz&quot;) error(&quot;can only print xyz file type with DUMPMULTICOLVAR&quot;);</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :   fmt_xyz=&quot;%f&quot;;
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">         34 :   string precision; parse(&quot;PRECISION&quot;,precision);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         17 :   if(precision.length()&gt;0) {</span>
+<span class="lineNum">     126 </span><span class="lineCov">          8 :     int p; Tools::convert(precision,p);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          8 :     log&lt;&lt;&quot;  with precision &quot;&lt;&lt;p&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     128 </span>            :     string a,b;
+<span class="lineNum">     129 </span><span class="lineCov">          8 :     Tools::convert(p+5,a);</span>
+<span class="lineNum">     130 </span><span class="lineCov">          8 :     Tools::convert(p,b);</span>
+<span class="lineNum">     131 </span><span class="lineCov">         40 :     fmt_xyz=&quot;%&quot;+a+&quot;.&quot;+b+&quot;f&quot;;</span>
+<span class="lineNum">     132 </span>            :   }
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">         34 :   std::string unitname; parse(&quot;UNITS&quot;,unitname);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         17 :   if(unitname!=&quot;PLUMED&quot;) {</span>
+<span class="lineNum">     136 </span><span class="lineCov">          2 :     Units myunit; myunit.setLength(unitname);</span>
+<span class="lineNum">     137 </span><span class="lineCov">          2 :     lenunit=plumed.getAtoms().getUnits().getLength()/myunit.getLength();</span>
+<span class="lineNum">     138 </span>            :   }
+<span class="lineNum">     139 </span><span class="lineCov">         16 :   else lenunit=1.0;</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">         17 :   checkRead();</span>
+<span class="lineNum">     142 </span><span class="lineCov">         17 :   of.link(*this);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         17 :   of.open(file);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         34 :   log.printf(&quot;  printing atom positions in %s units \n&quot;, unitname.c_str() );</span>
+<span class="lineNum">     145 </span><span class="lineCov">         17 :   requestAtoms(atom); addDependency( mycolv );</span>
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">         17 : }</span></a>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">         59 : void DumpMultiColvar::update() {</span>
+<span class="lineNum">     149 </span><span class="lineCov">        118 :   of.printf(&quot;%u\n&quot;,mycolv-&gt;getCurrentNumberOfActiveTasks());</span>
+<span class="lineNum">     150 </span><span class="lineCov">        118 :   const Tensor &amp; t(mycolv-&gt;getPbc().getBox());</span>
+<span class="lineNum">     151 </span><span class="lineCov">        118 :   if(mycolv-&gt;getPbc().isOrthorombic()) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">        472 :     of.printf((&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot;\n&quot;).c_str(),lenunit*t(0,0),lenunit*t(1,1),lenunit*t(2,2));</span>
+<span class="lineNum">     153 </span>            :   } else {
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :     of.printf((&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot;\n&quot;).c_str(),</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :               lenunit*t(0,0),lenunit*t(0,1),lenunit*t(0,2),</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :               lenunit*t(1,0),lenunit*t(1,1),lenunit*t(1,2),</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :               lenunit*t(2,0),lenunit*t(2,1),lenunit*t(2,2)</span>
+<span class="lineNum">     158 </span>            :              );
+<span class="lineNum">     159 </span>            :   }
+<span class="lineNum">     160 </span><span class="lineCov">         59 :   vesselbase::StoreDataVessel* stash=dynamic_cast&lt;vesselbase::StoreDataVessel*&gt;( getPntrToArgument() );</span>
+<span class="lineNum">     161 </span>            :   plumed_dbg_assert( stash );
+<span class="lineNum">     162 </span><span class="lineCov">         59 :   std::vector&lt;double&gt; cvals( mycolv-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     163 </span><span class="lineCov">      27334 :   for(unsigned i=0; i&lt;mycolv-&gt;getCurrentNumberOfActiveTasks(); ++i) {</span>
+<span class="lineNum">     164 </span>            :     const char* defname=&quot;X&quot;;
+<span class="lineNum">     165 </span>            :     const char* name=defname;
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">      27216 :     Vector apos = mycolv-&gt;getCentralAtomPos( mycolv-&gt;getPositionInFullTaskList(i) );</span>
+<span class="lineNum">     168 </span><span class="lineCov">      24766 :     if( getNumberOfAtoms()&gt;0 ) apos=pbcDistance( getPosition(0), apos );</span>
+<span class="lineNum">     169 </span><span class="lineCov">      95256 :     of.printf((&quot;%s &quot;+fmt_xyz+&quot; &quot;+fmt_xyz+&quot; &quot;+fmt_xyz).c_str(),name,lenunit*apos[0],lenunit*apos[1],lenunit*apos[2]);</span>
+<span class="lineNum">     170 </span><span class="lineCov">      13608 :     stash-&gt;retrieveSequentialValue( i, true, cvals );</span>
+<span class="lineNum">     171 </span><span class="lineCov">      27216 :     if( mycolv-&gt;weightWithDerivatives() ) {</span>
+<span class="lineNum">     172 </span><span class="lineCov">       9480 :       for(unsigned j=0; j&lt;cvals.size(); ++j) of.printf((&quot; &quot;+fmt_xyz).c_str(),cvals[j]);</span>
+<span class="lineNum">     173 </span>            :     } else {
+<span class="lineNum">     174 </span><span class="lineCov">      98046 :       for(unsigned j=1; j&lt;cvals.size(); ++j) of.printf((&quot; &quot;+fmt_xyz).c_str(),cvals[j]);</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span><span class="lineCov">      13608 :     of.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     177 </span>            :   }
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">         59 : }</span></a>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">         85 : DumpMultiColvar::~DumpMultiColvar() {</span>
+<span class="lineNum">     181 </span><span class="lineCov">         34 : }</span>
+<span class="lineNum">     182 </span>            : 
+<a name="183"><span class="lineNum">     183 </span>            : </a>
+<span class="lineNum">     184 </span>            : }
+<span class="lineNum">     185 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

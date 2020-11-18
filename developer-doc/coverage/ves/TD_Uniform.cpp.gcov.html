@@ -1,0 +1,374 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TD_Uniform.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TD_Uniform.cpp<span style="font-size: 80%;"> (source / <a href="TD_Uniform.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">54</td>
+            <td class="headerCovTableEntry">55</td>
+            <td class="headerCovTableEntryHi">98.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace ves {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC VES_TARGETDIST TD_UNIFORM
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Uniform target distribution (static).
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : Using this keyword you can define a uniform target distribution which is a
+<span class="lineNum">      36 </span>            : product of one-dimensional distributions \f$p_{k}(s_{k})\f$ that are uniform
+<span class="lineNum">      37 </span>            : over a given interval \f$[a_{k},b_{k}]\f$
+<span class="lineNum">      38 </span>            : \f[
+<span class="lineNum">      39 </span>            : p_{k}(s_{k}) =
+<span class="lineNum">      40 </span>            : \begin{cases}
+<span class="lineNum">      41 </span>            : \frac{1}{(b_{k}-a_{k})}
+<span class="lineNum">      42 </span>            : &amp; \mathrm{if} \ a_{k} \leq s_{k} \leq b_{k} \\
+<span class="lineNum">      43 </span>            : \\
+<span class="lineNum">      44 </span>            : \ 0
+<span class="lineNum">      45 </span>            : &amp; \mathrm{otherwise}
+<span class="lineNum">      46 </span>            : \end{cases}
+<span class="lineNum">      47 </span>            : \f]
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : The overall distribution is then given as
+<span class="lineNum">      50 </span>            : \f[
+<span class="lineNum">      51 </span>            : p(\mathbf{s}) =
+<span class="lineNum">      52 </span>            : \prod^{d}_{k} p_{k}(s_{k}) =
+<span class="lineNum">      53 </span>            : \begin{cases}
+<span class="lineNum">      54 </span>            : \prod^{d}_{k} \frac{1}{(b_{k}-a_{k})}
+<span class="lineNum">      55 </span>            : &amp; \mathrm{if} \ a_{k} \leq s_{k} \leq b_{k} \ \mathrm{for\ all}\ k \\
+<span class="lineNum">      56 </span>            : \\
+<span class="lineNum">      57 </span>            : 0 &amp; \mathrm{otherwise}
+<span class="lineNum">      58 </span>            : \end{cases}
+<span class="lineNum">      59 </span>            : \f]
+<span class="lineNum">      60 </span>            : The distribution is thus uniform inside a rectangular for two arguments
+<span class="lineNum">      61 </span>            : and a cube for a three arguments.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : The limits of the intervals \f$ a_{k}\f$ and \f$ b_{k}\f$ are given
+<span class="lineNum">      64 </span>            : with the MINIMA and MAXIMA keywords, respectively. If one or both of
+<span class="lineNum">      65 </span>            : these keywords are missing the code should automatically detect the limits.
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : It is also possible to use one-dimensional distributions
+<span class="lineNum">      69 </span>            : that go smoothly to zero at the boundaries.
+<span class="lineNum">      70 </span>            : This is done by employing a function with
+<span class="lineNum">      71 </span>            : Gaussian switching functions at the boundaries \f$a_{k}\f$ and \f$b_{k}\f$
+<span class="lineNum">      72 </span>            : \f[
+<span class="lineNum">      73 </span>            : f_{k}(s_{k}) =
+<span class="lineNum">      74 </span>            : \begin{cases}
+<span class="lineNum">      75 </span>            : \exp\left(-\frac{(s_{k}-a_{k})^2}{2 \sigma^2_{a,k}}\right)
+<span class="lineNum">      76 </span>            : &amp; \mathrm{if}\, s_{k} &lt; a_{k} \\
+<span class="lineNum">      77 </span>            : \\
+<span class="lineNum">      78 </span>            : 1 &amp; \mathrm{if}\, a_{k} \leq s_{k} \leq b_{k} \\
+<span class="lineNum">      79 </span>            : \\
+<span class="lineNum">      80 </span>            : \exp\left(-\frac{(s_{k}-b_{k})^2}{2 \sigma^2_{b,k}}\right)
+<span class="lineNum">      81 </span>            : &amp; \mathrm{if}\, s_{k} &gt; b_{k}
+<span class="lineNum">      82 </span>            : \end{cases}
+<span class="lineNum">      83 </span>            : \f]
+<span class="lineNum">      84 </span>            : where the standard deviation parameters \f$\sigma_{a,k}\f$
+<span class="lineNum">      85 </span>            : and \f$\sigma_{b,k}\f$ determine how quickly the switching functions
+<span class="lineNum">      86 </span>            : goes to zero.
+<span class="lineNum">      87 </span>            : The overall distribution is then normalized
+<span class="lineNum">      88 </span>            : \f[
+<span class="lineNum">      89 </span>            : p(\mathbf{s}) =
+<span class="lineNum">      90 </span>            : \prod^{d}_{k} p_{k}(s_{k}) =
+<span class="lineNum">      91 </span>            : \prod^{d}_{k} \frac{f(s_{k})}{\int d s_{k} \, f(s_{k})}
+<span class="lineNum">      92 </span>            : \f]
+<span class="lineNum">      93 </span>            : To use this option you need to provide the standard deviation
+<span class="lineNum">      94 </span>            : parameters \f$\sigma_{a,k}\f$ and \f$\sigma_{b,k}\f$ by using the
+<span class="lineNum">      95 </span>            : SIGMA_MINIMA and SIGMA_MAXIMA keywords, respectively. Giving a value of
+<span class="lineNum">      96 </span>            : 0.0 means that the boundary is sharp, which is the default behavior.
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : \par Examples
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : If one or both of the MINIMA or MAXIMA keywords are missing
+<span class="lineNum">     106 </span>            : the code should automatically detect the limits not given.
+<span class="lineNum">     107 </span>            : Therefore, if we consider a target distribution that is
+<span class="lineNum">     108 </span>            : defined over an interval from 0.0 to 10.0 for the first
+<span class="lineNum">     109 </span>            : argument and from 0.2 to 1.0 for the second argument are
+<span class="lineNum">     110 </span>            : all of the following examples equivalent
+<span class="lineNum">     111 </span>            : \plumedfile
+<span class="lineNum">     112 </span>            : td: TD_UNIFORM
+<span class="lineNum">     113 </span>            : \endplumedfile
+<span class="lineNum">     114 </span>            : \plumedfile
+<span class="lineNum">     115 </span>            : TD_UNIFORM ...
+<span class="lineNum">     116 </span>            :  MINIMA=0.0,0,2
+<span class="lineNum">     117 </span>            :  MAXIMA=10.0,1.0
+<span class="lineNum">     118 </span>            :  LABEL=td
+<span class="lineNum">     119 </span>            :  ... TD_UNIFORM
+<span class="lineNum">     120 </span>            : \endplumedfile
+<span class="lineNum">     121 </span>            : \plumedfile
+<span class="lineNum">     122 </span>            : td: TD_UNIFORM  MAXIMA=10.0,1.0
+<span class="lineNum">     123 </span>            : \endplumedfile
+<span class="lineNum">     124 </span>            : \plumedfile
+<span class="lineNum">     125 </span>            : td: TD_UNIFORM MINIMA=0.0,0,2
+<span class="lineNum">     126 </span>            : \endplumedfile
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : We can also define a target distribution that goes smoothly to zero
+<span class="lineNum">     130 </span>            : at the boundaries of the uniform distribution. In the following
+<span class="lineNum">     131 </span>            : we consider an interval of 0 to 10 for the target distribution.
+<span class="lineNum">     132 </span>            : The following input would result in a target distribution that
+<span class="lineNum">     133 </span>            : would be uniform from 2 to 7 and then smoothly go to zero from
+<span class="lineNum">     134 </span>            : 2 to 0 and from 7 to 10.
+<span class="lineNum">     135 </span>            : \plumedfile
+<span class="lineNum">     136 </span>            : TD_UNIFORM ...
+<span class="lineNum">     137 </span>            :  MINIMA=2.0
+<span class="lineNum">     138 </span>            :  MAXIMA=+7.0
+<span class="lineNum">     139 </span>            :  SIGMA_MINIMA=0.5
+<span class="lineNum">     140 </span>            :  SIGMA_MAXIMA=1.0
+<span class="lineNum">     141 </span>            :  LABEL=td
+<span class="lineNum">     142 </span>            : ... TD_UNIFORM
+<span class="lineNum">     143 </span>            : \endplumedfile
+<span class="lineNum">     144 </span>            : It is also possible to employ a smooth switching function for just one
+<span class="lineNum">     145 </span>            : of the boundaries as shown here where the target distribution
+<span class="lineNum">     146 </span>            : would be uniform from 0 to 7 and then smoothly go to zero from 7 to 10.
+<span class="lineNum">     147 </span>            : \plumedfile
+<span class="lineNum">     148 </span>            : TD_UNIFORM ...
+<span class="lineNum">     149 </span>            :  MAXIMA=+7.0
+<span class="lineNum">     150 </span>            :  SIGMA_MAXIMA=1.0
+<span class="lineNum">     151 </span>            :  LABEL=td
+<span class="lineNum">     152 </span>            : ... TD_UNIFORM
+<span class="lineNum">     153 </span>            : \endplumedfile
+<span class="lineNum">     154 </span>            : Furthermore, it is possible to employ a sharp boundary by
+<span class="lineNum">     155 </span>            : using
+<span class="lineNum">     156 </span>            : \plumedfile
+<span class="lineNum">     157 </span>            : TD_UNIFORM ...
+<span class="lineNum">     158 </span>            :  MAXIMA=+7.0
+<span class="lineNum">     159 </span>            :  SIGMA_MAXIMA=0.0
+<span class="lineNum">     160 </span>            :  LABEL=td
+<span class="lineNum">     161 </span>            : ... TD_UNIFORM
+<span class="lineNum">     162 </span>            : \endplumedfile
+<span class="lineNum">     163 </span>            : or
+<span class="lineNum">     164 </span>            : \plumedfile
+<span class="lineNum">     165 </span>            : td: TD_UNIFORM MAXIMA=+7.0
+<span class="lineNum">     166 </span>            : \endplumedfile
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : */
+<a name="170"><span class="lineNum">     170 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">        183 : class TD_Uniform : public TargetDistribution {</span>
+<span class="lineNum">     173 </span>            :   std::vector&lt;double&gt; minima_;
+<span class="lineNum">     174 </span>            :   std::vector&lt;double&gt; maxima_;
+<span class="lineNum">     175 </span>            :   std::vector&lt;double&gt; sigma_min_;
+<span class="lineNum">     176 </span>            :   std::vector&lt;double&gt; sigma_max_;
+<span class="lineNum">     177 </span>            :   double GaussianSwitchingFunc(const double, const double, const double) const;
+<span class="lineNum">     178 </span>            :   void setupAdditionalGrids(const std::vector&lt;Value*&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;unsigned int&gt;&amp;);
+<span class="lineNum">     179 </span>            : public:
+<span class="lineNum">     180 </span>            :   static void registerKeywords( Keywords&amp;);
+<span class="lineNum">     181 </span>            :   explicit TD_Uniform(const ActionOptions&amp; ao);
+<span class="lineNum">     182 </span>            :   double getValue(const std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     183 </span>            : };
+<a name="184"><span class="lineNum">     184 </span>            : </a>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">       6513 : PLUMED_REGISTER_ACTION(TD_Uniform,&quot;TD_UNIFORM&quot;)</span>
+<a name="187"><span class="lineNum">     187 </span>            : </a>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">         62 : void TD_Uniform::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     190 </span><span class="lineCov">         62 :   TargetDistribution::registerKeywords(keys);</span>
+<span class="lineNum">     191 </span><span class="lineCov">        248 :   keys.add(&quot;optional&quot;,&quot;MINIMA&quot;,&quot;The minima of the intervals where the target distribution is taken as uniform. You should give one value for each argument.&quot;);</span>
+<span class="lineNum">     192 </span><span class="lineCov">        248 :   keys.add(&quot;optional&quot;,&quot;MAXIMA&quot;,&quot;The maxima of the intervals where the target distribution is taken as uniform. You should give one value for each argument.&quot;);</span>
+<span class="lineNum">     193 </span><span class="lineCov">        248 :   keys.add(&quot;optional&quot;,&quot;SIGMA_MINIMA&quot;,&quot;The standard deviation parameters of the Gaussian switching functions for the minima of the intervals. You should give one value for each argument. Value of 0.0 means that switch is done without a smooth switching function, this is the default behavior.&quot;);</span>
+<span class="lineNum">     194 </span><span class="lineCov">        248 :   keys.add(&quot;optional&quot;,&quot;SIGMA_MAXIMA&quot;,&quot;The standard deviation parameters of the Gaussian switching functions for the maxima of the intervals. You should give one value for each argument. Value of 0.0 means that switch is done without a smooth switching function, this is the default behavior.&quot;);</span>
+<span class="lineNum">     195 </span><span class="lineCov">         62 : }</span>
+<a name="196"><span class="lineNum">     196 </span>            : </a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">         61 : TD_Uniform::TD_Uniform(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     199 </span>            :   PLUMED_VES_TARGETDISTRIBUTION_INIT(ao),
+<span class="lineNum">     200 </span>            :   minima_(0),
+<span class="lineNum">     201 </span>            :   maxima_(0),
+<span class="lineNum">     202 </span>            :   sigma_min_(0),
+<span class="lineNum">     203 </span><span class="lineCov">         61 :   sigma_max_(0)</span>
+<span class="lineNum">     204 </span>            : {
+<span class="lineNum">     205 </span><span class="lineCov">        122 :   parseVector(&quot;MINIMA&quot;,minima_);</span>
+<span class="lineNum">     206 </span><span class="lineCov">        122 :   parseVector(&quot;MAXIMA&quot;,maxima_);</span>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">        122 :   parseVector(&quot;SIGMA_MINIMA&quot;,sigma_min_);</span>
+<span class="lineNum">     209 </span><span class="lineCov">        122 :   parseVector(&quot;SIGMA_MAXIMA&quot;,sigma_max_);</span>
+<span class="lineNum">     210 </span><span class="lineCov">         75 :   if(minima_.size()==0 &amp;&amp; sigma_min_.size()&gt;0) {plumed_merror(getName()+&quot;: you cannot give SIGMA_MINIMA if MINIMA is not given&quot;);}</span>
+<span class="lineNum">     211 </span><span class="lineCov">         75 :   if(maxima_.size()==0 &amp;&amp; sigma_max_.size()&gt;0) {plumed_merror(getName()+&quot;: you cannot give SIGMA_MAXIMA if MAXIMA is not given&quot;);}</span>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineCov">        108 :   if(minima_.size()&gt;0 &amp;&amp; maxima_.size()&gt;0) {</span>
+<span class="lineNum">     214 </span>            :     // both MINIMA and MAXIMA given, do all checks
+<span class="lineNum">     215 </span><span class="lineCov">         46 :     if(minima_.size()!=maxima_.size()) {plumed_merror(getName()+&quot;: MINIMA and MAXIMA do not have the same number of values.&quot;);}</span>
+<span class="lineNum">     216 </span><span class="lineCov">         46 :     setDimension(minima_.size());</span>
+<span class="lineNum">     217 </span><span class="lineCov">        150 :     for(unsigned int k=0; k&lt;getDimension(); k++) {</span>
+<span class="lineNum">     218 </span><span class="lineCov">        156 :       if(minima_[k]&gt;maxima_[k]) {</span>
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :         plumed_merror(getName()+&quot;: error in MINIMA and MAXIMA keywords, one of the MINIMA values is larger than the corresponding MAXIMA values&quot;);</span>
+<span class="lineNum">     220 </span>            :       }
+<span class="lineNum">     221 </span>            :     }
+<span class="lineNum">     222 </span>            :   }
+<span class="lineNum">     223 </span><span class="lineCov">         16 :   else if(minima_.size()&gt;0 &amp;&amp; maxima_.size()==0) {</span>
+<span class="lineNum">     224 </span>            :     // only MINIMA given, MAXIMA assigned later on.
+<span class="lineNum">     225 </span><span class="lineCov">          1 :     setDimension(minima_.size());</span>
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span><span class="lineCov">         15 :   else if(maxima_.size()&gt;0 &amp;&amp; minima_.size()==0) {</span>
+<span class="lineNum">     228 </span>            :     // only MAXIMA given, MINIMA assigned later on.
+<span class="lineNum">     229 </span><span class="lineCov">          1 :     setDimension(maxima_.size());</span>
+<span class="lineNum">     230 </span>            :   }
+<span class="lineNum">     231 </span><span class="lineCov">         26 :   else if(maxima_.size()==0 &amp;&amp; minima_.size()==0) {</span>
+<span class="lineNum">     232 </span>            :     // neither MAXIMA nor MINIMA givenm, both assigned later on.
+<span class="lineNum">     233 </span><span class="lineCov">         13 :     setDimension(0);</span>
+<span class="lineNum">     234 </span>            :   }
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">        167 :   if(sigma_min_.size()==0) {sigma_min_.assign(getDimension(),0.0);}</span>
+<span class="lineNum">     237 </span><span class="lineCov">        167 :   if(sigma_max_.size()==0) {sigma_max_.assign(getDimension(),0.0);}</span>
+<span class="lineNum">     238 </span><span class="lineCov">         61 :   if(sigma_min_.size()!=getDimension()) {plumed_merror(getName()+&quot;: SIGMA_MINIMA has the wrong number of values&quot;);}</span>
+<span class="lineNum">     239 </span><span class="lineCov">         61 :   if(sigma_max_.size()!=getDimension()) {plumed_merror(getName()+&quot;: SIGMA_MAXIMA has the wrong number of values&quot;);}</span>
+<span class="lineNum">     240 </span>            :   //
+<span class="lineNum">     241 </span>            :   setForcedNormalization();
+<span class="lineNum">     242 </span><span class="lineCov">         61 :   checkRead();</span>
+<span class="lineNum">     243 </span><span class="lineCov">         61 : }</span>
+<a name="244"><span class="lineNum">     244 </span>            : </a>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">         61 : void TD_Uniform::setupAdditionalGrids(const std::vector&lt;Value*&gt;&amp; arguments, const std::vector&lt;std::string&gt;&amp; min, const std::vector&lt;std::string&gt;&amp; max, const std::vector&lt;unsigned int&gt;&amp; nbins) {</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">         61 :   if(minima_.size()==0) {</span>
+<span class="lineNum">     249 </span><span class="lineCov">         42 :     minima_.assign(getDimension(),0.0);</span>
+<span class="lineNum">     250 </span><span class="lineCov">         52 :     for(unsigned int k=0; k&lt;getDimension(); k++) {Tools::convert(min[k],minima_[k]);}</span>
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineCov">         61 :   if(maxima_.size()==0) {</span>
+<span class="lineNum">     254 </span><span class="lineCov">         42 :     maxima_.assign(getDimension(),0.0);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         52 :     for(unsigned int k=0; k&lt;getDimension(); k++) {Tools::convert(max[k],maxima_[k]);}</span>
+<span class="lineNum">     256 </span>            :   }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">         61 : }</span>
+<a name="259"><span class="lineNum">     259 </span>            : </a>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span><span class="lineCov">     115046 : double TD_Uniform::getValue(const std::vector&lt;double&gt;&amp; argument) const {</span>
+<span class="lineNum">     262 </span>            :   //
+<span class="lineNum">     263 </span>            :   double value = 1.0;
+<span class="lineNum">     264 </span><span class="lineCov">     547960 :   for(unsigned int k=0; k&lt;getDimension(); k++) {</span>
+<span class="lineNum">     265 </span>            :     double tmp;
+<span class="lineNum">     266 </span><span class="lineCov">     649371 :     if(argument[k] &lt; minima_[k]) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">      15379 :       tmp = GaussianSwitchingFunc(argument[k],minima_[k],sigma_min_[k]);</span>
+<span class="lineNum">     268 </span>            :     }
+<span class="lineNum">     269 </span><span class="lineCov">     201078 :     else if(argument[k] &gt; maxima_[k]) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">      15410 :       tmp = GaussianSwitchingFunc(argument[k],maxima_[k],sigma_max_[k]);</span>
+<span class="lineNum">     271 </span>            :     }
+<span class="lineNum">     272 </span>            :     else {
+<span class="lineNum">     273 </span>            :       tmp = 1.0;
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span><span class="lineCov">     216457 :     value *= tmp;</span>
+<span class="lineNum">     276 </span>            :   }
+<span class="lineNum">     277 </span><span class="lineCov">     115046 :   return value;</span>
+<span class="lineNum">     278 </span>            : }
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            : inline
+<span class="lineNum">     281 </span>            : double TD_Uniform::GaussianSwitchingFunc(const double argument, const double center, const double sigma) const {
+<span class="lineNum">     282 </span><span class="lineCov">      30789 :   if(sigma&gt;0.0) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">      23278 :     double arg=(argument-center)/sigma;</span>
+<span class="lineNum">     284 </span><span class="lineCov">      23278 :     return exp(-0.5*arg*arg);</span>
+<span class="lineNum">     285 </span>            :   }
+<span class="lineNum">     286 </span>            :   else {
+<span class="lineNum">     287 </span>            :     return 0.0;
+<span class="lineNum">     288 </span>            :   }
+<span class="lineNum">     289 </span>            : }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : 
+<a name="295"><span class="lineNum">     295 </span>            : </a>
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

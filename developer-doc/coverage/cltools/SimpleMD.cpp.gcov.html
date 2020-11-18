@@ -1,0 +1,706 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - cltools/SimpleMD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">cltools</a> - SimpleMD.cpp<span style="font-size: 80%;"> (source / <a href="SimpleMD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">241</td>
+            <td class="headerCovTableEntry">260</td>
+            <td class="headerCovTableEntryHi">92.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryHi">91.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CLTool.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;CLToolRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;wrapper/Plumed.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      30 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : namespace cltools {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : //+PLUMEDOC TOOLS simplemd
+<span class="lineNum">      38 </span>            : /*
+<span class="lineNum">      39 </span>            : simplemd allows one to do molecular dynamics on systems of Lennard-Jones atoms.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : The input to simplemd is spcified in an input file. Configurations are input and
+<span class="lineNum">      42 </span>            : output in xyz format. The input file should contain one directive per line.
+<span class="lineNum">      43 </span>            : The directives available are as follows:
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \par Examples
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : You run an MD simulation using simplemd with the following command:
+<span class="lineNum">      48 </span>            : \verbatim
+<span class="lineNum">      49 </span>            : plumed simplemd &lt; in
+<span class="lineNum">      50 </span>            : \endverbatim
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The following is an example of an input file for a simplemd calculation. This file
+<span class="lineNum">      53 </span>            : instructs simplemd to do 50 steps of MD at a temperature of 0.722
+<span class="lineNum">      54 </span>            : \verbatim
+<span class="lineNum">      55 </span>            : nputfile input.xyz
+<span class="lineNum">      56 </span>            : outputfile output.xyz
+<span class="lineNum">      57 </span>            : temperature 0.722
+<span class="lineNum">      58 </span>            : tstep 0.005
+<span class="lineNum">      59 </span>            : friction 1
+<span class="lineNum">      60 </span>            : forcecutoff 2.5
+<span class="lineNum">      61 </span>            : listcutoff  3.0
+<span class="lineNum">      62 </span>            : nstep 50
+<span class="lineNum">      63 </span>            : nconfig 10 trajectory.xyz
+<span class="lineNum">      64 </span>            : nstat   10 energies.dat
+<span class="lineNum">      65 </span>            : \endverbatim
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : If you run the following a description of all the directives that can be used in the
+<span class="lineNum">      68 </span>            : input file will be output.
+<span class="lineNum">      69 </span>            : \verbatim
+<span class="lineNum">      70 </span>            : plumed simplemd --help
+<span class="lineNum">      71 </span>            : \endverbatim
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : */
+<a name="74"><span class="lineNum">      74 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">          5 : class SimpleMD:</span>
+<a name="77"><span class="lineNum">      77 </span>            :   public PLMD::CLTool</a>
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :   string description()const {</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     return &quot;run lj code&quot;;</span>
+<span class="lineNum">      81 </span>            :   }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   bool write_positions_first;
+<span class="lineNum">      84 </span>            :   bool write_statistics_first;
+<span class="lineNum">      85 </span>            :   int write_statistics_last_time_reopened;
+<span class="lineNum">      86 </span>            :   FILE* write_statistics_fp;
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : public:
+<span class="lineNum">      90 </span><span class="lineCov">       1613 :   static void registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      91 </span><span class="lineCov">       6452 :     keys.add(&quot;compulsory&quot;,&quot;nstep&quot;,&quot;The number of steps of dynamics you want to run&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;temperature&quot;,&quot;NVE&quot;,&quot;the temperature at which you wish to run the simulation in LJ units&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;friction&quot;,&quot;off&quot;,&quot;The friction (in LJ units) for the langevin thermostat that is used to keep the temperature constant&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;tstep&quot;,&quot;0.005&quot;,&quot;the integration timestep in LJ units&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">       6452 :     keys.add(&quot;compulsory&quot;,&quot;inputfile&quot;,&quot;An xyz file containing the initial configuration of the system&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;forcecutoff&quot;,&quot;2.5&quot;,&quot;&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;listcutoff&quot;,&quot;3.0&quot;,&quot;&quot;);</span>
+<span class="lineNum">      98 </span><span class="lineCov">       6452 :     keys.add(&quot;compulsory&quot;,&quot;outputfile&quot;,&quot;An output xyz file containing the final configuration of the system&quot;);</span>
+<span class="lineNum">      99 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;nconfig&quot;,&quot;10&quot;,&quot;The frequency with which to write configurations to the trajectory file followed by the name of the trajectory file&quot;);</span>
+<span class="lineNum">     100 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;nstat&quot;,&quot;1&quot;,&quot;The frequency with which to write the statistics to the statistics file followed by the name of the statistics file&quot;);</span>
+<span class="lineNum">     101 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;maxneighbours&quot;,&quot;10000&quot;,&quot;The maximum number of neighbours an atom can have&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;idum&quot;,&quot;0&quot;,&quot;The random number seed&quot;);</span>
+<span class="lineNum">     103 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;ndim&quot;,&quot;3&quot;,&quot;The dimensionality of the system (some interesting LJ clusters are two dimensional)&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;wrapatoms&quot;,&quot;false&quot;,&quot;If true, atomic coordinates are written wrapped in minimal cell&quot;);</span>
+<span class="lineNum">     105 </span><span class="lineCov">       1613 :   }</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">          5 :   explicit SimpleMD( const CLToolOptions&amp; co ) :</span>
+<span class="lineNum">     108 </span>            :     CLTool(co),
+<span class="lineNum">     109 </span>            :     write_positions_first(true),
+<span class="lineNum">     110 </span>            :     write_statistics_first(true),
+<span class="lineNum">     111 </span>            :     write_statistics_last_time_reopened(0),
+<span class="lineNum">     112 </span><span class="lineCov">          5 :     write_statistics_fp(NULL)</span>
+<span class="lineNum">     113 </span>            :   {
+<span class="lineNum">     114 </span><span class="lineCov">          5 :     inputdata=ifile;</span>
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : private:
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :   void
+<span class="lineNum">     120 </span><span class="lineCov">          5 :   read_input(double&amp; temperature,</span>
+<span class="lineNum">     121 </span>            :              double&amp; tstep,
+<span class="lineNum">     122 </span>            :              double&amp; friction,
+<span class="lineNum">     123 </span>            :              double&amp; forcecutoff,
+<span class="lineNum">     124 </span>            :              double&amp; listcutoff,
+<span class="lineNum">     125 </span>            :              int&amp;    nstep,
+<span class="lineNum">     126 </span>            :              int&amp;    nconfig,
+<span class="lineNum">     127 </span>            :              int&amp;    nstat,
+<span class="lineNum">     128 </span>            :              bool&amp;   wrapatoms,
+<span class="lineNum">     129 </span>            :              string&amp; inputfile,
+<span class="lineNum">     130 </span>            :              string&amp; outputfile,
+<span class="lineNum">     131 </span>            :              string&amp; trajfile,
+<span class="lineNum">     132 </span>            :              string&amp; statfile,
+<span class="lineNum">     133 </span>            :              int&amp;    maxneighbours,
+<span class="lineNum">     134 </span>            :              int&amp;    ndim,
+<span class="lineNum">     135 </span>            :              int&amp;    idum)
+<span class="lineNum">     136 </span>            :   {
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :     // Read everything from input file
+<span class="lineNum">     139 </span>            :     char buffer1[256];
+<span class="lineNum">     140 </span><span class="lineCov">         10 :     std::string tempstr; parse(&quot;temperature&quot;,tempstr);</span>
+<span class="lineNum">     141 </span><span class="lineCov">          5 :     if( tempstr!=&quot;NVE&quot; ) Tools::convert(tempstr,temperature);</span>
+<span class="lineNum">     142 </span><span class="lineCov">         10 :     parse(&quot;tstep&quot;,tstep);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         10 :     std::string frictionstr; parse(&quot;friction&quot;,frictionstr);</span>
+<span class="lineNum">     144 </span><span class="lineCov">          5 :     if( tempstr!=&quot;NVE&quot; ) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">          5 :       if(frictionstr==&quot;off&quot;) { fprintf(stderr,&quot;Specify friction for thermostat\n&quot;); exit(1); }</span>
+<span class="lineNum">     146 </span><span class="lineCov">          5 :       Tools::convert(frictionstr,friction);</span>
+<span class="lineNum">     147 </span>            :     }
+<span class="lineNum">     148 </span><span class="lineCov">         10 :     parse(&quot;forcecutoff&quot;,forcecutoff);</span>
+<span class="lineNum">     149 </span><span class="lineCov">         10 :     parse(&quot;listcutoff&quot;,listcutoff);</span>
+<span class="lineNum">     150 </span><span class="lineCov">         10 :     parse(&quot;nstep&quot;,nstep);</span>
+<span class="lineNum">     151 </span><span class="lineCov">         10 :     parse(&quot;maxneighbours&quot;,maxneighbours);</span>
+<span class="lineNum">     152 </span><span class="lineCov">         10 :     parse(&quot;idum&quot;,idum);</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :     // Read in stuff with sanity checks
+<span class="lineNum">     155 </span><span class="lineCov">         10 :     parse(&quot;inputfile&quot;,inputfile);</span>
+<span class="lineNum">     156 </span><span class="lineCov">          5 :     if(inputfile.length()==0) {</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;Specify input file\n&quot;);</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     159 </span>            :     }
+<span class="lineNum">     160 </span><span class="lineCov">         10 :     parse(&quot;outputfile&quot;,outputfile);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          5 :     if(outputfile.length()==0) {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;Specify output file\n&quot;);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     164 </span>            :     }
+<span class="lineNum">     165 </span><span class="lineCov">         10 :     std::string nconfstr; parse(&quot;nconfig&quot;,nconfstr);</span>
+<span class="lineNum">     166 </span><span class="lineCov">          5 :     sscanf(nconfstr.c_str(),&quot;%100d %255s&quot;,&amp;nconfig,buffer1);</span>
+<span class="lineNum">     167 </span>            :     trajfile=buffer1;
+<span class="lineNum">     168 </span><span class="lineCov">          5 :     if(trajfile.length()==0) {</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;Specify traj file\n&quot;);</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     171 </span>            :     }
+<span class="lineNum">     172 </span><span class="lineCov">         10 :     std::string nstatstr; parse(&quot;nstat&quot;,nstatstr);</span>
+<span class="lineNum">     173 </span><span class="lineCov">          5 :     sscanf(nstatstr.c_str(),&quot;%100d %255s&quot;,&amp;nstat,buffer1);</span>
+<span class="lineNum">     174 </span>            :     statfile=buffer1;
+<span class="lineNum">     175 </span><span class="lineCov">          5 :     if(statfile.length()==0) {</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;Specify stat file\n&quot;);</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     178 </span>            :     }
+<span class="lineNum">     179 </span><span class="lineCov">         10 :     parse(&quot;ndim&quot;,ndim);</span>
+<span class="lineNum">     180 </span><span class="lineCov">          5 :     if(ndim&lt;1 || ndim&gt;3) {</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;ndim should be 1,2 or 3\n&quot;);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     183 </span>            :     }
+<span class="lineNum">     184 </span>            :     std::string w;
+<span class="lineNum">     185 </span><span class="lineCov">         10 :     parse(&quot;wrapatoms&quot;,w);</span>
+<span class="lineNum">     186 </span><span class="lineCov">          5 :     wrapatoms=false;</span>
+<span class="lineNum">     187 </span><span class="lineCov">         10 :     if(w.length()&gt;0 &amp;&amp; (w[0]=='T' || w[0]=='t')) wrapatoms=true;</span>
+<span class="lineNum">     188 </span><span class="lineCov">          5 :   }</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">          5 :   void read_natoms(const string &amp; inputfile,int &amp; natoms) {</span>
+<span class="lineNum">     191 </span>            : // read the number of atoms in file &quot;input.xyz&quot;
+<span class="lineNum">     192 </span><span class="lineCov">          5 :     FILE* fp=fopen(inputfile.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     193 </span><span class="lineCov">          5 :     if(!fp) {</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;ERROR: file %s not found\n&quot;,inputfile.c_str());</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     196 </span>            :     }
+<span class="lineNum">     197 </span><span class="lineCov">          5 :     fscanf(fp,&quot;%1000d&quot;,&amp;natoms);</span>
+<span class="lineNum">     198 </span><span class="lineCov">          5 :     fclose(fp);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          5 :   }</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span><span class="lineCov">          5 :   void read_positions(const string&amp; inputfile,int natoms,vector&lt;Vector&gt;&amp; positions,double cell[3]) {</span>
+<span class="lineNum">     202 </span>            : // read positions and cell from a file called inputfile
+<span class="lineNum">     203 </span>            : // natoms (input variable) and number of atoms in the file should be consistent
+<span class="lineNum">     204 </span><span class="lineCov">          5 :     FILE* fp=fopen(inputfile.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     205 </span><span class="lineCov">          5 :     if(!fp) {</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;ERROR: file %s not found\n&quot;,inputfile.c_str());</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :       exit(1);</span>
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            :     char buffer[256];
+<span class="lineNum">     210 </span>            :     char atomname[256];
+<span class="lineNum">     211 </span>            :     fgets(buffer,256,fp);
+<span class="lineNum">     212 </span><span class="lineCov">          5 :     fscanf(fp,&quot;%1000lf %1000lf %1000lf&quot;,&amp;cell[0],&amp;cell[1],&amp;cell[2]);</span>
+<span class="lineNum">     213 </span><span class="lineCov">        883 :     for(int i=0; i&lt;natoms; i++) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">        878 :       fscanf(fp,&quot;%255s %1000lf %1000lf %1000lf&quot;,atomname,&amp;positions[i][0],&amp;positions[i][1],&amp;positions[i][2]);</span>
+<span class="lineNum">     215 </span>            : // note: atomname is read but not used
+<span class="lineNum">     216 </span>            :     }
+<span class="lineNum">     217 </span><span class="lineCov">          5 :     fclose(fp);</span>
+<a name="218"><span class="lineNum">     218 </span><span class="lineCov">          5 :   }</span></a>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">          5 :   void randomize_velocities(const int natoms,const int ndim,const double temperature,const vector&lt;double&gt;&amp;masses,vector&lt;Vector&gt;&amp; velocities,Random&amp;random) {</span>
+<span class="lineNum">     221 </span>            : // randomize the velocities according to the temperature
+<span class="lineNum">     222 </span><span class="lineCov">       1754 :     for(int iatom=0; iatom&lt;natoms; iatom++) for(int i=0; i&lt;ndim; i++)</span>
+<span class="lineNum">     223 </span><span class="lineCov">       3930 :         velocities[iatom][i]=sqrt(temperature/masses[iatom])*random.Gaussian();</span>
+<a name="224"><span class="lineNum">     224 </span><span class="lineCov">          5 :   }</span></a>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span><span class="lineCov">     957956 :   void pbc(const double cell[3],const Vector &amp; vin,Vector &amp; vout) {</span>
+<span class="lineNum">     227 </span>            : // apply periodic boundary condition to a vector
+<span class="lineNum">     228 </span><span class="lineCov">    6705692 :     for(int i=0; i&lt;3; i++) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">    2873868 :       vout[i]=vin[i]-floor(vin[i]/cell[i]+0.5)*cell[i];</span>
+<span class="lineNum">     230 </span>            :     }
+<a name="231"><span class="lineNum">     231 </span><span class="lineCov">     957956 :   }</span></a>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">       2200 :   void check_list(const int natoms,const vector&lt;Vector&gt;&amp; positions,const vector&lt;Vector&gt;&amp;positions0,const double listcutoff,</span>
+<span class="lineNum">     234 </span>            :                   const double forcecutoff,bool &amp; recompute)
+<span class="lineNum">     235 </span>            :   {
+<span class="lineNum">     236 </span>            : // check if the neighbour list have to be recomputed
+<span class="lineNum">     237 </span><span class="lineCov">       2200 :     Vector displacement;  // displacement from positions0 to positions</span>
+<span class="lineNum">     238 </span>            :     double delta2;        // square of the 'skin' thickness
+<span class="lineNum">     239 </span><span class="lineCov">       2200 :     recompute=false;</span>
+<span class="lineNum">     240 </span><span class="lineCov">       2200 :     delta2=(0.5*(listcutoff-forcecutoff))*(0.5*(listcutoff-forcecutoff));</span>
+<span class="lineNum">     241 </span>            : // if ANY atom moved more than half of the skin thickness, recompute is set to .true.
+<span class="lineNum">     242 </span><span class="lineCov">      73400 :     for(int iatom=0; iatom&lt;natoms; iatom++) {</span>
+<span class="lineNum">     243 </span><span class="lineCov">     356000 :       for(int k=0; k&lt;3; k++) displacement[k]=positions[iatom][k]-positions0[iatom][k];</span>
+<span class="lineNum">     244 </span>            :       double s=0.0;
+<span class="lineNum">     245 </span><span class="lineCov">     142400 :       for(int k=0; k&lt;3; k++) s+=displacement[k]*displacement[k];</span>
+<span class="lineNum">     246 </span><span class="lineCov">      35600 :       if(s&gt;delta2) recompute=true;</span>
+<span class="lineNum">     247 </span>            :     }
+<span class="lineNum">     248 </span><span class="lineCov">       2200 :   }</span>
+<a name="249"><span class="lineNum">     249 </span>            : </a>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineCov">         37 :   void compute_list(const int natoms,const int listsize,const vector&lt;Vector&gt;&amp; positions,const double cell[3],const double listcutoff,</span>
+<span class="lineNum">     252 </span>            :                     vector&lt;int&gt;&amp; point,vector&lt;int&gt;&amp; list) {
+<span class="lineNum">     253 </span>            : // see Allen-Tildesey for a definition of point and list
+<span class="lineNum">     254 </span><span class="lineCov">         37 :     Vector distance;     // distance of the two atoms</span>
+<span class="lineNum">     255 </span><span class="lineCov">         37 :     Vector distance_pbc; // minimum-image distance of the two atoms</span>
+<span class="lineNum">     256 </span>            :     double listcutoff2;  // squared list cutoff
+<span class="lineNum">     257 </span><span class="lineCov">         37 :     listcutoff2=listcutoff*listcutoff;</span>
+<span class="lineNum">     258 </span><span class="lineCov">         37 :     point[0]=0;</span>
+<span class="lineNum">     259 </span><span class="lineCov">       1572 :     for(int iatom=0; iatom&lt;natoms-1; iatom++) {</span>
+<span class="lineNum">     260 </span><span class="lineCov">       4605 :       point[iatom+1]=point[iatom];</span>
+<span class="lineNum">     261 </span><span class="lineCov">     152771 :       for(int jatom=iatom+1; jatom&lt;natoms; jatom++) {</span>
+<span class="lineNum">     262 </span><span class="lineCov">     756180 :         for(int k=0; k&lt;3; k++) distance[k]=positions[iatom][k]-positions[jatom][k];</span>
+<span class="lineNum">     263 </span><span class="lineCov">      75618 :         pbc(cell,distance,distance_pbc);</span>
+<span class="lineNum">     264 </span>            : // if the interparticle distance is larger than the cutoff, skip
+<span class="lineNum">     265 </span><span class="lineCov">     302472 :         double d2=0; for(int k=0; k&lt;3; k++) d2+=distance_pbc[k]*distance_pbc[k];</span>
+<span class="lineNum">     266 </span><span class="lineCov">      75618 :         if(d2&gt;listcutoff2)continue;</span>
+<span class="lineNum">     267 </span><span class="lineCov">      54532 :         if(point[iatom+1]&gt;listsize) {</span>
+<span class="lineNum">     268 </span>            : // too many neighbours
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :           fprintf(stderr,&quot;%s&quot;,&quot;Verlet list size exceeded\n&quot;);</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :           fprintf(stderr,&quot;%s&quot;,&quot;Increase maxneighbours\n&quot;);</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :           exit(1);</span>
+<span class="lineNum">     272 </span>            :         }
+<span class="lineNum">     273 </span><span class="lineCov">     109064 :         list[point[iatom+1]]=jatom;</span>
+<span class="lineNum">     274 </span><span class="lineCov">      54532 :         point[iatom+1]++;</span>
+<span class="lineNum">     275 </span>            :       }
+<span class="lineNum">     276 </span>            :     }
+<a name="277"><span class="lineNum">     277 </span><span class="lineCov">         37 :   }</span></a>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">       2205 :   void compute_forces(const int natoms,const int listsize,const vector&lt;Vector&gt;&amp; positions,const double cell[3],</span>
+<span class="lineNum">     280 </span>            :                       double forcecutoff,const vector&lt;int&gt;&amp; point,const vector&lt;int&gt;&amp; list,vector&lt;Vector&gt;&amp; forces,double &amp; engconf)
+<span class="lineNum">     281 </span>            :   {
+<span class="lineNum">     282 </span><span class="lineCov">       2205 :     Vector distance;        // distance of the two atoms</span>
+<span class="lineNum">     283 </span><span class="lineCov">       2205 :     Vector distance_pbc;    // minimum-image distance of the two atoms</span>
+<span class="lineNum">     284 </span>            :     double distance_pbc2;   // squared minimum-image distance
+<span class="lineNum">     285 </span>            :     double forcecutoff2;    // squared force cutoff
+<span class="lineNum">     286 </span><span class="lineCov">       2205 :     Vector f;               // force</span>
+<span class="lineNum">     287 </span>            :     double engcorrection;   // energy necessary shift the potential avoiding discontinuities
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineCov">       2205 :     forcecutoff2=forcecutoff*forcecutoff;</span>
+<span class="lineNum">     290 </span><span class="lineCov">       2205 :     engconf=0.0;</span>
+<span class="lineNum">     291 </span><span class="lineCov">     146361 :     for(int i=0; i&lt;natoms; i++)for(int k=0; k&lt;3; k++) forces[i][k]=0.0;</span>
+<span class="lineNum">     292 </span><span class="lineCov">       4410 :     engcorrection=4.0*(1.0/pow(forcecutoff2,6.0)-1.0/pow(forcecutoff2,3));</span>
+<span class="lineNum">     293 </span><span class="lineCov">      36039 :     for(int iatom=0; iatom&lt;natoms-1; iatom++) {</span>
+<span class="lineNum">     294 </span><span class="lineCov">    1863586 :       for(int jlist=point[iatom]; jlist&lt;point[iatom+1]; jlist++) {</span>
+<span class="lineNum">     295 </span><span class="lineCov">    1762084 :         int jatom=list[jlist];</span>
+<span class="lineNum">     296 </span><span class="lineCov">    8810420 :         for(int k=0; k&lt;3; k++) distance[k]=positions[iatom][k]-positions[jatom][k];</span>
+<span class="lineNum">     297 </span><span class="lineCov">     881042 :         pbc(cell,distance,distance_pbc);</span>
+<span class="lineNum">     298 </span><span class="lineCov">    3524168 :         distance_pbc2=0.0; for(int k=0; k&lt;3; k++) distance_pbc2+=distance_pbc[k]*distance_pbc[k];</span>
+<span class="lineNum">     299 </span>            : // if the interparticle distance is larger than the cutoff, skip
+<span class="lineNum">     300 </span><span class="lineCov">     881042 :         if(distance_pbc2&gt;forcecutoff2) continue;</span>
+<span class="lineNum">     301 </span><span class="lineCov">     641298 :         double distance_pbc6=distance_pbc2*distance_pbc2*distance_pbc2;</span>
+<span class="lineNum">     302 </span><span class="lineCov">     641298 :         double distance_pbc8=distance_pbc6*distance_pbc2;</span>
+<span class="lineNum">     303 </span><span class="lineCov">     641298 :         double distance_pbc12=distance_pbc6*distance_pbc6;</span>
+<span class="lineNum">     304 </span><span class="lineCov">     641298 :         double distance_pbc14=distance_pbc12*distance_pbc2;</span>
+<span class="lineNum">     305 </span><span class="lineCov">     641298 :         engconf+=4.0*(1.0/distance_pbc12 - 1.0/distance_pbc6) - engcorrection;</span>
+<span class="lineNum">     306 </span><span class="lineCov">    2565192 :         for(int k=0; k&lt;3; k++) f[k]=2.0*distance_pbc[k]*4.0*(6.0/distance_pbc14-3.0/distance_pbc8);</span>
+<span class="lineNum">     307 </span>            : // same force on the two atoms, with opposite sign:
+<span class="lineNum">     308 </span><span class="lineCov">    4489086 :         for(int k=0; k&lt;3; k++) forces[iatom][k]+=f[k];</span>
+<span class="lineNum">     309 </span><span class="lineCov">    4489086 :         for(int k=0; k&lt;3; k++) forces[jatom][k]-=f[k];</span>
+<span class="lineNum">     310 </span>            :       }
+<span class="lineNum">     311 </span>            :     }
+<a name="312"><span class="lineNum">     312 </span><span class="lineCov">       2205 :   }</span></a>
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span><span class="lineCov">       2200 :   void compute_engkin(const int natoms,const vector&lt;double&gt;&amp; masses,const vector&lt;Vector&gt;&amp; velocities,double &amp; engkin)</span>
+<span class="lineNum">     315 </span>            :   {
+<span class="lineNum">     316 </span>            : // calculate the kinetic energy from the velocities
+<span class="lineNum">     317 </span><span class="lineCov">       2200 :     engkin=0.0;</span>
+<span class="lineNum">     318 </span><span class="lineCov">     144600 :     for(int iatom=0; iatom&lt;natoms; iatom++)for(int k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     319 </span><span class="lineCov">     320400 :         engkin+=0.5*masses[iatom]*velocities[iatom][k]*velocities[iatom][k];</span>
+<span class="lineNum">     320 </span>            :       }
+<span class="lineNum">     321 </span><span class="lineCov">       2200 :   }</span>
+<a name="322"><span class="lineNum">     322 </span>            : </a>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineCov">       4400 :   void thermostat(const int natoms,const int ndim,const vector&lt;double&gt;&amp; masses,const double dt,const double friction,</span>
+<span class="lineNum">     325 </span>            :                   const double temperature,vector&lt;Vector&gt;&amp; velocities,double &amp; engint,Random &amp; random) {
+<span class="lineNum">     326 </span>            : // Langevin thermostat, implemented as decribed in Bussi and Parrinello, Phys. Rev. E (2007)
+<span class="lineNum">     327 </span>            : // it is a linear combination of old velocities and new, randomly chosen, velocity,
+<span class="lineNum">     328 </span>            : // with proper coefficients
+<span class="lineNum">     329 </span><span class="lineCov">       4400 :     double c1=exp(-friction*dt);</span>
+<span class="lineNum">     330 </span><span class="lineCov">     146800 :     for(int iatom=0; iatom&lt;natoms; iatom++) {</span>
+<span class="lineNum">     331 </span><span class="lineCov">     142400 :       double c2=sqrt((1.0-c1*c1)*temperature/masses[iatom]);</span>
+<span class="lineNum">     332 </span><span class="lineCov">     442400 :       for(int i=0; i&lt;ndim; i++) {</span>
+<span class="lineNum">     333 </span><span class="lineCov">     371200 :         engint+=0.5*masses[iatom]*velocities[iatom][i]*velocities[iatom][i];</span>
+<span class="lineNum">     334 </span><span class="lineCov">     371200 :         velocities[iatom][i]=c1*velocities[iatom][i]+c2*random.Gaussian();</span>
+<span class="lineNum">     335 </span><span class="lineCov">     371200 :         engint-=0.5*masses[iatom]*velocities[iatom][i]*velocities[iatom][i];</span>
+<span class="lineNum">     336 </span>            :       }
+<span class="lineNum">     337 </span>            :     }
+<span class="lineNum">     338 </span><span class="lineCov">       4400 :   }</span>
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span><span class="lineCov">         22 :   void write_positions(const string&amp; trajfile,int natoms,const vector&lt;Vector&gt;&amp; positions,const double cell[3],const bool wrapatoms)</span>
+<span class="lineNum">     341 </span>            :   {
+<span class="lineNum">     342 </span>            : // write positions on file trajfile
+<span class="lineNum">     343 </span>            : // positions are appended at the end of the file
+<span class="lineNum">     344 </span><span class="lineCov">         22 :     Vector pos;</span>
+<span class="lineNum">     345 </span>            :     FILE*fp;
+<span class="lineNum">     346 </span><span class="lineCov">         22 :     if(write_positions_first) {</span>
+<span class="lineNum">     347 </span><span class="lineCov">          5 :       fp=fopen(trajfile.c_str(),&quot;w&quot;);</span>
+<span class="lineNum">     348 </span><span class="lineCov">          5 :       write_positions_first=false;</span>
+<span class="lineNum">     349 </span>            :     } else {
+<span class="lineNum">     350 </span><span class="lineCov">         17 :       fp=fopen(trajfile.c_str(),&quot;a&quot;);</span>
+<span class="lineNum">     351 </span>            :     }
+<span class="lineNum">     352 </span>            :     fprintf(fp,&quot;%d\n&quot;,natoms);
+<span class="lineNum">     353 </span><span class="lineCov">         22 :     fprintf(fp,&quot;%f %f %f\n&quot;,cell[0],cell[1],cell[2]);</span>
+<span class="lineNum">     354 </span><span class="lineCov">       4370 :     for(int iatom=0; iatom&lt;natoms; iatom++) {</span>
+<span class="lineNum">     355 </span>            : // usually, it is better not to apply pbc here, so that diffusion
+<span class="lineNum">     356 </span>            : // is more easily calculated from a trajectory file:
+<span class="lineNum">     357 </span><span class="lineCov">       3254 :       if(wrapatoms) pbc(cell,positions[iatom],pos);</span>
+<span class="lineNum">     358 </span><span class="lineCov">       7658 :       else for(int k=0; k&lt;3; k++) pos[k]=positions[iatom][k];</span>
+<span class="lineNum">     359 </span><span class="lineCov">       2174 :       fprintf(fp,&quot;Ar %10.7f %10.7f %10.7f\n&quot;,pos[0],pos[1],pos[2]);</span>
+<span class="lineNum">     360 </span>            :     }
+<span class="lineNum">     361 </span><span class="lineCov">         22 :     fclose(fp);</span>
+<span class="lineNum">     362 </span><span class="lineCov">         22 :   }</span>
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineCov">          5 :   void write_final_positions(const string&amp; outputfile,int natoms,const vector&lt;Vector&gt;&amp; positions,const double cell[3],const bool wrapatoms)</span>
+<span class="lineNum">     365 </span>            :   {
+<span class="lineNum">     366 </span>            : // write positions on file outputfile
+<span class="lineNum">     367 </span><span class="lineCov">          5 :     Vector pos;</span>
+<span class="lineNum">     368 </span>            :     FILE*fp;
+<span class="lineNum">     369 </span><span class="lineCov">          5 :     fp=fopen(outputfile.c_str(),&quot;w&quot;);</span>
+<span class="lineNum">     370 </span>            :     fprintf(fp,&quot;%d\n&quot;,natoms);
+<span class="lineNum">     371 </span><span class="lineCov">          5 :     fprintf(fp,&quot;%f %f %f\n&quot;,cell[0],cell[1],cell[2]);</span>
+<span class="lineNum">     372 </span><span class="lineCov">        883 :     for(int iatom=0; iatom&lt;natoms; iatom++) {</span>
+<span class="lineNum">     373 </span>            : // usually, it is better not to apply pbc here, so that diffusion
+<span class="lineNum">     374 </span>            : // is more easily calculated from a trajectory file:
+<span class="lineNum">     375 </span><span class="lineCov">        655 :       if(wrapatoms) pbc(cell,positions[iatom],pos);</span>
+<span class="lineNum">     376 </span><span class="lineCov">       1561 :       else for(int k=0; k&lt;3; k++) pos[k]=positions[iatom][k];</span>
+<span class="lineNum">     377 </span><span class="lineCov">        439 :       fprintf(fp,&quot;Ar %10.7f %10.7f %10.7f\n&quot;,pos[0],pos[1],pos[2]);</span>
+<span class="lineNum">     378 </span>            :     }
+<span class="lineNum">     379 </span><span class="lineCov">          5 :     fclose(fp);</span>
+<span class="lineNum">     380 </span><span class="lineCov">          5 :   }</span>
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineCov">         22 :   void write_statistics(const string &amp; statfile,const int istep,const double tstep,</span>
+<span class="lineNum">     384 </span>            :                         const int natoms,const int ndim,const double engkin,const double engconf,const double engint) {
+<span class="lineNum">     385 </span>            : // write statistics on file statfile
+<span class="lineNum">     386 </span><span class="lineCov">         22 :     if(write_statistics_first) {</span>
+<span class="lineNum">     387 </span>            : // first time this routine is called, open the file
+<span class="lineNum">     388 </span><span class="lineCov">          5 :       write_statistics_fp=fopen(statfile.c_str(),&quot;w&quot;);</span>
+<span class="lineNum">     389 </span><span class="lineCov">          5 :       write_statistics_first=false;</span>
+<span class="lineNum">     390 </span>            :     }
+<span class="lineNum">     391 </span><span class="lineCov">         22 :     if(istep-write_statistics_last_time_reopened&gt;100) {</span>
+<span class="lineNum">     392 </span>            : // every 100 steps, reopen the file to flush the buffer
+<span class="lineNum">     393 </span><span class="lineCov">          2 :       fclose(write_statistics_fp);</span>
+<span class="lineNum">     394 </span><span class="lineCov">          2 :       write_statistics_fp=fopen(statfile.c_str(),&quot;a&quot;);</span>
+<span class="lineNum">     395 </span><span class="lineCov">          2 :       write_statistics_last_time_reopened=istep;</span>
+<span class="lineNum">     396 </span>            :     }
+<span class="lineNum">     397 </span><span class="lineCov">         22 :     fprintf(write_statistics_fp,&quot;%d %f %f %f %f %f\n&quot;,istep,istep*tstep,2.0*engkin/double(ndim*natoms),engconf,engkin+engconf,engkin+engconf+engint);</span>
+<span class="lineNum">     398 </span><span class="lineCov">         22 :   }</span>
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span><span class="lineCov">          5 :   virtual int main(FILE* in,FILE*out,PLMD::Communicator&amp; pc) {</span>
+<span class="lineNum">     403 </span>            :     int            natoms;       // number of atoms
+<span class="lineNum">     404 </span>            :     vector&lt;Vector&gt; positions;    // atomic positions
+<span class="lineNum">     405 </span>            :     vector&lt;Vector&gt; velocities;   // velocities
+<span class="lineNum">     406 </span>            :     vector&lt;double&gt; masses;       // masses
+<span class="lineNum">     407 </span>            :     vector&lt;Vector&gt; forces;       // forces
+<span class="lineNum">     408 </span>            :     double         cell[3];      // cell size
+<span class="lineNum">     409 </span>            :     double         cell9[3][3];  // cell size
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : // neighbour list variables
+<span class="lineNum">     412 </span>            : // see Allen and Tildesey book for details
+<span class="lineNum">     413 </span>            :     int            listsize;     // size of the list array
+<span class="lineNum">     414 </span>            :     vector&lt;int&gt;    list;         // neighbour list
+<span class="lineNum">     415 </span>            :     vector&lt;int&gt;    point;        // pointer to neighbour list
+<span class="lineNum">     416 </span>            :     vector&lt;Vector&gt; positions0;   // reference atomic positions, i.e. positions when the neighbour list
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            : // input parameters
+<span class="lineNum">     419 </span>            : // all of them have a reasonable default value, set in read_input()
+<span class="lineNum">     420 </span>            :     double      tstep;             // simulation timestep
+<span class="lineNum">     421 </span>            :     double      temperature;       // temperature
+<span class="lineNum">     422 </span>            :     double      friction;          // friction for Langevin dynamics (for NVE, use 0)
+<span class="lineNum">     423 </span>            :     double      listcutoff;        // cutoff for neighbour list
+<span class="lineNum">     424 </span>            :     double      forcecutoff;       // cutoff for forces
+<span class="lineNum">     425 </span>            :     int         nstep;             // number of steps
+<span class="lineNum">     426 </span>            :     int         nconfig;           // stride for output of configurations
+<span class="lineNum">     427 </span>            :     int         nstat;             // stride for output of statistics
+<span class="lineNum">     428 </span>            :     int         maxneighbour;      // maximum average number of neighbours per atom
+<span class="lineNum">     429 </span>            :     int         ndim;              // dimensionality of the system (1, 2, or 3)
+<span class="lineNum">     430 </span>            :     int         idum;              // seed
+<span class="lineNum">     431 </span>            :     int         plumedWantsToStop; // stop flag
+<span class="lineNum">     432 </span>            :     bool        wrapatoms;         // if true, atomic coordinates are written wrapped in minimal cell
+<span class="lineNum">     433 </span>            :     string      inputfile;         // name of file with starting configuration (xyz)
+<span class="lineNum">     434 </span>            :     string      outputfile;        // name of file with final configuration (xyz)
+<span class="lineNum">     435 </span>            :     string      trajfile;          // name of the trajectory file (xyz)
+<span class="lineNum">     436 </span>            :     string      statfile;          // name of the file with statistics
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span>            :     double engkin;                 // kinetic energy
+<span class="lineNum">     439 </span>            :     double engconf;                // configurational energy
+<span class="lineNum">     440 </span>            :     double engint;                 // integral for conserved energy in Langevin dynamics
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            :     bool recompute_list;           // control if the neighbour list have to be recomputed
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span><span class="lineCov">          5 :     Random random;                 // random numbers stream</span>
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span>            :     PLMD::Plumed* plumed=NULL;
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            : // Commenting the next line it is possible to switch-off plumed
+<span class="lineNum">     449 </span><span class="lineCov">          5 :     plumed=new PLMD::Plumed;</span>
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span><span class="lineCov">          5 :     if(plumed) {</span>
+<span class="lineNum">     452 </span><span class="lineCov">          5 :       int s=sizeof(double);</span>
+<span class="lineNum">     453 </span>            :       plumed-&gt;cmd(&quot;setRealPrecision&quot;,&amp;s);
+<span class="lineNum">     454 </span>            :     }
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span><span class="lineCov">          5 :     read_input(temperature,tstep,friction,forcecutoff,</span>
+<span class="lineNum">     457 </span>            :                listcutoff,nstep,nconfig,nstat,
+<span class="lineNum">     458 </span>            :                wrapatoms,inputfile,outputfile,trajfile,statfile,
+<span class="lineNum">     459 </span>            :                maxneighbour,ndim,idum);
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span>            : // number of atoms is read from file inputfile
+<span class="lineNum">     462 </span><span class="lineCov">          5 :     read_natoms(inputfile,natoms);</span>
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            : // write the parameters in output so they can be checked
+<span class="lineNum">     465 </span>            :     fprintf(out,&quot;%s %s\n&quot;,&quot;Starting configuration           :&quot;,inputfile.c_str());
+<span class="lineNum">     466 </span>            :     fprintf(out,&quot;%s %s\n&quot;,&quot;Final configuration              :&quot;,outputfile.c_str());
+<span class="lineNum">     467 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Number of atoms                  :&quot;,natoms);</span>
+<span class="lineNum">     468 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %f\n&quot;,&quot;Temperature                      :&quot;,temperature);</span>
+<span class="lineNum">     469 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %f\n&quot;,&quot;Time step                        :&quot;,tstep);</span>
+<span class="lineNum">     470 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %f\n&quot;,&quot;Friction                         :&quot;,friction);</span>
+<span class="lineNum">     471 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %f\n&quot;,&quot;Cutoff for forces                :&quot;,forcecutoff);</span>
+<span class="lineNum">     472 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %f\n&quot;,&quot;Cutoff for neighbour list        :&quot;,listcutoff);</span>
+<span class="lineNum">     473 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Number of steps                  :&quot;,nstep);</span>
+<span class="lineNum">     474 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Stride for trajectory            :&quot;,nconfig);</span>
+<span class="lineNum">     475 </span>            :     fprintf(out,&quot;%s %s\n&quot;,&quot;Trajectory file                  :&quot;,trajfile.c_str());
+<span class="lineNum">     476 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Stride for statistics            :&quot;,nstat);</span>
+<span class="lineNum">     477 </span>            :     fprintf(out,&quot;%s %s\n&quot;,&quot;Statistics file                  :&quot;,statfile.c_str());
+<span class="lineNum">     478 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Max average number of neighbours :&quot;,maxneighbour);</span>
+<span class="lineNum">     479 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Dimensionality                   :&quot;,ndim);</span>
+<span class="lineNum">     480 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %d\n&quot;,&quot;Seed                             :&quot;,idum);</span>
+<span class="lineNum">     481 </span><span class="lineCov">          5 :     fprintf(out,&quot;%s %s\n&quot;,&quot;Are atoms wrapped on output?     :&quot;,(wrapatoms?&quot;T&quot;:&quot;F&quot;));</span>
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span>            : // Setting the seed
+<span class="lineNum">     484 </span><span class="lineCov">          5 :     random.setSeed(idum);</span>
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            : // Since each atom pair is counted once, the total number of pairs
+<span class="lineNum">     487 </span>            : // will be half of the number of neighbours times the number of atoms
+<span class="lineNum">     488 </span><span class="lineCov">          5 :     listsize=maxneighbour*natoms/2;</span>
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            : // allocation of dynamical arrays
+<span class="lineNum">     491 </span><span class="lineCov">          5 :     positions.resize(natoms);</span>
+<span class="lineNum">     492 </span><span class="lineCov">          5 :     positions0.resize(natoms);</span>
+<span class="lineNum">     493 </span><span class="lineCov">          5 :     velocities.resize(natoms);</span>
+<span class="lineNum">     494 </span><span class="lineCov">          5 :     forces.resize(natoms);</span>
+<span class="lineNum">     495 </span><span class="lineCov">          5 :     masses.resize(natoms);</span>
+<span class="lineNum">     496 </span><span class="lineCov">          5 :     point.resize(natoms);</span>
+<span class="lineNum">     497 </span><span class="lineCov">          5 :     list.resize(listsize);</span>
+<span class="lineNum">     498 </span>            : 
+<span class="lineNum">     499 </span>            : // masses are hard-coded to 1
+<span class="lineNum">     500 </span><span class="lineCov">        883 :     for(int i=0; i&lt;natoms; ++i) masses[i]=1.0;</span>
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            : // energy integral initialized to 0
+<span class="lineNum">     503 </span><span class="lineCov">          5 :     engint=0.0;</span>
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span>            : // positions are read from file inputfile
+<span class="lineNum">     506 </span><span class="lineCov">          5 :     read_positions(inputfile,natoms,positions,cell);</span>
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span>            : // velocities are randomized according to temperature
+<span class="lineNum">     509 </span><span class="lineCov">          5 :     randomize_velocities(natoms,ndim,temperature,masses,velocities,random);</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span><span class="lineCov">          5 :     if(plumed) {</span>
+<span class="lineNum">     512 </span>            :       plumed-&gt;cmd(&quot;setNoVirial&quot;);
+<span class="lineNum">     513 </span>            :       plumed-&gt;cmd(&quot;setNatoms&quot;,&amp;natoms);
+<span class="lineNum">     514 </span>            :       plumed-&gt;cmd(&quot;setMDEngine&quot;,&quot;simpleMD&quot;);
+<span class="lineNum">     515 </span>            :       plumed-&gt;cmd(&quot;setTimestep&quot;,&amp;tstep);
+<span class="lineNum">     516 </span>            :       plumed-&gt;cmd(&quot;setPlumedDat&quot;,&quot;plumed.dat&quot;);
+<span class="lineNum">     517 </span><span class="lineCov">          5 :       int pversion=0;</span>
+<span class="lineNum">     518 </span>            :       plumed-&gt;cmd(&quot;getApiVersion&quot;,&amp;pversion);
+<span class="lineNum">     519 </span>            : // setting kbT is only implemented with api&gt;1
+<span class="lineNum">     520 </span>            : // even if not necessary in principle in SimpleMD (which is part of plumed)
+<span class="lineNum">     521 </span>            : // we leave the check here as a reference
+<span class="lineNum">     522 </span><span class="lineCov">          5 :       if(pversion&gt;1) {</span>
+<span class="lineNum">     523 </span>            :         plumed-&gt;cmd(&quot;setKbT&quot;,&amp;temperature);
+<span class="lineNum">     524 </span>            :       }
+<span class="lineNum">     525 </span>            :       plumed-&gt;cmd(&quot;init&quot;);
+<span class="lineNum">     526 </span>            :     }
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            : // neighbour list are computed, and reference positions are saved
+<span class="lineNum">     529 </span><span class="lineCov">          5 :     compute_list(natoms,listsize,positions,cell,listcutoff,point,list);</span>
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span><span class="lineCov">         10 :     fprintf(out,&quot;List size: %d\n&quot;,point[natoms-1]);</span>
+<span class="lineNum">     532 </span><span class="lineCov">       3078 :     for(int iatom=0; iatom&lt;natoms; ++iatom) for(int k=0; k&lt;3; ++k) positions0[iatom][k]=positions[iatom][k];</span>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            : // forces are computed before starting md
+<span class="lineNum">     535 </span><span class="lineCov">          5 :     compute_forces(natoms,listsize,positions,cell,forcecutoff,point,list,forces,engconf);</span>
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span>            : // remove forces if ndim&lt;3
+<span class="lineNum">     538 </span><span class="lineCov">          5 :     if(ndim&lt;3)</span>
+<span class="lineNum">     539 </span><span class="lineCov">         15 :       for(int iatom=0; iatom&lt;natoms; ++iatom) for(int k=ndim; k&lt;3; ++k) forces[iatom][k]=0.0;</span>
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            : // here is the main md loop
+<span class="lineNum">     542 </span>            : // Langevin thermostat is applied before and after a velocity-Verlet integrator
+<span class="lineNum">     543 </span>            : // the overall structure is:
+<span class="lineNum">     544 </span>            : //   thermostat
+<span class="lineNum">     545 </span>            : //   update velocities
+<span class="lineNum">     546 </span>            : //   update positions
+<span class="lineNum">     547 </span>            : //   (eventually recompute neighbour list)
+<span class="lineNum">     548 </span>            : //   compute forces
+<span class="lineNum">     549 </span>            : //   update velocities
+<span class="lineNum">     550 </span>            : //   thermostat
+<span class="lineNum">     551 </span>            : //   (eventually dump output informations)
+<span class="lineNum">     552 </span><span class="lineCov">       2205 :     for(int istep=0; istep&lt;nstep; istep++) {</span>
+<span class="lineNum">     553 </span><span class="lineCov">       2200 :       thermostat(natoms,ndim,masses,0.5*tstep,friction,temperature,velocities,engint,random);</span>
+<span class="lineNum">     554 </span>            : 
+<span class="lineNum">     555 </span><span class="lineCov">     144600 :       for(int iatom=0; iatom&lt;natoms; iatom++) for(int k=0; k&lt;3; k++)</span>
+<span class="lineNum">     556 </span><span class="lineCov">     427200 :           velocities[iatom][k]+=forces[iatom][k]*0.5*tstep/masses[iatom];</span>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineCov">     144600 :       for(int iatom=0; iatom&lt;natoms; iatom++) for(int k=0; k&lt;3; k++)</span>
+<span class="lineNum">     559 </span><span class="lineCov">     320400 :           positions[iatom][k]+=velocities[iatom][k]*tstep;</span>
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            : // a check is performed to decide whether to recalculate the neighbour list
+<span class="lineNum">     562 </span><span class="lineCov">       2200 :       check_list(natoms,positions,positions0,listcutoff,forcecutoff,recompute_list);</span>
+<span class="lineNum">     563 </span><span class="lineCov">       2200 :       if(recompute_list) {</span>
+<span class="lineNum">     564 </span><span class="lineCov">         32 :         compute_list(natoms,listsize,positions,cell,listcutoff,point,list);</span>
+<span class="lineNum">     565 </span><span class="lineCov">       7963 :         for(int iatom=0; iatom&lt;natoms; ++iatom) for(int k=0; k&lt;3; ++k) positions0[iatom][k]=positions[iatom][k];</span>
+<span class="lineNum">     566 </span>            :         fprintf(out,&quot;Neighbour list recomputed at step %d\n&quot;,istep);
+<span class="lineNum">     567 </span><span class="lineCov">         64 :         fprintf(out,&quot;List size: %d\n&quot;,point[natoms-1]);</span>
+<span class="lineNum">     568 </span>            :       }
+<span class="lineNum">     569 </span>            : 
+<span class="lineNum">     570 </span><span class="lineCov">       2200 :       compute_forces(natoms,listsize,positions,cell,forcecutoff,point,list,forces,engconf);</span>
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span><span class="lineCov">       2200 :       if(plumed) {</span>
+<span class="lineNum">     573 </span><span class="lineCov">       2200 :         int istepplusone=istep+1;</span>
+<span class="lineNum">     574 </span><span class="lineCov">       2200 :         plumedWantsToStop=0;</span>
+<span class="lineNum">     575 </span><span class="lineCov">       8800 :         for(int i=0; i&lt;3; i++)for(int k=0; k&lt;3; k++) cell9[i][k]=0.0;</span>
+<span class="lineNum">     576 </span><span class="lineCov">       8800 :         for(int i=0; i&lt;3; i++) cell9[i][i]=cell[i];</span>
+<span class="lineNum">     577 </span>            :         plumed-&gt;cmd(&quot;setStep&quot;,&amp;istepplusone);
+<span class="lineNum">     578 </span>            :         plumed-&gt;cmd(&quot;setMasses&quot;,&amp;masses[0]);
+<span class="lineNum">     579 </span>            :         plumed-&gt;cmd(&quot;setForces&quot;,&amp;forces[0]);
+<span class="lineNum">     580 </span>            :         plumed-&gt;cmd(&quot;setEnergy&quot;,&amp;engconf);
+<span class="lineNum">     581 </span>            :         plumed-&gt;cmd(&quot;setPositions&quot;,&amp;positions[0]);
+<span class="lineNum">     582 </span>            :         plumed-&gt;cmd(&quot;setBox&quot;,cell9);
+<span class="lineNum">     583 </span>            :         plumed-&gt;cmd(&quot;setStopFlag&quot;,&amp;plumedWantsToStop);
+<span class="lineNum">     584 </span>            :         plumed-&gt;cmd(&quot;calc&quot;);
+<span class="lineNum">     585 </span><span class="lineCov">       2200 :         if(plumedWantsToStop) nstep=istep;</span>
+<span class="lineNum">     586 </span>            :       }
+<span class="lineNum">     587 </span>            : // remove forces if ndim&lt;3
+<span class="lineNum">     588 </span><span class="lineCov">       2200 :       if(ndim&lt;3)</span>
+<span class="lineNum">     589 </span><span class="lineCov">      30000 :         for(int iatom=0; iatom&lt;natoms; ++iatom) for(int k=ndim; k&lt;3; ++k) forces[iatom][k]=0.0;</span>
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span><span class="lineCov">     144600 :       for(int iatom=0; iatom&lt;natoms; iatom++) for(int k=0; k&lt;3; k++)</span>
+<span class="lineNum">     592 </span><span class="lineCov">     427200 :           velocities[iatom][k]+=forces[iatom][k]*0.5*tstep/masses[iatom];</span>
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span><span class="lineCov">       2200 :       thermostat(natoms,ndim,masses,0.5*tstep,friction,temperature,velocities,engint,random);</span>
+<span class="lineNum">     595 </span>            : 
+<span class="lineNum">     596 </span>            : // kinetic energy is calculated
+<span class="lineNum">     597 </span><span class="lineCov">       2200 :       compute_engkin(natoms,masses,velocities,engkin);</span>
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            : // eventually, write positions and statistics
+<span class="lineNum">     600 </span><span class="lineCov">       2200 :       if((istep+1)%nconfig==0) write_positions(trajfile,natoms,positions,cell,wrapatoms);</span>
+<span class="lineNum">     601 </span><span class="lineCov">       2200 :       if((istep+1)%nstat==0)   write_statistics(statfile,istep+1,tstep,natoms,ndim,engkin,engconf,engint);</span>
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            :     }
+<span class="lineNum">     604 </span>            : 
+<span class="lineNum">     605 </span>            : // call final plumed jobs
+<span class="lineNum">     606 </span>            :     plumed-&gt;cmd(&quot;runFinalJobs&quot;);
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span>            : // write final positions
+<span class="lineNum">     609 </span><span class="lineCov">          5 :     write_final_positions(outputfile,natoms,positions,cell,wrapatoms);</span>
+<span class="lineNum">     610 </span>            : 
+<span class="lineNum">     611 </span>            : // close the statistic file if it was open:
+<span class="lineNum">     612 </span><span class="lineCov">          5 :     if(write_statistics_fp) fclose(write_statistics_fp);</span>
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span><span class="lineCov">          5 :     if(plumed) delete plumed;</span>
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span><span class="lineCov">          5 :     return 0;</span>
+<span class="lineNum">     617 </span>            :   }
+<span class="lineNum">     618 </span>            : 
+<span class="lineNum">     619 </span>            : 
+<a name="620"><span class="lineNum">     620 </span>            : };</a>
+<span class="lineNum">     621 </span>            : 
+<span class="lineNum">     622 </span><span class="lineCov">       6462 : PLUMED_REGISTER_CLTOOL(SimpleMD,&quot;simplemd&quot;)</span>
+<a name="623"><span class="lineNum">     623 </span>            : </a>
+<span class="lineNum">     624 </span>            : }
+<span class="lineNum">     625 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     626 </span>            : 
+<span class="lineNum">     627 </span>            : 
+<span class="lineNum">     628 </span>            : 
+<span class="lineNum">     629 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

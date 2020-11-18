@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/ActionWithVessel.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - ActionWithVessel.h<span style="font-size: 80%;"> (source / <a href="ActionWithVessel.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryMed">82.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_vesselbase_ActionWithVessel_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_vesselbase_ActionWithVessel_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/DynamicList.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/MultiValue.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : class Value;
+<span class="lineNum">      34 </span>            : class Stopwatch;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace vesselbase {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : class Vessel;
+<span class="lineNum">      39 </span>            : class BridgeVessel;
+<span class="lineNum">      40 </span>            : class StoreDataVessel;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : /**
+<span class="lineNum">      43 </span>            : \ingroup MULTIINHERIT
+<span class="lineNum">      44 </span>            : This is used to create PLMD::Action objects that are computed by calculating the same function multiple
+<span class="lineNum">      45 </span>            : times.  This is used in PLMD::MultiColvar.
+<span class="lineNum">      46 </span>            : */
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : class ActionWithVessel : public virtual Action {
+<span class="lineNum">      49 </span>            :   friend class Vessel;
+<span class="lineNum">      50 </span>            :   friend class ShortcutVessel;
+<span class="lineNum">      51 </span>            :   friend class FunctionVessel;
+<span class="lineNum">      52 </span>            :   friend class StoreDataVessel;
+<span class="lineNum">      53 </span>            :   friend class BridgeVessel;
+<span class="lineNum">      54 </span>            :   friend class ActionWithInputVessel;
+<span class="lineNum">      55 </span>            :   friend class OrderingVessel;
+<span class="lineNum">      56 </span>            : private:
+<span class="lineNum">      57 </span>            : /// Do all calculations in serial
+<span class="lineNum">      58 </span>            :   bool serial;
+<span class="lineNum">      59 </span>            : /// Lower memory requirements
+<span class="lineNum">      60 </span>            :   bool lowmem;
+<span class="lineNum">      61 </span>            : /// Are we skipping the calculation of the derivatives
+<span class="lineNum">      62 </span>            :   bool noderiv;
+<span class="lineNum">      63 </span>            : /// This tells plumed that this is used in a bridge
+<span class="lineNum">      64 </span>            :   bool actionIsBridged;
+<span class="lineNum">      65 </span>            : /// The maximum number of derivatives we can use before we need to invoke lowmem
+<span class="lineNum">      66 </span>            :   unsigned maxderivatives;
+<span class="lineNum">      67 </span>            : /// The tolerance on the accumulators
+<span class="lineNum">      68 </span>            :   double tolerance;
+<span class="lineNum">      69 </span>            : /// Tolerance for quantities being put in neighbor lists
+<span class="lineNum">      70 </span>            :   double nl_tolerance;
+<span class="lineNum">      71 </span>            : /// Pointers to the functions we are using on each value
+<span class="lineNum">      72 </span>            :   std::vector&lt;Vessel*&gt; functions;
+<span class="lineNum">      73 </span>            : /// Tempory storage for forces
+<span class="lineNum">      74 </span>            :   std::vector&lt;double&gt; tmpforces;
+<span class="lineNum">      75 </span>            : /// Ths full list of tasks we have to perform
+<span class="lineNum">      76 </span>            :   std::vector&lt;unsigned&gt; fullTaskList;
+<span class="lineNum">      77 </span>            : /// The current number of active tasks
+<span class="lineNum">      78 </span>            :   unsigned nactive_tasks;
+<span class="lineNum">      79 </span>            : /// The indices of the tasks in the full list of tasks
+<span class="lineNum">      80 </span>            :   std::vector&lt;unsigned&gt; indexOfTaskInFullList;
+<span class="lineNum">      81 </span>            : /// The list of currently active tasks
+<span class="lineNum">      82 </span>            :   std::vector&lt;unsigned&gt; partialTaskList;
+<span class="lineNum">      83 </span>            : /// The list of atoms involved in derivatives (we keep a copy here to avoid resizing)
+<span class="lineNum">      84 </span>            :   std::vector&lt;unsigned&gt; der_list;
+<span class="lineNum">      85 </span>            : /// The buffer that we use (we keep a copy here to avoid resizing)
+<span class="lineNum">      86 </span>            :   std::vector&lt;double&gt; buffer;
+<span class="lineNum">      87 </span>            : /// Do we want to output information on the timings of different parts of the calculation
+<span class="lineNum">      88 </span>            :   bool timers;
+<span class="lineNum">      89 </span>            : /// The stopwatch that times the different parts of the calculation
+<span class="lineNum">      90 </span>            :   Stopwatch&amp; stopwatch;
+<span class="lineNum">      91 </span>            : /// These are used to minmise computational expense in complex functions
+<span class="lineNum">      92 </span>            :   bool dertime_can_be_off;
+<span class="lineNum">      93 </span>            : protected:
+<span class="lineNum">      94 </span>            : /// This is also used to minimise computational expense in complex functions
+<span class="lineNum">      95 </span>            :   bool dertime;
+<span class="lineNum">      96 </span>            : /// The terms in the series are locked
+<span class="lineNum">      97 </span>            :   bool contributorsAreUnlocked;
+<span class="lineNum">      98 </span>            : /// Does the weight have derivatives
+<span class="lineNum">      99 </span>            :   bool weightHasDerivatives;
+<span class="lineNum">     100 </span>            : /// This is used for numerical derivatives of bridge variables
+<span class="lineNum">     101 </span>            :   unsigned bridgeVariable;
+<span class="lineNum">     102 </span>            : /// A pointer to the object that stores data
+<span class="lineNum">     103 </span>            :   StoreDataVessel* mydata;
+<span class="lineNum">     104 </span>            : /// This list is used to update the neighbor list
+<span class="lineNum">     105 </span>            :   std::vector&lt;unsigned&gt; taskFlags;
+<span class="lineNum">     106 </span>            : /// Add a vessel to the list of vessels
+<span class="lineNum">     107 </span>            :   void addVessel( const std::string&amp; name, const std::string&amp; input, const int numlab=0 );
+<span class="lineNum">     108 </span>            :   void addVessel( Vessel* vv );
+<span class="lineNum">     109 </span>            : /// Add a bridging vessel to the list of vessels
+<span class="lineNum">     110 </span>            :   BridgeVessel* addBridgingVessel( ActionWithVessel* tome );
+<span class="lineNum">     111 </span>            : /// Complete the setup of this object (this routine must be called after construction of ActionWithValue)
+<span class="lineNum">     112 </span>            :   void readVesselKeywords();
+<span class="lineNum">     113 </span>            : /// Turn on the derivatives in the vessel
+<span class="lineNum">     114 </span>            :   void needsDerivatives();
+<span class="lineNum">     115 </span>            : /// Return the value of the tolerance
+<span class="lineNum">     116 </span>            :   double getTolerance() const ;
+<span class="lineNum">     117 </span>            : /// Return the value for the neighbor list tolerance
+<span class="lineNum">     118 </span>            :   double getNLTolerance() const ;
+<span class="lineNum">     119 </span>            : /// Calculate the values of all the vessels
+<span class="lineNum">     120 </span>            :   void runAllTasks();
+<span class="lineNum">     121 </span>            : /// Resize all the functions when the number of derivatives change
+<span class="lineNum">     122 </span>            :   void resizeFunctions();
+<span class="lineNum">     123 </span>            : /// This loops over all the vessels calculating them and also
+<span class="lineNum">     124 </span>            : /// sets all the element derivatives equal to zero
+<span class="lineNum">     125 </span>            :   void calculateAllVessels( const unsigned&amp; taskCode, MultiValue&amp; myvals, MultiValue&amp; bvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list );
+<span class="lineNum">     126 </span>            : /// Retrieve the forces from all the vessels (used in apply)
+<span class="lineNum">     127 </span>            :   bool getForcesFromVessels( std::vector&lt;double&gt;&amp; forcesToApply );
+<span class="lineNum">     128 </span>            : /// Is the calculation being done in serial
+<span class="lineNum">     129 </span>            :   bool serialCalculation() const;
+<span class="lineNum">     130 </span>            : /// Are we using low memory
+<span class="lineNum">     131 </span>            :   bool usingLowMem() const ;
+<span class="lineNum">     132 </span>            : /// Set that we are using low memory
+<span class="lineNum">     133 </span>            :   void setLowMemOption(const bool&amp; );
+<span class="lineNum">     134 </span>            : /// Deactivate all the tasks in the task list
+<span class="lineNum">     135 </span>            :   void deactivateAllTasks();
+<span class="lineNum">     136 </span>            : /// Get the size of the buffer
+<span class="lineNum">     137 </span>            :   unsigned getSizeOfBuffer( unsigned&amp; bufsize );
+<span class="lineNum">     138 </span>            : /// Add a task to the full list
+<span class="lineNum">     139 </span>            :   void addTaskToList( const unsigned&amp; taskCode );
+<span class="lineNum">     140 </span>            : public:
+<span class="lineNum">     141 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">     142 </span>            :   explicit ActionWithVessel(const ActionOptions&amp;ao);
+<span class="lineNum">     143 </span>            :   ~ActionWithVessel();
+<span class="lineNum">     144 </span>            :   void lockContributors();
+<span class="lineNum">     145 </span>            : /// Get the number of tasks that are currently active
+<span class="lineNum">     146 </span>            :   unsigned getCurrentNumberOfActiveTasks() const ;
+<span class="lineNum">     147 </span>            : /// Check whether or not a particular task is currently active
+<span class="lineNum">     148 </span>            :   bool taskIsCurrentlyActive( const unsigned&amp; index ) const ;
+<span class="lineNum">     149 </span>            : /// Are derivatives required for this quantity
+<a name="150"><span class="lineNum">     150 </span>            :   bool derivativesAreRequired() const ;</a>
+<span class="lineNum">     151 </span>            : /// Is this action thread safe
+<span class="lineNum">     152 </span><span class="lineCov">       5206 :   virtual bool threadSafe() const { return true; }</span>
+<span class="lineNum">     153 </span>            : /// Finish running all the calculations
+<span class="lineNum">     154 </span>            :   virtual void finishComputations( const std::vector&lt;double&gt;&amp; buffer );
+<span class="lineNum">     155 </span>            : /// Are the base quantities periodic
+<span class="lineNum">     156 </span>            :   virtual bool isPeriodic()=0;
+<span class="lineNum">     157 </span>            : /// What are the domains of the base quantities
+<span class="lineNum">     158 </span>            :   virtual void retrieveDomain( std::string&amp; min, std::string&amp; max);
+<span class="lineNum">     159 </span>            : /// Get the number of derivatives for final calculated quantity
+<span class="lineNum">     160 </span>            :   virtual unsigned getNumberOfDerivatives()=0;
+<span class="lineNum">     161 </span>            : /// Get the number of quantities that are calculated during each task
+<span class="lineNum">     162 </span>            :   virtual unsigned getNumberOfQuantities() const ;
+<span class="lineNum">     163 </span>            : /// Get the number of vessels
+<span class="lineNum">     164 </span>            :   unsigned getNumberOfVessels() const;
+<span class="lineNum">     165 </span>            : /// Get a pointer to the ith vessel
+<span class="lineNum">     166 </span>            :   Vessel* getPntrToVessel( const unsigned&amp; i );
+<span class="lineNum">     167 </span>            : /// Do any jobs that are required before the task list is undertaken
+<span class="lineNum">     168 </span>            :   virtual void doJobsRequiredBeforeTaskList();
+<span class="lineNum">     169 </span>            : /// Get the full size of the taskList dynamic list
+<span class="lineNum">     170 </span>            :   unsigned getFullNumberOfTasks() const ;
+<span class="lineNum">     171 </span>            : /// Get the position of the ith active task in the full list
+<span class="lineNum">     172 </span>            :   unsigned getPositionInFullTaskList( const unsigned&amp; ii ) const ;
+<span class="lineNum">     173 </span>            : /// Get the code for the ii th task in the list
+<span class="lineNum">     174 </span>            :   unsigned getTaskCode( const unsigned&amp; ii ) const ;
+<span class="lineNum">     175 </span>            : /// Get the ith of the currently active tasks
+<span class="lineNum">     176 </span>            :   unsigned getActiveTask( const unsigned&amp; ii ) const ;
+<span class="lineNum">     177 </span>            : /// Calculate one of the functions in the distribution
+<span class="lineNum">     178 </span>            :   virtual void performTask( const unsigned&amp;, const unsigned&amp;, MultiValue&amp; ) const=0;
+<span class="lineNum">     179 </span>            : /// Do the task if we have a bridge
+<span class="lineNum">     180 </span>            :   virtual void transformBridgedDerivatives( const unsigned&amp; current, MultiValue&amp; invals, MultiValue&amp; outvals ) const;
+<span class="lineNum">     181 </span>            : /// Ensure that data required in other vessels is stored
+<a name="182"><span class="lineNum">     182 </span>            :   StoreDataVessel* buildDataStashes( ActionWithVessel* actionThatUses );</a>
+<span class="lineNum">     183 </span>            : /// Apply forces from bridge vessel - this is rarely used - currently only in ActionVolume
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :   virtual void applyBridgeForces( const std::vector&lt;double&gt;&amp; bb ) { plumed_error(); }</span>
+<span class="lineNum">     185 </span>            : /// These are overwritten in MultiColvarFunction
+<span class="lineNum">     186 </span>            : //  virtual void activateIndexes( const unsigned&amp;, const unsigned&amp;, const std::vector&lt;unsigned&gt;&amp; ){}
+<span class="lineNum">     187 </span>            : /// Return a particular named vessel
+<span class="lineNum">     188 </span>            :   Vessel* getVesselWithName( const std::string&amp; mynam );
+<span class="lineNum">     189 </span>            : /// Does the weight have derivatives
+<span class="lineNum">     190 </span>            :   bool weightWithDerivatives() const ;
+<span class="lineNum">     191 </span>            : /// Return the position in the current task list
+<a name="192"><span class="lineNum">     192 </span>            :   unsigned getPositionInCurrentTaskList( const unsigned&amp; myind ) const ;</a>
+<a name="193"><span class="lineNum">     193 </span>            : /// These normalizes vectors and is used in StoreDataVessel</a>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :   virtual void normalizeVector( std::vector&lt;double&gt;&amp; vals ) const { plumed_error(); }</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :   virtual void normalizeVectorDerivatives( MultiValue&amp; myvals ) const { plumed_error(); }</span>
+<span class="lineNum">     196 </span>            : };
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : inline
+<span class="lineNum">     199 </span>            : double ActionWithVessel::getTolerance() const {
+<span class="lineNum">     200 </span><span class="lineCov">     712678 :   return tolerance;</span>
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : inline
+<span class="lineNum">     204 </span>            : double ActionWithVessel::getNLTolerance() const {
+<span class="lineNum">     205 </span>            :   return nl_tolerance;
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : inline
+<span class="lineNum">     209 </span>            : unsigned ActionWithVessel::getNumberOfVessels() const {
+<span class="lineNum">     210 </span><span class="lineCov">   12530151 :   return functions.size();</span>
+<span class="lineNum">     211 </span>            : }
+<a name="212"><span class="lineNum">     212 </span>            : </a>
+<span class="lineNum">     213 </span>            : inline
+<span class="lineNum">     214 </span><span class="lineCov">     194034 : unsigned ActionWithVessel::getNumberOfQuantities() const {</span>
+<span class="lineNum">     215 </span><span class="lineCov">     194034 :   return 2;</span>
+<span class="lineNum">     216 </span>            : }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : inline
+<span class="lineNum">     219 </span>            : Vessel* ActionWithVessel::getPntrToVessel( const unsigned&amp; i ) {
+<span class="lineNum">     220 </span>            :   plumed_dbg_assert( i&lt;functions.size() );
+<span class="lineNum">     221 </span><span class="lineCov">       3718 :   return functions[i];</span>
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : inline
+<span class="lineNum">     225 </span>            : unsigned ActionWithVessel::getFullNumberOfTasks() const {
+<span class="lineNum">     226 </span><span class="lineCov">   20230614 :   return fullTaskList.size();</span>
+<span class="lineNum">     227 </span>            : }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : inline
+<span class="lineNum">     230 </span>            : unsigned ActionWithVessel::getTaskCode( const unsigned&amp; ii ) const {
+<span class="lineNum">     231 </span>            :   plumed_dbg_assert( ii&lt;fullTaskList.size() );
+<span class="lineNum">     232 </span><span class="lineCov">    7018602 :   return fullTaskList[ii];</span>
+<span class="lineNum">     233 </span>            : }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : inline
+<span class="lineNum">     236 </span>            : unsigned ActionWithVessel::getCurrentNumberOfActiveTasks() const {
+<span class="lineNum">     237 </span><span class="lineCov">      28504 :   return nactive_tasks;</span>
+<span class="lineNum">     238 </span>            : }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : inline
+<span class="lineNum">     241 </span>            : unsigned ActionWithVessel::getActiveTask( const unsigned&amp; ii ) const {
+<span class="lineNum">     242 </span>            :   plumed_dbg_assert( ii&lt;nactive_tasks );
+<span class="lineNum">     243 </span><span class="lineCov">     108932 :   return partialTaskList[ii];</span>
+<span class="lineNum">     244 </span>            : }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : inline
+<span class="lineNum">     247 </span>            : unsigned ActionWithVessel::getPositionInFullTaskList( const unsigned&amp; ii ) const {
+<span class="lineNum">     248 </span>            :   plumed_dbg_assert( ii&lt;nactive_tasks );
+<span class="lineNum">     249 </span><span class="lineCov">     126939 :   return indexOfTaskInFullList[ii];</span>
+<span class="lineNum">     250 </span>            : }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : inline
+<span class="lineNum">     253 </span>            : bool ActionWithVessel::serialCalculation() const {
+<span class="lineNum">     254 </span><span class="lineCov">       1450 :   return serial;</span>
+<span class="lineNum">     255 </span>            : }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            : inline
+<span class="lineNum">     258 </span>            : bool ActionWithVessel::usingLowMem() const {
+<span class="lineNum">     259 </span>            :   return lowmem;
+<span class="lineNum">     260 </span>            : }
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            : inline
+<span class="lineNum">     263 </span>            : void ActionWithVessel::setLowMemOption(const bool&amp; l) {
+<span class="lineNum">     264 </span><span class="lineCov">         33 :   lowmem=l;</span>
+<span class="lineNum">     265 </span>            : }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            : inline
+<span class="lineNum">     268 </span>            : bool ActionWithVessel::derivativesAreRequired() const {
+<span class="lineNum">     269 </span><span class="lineCov">     644232 :   return !noderiv;</span>
+<span class="lineNum">     270 </span>            : }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : inline
+<span class="lineNum">     273 </span>            : bool ActionWithVessel::weightWithDerivatives() const {
+<span class="lineNum">     274 </span><span class="lineCov">      13612 :   return weightHasDerivatives;</span>
+<span class="lineNum">     275 </span>            : }
+<a name="276"><span class="lineNum">     276 </span>            : </a>
+<span class="lineNum">     277 </span>            : inline
+<span class="lineNum">     278 </span><span class="lineCov">     218264 : unsigned ActionWithVessel::getPositionInCurrentTaskList( const unsigned&amp; myind ) const {</span>
+<span class="lineNum">     279 </span><span class="lineCov">     436528 :   if( nactive_tasks==fullTaskList.size() ) return myind;</span>
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span><span class="lineCov">  507477438 :   for(unsigned i=0; i&lt;nactive_tasks; ++i) {</span>
+<span class="lineNum">     282 </span><span class="lineCov">  507519400 :     if( myind==indexOfTaskInFullList[i] ) return i;</span>
+<span class="lineNum">     283 </span>            :   }
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;requested task is not active&quot;);</span>
+<span class="lineNum">     285 </span>            : }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            : }
+<span class="lineNum">     288 </span>            : }
+<span class="lineNum">     289 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

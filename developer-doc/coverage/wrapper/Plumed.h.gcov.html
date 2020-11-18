@@ -1,0 +1,663 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - wrapper/Plumed.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">wrapper</a> - Plumed.h<span style="font-size: 80%;"> (source / <a href="Plumed.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_wrapper_Plumed_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_wrapper_Plumed_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /**
+<span class="lineNum">      26 </span>            : \page ReferencePlumedH Reference for interfacing MD codes with PLUMED
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            :   Plumed.h and Plumed.c contain the external plumed interface, which is used to
+<span class="lineNum">      29 </span>            :   integrate it with MD engines. This interface is very general, and is expected
+<span class="lineNum">      30 </span>            :   not to change across plumed versions. Plumed.c also implements a dummy version
+<span class="lineNum">      31 </span>            :   of the interface, so as to allow a code to be fully linked even if the plumed
+<span class="lineNum">      32 </span>            :   library is not available yet. These files could be directly included in the official
+<span class="lineNum">      33 </span>            :   host MD distribution. In this manner, it will be sufficient to link the plumed
+<span class="lineNum">      34 </span>            :   library at link time (on all systems) or directly at runtime (on system where
+<span class="lineNum">      35 </span>            :   dynamic loading is enabled) to include plumed features.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            :   Why is Plumed.c written in C and not C++? The reason is that the resulting Plumed.o
+<span class="lineNum">      38 </span>            :   needs to be linked with the host MD code immediately (whereas the rest of plumed
+<span class="lineNum">      39 </span>            :   could be linked a posteriori). Imagine the MD code is written in FORTRAN: when we
+<span class="lineNum">      40 </span>            :   link the Plumed.o file we would like not to need any C++ library linked. In this
+<span class="lineNum">      41 </span>            :   manner, we do not need to know which C++ compiler will be used to compile plumed.
+<span class="lineNum">      42 </span>            :   The C++ library is only linked to the &quot;rest&quot; of plumed, which actually use it.
+<span class="lineNum">      43 </span>            :   Anyway, Plumed.c is written in such a manner to allow its compilation also in C++
+<span class="lineNum">      44 </span>            :   (C++ is a bit stricter than C; compatibility is checked when PlumedStatic.cpp,
+<span class="lineNum">      45 </span>            :   which basically includes Plumed.c, is compiled with the C++ compiler). This will
+<span class="lineNum">      46 </span>            :   allow e.g. MD codes written in C++ to just incorporate Plumed.c (maybe renamed into
+<span class="lineNum">      47 </span>            :   Plumed.cpp), without the need of configuring a plain C compiler.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :   Plumed interface can be used from C, C++ and FORTRAN. Everything concerning plumed
+<span class="lineNum">      50 </span>            :   is hidden inside a single object type, which is described in C by a structure
+<span class="lineNum">      51 </span>            :   (struct \ref plumed), in C++ by a class (PLMD::Plumed) and in FORTRAN by a
+<span class="lineNum">      52 </span>            :   fixed-length string (CHARACTER(LEN=32)). Obviously C++ can use both struct
+<span class="lineNum">      53 </span>            :   and class interfaces, but the first should be preferred. The reference interface
+<span class="lineNum">      54 </span>            :   is the C one, whereas FORTRAN and C++ interfaces are implemented as wrappers
+<span class="lineNum">      55 </span>            :   around it.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :   In the C++ interface, all the routines are implemented as methods of PLMD::Plumed.
+<span class="lineNum">      58 </span>            :   In the C and FORTRAN interfaces, all the routines are named plumed_*, to
+<span class="lineNum">      59 </span>            :   avoid potential name clashes. Notice that the entire plumed library
+<span class="lineNum">      60 </span>            :   is implemented in C++, and it is hidden inside the PLMD namespace.
+<span class="lineNum">      61 </span>            :   If the used C++ compiler supports C++11, PLMD::Plumed object defines move semantics
+<span class="lineNum">      62 </span>            :   so as to be usable in STL containers. That is, you can declare a std::vector&lt;PLMD::Plumed&gt;.
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :   Handlers to the plumed object can be converted among different representations,
+<span class="lineNum">      65 </span>            :   to allow inter-operability among languages. In C, there are tools to convert
+<span class="lineNum">      66 </span>            :   to/from FORTRAN, whereas in C++ there are tools to convert to/from FORTRAN and C.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :   These handlers only contain a pointer to the real structure, so that
+<span class="lineNum">      69 </span>            :   when a plumed object is brought from one language to another,
+<span class="lineNum">      70 </span>            :   it brings a reference to the same environment.
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :   Moreover, to simplify life in all cases where a single Plumed object is
+<span class="lineNum">      73 </span>            :   required for the entire simulation (which covers most of the practical
+<span class="lineNum">      74 </span>            :   applications with conventional MD codes) it is possible to take advantage
+<span class="lineNum">      75 </span>            :   of a global interface, which is implicitly referring to a unique global instance.
+<span class="lineNum">      76 </span>            :   The global object should still be initialized and finalized properly.
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :   The basic method to send a message to plumed is
+<span class="lineNum">      79 </span>            : \verbatim
+<span class="lineNum">      80 </span>            :   (C) plumed_cmd
+<span class="lineNum">      81 </span>            :   (C++) PLMD::Plumed::cmd
+<span class="lineNum">      82 </span>            :   (FORTRAN)  PLUMED_F_CMD
+<span class="lineNum">      83 </span>            : \endverbatim
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :   To initialize a plumed object, use:
+<span class="lineNum">      86 </span>            : \verbatim
+<span class="lineNum">      87 </span>            :   (C)        plumed_create
+<span class="lineNum">      88 </span>            :   (C++)      (constructor of PLMD::Plumed)
+<span class="lineNum">      89 </span>            :   (FORTRAN)  PLUMED_F_CREATE
+<span class="lineNum">      90 </span>            : \endverbatim
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   To finalize it, use
+<span class="lineNum">      93 </span>            : \verbatim
+<span class="lineNum">      94 </span>            :   (C)        plumed_finalize
+<span class="lineNum">      95 </span>            :   (C++)      (destructor of PLMD::Plumed)
+<span class="lineNum">      96 </span>            :   (FORTRAN)  PLUMED_F_FINALIZE
+<span class="lineNum">      97 </span>            : \endverbatim
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   To access to the global-object, use
+<span class="lineNum">     100 </span>            : \verbatim
+<span class="lineNum">     101 </span>            :   (C)        plumed_gcreate, plumed_gfinalize, plumed_gcmd
+<span class="lineNum">     102 </span>            :   (C++)      PLMD::Plumed::gcreate, PLMD::Plumed::gfinalize, PLMD::Plumed::gcmd
+<span class="lineNum">     103 </span>            :   (FORTRAN)  PLUMED_F_GCREATE, PLUMED_F_GFINALIZE, PLUMED_F_GCMD
+<span class="lineNum">     104 </span>            : \endverbatim
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   To check if the global object has been initialized, use
+<span class="lineNum">     107 </span>            : \verbatim
+<span class="lineNum">     108 </span>            :   (C)        plumed_ginitialized
+<span class="lineNum">     109 </span>            :   (C++)      PLMD::Plumed::ginitialized
+<span class="lineNum">     110 </span>            :   (FORTRAN)  PLUMED_F_GINITIALIZED
+<span class="lineNum">     111 </span>            : \endverbatim
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :   To check if plumed library is available (this is useful for runtime linking), use
+<span class="lineNum">     114 </span>            : \verbatim
+<span class="lineNum">     115 </span>            :   (C)        plumed_installed
+<span class="lineNum">     116 </span>            :   (C++)      PLMD::Plumed::installed
+<span class="lineNum">     117 </span>            :   (FORTRAN)  PLUMED_F_INSTALLED
+<span class="lineNum">     118 </span>            : \endverbatim
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :   To convert handlers use
+<span class="lineNum">     121 </span>            : \verbatim
+<span class="lineNum">     122 </span>            :   (C)        plumed_c2f                 (C to FORTRAN)
+<span class="lineNum">     123 </span>            :   (C)        plumed_f2c                 (FORTRAN to C)
+<span class="lineNum">     124 </span>            :   (C++)      Plumed(plumed) constructor (C to C++)
+<span class="lineNum">     125 </span>            :   (C++)      operator plumed() cast     (C++ to C)
+<span class="lineNum">     126 </span>            :   (C++)      Plumed(char*)  constructor (FORTRAN to C++)
+<span class="lineNum">     127 </span>            :   (C++)      toFortran(char*)           (C++ to FORTRAN)
+<span class="lineNum">     128 </span>            : \endverbatim
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : \verbatim
+<span class="lineNum">     131 </span>            :   FORTRAN interface
+<span class="lineNum">     132 </span>            :     SUBROUTINE PLUMED_F_INSTALLED(i)
+<span class="lineNum">     133 </span>            :       INTEGER,           INTENT(OUT)   :: i
+<span class="lineNum">     134 </span>            :     SUBROUTINE PLUMED_F_GINITIALIZED(i)
+<span class="lineNum">     135 </span>            :       INTEGER,           INTENT(OUT)   :: i
+<span class="lineNum">     136 </span>            :     SUBROUTINE PLUMED_F_GCREATE()
+<span class="lineNum">     137 </span>            :     SUBROUTINE PLUMED_F_GCMD(key,val)
+<span class="lineNum">     138 </span>            :       CHARACTER(LEN=*), INTENT(IN)     :: key
+<span class="lineNum">     139 </span>            :       UNSPECIFIED_TYPE, INTENT(INOUT)  :: val(*)
+<span class="lineNum">     140 </span>            :     SUBROUTINE PLUMED_F_GFINALIZE()
+<span class="lineNum">     141 </span>            :     SUBROUTINE PLUMED_F_GLOBAL(p)
+<span class="lineNum">     142 </span>            :       CHARACTER(LEN=32), INTENT(OUT)   :: p
+<span class="lineNum">     143 </span>            :     SUBROUTINE PLUMED_F_CREATE(p)
+<span class="lineNum">     144 </span>            :       CHARACTER(LEN=32), INTENT(OUT)   :: p
+<span class="lineNum">     145 </span>            :     SUBROUTINE PLUMED_F_CMD(p,key,val)
+<span class="lineNum">     146 </span>            :       CHARACTER(LEN=32), INTENT(IN)    :: p
+<span class="lineNum">     147 </span>            :       CHARACTER(LEN=*),  INTENT(IN)    :: key
+<span class="lineNum">     148 </span>            :       UNSPECIFIED_TYPE,  INTENT(INOUT) :: val(*)
+<span class="lineNum">     149 </span>            :     SUBROUTINE PLUMED_F_FINALIZE(p)
+<span class="lineNum">     150 </span>            :       CHARACTER(LEN=32), INTENT(IN)    :: p
+<span class="lineNum">     151 </span>            : \endverbatim
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   The main routine is &quot;cmd&quot;, which accepts two arguments:
+<span class="lineNum">     154 </span>            :   key is a string containing the name of the command
+<span class="lineNum">     155 </span>            :   val is the argument. it is declared const so as to use allow passing const objects, but in practice plumed
+<span class="lineNum">     156 </span>            :       is going to modify val in several cases (using a const_cast).
+<span class="lineNum">     157 </span>            :   In some cases val can be omitted: just pass a NULL pointer (in C++, val is optional and can be omitted).
+<span class="lineNum">     158 </span>            :   The set of possible keys is the real API of the plumed library, and will be expanded with time.
+<span class="lineNum">     159 </span>            :   New commands will be added, but backward compatibility will be retained as long as possible.
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :   To pass plumed a callback function use the following syntax (not available in FORTRAN yet)
+<span class="lineNum">     162 </span>            : \verbatim
+<span class="lineNum">     163 </span>            :     plumed_function_holder ff;
+<span class="lineNum">     164 </span>            :     ff.p=your_function;
+<span class="lineNum">     165 </span>            :     plumed_cmd(plumed,&quot;xxxx&quot;,&amp;ff);
+<span class="lineNum">     166 </span>            : \endverbatim
+<span class="lineNum">     167 </span>            :   (this is passing the your_function() function to the &quot;xxxx&quot; command)
+<span class="lineNum">     168 </span>            : */
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : #ifdef __cplusplus
+<span class="lineNum">     171 </span>            : extern &quot;C&quot; {
+<span class="lineNum">     172 </span>            : #endif
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : /* Generic function pointer */
+<span class="lineNum">     175 </span>            : typedef void (*plumed_function_pointer)(void);
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : /**
+<span class="lineNum">     178 </span>            :   \brief Holder for function pointer.
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :   To pass plumed a callback function use the following syntax:
+<span class="lineNum">     181 </span>            : \verbatim
+<span class="lineNum">     182 </span>            :     plumed_function_holder ff;
+<span class="lineNum">     183 </span>            :     ff.p=your_function;
+<span class="lineNum">     184 </span>            :     plumed_cmd(plumed,&quot;xxxx&quot;,&amp;ff);
+<span class="lineNum">     185 </span>            : \endverbatim
+<span class="lineNum">     186 </span>            :   (this is going to pass the your_function() function to the &quot;xxxx&quot; command)
+<span class="lineNum">     187 </span>            : */
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : typedef struct {
+<span class="lineNum">     190 </span>            :   plumed_function_pointer p;
+<span class="lineNum">     191 </span>            : } plumed_function_holder;
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : /**
+<span class="lineNum">     194 </span>            :   \brief Main plumed object
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :   This is an object containing a Plumed instance, which should be used in
+<span class="lineNum">     197 </span>            :   the MD engine. It should first be initialized with plumed_create(),
+<span class="lineNum">     198 </span>            :   then it communicates with the MD engine using plumed_cmd(). Finally,
+<span class="lineNum">     199 </span>            :   before the termination, it should be deallocated with plumed_finalize().
+<span class="lineNum">     200 </span>            :   Its interface is very simple and general, and is expected
+<span class="lineNum">     201 </span>            :   not to change across plumed versions. See \ref ReferencePlumedH.
+<span class="lineNum">     202 </span>            : */
+<span class="lineNum">     203 </span>            : typedef struct {
+<span class="lineNum">     204 </span>            :   /**
+<span class="lineNum">     205 </span>            :     \private
+<span class="lineNum">     206 </span>            :     \brief Void pointer holding the real PlumedMain structure
+<span class="lineNum">     207 </span>            :   */
+<span class="lineNum">     208 </span>            :   void*p;
+<span class="lineNum">     209 </span>            : } plumed;
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : /** \relates plumed
+<span class="lineNum">     212 </span>            :     \brief Constructor
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :     \return The constructed plumed object
+<span class="lineNum">     215 </span>            : */
+<span class="lineNum">     216 </span>            : plumed plumed_create(void);
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : /** \relates plumed
+<span class="lineNum">     219 </span>            :     \brief Tells p to execute a command
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :     \param p The plumed object on which command is acting
+<span class="lineNum">     222 </span>            :     \param key The name of the command to be executed
+<span class="lineNum">     223 </span>            :     \param val The argument. It is declared as const to allow calls like plumed_cmd(p,&quot;A&quot;,&quot;B&quot;),
+<span class="lineNum">     224 </span>            :                but for some choice of key it can change the content
+<span class="lineNum">     225 </span>            : */
+<span class="lineNum">     226 </span>            : void plumed_cmd(plumed p,const char*key,const void*val);
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : /** \relates plumed
+<span class="lineNum">     229 </span>            :     \brief Destructor
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :     \param p The plumed object to be deallocated
+<span class="lineNum">     232 </span>            : */
+<span class="lineNum">     233 </span>            : void plumed_finalize(plumed p);
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : /** \relates plumed
+<span class="lineNum">     236 </span>            :     \brief Check if plumed is installed (for runtime binding)
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            :     \return 1 if plumed is installed, 0 otherwise
+<span class="lineNum">     239 </span>            : */
+<span class="lineNum">     240 </span>            : int plumed_installed(void);
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : /** \relates plumed
+<span class="lineNum">     243 </span>            :     \brief Retrieves an handler to the global structure.
+<span class="lineNum">     244 </span>            : */
+<span class="lineNum">     245 </span>            : plumed plumed_global(void);
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : /** \relates plumed
+<span class="lineNum">     248 </span>            :     \brief Check if the global interface has been initialized
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            :     \return 1 if plumed has been initialized, 0 otherwise
+<span class="lineNum">     251 </span>            : */
+<span class="lineNum">     252 </span>            : int plumed_ginitialized(void);
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : /* global C interface, working on a global object */
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : /** \relates plumed
+<span class="lineNum">     257 </span>            :     \brief Constructor for the global interface.
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :     \note Equivalent to plumed_create(), but initialize the static global plumed object
+<span class="lineNum">     260 </span>            : */
+<span class="lineNum">     261 </span>            : void plumed_gcreate(void);
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : /** \relates plumed
+<span class="lineNum">     264 </span>            :     \brief Tells to the global interface to execute a command.
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :     \param key The name of the command to be executed
+<span class="lineNum">     267 </span>            :     \param val The argument. It is declared as const to allow calls like plumed_gcmd(&quot;A&quot;,&quot;B&quot;),
+<span class="lineNum">     268 </span>            :                but for some choice of key it can change the content
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :     \note Equivalent to plumed_cmd(), but acting on the global plumed object.
+<span class="lineNum">     271 </span>            :           It thus does not require the plumed object to be specified.
+<span class="lineNum">     272 </span>            : */
+<span class="lineNum">     273 </span>            : void plumed_gcmd(const char* key,const void* val);
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : /** \relates plumed
+<span class="lineNum">     276 </span>            :     \brief Destructor for the global interface.
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :     \note Equivalent to plumed_finalize(), but acting on the global plumed object.
+<span class="lineNum">     279 </span>            :           It thus does not require the plumed object to be specified.
+<span class="lineNum">     280 </span>            : */
+<span class="lineNum">     281 </span>            : void plumed_gfinalize(void);
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            : /* routines to convert char handler from/to plumed objects */
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            : /** \related plumed
+<span class="lineNum">     286 </span>            :     \brief Converts a C handler to a FORTRAN handler
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :     \param p The C handler
+<span class="lineNum">     289 </span>            :     \param c The FORTRAN handler (a char[32])
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :     This function can be used to convert a plumed object created in C to
+<span class="lineNum">     292 </span>            :     a plumed handler that can be used in FORTRAN.
+<span class="lineNum">     293 </span>            : \verbatim
+<span class="lineNum">     294 </span>            : #include &lt;plumed/wrapper/Plumed.h&gt;
+<span class="lineNum">     295 </span>            : int main(int argc,char*argv[]){
+<span class="lineNum">     296 </span>            :   plumed p;
+<span class="lineNum">     297 </span>            :   p=plumed_create();
+<span class="lineNum">     298 </span>            :   char fortran_handler[32];
+<span class="lineNum">     299 </span>            :   plumed_c2f(p,fortran_handler);
+<span class="lineNum">     300 </span>            :   printf(&quot;DEBUG: this is a string representation for the plumed handler: %s\n&quot;,fortran_handler);
+<span class="lineNum">     301 </span>            :   fortran_routine(fortran_handler);
+<span class="lineNum">     302 </span>            :   plumed_finalize(p);
+<span class="lineNum">     303 </span>            :   return 0;
+<span class="lineNum">     304 </span>            : }
+<span class="lineNum">     305 </span>            : \endverbatim
+<span class="lineNum">     306 </span>            :   Here `fortran_routine` is a routine implemented in FORTRAN that manipulates the
+<span class="lineNum">     307 </span>            :   fortran_handler.
+<span class="lineNum">     308 </span>            : */
+<span class="lineNum">     309 </span>            : void   plumed_c2f(plumed p,char* c);
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            : /** \related plumed
+<span class="lineNum">     312 </span>            :     \brief Converts a FORTRAN handler to a C handler
+<span class="lineNum">     313 </span>            :     \param c The FORTRAN handler (a char[32])
+<span class="lineNum">     314 </span>            :     \return The C handler
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            :     This function can be used to convert a plumed object created in FORTRAN
+<span class="lineNum">     317 </span>            :     to a plumed handler that can be used in C.
+<span class="lineNum">     318 </span>            : \verbatim
+<span class="lineNum">     319 </span>            : void c_routine(char handler[32]){
+<span class="lineNum">     320 </span>            :   plumed p;
+<span class="lineNum">     321 </span>            :   p=plumed_f2c(handler);
+<span class="lineNum">     322 </span>            :   plumed_cmd(p,&quot;init&quot;,NULL);
+<span class="lineNum">     323 </span>            : }
+<span class="lineNum">     324 </span>            : \endverbatim
+<span class="lineNum">     325 </span>            :   Here `c_routine` is a C function that can be called from FORTRAN
+<span class="lineNum">     326 </span>            :   and interact with the provided plumed handler.
+<span class="lineNum">     327 </span>            : */
+<span class="lineNum">     328 </span>            : plumed plumed_f2c(const char* c);
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            : #ifdef __cplusplus
+<span class="lineNum">     331 </span>            : }
+<span class="lineNum">     332 </span>            : #endif
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            : #ifdef __cplusplus
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span>            : /* this is to include the NULL pointer */
+<span class="lineNum">     337 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            : /* C++ interface is hidden in PLMD namespace (same as plumed library) */
+<span class="lineNum">     340 </span>            : namespace PLMD {
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            : /**
+<span class="lineNum">     343 </span>            :   C++ wrapper for \ref plumed.
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :   This class provides a C++ interface to PLUMED.
+<span class="lineNum">     346 </span>            : */
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : class Plumed {
+<span class="lineNum">     349 </span>            :   /**
+<span class="lineNum">     350 </span>            :     C structure.
+<span class="lineNum">     351 </span>            :   */
+<span class="lineNum">     352 </span>            :   plumed main;
+<span class="lineNum">     353 </span>            :   /**
+<span class="lineNum">     354 </span>            :      keeps track if the object was created from scratch using
+<span class="lineNum">     355 </span>            :      the defaults destructor (reference=false) or if it was imported
+<span class="lineNum">     356 </span>            :      from C or FORTRAN (reference=true). In the latter case, the
+<span class="lineNum">     357 </span>            :      plumed_finalize() method is not called when destructing the object,
+<span class="lineNum">     358 </span>            :      since it is expected to be finalized in the C/FORTRAN code
+<span class="lineNum">     359 </span>            :   */
+<span class="lineNum">     360 </span>            :   bool reference;
+<span class="lineNum">     361 </span>            : public:
+<span class="lineNum">     362 </span>            :   /**
+<span class="lineNum">     363 </span>            :      Check if plumed is installed (for runtime binding)
+<span class="lineNum">     364 </span>            :      \return true if plumed is installed, false otherwise
+<span class="lineNum">     365 </span>            :      \note Equivalent to plumed_installed() but returns a bool
+<span class="lineNum">     366 </span>            :   */
+<span class="lineNum">     367 </span>            :   static bool installed();
+<span class="lineNum">     368 </span>            :   /**
+<span class="lineNum">     369 </span>            :      Check if global-plumed has been initialized
+<span class="lineNum">     370 </span>            :      \return true if global plumed object (see global()) is initialized (i.e. if gcreate() has been
+<span class="lineNum">     371 </span>            :              called), false otherwise.
+<span class="lineNum">     372 </span>            :      \note Equivalent to plumed_ginitialized() but returns a bool
+<span class="lineNum">     373 </span>            :   */
+<span class="lineNum">     374 </span>            :   static bool ginitialized();
+<span class="lineNum">     375 </span>            :   /**
+<span class="lineNum">     376 </span>            :      Initialize global-plumed.
+<span class="lineNum">     377 </span>            :      \note Equivalent to plumed_gcreate()
+<span class="lineNum">     378 </span>            :   */
+<span class="lineNum">     379 </span>            :   static void gcreate();
+<span class="lineNum">     380 </span>            :   /**
+<span class="lineNum">     381 </span>            :      Send a command to global-plumed
+<span class="lineNum">     382 </span>            :       \param key The name of the command to be executed
+<span class="lineNum">     383 </span>            :       \param val The argument. It is declared as const to allow calls like gcmd(&quot;A&quot;,&quot;B&quot;),
+<span class="lineNum">     384 </span>            :                  but for some choice of key it can change the content
+<span class="lineNum">     385 </span>            :      \note Equivalent to plumed_gcmd()
+<span class="lineNum">     386 </span>            :   */
+<span class="lineNum">     387 </span>            :   static void gcmd(const char* key,const void* val=NULL);
+<span class="lineNum">     388 </span>            :   /**
+<span class="lineNum">     389 </span>            :      Finalize global-plumed
+<span class="lineNum">     390 </span>            :   */
+<span class="lineNum">     391 </span>            :   static void gfinalize();
+<span class="lineNum">     392 </span>            :   /**
+<span class="lineNum">     393 </span>            :      Returns the Plumed global object
+<span class="lineNum">     394 </span>            :      \return The Plumed global object
+<span class="lineNum">     395 </span>            :   */
+<span class="lineNum">     396 </span>            :   static Plumed global();
+<span class="lineNum">     397 </span>            :   /**
+<span class="lineNum">     398 </span>            :      Constructor.
+<span class="lineNum">     399 </span>            :     \note Performs the same task a plumed_create()
+<span class="lineNum">     400 </span>            :   */
+<span class="lineNum">     401 </span>            :   Plumed();
+<span class="lineNum">     402 </span>            :   /**
+<span class="lineNum">     403 </span>            :      Clone a Plumed object from a FORTRAN char* handler
+<span class="lineNum">     404 </span>            :      \param c The FORTRAN handler (a char[32]).
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :    \attention The Plumed object created in this manner
+<span class="lineNum">     407 </span>            :               will not finalize the corresponding plumed structure.
+<span class="lineNum">     408 </span>            :               It is expected that the FORTRAN code calls plumed_c_finalize for it
+<span class="lineNum">     409 </span>            :   */
+<span class="lineNum">     410 </span>            : // to have maximum portability of this file I do not use the explicit keyword here
+<span class="lineNum">     411 </span>            : // I thus add a suppress command for cppcheck
+<span class="lineNum">     412 </span>            : // cppcheck-suppress noExplicitConstructor
+<span class="lineNum">     413 </span>            :   Plumed(const char*c);
+<span class="lineNum">     414 </span>            :   /**
+<span class="lineNum">     415 </span>            :      Clone a Plumed object from a C plumed structure
+<span class="lineNum">     416 </span>            :      \param p The C plumed structure.
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            :    \attention The Plumed object created in this manner
+<span class="lineNum">     419 </span>            :               will not finalize the corresponding plumed structure.
+<span class="lineNum">     420 </span>            :               It is expected that the C code calls plumed_finalize for it
+<span class="lineNum">     421 </span>            :   */
+<span class="lineNum">     422 </span>            : // to have maximum portability of this file I do not use the explicit keyword here
+<span class="lineNum">     423 </span>            : // I thus add a suppress command for cppcheck
+<span class="lineNum">     424 </span>            : // cppcheck-suppress noExplicitConstructor
+<span class="lineNum">     425 </span>            :   Plumed(plumed p);
+<span class="lineNum">     426 </span>            : private:
+<span class="lineNum">     427 </span>            :   /** Copy constructor is disabled (private and unimplemented)
+<span class="lineNum">     428 </span>            :     The problem here is that after copying it will not be clear who is
+<span class="lineNum">     429 </span>            :     going to finalize the corresponding plumed structure.
+<span class="lineNum">     430 </span>            :   */
+<span class="lineNum">     431 </span>            :   Plumed(const Plumed&amp;);
+<span class="lineNum">     432 </span>            :   /** Assignment operator is disabled (private and unimplemented)
+<span class="lineNum">     433 </span>            :     The problem here is that after copying it will not be clear who is
+<span class="lineNum">     434 </span>            :     going to finalize the corresponding plumed structure.
+<span class="lineNum">     435 </span>            :   */
+<span class="lineNum">     436 </span>            :   Plumed&amp;operator=(const Plumed&amp;);
+<span class="lineNum">     437 </span>            : public:
+<span class="lineNum">     438 </span>            :   /*
+<span class="lineNum">     439 </span>            :     PLUMED 2.4 requires a C++11 compiler.
+<span class="lineNum">     440 </span>            :     Anyway, since Plumed.h file might be redistributed with other codes
+<span class="lineNum">     441 </span>            :     and it should be possible to combine it with earlier PLUMED versions,
+<span class="lineNum">     442 </span>            :     we here explicitly check if C+11 is available before enabling move semantics.
+<span class="lineNum">     443 </span>            :     This could still create problems if a compiler 'cheats', setting  __cplusplus &gt; 199711L
+<span class="lineNum">     444 </span>            :     but not supporting move semantics. Hopefully will not happen!
+<span class="lineNum">     445 </span>            :   */
+<span class="lineNum">     446 </span>            : #if __cplusplus &gt; 199711L
+<span class="lineNum">     447 </span>            :   /** Move constructor.
+<span class="lineNum">     448 </span>            :     Only if move semantics is enabled.
+<span class="lineNum">     449 </span>            :     It allows storing PLMD::Plumed objects in STL containers.
+<span class="lineNum">     450 </span>            :   */
+<span class="lineNum">     451 </span>            :   Plumed(Plumed&amp;&amp;);
+<span class="lineNum">     452 </span>            :   /** Move assignment.
+<span class="lineNum">     453 </span>            :     Only if move semantics is enabled.
+<span class="lineNum">     454 </span>            :   */
+<span class="lineNum">     455 </span>            :   Plumed&amp; operator=(Plumed&amp;&amp;);
+<span class="lineNum">     456 </span>            : #endif
+<span class="lineNum">     457 </span>            :   /**
+<span class="lineNum">     458 </span>            :      Retrieve the C plumed structure for this object
+<span class="lineNum">     459 </span>            :   */
+<span class="lineNum">     460 </span>            :   operator plumed()const;
+<span class="lineNum">     461 </span>            :   /**
+<span class="lineNum">     462 </span>            :      Retrieve a FORTRAN handler for this object
+<span class="lineNum">     463 </span>            :       \param c The FORTRAN handler (a char[32]).
+<span class="lineNum">     464 </span>            :   */
+<span class="lineNum">     465 </span>            :   void toFortran(char*c)const;
+<span class="lineNum">     466 </span>            :   /**
+<span class="lineNum">     467 </span>            :      Send a command to this plumed object
+<span class="lineNum">     468 </span>            :       \param key The name of the command to be executed
+<span class="lineNum">     469 </span>            :       \param val The argument. It is declared as const to allow calls like p.cmd(&quot;A&quot;,&quot;B&quot;),
+<span class="lineNum">     470 </span>            :                  but for some choice of key it can change the content
+<span class="lineNum">     471 </span>            :       \note Equivalent to plumed_cmd()
+<span class="lineNum">     472 </span>            :   */
+<span class="lineNum">     473 </span>            :   void cmd(const char*key,const void*val=NULL);
+<span class="lineNum">     474 </span>            :   /**
+<span class="lineNum">     475 </span>            :      Destructor
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            :      Destructor is virtual so as to allow correct inheritance from Plumed object.
+<span class="lineNum">     478 </span>            :      To avoid linking problems with g++, I specify &quot;inline&quot; also here (in principle
+<span class="lineNum">     479 </span>            :      it should be enough to specify it down in the definition of the function, but
+<span class="lineNum">     480 </span>            :      for some reason that I do not understand g++ does not inline it properly in that
+<span class="lineNum">     481 </span>            :      case and complains when Plumed.h is included but Plumed.o is not linked. Anyway, the
+<span class="lineNum">     482 </span>            :      way it is done here seems to work properly).
+<span class="lineNum">     483 </span>            :   */
+<span class="lineNum">     484 </span>            :   inline virtual ~Plumed();
+<span class="lineNum">     485 </span>            : };
+<span class="lineNum">     486 </span>            : 
+<span class="lineNum">     487 </span>            : /* All methods are inlined so as to avoid the compilation of an extra c++ file */
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span>            : inline
+<span class="lineNum">     490 </span>            : bool Plumed::installed() {
+<span class="lineNum">     491 </span>            :   return plumed_installed();
+<span class="lineNum">     492 </span>            : }
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span>            : inline
+<span class="lineNum">     495 </span><span class="lineCov">       2115 : Plumed::Plumed():</span>
+<span class="lineNum">     496 </span>            :   main(plumed_create()),
+<span class="lineNum">     497 </span><span class="lineCov">       2115 :   reference(false)</span>
+<span class="lineNum">     498 </span>            : {}
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span>            : inline
+<span class="lineNum">     501 </span>            : Plumed::Plumed(const char*c):
+<span class="lineNum">     502 </span>            :   main(plumed_f2c(c)),
+<span class="lineNum">     503 </span>            :   reference(true)
+<span class="lineNum">     504 </span>            : {}
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            : inline
+<span class="lineNum">     507 </span>            : Plumed::Plumed(plumed p):
+<span class="lineNum">     508 </span>            :   main(p),
+<span class="lineNum">     509 </span>            :   reference(true)
+<span class="lineNum">     510 </span>            : {}
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span>            : #if __cplusplus &gt; 199711L
+<span class="lineNum">     513 </span>            : inline
+<span class="lineNum">     514 </span>            : Plumed::Plumed(Plumed&amp;&amp; p):
+<span class="lineNum">     515 </span>            :   main(p.main),
+<span class="lineNum">     516 </span>            :   reference(p.reference)
+<span class="lineNum">     517 </span>            : {
+<span class="lineNum">     518 </span>            :   p.main.p=nullptr;
+<span class="lineNum">     519 </span>            :   p.reference=true; // make sure the moved plumed is not finalized
+<span class="lineNum">     520 </span>            : }
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span>            : inline
+<span class="lineNum">     523 </span>            : Plumed&amp; Plumed::operator=(Plumed&amp;&amp; p) {
+<span class="lineNum">     524 </span>            :   if(this != &amp;p) {
+<span class="lineNum">     525 </span>            :     if(!reference) plumed_finalize(main);
+<span class="lineNum">     526 </span>            :     main=p.main;
+<span class="lineNum">     527 </span>            :     reference=p.reference;
+<span class="lineNum">     528 </span>            :     p.main.p=nullptr;
+<span class="lineNum">     529 </span>            :     p.reference=true; // make sure the moved plumed is not finalized
+<span class="lineNum">     530 </span>            :   }
+<span class="lineNum">     531 </span>            :   return *this;
+<span class="lineNum">     532 </span>            : }
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            : #endif
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            : inline
+<span class="lineNum">     537 </span>            : Plumed::operator plumed()const {
+<span class="lineNum">     538 </span>            :   return main;
+<span class="lineNum">     539 </span>            : }
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            : inline
+<span class="lineNum">     542 </span>            : void Plumed::toFortran(char*c)const {
+<span class="lineNum">     543 </span>            :   plumed_c2f(main,c);
+<span class="lineNum">     544 </span>            : }
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span>            : inline
+<span class="lineNum">     547 </span>            : void Plumed::cmd(const char*key,const void*val) {
+<span class="lineNum">     548 </span><span class="lineCov">     189456 :   plumed_cmd(main,key,val);</span>
+<span class="lineNum">     549 </span>            : }
+<a name="550"><span class="lineNum">     550 </span>            : </a>
+<span class="lineNum">     551 </span>            : inline
+<span class="lineNum">     552 </span><span class="lineCov">       4230 : Plumed::~Plumed() {</span>
+<span class="lineNum">     553 </span><span class="lineCov">       2115 :   if(!reference)plumed_finalize(main);</span>
+<span class="lineNum">     554 </span><span class="lineCov">       1603 : }</span>
+<span class="lineNum">     555 </span>            : 
+<span class="lineNum">     556 </span>            : inline
+<span class="lineNum">     557 </span>            : bool Plumed::ginitialized() {
+<span class="lineNum">     558 </span>            :   return plumed_ginitialized();
+<span class="lineNum">     559 </span>            : }
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            : inline
+<span class="lineNum">     562 </span>            : void Plumed::gcreate() {
+<span class="lineNum">     563 </span>            :   plumed_gcreate();
+<span class="lineNum">     564 </span>            : }
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span>            : inline
+<span class="lineNum">     567 </span>            : void Plumed::gcmd(const char* key,const void* val) {
+<span class="lineNum">     568 </span>            :   plumed_gcmd(key,val);
+<span class="lineNum">     569 </span>            : }
+<span class="lineNum">     570 </span>            : 
+<span class="lineNum">     571 </span>            : inline
+<span class="lineNum">     572 </span>            : void Plumed::gfinalize() {
+<span class="lineNum">     573 </span>            :   plumed_gfinalize();
+<span class="lineNum">     574 </span>            : }
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            : inline
+<span class="lineNum">     577 </span>            : Plumed Plumed::global() {
+<span class="lineNum">     578 </span>            :   return plumed_global();
+<span class="lineNum">     579 </span>            : }
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span>            : }
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            : #endif
+<span class="lineNum">     584 </span>            : 
+<span class="lineNum">     585 </span>            : 
+<span class="lineNum">     586 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

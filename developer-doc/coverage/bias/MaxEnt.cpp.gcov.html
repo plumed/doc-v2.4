@@ -1,0 +1,584 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - bias/MaxEnt.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">bias</a> - MaxEnt.cpp<span style="font-size: 80%;"> (source / <a href="MaxEnt.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">215</td>
+            <td class="headerCovTableEntry">224</td>
+            <td class="headerCovTableEntryHi">96.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryMed">89.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Bias.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      25 </span>            : #include &lt;string&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      27 </span>            : //#include &quot;ActionRegister.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      32 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //#include &quot;Analysis.h&quot;
+<span class="lineNum">      35 </span>            : //#include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      36 </span>            : //#include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      37 </span>            : //#include &quot;tools/Grid.h&quot;
+<span class="lineNum">      38 </span>            : //#include &quot;tools/KernelFunctions.h&quot;
+<span class="lineNum">      39 </span>            : //#include &quot;tools/IFile.h&quot;
+<span class="lineNum">      40 </span>            : //#include &quot;tools/OFile.h&quot;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : // The original implementation of this method was contributed
+<span class="lineNum">      43 </span>            : // by Andrea Cesari (andreacesari90@gmail.com).
+<span class="lineNum">      44 </span>            : // Copyright has been then transferred to PLUMED developers
+<span class="lineNum">      45 </span>            : // (see https://github.com/plumed/plumed2/blob/master/.github/CONTRIBUTING.md)
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : using namespace std;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : namespace PLMD {
+<span class="lineNum">      51 </span>            : namespace bias {
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : //+PLUMEDOC BIAS MAXENT
+<span class="lineNum">      54 </span>            : /*
+<span class="lineNum">      55 </span>            : Add a linear biasing potential on one or more variables \f$f_{i}\left(\boldsymbol{x}\right)\f$ satisfying the maximum entropy principle as proposed in Ref. \cite cesari2016maxent .
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \warning
+<span class="lineNum">      58 </span>            :     Notice that syntax is still under revision and might change
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : The resulting biasing potential is given by:
+<span class="lineNum">      61 </span>            : \f[
+<span class="lineNum">      62 </span>            :   V_{BIAS}(\boldsymbol{x},t)=K_{B}T\sum_{i=1}^{\#arguments}f_{i}(\boldsymbol{x},t)\lambda_{i}(t)
+<span class="lineNum">      63 </span>            : \f]
+<span class="lineNum">      64 </span>            : Lagrangian multipliers \f$ \lambda_{i}\f$ are updated, every PACE steps, according to the following update rule:
+<span class="lineNum">      65 </span>            : \f[
+<span class="lineNum">      66 </span>            : \lambda_{i}=\lambda_{i}+\frac{k_{i}}{1+\frac{t}{\tau_{i}}}\left(f_{exp,i}+\xi_{i}\lambda_{i}-f_{i}(\boldsymbol{x})\right)
+<span class="lineNum">      67 </span>            : \f]
+<span class="lineNum">      68 </span>            : \f$k\f$ set the initial value of the learning rate and its units are \f$[observable]^{-2}ps^{-1}\f$. This can be set with the keyword KAPPA.
+<span class="lineNum">      69 </span>            : The number of components for any KAPPA vector must be equal to the number of arguments of the action.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : Variable \f$ \xi_{i}(\lambda) \f$ is related to the choosen prior to model experimental errors. If a GAUSSIAN prior is used then:
+<span class="lineNum">      72 </span>            : \f[
+<span class="lineNum">      73 </span>            : \xi_{i}(\lambda)=-\lambda_{i}\sigma^{2}
+<span class="lineNum">      74 </span>            : \f]
+<span class="lineNum">      75 </span>            : where \f$ \sigma \f$ is the typical expected error on the observable \f$ f_i\f$.
+<span class="lineNum">      76 </span>            : For a LAPLACE prior:
+<span class="lineNum">      77 </span>            : \f[
+<span class="lineNum">      78 </span>            : \xi_{i}(\lambda)=-\frac{\lambda_{i}\sigma^{2}}{1-\frac{\lambda^{2}\sigma^{2}}{2}}
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : \f]
+<span class="lineNum">      81 </span>            : The value of \f$ \xi(\lambda,t)\f$ is written in output as a component named: argument name followed by the string _error.
+<span class="lineNum">      82 </span>            : Setting \f$ \sigma =0\f$ is equivalent to enforce a pure Maximum Entropy restraint without any noise modelling.
+<span class="lineNum">      83 </span>            : This method can be also used to enforce inequality restraint as shown in following examples.
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : Notice that a similar method is available as \ref EDS, although with different features and using a different optimization algorithm.
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : \par Examples
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : The following input tells plumed to restrain the distance between atoms 7 and 15
+<span class="lineNum">      90 </span>            : and the distance between atoms 2 and 19, at different equilibrium
+<span class="lineNum">      91 </span>            : values, and to print the energy of the restraint.
+<span class="lineNum">      92 </span>            : Lagrangian multiplier will be printed on a file called restraint.LAGMULT with a stride set by the variable PACE to 200ps.
+<span class="lineNum">      93 </span>            : Moreover plumed will compute the average of each lagrangian multiplier in the window [TSTART,TEND] and use that to continue the simulations with fixed Lagrangian multipliers.
+<span class="lineNum">      94 </span>            : \plumedfile
+<span class="lineNum">      95 </span>            : DISTANCE ATOMS=7,15 LABEL=d1
+<span class="lineNum">      96 </span>            : DISTANCE ATOMS=2,19 LABEL=d2
+<span class="lineNum">      97 </span>            : MAXENT ...
+<span class="lineNum">      98 </span>            : ARG=d1,d2
+<span class="lineNum">      99 </span>            : TYPE=EQUAL
+<span class="lineNum">     100 </span>            : AT=0.2,0.5
+<span class="lineNum">     101 </span>            : KAPPA=35000.0,35000.0
+<span class="lineNum">     102 </span>            : TAU=0.02,0.02
+<span class="lineNum">     103 </span>            : PACE=200
+<span class="lineNum">     104 </span>            : TSTART=100
+<span class="lineNum">     105 </span>            : TEND=500
+<span class="lineNum">     106 </span>            : LABEL=restraint
+<span class="lineNum">     107 </span>            : PRINT ARG=restraint.bias
+<span class="lineNum">     108 </span>            : ... MAXENT
+<span class="lineNum">     109 </span>            : \endplumedfile
+<span class="lineNum">     110 </span>            : Lagrangian multipliers will be printed on a file called restraint.bias
+<span class="lineNum">     111 </span>            : The following input tells plumed to restrain the distance between atoms 7 and 15
+<span class="lineNum">     112 </span>            : to be greater than 0.2 and to print the energy of the restraint
+<span class="lineNum">     113 </span>            : \plumedfile
+<span class="lineNum">     114 </span>            : DISTANCE ATOMS=7,15 LABEL=d
+<span class="lineNum">     115 </span>            : MAXENT ARG=d TYPE=INEQUAL&gt; AT=0.02 KAPPA=35000.0 TAU= LABEL=restraint
+<span class="lineNum">     116 </span>            : PRINT ARG=restraint.bias
+<span class="lineNum">     117 </span>            : \endplumedfile
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : (See also \ref DISTANCE and \ref PRINT).
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : */
+<span class="lineNum">     122 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : class MaxEnt : public Bias {
+<span class="lineNum">     125 </span>            :   std::vector&lt;double&gt; at;
+<span class="lineNum">     126 </span>            :   std::vector&lt;double&gt; kappa;
+<span class="lineNum">     127 </span>            :   std::vector&lt;double&gt; lambda;
+<span class="lineNum">     128 </span>            :   std::vector&lt;double&gt; avgx;
+<span class="lineNum">     129 </span>            :   std::vector&lt;double&gt; work;
+<span class="lineNum">     130 </span>            :   std::vector&lt;double&gt; oldlambda;
+<span class="lineNum">     131 </span>            :   std::vector&lt;double&gt; tau;
+<span class="lineNum">     132 </span>            :   std::vector&lt;double&gt; avglambda;
+<span class="lineNum">     133 </span>            :   std::vector&lt;double&gt; avglambda_restart;
+<span class="lineNum">     134 </span>            :   std::vector&lt;double&gt; expected_eps;
+<span class="lineNum">     135 </span>            :   std::vector&lt;double&gt; apply_weights;
+<span class="lineNum">     136 </span>            :   double sigma;
+<span class="lineNum">     137 </span>            :   double tstart;
+<span class="lineNum">     138 </span>            :   double tend;
+<span class="lineNum">     139 </span>            :   double avgstep; //current number of samples over which to compute the average. Check if could be replaced bu getStep()
+<span class="lineNum">     140 </span>            :   long int pace_;
+<span class="lineNum">     141 </span>            :   long int stride_;
+<span class="lineNum">     142 </span>            :   double totalWork;
+<span class="lineNum">     143 </span>            :   double BetaReweightBias;
+<span class="lineNum">     144 </span>            :   double simtemp;
+<span class="lineNum">     145 </span>            :   double reweight_bias2;
+<span class="lineNum">     146 </span>            :   vector&lt;ActionWithValue*&gt; biases;
+<span class="lineNum">     147 </span>            :   std::string type;
+<span class="lineNum">     148 </span>            :   std::string error_type;
+<span class="lineNum">     149 </span>            :   double alpha;
+<span class="lineNum">     150 </span>            :   double avg_counter;
+<span class="lineNum">     151 </span>            :   int learn_replica;
+<span class="lineNum">     152 </span>            :   Value* valueForce2;
+<span class="lineNum">     153 </span>            :   Value* valueWork;
+<span class="lineNum">     154 </span>            :   OFile lagmultOfile_;
+<span class="lineNum">     155 </span>            :   IFile ifile;
+<span class="lineNum">     156 </span>            :   string lagmultfname;
+<span class="lineNum">     157 </span>            :   string ifilesnames;
+<span class="lineNum">     158 </span>            :   string fmt;
+<span class="lineNum">     159 </span>            :   bool isFirstStep;
+<span class="lineNum">     160 </span>            :   bool reweight;
+<span class="lineNum">     161 </span>            :   bool no_broadcast;
+<span class="lineNum">     162 </span>            :   bool printFirstStep;
+<span class="lineNum">     163 </span>            :   std::vector&lt;bool&gt; done_average;
+<span class="lineNum">     164 </span>            :   int myrep,nrep;
+<span class="lineNum">     165 </span>            : public:
+<span class="lineNum">     166 </span>            :   explicit MaxEnt(const ActionOptions&amp;);
+<span class="lineNum">     167 </span>            :   ~MaxEnt();
+<span class="lineNum">     168 </span>            :   void calculate();
+<span class="lineNum">     169 </span>            :   void update();
+<span class="lineNum">     170 </span>            :   void update_lambda();
+<span class="lineNum">     171 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">     172 </span>            :   void ReadLagrangians(IFile &amp;ifile);
+<span class="lineNum">     173 </span>            :   void WriteLagrangians(vector&lt;double&gt; &amp;lagmult,OFile &amp;file);
+<span class="lineNum">     174 </span>            :   double compute_error(string &amp;err_type,double &amp;l);
+<span class="lineNum">     175 </span>            :   double convert_lambda(string &amp;type,double lold);
+<a name="176"><span class="lineNum">     176 </span>            :   void check_lambda_boundaries(string &amp;err_type,double &amp;l);</a>
+<span class="lineNum">     177 </span>            : };
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">       6502 : PLUMED_REGISTER_ACTION(MaxEnt,&quot;MAXENT&quot;)</span></a>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">         51 : void MaxEnt::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     181 </span><span class="lineCov">         51 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">     182 </span><span class="lineCov">         51 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     183 </span><span class="lineCov">        102 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineCov">        255 :   keys.add(&quot;compulsory&quot;,&quot;KAPPA&quot;,&quot;0.0&quot;,&quot;specifies the initial value for the learning rate&quot;);</span>
+<span class="lineNum">     185 </span><span class="lineCov">        204 :   keys.add(&quot;compulsory&quot;,&quot;TAU&quot;,&quot;Specify the dumping time for the learning rate.&quot;);</span>
+<span class="lineNum">     186 </span><span class="lineCov">        204 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;specify the restraint type. &quot;</span>
+<span class="lineNum">     187 </span>            :            &quot;EQAUL to restrain the variable at a given equilibrium value&quot;
+<span class="lineNum">     188 </span>            :            &quot;INEQUAL&lt; to restrain the variable to be smaller than a given value&quot;
+<span class="lineNum">     189 </span>            :            &quot;INEQUAL&gt; to restrain the variable to be greater than a given value&quot;);
+<span class="lineNum">     190 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;ERROR_TYPE&quot;,&quot;specify the prior on the error to use.&quot;</span>
+<span class="lineNum">     191 </span>            :            &quot;GAUSSIAN: use a Gaussian prior&quot;
+<span class="lineNum">     192 </span>            :            &quot;LAPLACE: use a Laplace prior&quot;);
+<span class="lineNum">     193 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;TSTART&quot;,&quot;time in ps from where to start averaging the Lagrangian multiplier. By default no average is computed, hence lambda is updated every PACE steps&quot;);</span>
+<span class="lineNum">     194 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;TEND&quot;,&quot;time in ps where to stop to compute the average of Lagrangian multiplier. From this time until the end of the simulation Lagrangian multipliers are kept fix to the average computed between TSTART and TEND;&quot;);</span>
+<span class="lineNum">     195 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;ALPHA&quot;,&quot;default=1.0; To be used with LAPLACE KEYWORD, allows to choose a prior function proportional to a Gaussian times an exponential function. ALPHA=1 correspond to the LAPLACE prior.&quot;);</span>
+<span class="lineNum">     196 </span><span class="lineCov">        204 :   keys.add(&quot;compulsory&quot;,&quot;AT&quot;,&quot;the position of the restraint&quot;);</span>
+<span class="lineNum">     197 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;SIGMA&quot;,&quot;The typical erros expected on observable&quot;);</span>
+<span class="lineNum">     198 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;FILE&quot;,&quot;Lagrangian multipliers output file. The default name is: label name followed by the string .LAGMULT &quot;);</span>
+<span class="lineNum">     199 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;LEARN_REPLICA&quot;,&quot;In a multiple replica environment specify which is the reference replica. By default replica 0 will be used.&quot;);</span>
+<span class="lineNum">     200 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;APPLY_WEIGHTS&quot;,&quot;Vector of weights containing 1 in correspondece of each replica that will receive the lagrangian multiplier from the current one.&quot;);</span>
+<span class="lineNum">     201 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;PACE&quot;,&quot;the frequency for Lagrangian multipliers update&quot;);</span>
+<span class="lineNum">     202 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;PRINT_STRIDE&quot;,&quot;stride of Lagrangian multipliers output file. If no STRIDE is passed they are written every time they are updated (PACE).&quot;);</span>
+<span class="lineNum">     203 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;FMT&quot;,&quot;specify format for Lagrangian multipliers files (usefulf to decrease the number of digits in regtests)&quot;);</span>
+<span class="lineNum">     204 </span><span class="lineCov">        153 :   keys.addFlag(&quot;REWEIGHT&quot;,false,&quot;to be used with plumed driver in order to reweight a trajectory a posteriori&quot;);</span>
+<span class="lineNum">     205 </span><span class="lineCov">        153 :   keys.addFlag(&quot;NO_BROADCAST&quot;,false,&quot;If active will avoid Lagrangian multipliers to be comunicated to other replicas.&quot;);</span>
+<span class="lineNum">     206 </span><span class="lineCov">        204 :   keys.add(&quot;optional&quot;,&quot;TEMP&quot;,&quot;the system temperature.  This is required if you are reweighting.&quot;);</span>
+<span class="lineNum">     207 </span><span class="lineCov">        204 :   keys.addOutputComponent(&quot;force2&quot;,&quot;default&quot;,&quot;the instantaneous value of the squared force due to this bias potential&quot;);</span>
+<span class="lineNum">     208 </span><span class="lineCov">        204 :   keys.addOutputComponent(&quot;work&quot;,&quot;default&quot;,&quot;the instantaneous value of the work done by the biasing force&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">        204 :   keys.addOutputComponent(&quot;_work&quot;,&quot;default&quot;,&quot;the instantaneous value of the work done by the biasing force for each argument. &quot;</span>
+<span class="lineNum">     210 </span>            :                           &quot;These quantities will named with the arguments of the bias followed by &quot;
+<span class="lineNum">     211 </span>            :                           &quot;the character string _work.&quot;);
+<span class="lineNum">     212 </span><span class="lineCov">        204 :   keys.addOutputComponent(&quot;_error&quot;,&quot;default&quot;,&quot;Instantaneous values of the discrepancy between the observable and the restraint center&quot;);</span>
+<span class="lineNum">     213 </span><span class="lineCov">        204 :   keys.addOutputComponent(&quot;_coupling&quot;,&quot;default&quot;,&quot;Instantaneous values of Lagrangian multipliers. They are also written by default in a separate output file.&quot;);</span>
+<a name="214"><span class="lineNum">     214 </span><span class="lineCov">        102 :   keys.use(&quot;RESTART&quot;);</span></a>
+<span class="lineNum">     215 </span><span class="lineCov">         51 : }</span>
+<span class="lineNum">     216 </span><span class="lineCov">        200 : MaxEnt::~MaxEnt() {</span>
+<a name="217"><span class="lineNum">     217 </span><span class="lineCov">         50 :   lagmultOfile_.close();</span></a>
+<span class="lineNum">     218 </span><span class="lineCov">        100 : }</span>
+<span class="lineNum">     219 </span><span class="lineCov">         50 : MaxEnt::MaxEnt(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     220 </span>            :   PLUMED_BIAS_INIT(ao),
+<span class="lineNum">     221 </span>            :   at(getNumberOfArguments()),
+<span class="lineNum">     222 </span>            :   kappa(getNumberOfArguments(),0.0),
+<span class="lineNum">     223 </span>            :   lambda(getNumberOfArguments(),0.0),
+<span class="lineNum">     224 </span>            :   avgx(getNumberOfArguments(),0.0),
+<span class="lineNum">     225 </span>            :   oldlambda(getNumberOfArguments(),0.0),
+<span class="lineNum">     226 </span><span class="lineCov">        100 :   tau(getNumberOfArguments(),getTimeStep()),</span>
+<span class="lineNum">     227 </span>            :   avglambda(getNumberOfArguments(),0.0),
+<span class="lineNum">     228 </span>            :   avglambda_restart(getNumberOfArguments(),0.0),
+<span class="lineNum">     229 </span>            :   expected_eps(getNumberOfArguments(),0.0),
+<span class="lineNum">     230 </span>            :   sigma(0.0),
+<span class="lineNum">     231 </span>            :   pace_(100),
+<span class="lineNum">     232 </span>            :   stride_(100),
+<span class="lineNum">     233 </span>            :   alpha(1.0),
+<span class="lineNum">     234 </span>            :   avg_counter(0.0),
+<span class="lineNum">     235 </span>            :   isFirstStep(true),
+<span class="lineNum">     236 </span>            :   reweight(false),
+<span class="lineNum">     237 </span>            :   no_broadcast(false),
+<span class="lineNum">     238 </span>            :   printFirstStep(true),
+<span class="lineNum">     239 </span><span class="lineCov">        950 :   done_average(getNumberOfArguments(),false)</span>
+<span class="lineNum">     240 </span>            : {
+<span class="lineNum">     241 </span><span class="lineCov">         50 :   if(comm.Get_rank()==0) nrep=multi_sim_comm.Get_size();</span>
+<span class="lineNum">     242 </span><span class="lineCov">         50 :   if(comm.Get_rank()==0) myrep=multi_sim_comm.Get_rank();</span>
+<span class="lineNum">     243 </span><span class="lineCov">         50 :   comm.Bcast(nrep,0);</span>
+<span class="lineNum">     244 </span><span class="lineCov">         50 :   comm.Bcast(myrep,0);</span>
+<span class="lineNum">     245 </span><span class="lineCov">        100 :   parseFlag(&quot;NO_BROADCAST&quot;,no_broadcast);</span>
+<span class="lineNum">     246 </span>            :   //if(no_broadcast){
+<span class="lineNum">     247 </span>            :   //for(int irep=0;irep&lt;nrep;irep++){
+<span class="lineNum">     248 </span>            :   //  if(irep!=myrep)
+<span class="lineNum">     249 </span>            :   //    apply_weights[irep]=0.0;}
+<span class="lineNum">     250 </span>            :   //}
+<span class="lineNum">     251 </span><span class="lineCov">         50 :   avgstep=1.0;</span>
+<span class="lineNum">     252 </span><span class="lineCov">         50 :   tstart=-1.0;</span>
+<span class="lineNum">     253 </span><span class="lineCov">         50 :   tend=-1.0;</span>
+<span class="lineNum">     254 </span><span class="lineCov">         50 :   totalWork=0.0;</span>
+<span class="lineNum">     255 </span><span class="lineCov">         50 :   learn_replica=0;</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span><span class="lineCov">        100 :   parse(&quot;LEARN_REPLICA&quot;,learn_replica);</span>
+<span class="lineNum">     258 </span><span class="lineCov">        100 :   parseVector(&quot;APPLY_WEIGHTS&quot;,apply_weights);</span>
+<span class="lineNum">     259 </span><span class="lineCov">         50 :   if(apply_weights.size()==0) apply_weights.resize(nrep,1.0);</span>
+<span class="lineNum">     260 </span><span class="lineCov">        100 :   parseVector(&quot;KAPPA&quot;,kappa);</span>
+<span class="lineNum">     261 </span><span class="lineCov">        100 :   parseVector(&quot;AT&quot;,at);</span>
+<span class="lineNum">     262 </span><span class="lineCov">        100 :   parseVector(&quot;TAU&quot;,tau);</span>
+<span class="lineNum">     263 </span><span class="lineCov">        100 :   parse(&quot;TYPE&quot;,type);</span>
+<span class="lineNum">     264 </span>            :   error_type=&quot;GAUSSIAN&quot;;
+<span class="lineNum">     265 </span><span class="lineCov">        100 :   parse(&quot;ERROR_TYPE&quot;,error_type);</span>
+<span class="lineNum">     266 </span><span class="lineCov">        100 :   parse(&quot;ALPHA&quot;,alpha);</span>
+<span class="lineNum">     267 </span><span class="lineCov">        100 :   parse(&quot;SIGMA&quot;,sigma);</span>
+<span class="lineNum">     268 </span><span class="lineCov">        100 :   parse(&quot;TSTART&quot;,tstart);</span>
+<span class="lineNum">     269 </span><span class="lineCov">         50 :   if(tstart &lt;0 &amp;&amp; tstart != -1.0) error(&quot;TSTART should be a positive number&quot;);</span>
+<span class="lineNum">     270 </span><span class="lineCov">        100 :   parse(&quot;TEND&quot;,tend);</span>
+<span class="lineNum">     271 </span><span class="lineCov">         50 :   if(tend&lt;0 &amp;&amp; tend != -1.0) error(&quot;TSTART should be a positive number&quot;);</span>
+<span class="lineNum">     272 </span><span class="lineCov">         50 :   if(tend&lt;tstart) error(&quot;TEND should be &gt;= TSTART&quot;);</span>
+<span class="lineNum">     273 </span><span class="lineCov">        100 :   lagmultfname=getLabel()+&quot;.LAGMULT&quot;;</span>
+<span class="lineNum">     274 </span><span class="lineCov">        100 :   parse(&quot;FILE&quot;,lagmultfname);</span>
+<span class="lineNum">     275 </span><span class="lineCov">        100 :   parse(&quot;FMT&quot;,fmt);</span>
+<span class="lineNum">     276 </span><span class="lineCov">        100 :   parse(&quot;PACE&quot;,pace_);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         50 :   if(pace_&lt;=0 ) error(&quot;frequency for lagrangian multipliers update (PACE) is nonsensical&quot;);</span>
+<span class="lineNum">     278 </span><span class="lineCov">         50 :   stride_=pace_;  //if no STRIDE is passed, then Lagrangian multipliers willbe printed at each update</span>
+<span class="lineNum">     279 </span><span class="lineCov">        100 :   parse(&quot;PRINT_STRIDE&quot;,stride_);</span>
+<span class="lineNum">     280 </span><span class="lineCov">         50 :   if(stride_&lt;=0 ) error(&quot;frequency for Lagrangian multipliers printing (STRIDE) is nonsensical&quot;);</span>
+<span class="lineNum">     281 </span><span class="lineCov">         50 :   simtemp=0.;</span>
+<span class="lineNum">     282 </span><span class="lineCov">        100 :   parse(&quot;TEMP&quot;,simtemp);</span>
+<span class="lineNum">     283 </span><span class="lineCov">        100 :   if(simtemp&gt;0) simtemp*=plumed.getAtoms().getKBoltzmann();</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :   else simtemp=plumed.getAtoms().getKbT();</span>
+<span class="lineNum">     285 </span><span class="lineCov">        100 :   parseFlag(&quot;REWEIGHT&quot;,reweight);</span>
+<span class="lineNum">     286 </span><span class="lineCov">         50 :   if(simtemp&lt;=0 &amp;&amp; reweight) error(&quot;Set the temperature (TEMP) if you want to do reweighting.&quot;);</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">         50 :   checkRead();</span>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineCov">         50 :   log.printf(&quot;  at&quot;);</span>
+<span class="lineNum">     291 </span><span class="lineCov">       1546 :   for(unsigned i=0; i&lt;at.size(); i++) log.printf(&quot; %f&quot;,at[i]);</span>
+<span class="lineNum">     292 </span><span class="lineCov">         50 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     293 </span><span class="lineCov">         50 :   log.printf(&quot;  with initial learning rate for optimization of&quot;);</span>
+<span class="lineNum">     294 </span><span class="lineCov">       1546 :   for(unsigned i=0; i&lt;kappa.size(); i++) log.printf(&quot; %f&quot;,kappa[i]);</span>
+<span class="lineNum">     295 </span><span class="lineCov">         50 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     296 </span><span class="lineCov">         50 :   log.printf(&quot;Dumping times for the learning rates are (ps): &quot;);</span>
+<span class="lineNum">     297 </span><span class="lineCov">       1546 :   for(unsigned i=0; i&lt;tau.size(); i++) log.printf(&quot; %f&quot;,tau[i]);</span>
+<span class="lineNum">     298 </span><span class="lineCov">         50 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     299 </span><span class="lineCov">         50 :   log.printf(&quot;Lagrangian multipliers are updated every %ld steps (PACE)\n&quot;,pace_);</span>
+<span class="lineNum">     300 </span><span class="lineCov">        100 :   log.printf(&quot;Lagrangian multipliers output file %s\n&quot;,lagmultfname.c_str());</span>
+<span class="lineNum">     301 </span><span class="lineCov">         50 :   log.printf(&quot;Lagrangian multipliers are written every %ld steps (PRINT_STRIDE)\n&quot;,stride_);</span>
+<span class="lineNum">     302 </span><span class="lineCov">         50 :   if(fmt.length()&gt;0)</span>
+<span class="lineNum">     303 </span><span class="lineCov">        100 :     log.printf(&quot;The format for real number in Lagrangian multipliers file is %s\n&quot;,fmt.c_str());</span>
+<span class="lineNum">     304 </span><span class="lineCov">         50 :   if(tstart &gt;-1.0 &amp;&amp; tend&gt;-1.0)</span>
+<span class="lineNum">     305 </span><span class="lineCov">         14 :     log.printf(&quot;Lagrangian multipliers are averaged from %lf ps to %lf ps\n&quot;,tstart,tend);</span>
+<span class="lineNum">     306 </span><span class="lineCov">         50 :   if(no_broadcast)</span>
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :     log.printf(&quot;Using NO_BROADCAST options. Lagrangian multipliers will not be comunicated to other replicas.\n&quot;);</span>
+<span class="lineNum">     308 </span>            :   //for(int irep=0;irep&lt;nrep;irep++){
+<span class="lineNum">     309 </span>            :   //  if(apply_weights[irep]!=0)
+<span class="lineNum">     310 </span>            :   //    log.printf(&quot;%d&quot;,irep);
+<span class="lineNum">     311 </span>            :   //  }
+<span class="lineNum">     312 </span><span class="lineCov">        150 :   addComponent(&quot;force2&quot;); componentIsNotPeriodic(&quot;force2&quot;);</span>
+<span class="lineNum">     313 </span><span class="lineCov">        150 :   addComponent(&quot;work&quot;); componentIsNotPeriodic(&quot;work&quot;);</span>
+<span class="lineNum">     314 </span><span class="lineCov">        100 :   valueForce2=getPntrToComponent(&quot;force2&quot;);</span>
+<span class="lineNum">     315 </span><span class="lineCov">        100 :   valueWork=getPntrToComponent(&quot;work&quot;);</span>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :   std::string comp;
+<span class="lineNum">     318 </span><span class="lineCov">       1014 :   for(unsigned i=0; i&lt; getNumberOfArguments() ; i++) {</span>
+<span class="lineNum">     319 </span><span class="lineCov">        964 :     comp=getPntrToArgument(i)-&gt;getName()+&quot;_coupling&quot;;</span>
+<span class="lineNum">     320 </span><span class="lineCov">        482 :     addComponent(comp); componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     321 </span><span class="lineCov">        964 :     comp=getPntrToArgument(i)-&gt;getName()+&quot;_work&quot;;</span>
+<span class="lineNum">     322 </span><span class="lineCov">        482 :     addComponent(comp); componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     323 </span><span class="lineCov">        964 :     work.push_back(0.); // initialize the work value</span>
+<span class="lineNum">     324 </span><span class="lineCov">        964 :     comp=getPntrToArgument(i)-&gt;getName()+&quot;_error&quot;;</span>
+<span class="lineNum">     325 </span><span class="lineCov">        482 :     addComponent(comp); componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     326 </span>            :   }
+<span class="lineNum">     327 </span>            :   string fname;
+<span class="lineNum">     328 </span>            :   fname=lagmultfname;
+<span class="lineNum">     329 </span><span class="lineCov">         50 :   ifile.link(*this);</span>
+<span class="lineNum">     330 </span><span class="lineCov">         50 :   if(ifile.FileExist(fname)) {</span>
+<span class="lineNum">     331 </span><span class="lineCov">         37 :     ifile.open(fname);</span>
+<span class="lineNum">     332 </span><span class="lineCov">         37 :     if(getRestart()) {</span>
+<span class="lineNum">     333 </span><span class="lineCov">         74 :       log.printf(&quot;  Restarting from: %s\n&quot;,fname.c_str());</span>
+<span class="lineNum">     334 </span><span class="lineCov">         37 :       ReadLagrangians(ifile);</span>
+<span class="lineNum">     335 </span><span class="lineCov">         37 :       printFirstStep=false;</span>
+<span class="lineNum">     336 </span>            :     }
+<span class="lineNum">     337 </span><span class="lineCov">         37 :     ifile.reset(false);</span>
+<span class="lineNum">     338 </span><span class="lineCov">         37 :     ifile.close();</span>
+<span class="lineNum">     339 </span>            :   }
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineCov">         50 :   lagmultOfile_.link(*this);</span>
+<span class="lineNum">     342 </span><span class="lineCov">         50 :   lagmultOfile_.open(fname);</span>
+<span class="lineNum">     343 </span><span class="lineCov">        100 :   if(fmt.length()&gt;0) {fmt=&quot; &quot;+fmt; lagmultOfile_.fmtField(fmt);}</span>
+<a name="344"><span class="lineNum">     344 </span><span class="lineCov">         50 : }</span></a>
+<span class="lineNum">     345 </span>            : ////MEMBER FUNCTIONS
+<span class="lineNum">     346 </span><span class="lineCov">         37 : void MaxEnt::ReadLagrangians(IFile &amp;ifile)</span>
+<span class="lineNum">     347 </span>            : {
+<span class="lineNum">     348 </span>            :   double dummy;
+<span class="lineNum">     349 </span><span class="lineCov">        888 :   while(ifile.scanField(&quot;time&quot;,dummy)) {</span>
+<span class="lineNum">     350 </span><span class="lineCov">       9009 :     for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) {</span>
+<span class="lineNum">     351 </span><span class="lineCov">      12903 :       ifile.scanField(getPntrToArgument(j)-&gt;getName()+&quot;_coupling&quot;,lambda[j]);</span>
+<span class="lineNum">     352 </span><span class="lineCov">       4301 :       if(dummy&gt;=tstart &amp;&amp; dummy &lt;=tend)</span>
+<span class="lineNum">     353 </span><span class="lineCov">         84 :         avglambda[j]+=lambda[j];</span>
+<span class="lineNum">     354 </span><span class="lineCov">       4301 :       if(dummy&gt;=tend) {</span>
+<span class="lineNum">     355 </span><span class="lineCov">       4231 :         avglambda[j]=lambda[j];</span>
+<span class="lineNum">     356 </span>            :         done_average[j]=true;
+<span class="lineNum">     357 </span>            :       }
+<span class="lineNum">     358 </span>            :     }
+<span class="lineNum">     359 </span><span class="lineCov">        407 :     if(dummy&gt;=tstart &amp;&amp; dummy &lt;=tend)</span>
+<span class="lineNum">     360 </span><span class="lineCov">          6 :       avg_counter++;</span>
+<span class="lineNum">     361 </span><span class="lineCov">        407 :     ifile.scanField();</span>
+<a name="362"><span class="lineNum">     362 </span>            :   }</a>
+<span class="lineNum">     363 </span><span class="lineCov">         37 : }</span>
+<span class="lineNum">     364 </span><span class="lineCov">        550 : void MaxEnt::WriteLagrangians(vector&lt;double&gt; &amp;lagmult,OFile &amp;file) {</span>
+<span class="lineNum">     365 </span><span class="lineCov">        550 :   if(printFirstStep) {</span>
+<span class="lineNum">     366 </span><span class="lineCov">        143 :     unsigned ncv=getNumberOfArguments();</span>
+<span class="lineNum">     367 </span><span class="lineCov">        286 :     file.printField(&quot;time&quot;,getTimeStep()*getStep());</span>
+<span class="lineNum">     368 </span><span class="lineCov">       2145 :     for(unsigned i=0; i&lt;ncv; ++i)</span>
+<span class="lineNum">     369 </span><span class="lineCov">       4004 :       file.printField(getPntrToArgument(i)-&gt;getName()+&quot;_coupling&quot;,lagmult[i]);</span>
+<span class="lineNum">     370 </span><span class="lineCov">        143 :     file.printField();</span>
+<span class="lineNum">     371 </span>            :   } else {
+<span class="lineNum">     372 </span><span class="lineCov">        407 :     if(!isFirstStep) {</span>
+<span class="lineNum">     373 </span><span class="lineCov">        370 :       unsigned ncv=getNumberOfArguments();</span>
+<span class="lineNum">     374 </span><span class="lineCov">        740 :       file.printField(&quot;time&quot;,getTimeStep()*getStep());</span>
+<span class="lineNum">     375 </span><span class="lineCov">       8190 :       for(unsigned i=0; i&lt;ncv; ++i)</span>
+<span class="lineNum">     376 </span><span class="lineCov">      15640 :         file.printField(getPntrToArgument(i)-&gt;getName()+&quot;_coupling&quot;,lagmult[i]);</span>
+<span class="lineNum">     377 </span><span class="lineCov">        370 :       file.printField();</span>
+<span class="lineNum">     378 </span>            :     }
+<a name="379"><span class="lineNum">     379 </span>            :   }</a>
+<span class="lineNum">     380 </span><span class="lineCov">        550 : }</span>
+<span class="lineNum">     381 </span><span class="lineCov">       5302 : double MaxEnt::compute_error(string &amp;err_type,double &amp;l) {</span>
+<span class="lineNum">     382 </span><span class="lineCov">       5302 :   double sigma2=pow(sigma,2.0);</span>
+<span class="lineNum">     383 </span><span class="lineCov">       5302 :   double l2=convert_lambda(type,l);</span>
+<span class="lineNum">     384 </span>            :   double return_error=0;
+<span class="lineNum">     385 </span><span class="lineCov">       5302 :   if(err_type==&quot;GAUSSIAN&quot; &amp;&amp; sigma!=0.0)</span>
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :     return_error=-l2*sigma2;</span>
+<span class="lineNum">     387 </span>            :   else {
+<span class="lineNum">     388 </span><span class="lineCov">       5302 :     if(err_type==&quot;LAPLACE&quot; &amp;&amp; sigma!=0) {</span>
+<span class="lineNum">     389 </span><span class="lineCov">       5302 :       return_error=-l2*sigma2/(1.0-l2*l2*sigma2/(alpha+1));</span>
+<span class="lineNum">     390 </span>            :     }
+<span class="lineNum">     391 </span>            :   }
+<a name="392"><span class="lineNum">     392 </span><span class="lineCov">       5302 :   return return_error;</span></a>
+<span class="lineNum">     393 </span>            : }
+<span class="lineNum">     394 </span><span class="lineCov">     119118 : double MaxEnt::convert_lambda(string &amp;type,double lold) {</span>
+<span class="lineNum">     395 </span>            :   double return_lambda=0;
+<span class="lineNum">     396 </span><span class="lineCov">     119118 :   if(type==&quot;EQUAL&quot;)</span>
+<span class="lineNum">     397 </span>            :     return_lambda=lold;
+<span class="lineNum">     398 </span>            :   else {
+<span class="lineNum">     399 </span><span class="lineCov">       5302 :     if(type==&quot;INEQUAL&gt;&quot;) {</span>
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :       if(lold&gt;0.0)</span>
+<span class="lineNum">     401 </span>            :         return_lambda=0.0;
+<span class="lineNum">     402 </span>            :       else
+<span class="lineNum">     403 </span>            :         return_lambda=lold;
+<span class="lineNum">     404 </span>            :     }
+<span class="lineNum">     405 </span>            :     else {
+<span class="lineNum">     406 </span><span class="lineCov">       5302 :       if(type==&quot;INEQUAL&lt;&quot;) {</span>
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :         if(lold&lt;0.0)</span>
+<span class="lineNum">     408 </span>            :           return_lambda=0.0;
+<span class="lineNum">     409 </span>            :         else
+<span class="lineNum">     410 </span>            :           return_lambda=lold;
+<span class="lineNum">     411 </span>            :       }
+<span class="lineNum">     412 </span>            :     }
+<span class="lineNum">     413 </span>            :   }
+<a name="414"><span class="lineNum">     414 </span><span class="lineCov">     119118 :   return return_lambda;</span></a>
+<span class="lineNum">     415 </span>            : }
+<span class="lineNum">     416 </span><span class="lineCov">       5302 : void MaxEnt::check_lambda_boundaries(string &amp;err_type,double &amp;l) {</span>
+<span class="lineNum">     417 </span><span class="lineCov">       5302 :   if(err_type==&quot;LAPLACE&quot; &amp;&amp; sigma !=0 ) {</span>
+<span class="lineNum">     418 </span><span class="lineCov">       5302 :     double l2=convert_lambda(err_type,l);</span>
+<span class="lineNum">     419 </span><span class="lineCov">       5302 :     if(l2 &lt;-(sqrt(alpha+1)/sigma-0.01)) {</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :       l=-(sqrt(alpha+1)/sigma-0.01);</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :       log.printf(&quot;Lambda exceeded the allowed range\n&quot;);</span>
+<span class="lineNum">     422 </span>            :     }
+<span class="lineNum">     423 </span><span class="lineCov">       5302 :     if(l2&gt;(sqrt(alpha+1)/sigma-0.01)) {</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :       l=sqrt(alpha+1)/sigma-0.01;</span>
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :       log.printf(&quot;Lambda exceeded the allowed range\n&quot;);</span>
+<span class="lineNum">     426 </span>            :     }
+<span class="lineNum">     427 </span>            :   }
+<a name="428"><span class="lineNum">     428 </span><span class="lineCov">       5302 : }</span></a>
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span><span class="lineCov">        550 : void MaxEnt::update_lambda() {</span>
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :   double totalWork_=0.0;
+<span class="lineNum">     433 </span><span class="lineCov">        550 :   const double time=getTime();</span>
+<span class="lineNum">     434 </span><span class="lineCov">        550 :   const double step=getStep();</span>
+<span class="lineNum">     435 </span><span class="lineCov">        550 :   double KbT=simtemp;</span>
+<span class="lineNum">     436 </span>            :   double learning_rate;
+<span class="lineNum">     437 </span><span class="lineCov">        550 :   if(reweight)</span>
+<span class="lineNum">     438 </span><span class="lineCov">        396 :     BetaReweightBias=plumed.getBias()/KbT;</span>
+<span class="lineNum">     439 </span>            :   else
+<span class="lineNum">     440 </span><span class="lineCov">        154 :     BetaReweightBias=0.0;</span>
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span><span class="lineCov">      11154 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     443 </span><span class="lineCov">      10604 :     const double k=kappa[i];</span>
+<span class="lineNum">     444 </span><span class="lineCov">      10604 :     double cv=(getArgument(i)+compute_error(error_type,lambda[i])-at[i]);</span>
+<span class="lineNum">     445 </span><span class="lineCov">       5302 :     if(reweight)</span>
+<span class="lineNum">     446 </span><span class="lineCov">       4224 :       learning_rate=1.0*k/(1+step/tau[i]);</span>
+<span class="lineNum">     447 </span>            :     else
+<span class="lineNum">     448 </span><span class="lineCov">       1078 :       learning_rate=1.0*k/(1+time/tau[i]);</span>
+<span class="lineNum">     449 </span><span class="lineCov">      10604 :     lambda[i]+=learning_rate*cv*exp(-BetaReweightBias); //update Lagrangian multipliers and reweight them if REWEIGHT is set</span>
+<span class="lineNum">     450 </span><span class="lineCov">       5302 :     check_lambda_boundaries(error_type,lambda[i]);      //check that Lagrangians multipliers not exceed the allowed range</span>
+<span class="lineNum">     451 </span><span class="lineCov">       5890 :     if(time&gt;=tstart &amp;&amp; time &lt;=tend &amp;&amp; !done_average[i]) {</span>
+<span class="lineNum">     452 </span><span class="lineCov">       1092 :       avglambda[i]+=convert_lambda(type,lambda[i]); //compute the average of Lagrangian multipliers over the required time window</span>
+<span class="lineNum">     453 </span>            :     }
+<span class="lineNum">     454 </span><span class="lineCov">       5302 :     if(time&gt;=tend &amp;&amp; tend &gt;=0) { //setting tend&lt;0 will disable this feature</span>
+<span class="lineNum">     455 </span><span class="lineCov">         98 :       if(!done_average[i]) {</span>
+<span class="lineNum">     456 </span><span class="lineCov">         91 :         avglambda[i]=avglambda[i]/avg_counter;</span>
+<span class="lineNum">     457 </span>            :         done_average[i]=true;
+<span class="lineNum">     458 </span><span class="lineCov">         91 :         lambda[i]=avglambda[i];</span>
+<span class="lineNum">     459 </span>            :       }
+<span class="lineNum">     460 </span>            :       else
+<span class="lineNum">     461 </span><span class="lineCov">          7 :         lambda[i]=avglambda[i]; //keep Lagrangian multipliers fixed to the previously computed average.</span>
+<span class="lineNum">     462 </span>            :     }
+<span class="lineNum">     463 </span><span class="lineCov">      21208 :     work[i]+=(convert_lambda(type,lambda[i])-oldlambda[i])*getArgument(i); //compute the work performed in updating lambda</span>
+<span class="lineNum">     464 </span><span class="lineCov">       5302 :     totalWork_+=work[i];</span>
+<span class="lineNum">     465 </span><span class="lineCov">       5302 :     totalWork=totalWork_;</span>
+<span class="lineNum">     466 </span><span class="lineCov">      10604 :     oldlambda[i]=convert_lambda(type,lambda[i]);</span>
+<span class="lineNum">     467 </span>            :   };
+<span class="lineNum">     468 </span><span class="lineCov">        550 :   if(time&gt;=tstart &amp;&amp; time &lt;=tend)</span>
+<span class="lineNum">     469 </span><span class="lineCov">         84 :     avg_counter++;</span>
+<a name="470"><span class="lineNum">     470 </span><span class="lineCov">        550 : }</span></a>
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span><span class="lineCov">       5050 : void MaxEnt::calculate() {</span>
+<span class="lineNum">     473 </span>            :   double totf2=0.0;
+<span class="lineNum">     474 </span>            :   double ene=0.0;
+<span class="lineNum">     475 </span><span class="lineCov">       5050 :   double KbT=simtemp;</span>
+<span class="lineNum">     476 </span><span class="lineCov">     102414 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     477 </span><span class="lineCov">     194728 :     getPntrToComponent(getPntrToArgument(i)-&gt;getName()+&quot;_error&quot;)-&gt;set(expected_eps[i]);</span>
+<span class="lineNum">     478 </span><span class="lineCov">     146046 :     getPntrToComponent(getPntrToArgument(i)-&gt;getName()+&quot;_work&quot;)-&gt;set(work[i]);</span>
+<span class="lineNum">     479 </span><span class="lineCov">      48682 :     valueWork-&gt;set(totalWork);</span>
+<span class="lineNum">     480 </span><span class="lineCov">     146046 :     getPntrToComponent(getPntrToArgument(i)-&gt;getName()+&quot;_coupling&quot;)-&gt;set(lambda[i]);</span>
+<span class="lineNum">     481 </span><span class="lineCov">     146046 :     const double f=-KbT*convert_lambda(type,lambda[i])*apply_weights[myrep];</span>
+<span class="lineNum">     482 </span><span class="lineCov">      48682 :     totf2+=f*f;</span>
+<span class="lineNum">     483 </span><span class="lineCov">     146046 :     ene+=KbT*convert_lambda(type,lambda[i])*getArgument(i)*apply_weights[myrep];</span>
+<span class="lineNum">     484 </span><span class="lineCov">      48682 :     setOutputForce(i,f);</span>
+<span class="lineNum">     485 </span>            :   }
+<span class="lineNum">     486 </span>            :   setBias(ene);
+<span class="lineNum">     487 </span><span class="lineCov">       5050 :   valueForce2-&gt;set(totf2);</span>
+<a name="488"><span class="lineNum">     488 </span><span class="lineCov">       5050 : }</span></a>
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span><span class="lineCov">       5050 : void MaxEnt::update() {</span>
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span><span class="lineCov">       5050 :   if(getStep()%stride_ == 0)</span>
+<span class="lineNum">     493 </span><span class="lineCov">        550 :     WriteLagrangians(lambda,lagmultOfile_);</span>
+<span class="lineNum">     494 </span><span class="lineCov">       5050 :   if(getStep()%pace_ == 0) {</span>
+<span class="lineNum">     495 </span><span class="lineCov">        550 :     update_lambda();</span>
+<span class="lineNum">     496 </span><span class="lineCov">        550 :     if(!no_broadcast) {</span>
+<span class="lineNum">     497 </span><span class="lineCov">        550 :       if(comm.Get_rank()==0) //Comunicate Lagrangian multipliers from reference replica to higher ones</span>
+<span class="lineNum">     498 </span><span class="lineCov">        462 :         multi_sim_comm.Bcast(lambda,learn_replica);</span>
+<span class="lineNum">     499 </span>            :     }
+<span class="lineNum">     500 </span><span class="lineCov">        550 :     comm.Bcast(lambda,0);</span>
+<span class="lineNum">     501 </span>            :   }
+<span class="lineNum">     502 </span><span class="lineCov">       5050 :   isFirstStep=false;</span>
+<span class="lineNum">     503 </span><span class="lineCov">       5050 : }</span>
+<span class="lineNum">     504 </span>            : 
+<a name="505"><span class="lineNum">     505 </span>            : }</a>
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

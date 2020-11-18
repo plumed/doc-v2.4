@@ -1,0 +1,493 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/PlumedMain.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - PlumedMain.h<span style="font-size: 80%;"> (source / <a href="PlumedMain.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_core_PlumedMain_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_core_PlumedMain_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;WithCmd.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      29 </span>            : #include &lt;set&gt;
+<span class="lineNum">      30 </span>            : #include &lt;stack&gt;
+<span class="lineNum">      31 </span>            : #include &lt;map&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : // !!!!!!!!!!!!!!!!!!!!!!    DANGER   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+<span class="lineNum">      34 </span>            : // THE FOLLOWING ARE DEFINITIONS WHICH ARE NECESSARY FOR DYNAMIC LOADING OF THE PLUMED KERNEL:
+<span class="lineNum">      35 </span>            : // This section should be consistent with the Plumed.h file.
+<span class="lineNum">      36 </span>            : // Since the Plumed.h file may be included in host MD codes, **NEVER** MODIFY THE CODE DOWN HERE
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : /* Generic function pointer */
+<span class="lineNum">      39 </span>            : typedef void (*plumed_function_pointer)(void);
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : /* Holder for function pointer */
+<span class="lineNum">      42 </span>            : typedef struct {
+<span class="lineNum">      43 </span>            :   plumed_function_pointer p;
+<span class="lineNum">      44 </span>            : } plumed_function_holder;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : // END OF DANGER
+<span class="lineNum">      47 </span>            : ////////////////////////////////////////////////////////////
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : namespace PLMD {
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : class ActionAtomistic;
+<span class="lineNum">      54 </span>            : class ActionPilot;
+<span class="lineNum">      55 </span>            : class Log;
+<span class="lineNum">      56 </span>            : class Atoms;
+<span class="lineNum">      57 </span>            : class ActionSet;
+<span class="lineNum">      58 </span>            : class DLLoader;
+<span class="lineNum">      59 </span>            : class Communicator;
+<span class="lineNum">      60 </span>            : class Stopwatch;
+<span class="lineNum">      61 </span>            : class Citations;
+<span class="lineNum">      62 </span>            : class ExchangePatterns;
+<span class="lineNum">      63 </span>            : class FileBase;
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : /**
+<span class="lineNum">      66 </span>            : Main plumed object.
+<span class="lineNum">      67 </span>            : In MD engines this object is not manipulated directly but it is wrapped in
+<span class="lineNum">      68 </span>            : plumed or PLMD::Plumed objects. Its main method is cmd(),
+<span class="lineNum">      69 </span>            : which defines completely the external plumed interface.
+<span class="lineNum">      70 </span>            : It does not contain any static data.
+<span class="lineNum">      71 </span>            : */
+<span class="lineNum">      72 </span>            : class PlumedMain:
+<span class="lineNum">      73 </span>            :   public WithCmd
+<span class="lineNum">      74 </span>            : {
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span>            : /// Communicator for plumed.
+<span class="lineNum">      77 </span>            : /// Includes all the processors used by plumed.
+<span class="lineNum">      78 </span>            :   Communicator&amp;comm;
+<span class="lineNum">      79 </span>            :   Communicator&amp;multi_sim_comm;
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : private:
+<span class="lineNum">      82 </span>            :   DLLoader&amp; dlloader;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :   WithCmd* cltool;
+<span class="lineNum">      85 </span>            :   Stopwatch&amp; stopwatch;
+<span class="lineNum">      86 </span>            :   WithCmd* grex;
+<span class="lineNum">      87 </span>            : /// Flag to avoid double initialization
+<span class="lineNum">      88 </span>            :   bool  initialized;
+<span class="lineNum">      89 </span>            : /// Name of MD engine
+<span class="lineNum">      90 </span>            :   std::string MDEngine;
+<span class="lineNum">      91 </span>            : /// Log stream
+<span class="lineNum">      92 </span>            :   Log&amp; log;
+<span class="lineNum">      93 </span>            : /// tools/Citations.holder
+<span class="lineNum">      94 </span>            :   Citations&amp; citations;
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : /// Present step number.
+<span class="lineNum">      97 </span>            :   long int step;
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : /// Condition for plumed to be active.
+<span class="lineNum">     100 </span>            : /// At every step, PlumedMain is checking if there are Action's requiring some work.
+<span class="lineNum">     101 </span>            : /// If at least one Action requires some work, this variable is set to true.
+<span class="lineNum">     102 </span>            :   bool active;
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : /// Name of the input file
+<span class="lineNum">     105 </span>            :   std::string plumedDat;
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : /// End of input file.
+<span class="lineNum">     108 </span>            : /// Set to true to terminate reading
+<span class="lineNum">     109 </span>            :   bool endPlumed;
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : /// Object containing information about atoms (such as positions,...).
+<span class="lineNum">     112 </span>            :   Atoms&amp;    atoms;           // atomic coordinates
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : /// Set of actions found in plumed.dat file
+<span class="lineNum">     115 </span>            :   ActionSet&amp; actionSet;
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : /// Set of Pilot actions.
+<span class="lineNum">     118 </span>            : /// These are the action the, if they are Pilot::onStep(), can trigger execution
+<span class="lineNum">     119 </span>            :   std::vector&lt;ActionPilot*&gt; pilots;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : /// Suffix string for file opening, useful for multiple simulations in the same directory
+<span class="lineNum">     122 </span>            :   std::string suffix;
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : /// The total bias (=total energy of the restraints)
+<span class="lineNum">     125 </span>            :   double bias;
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : /// The total work.
+<span class="lineNum">     128 </span>            : /// This computed by accumulating the change in external potentials.
+<span class="lineNum">     129 </span>            :   double work;
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : /// Class of possible exchange patterns, used for BIASEXCHANGE but also for future parallel tempering
+<span class="lineNum">     132 </span>            :   ExchangePatterns&amp; exchangePatterns;
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : /// Set to true if on an exchange step
+<span class="lineNum">     135 </span>            :   bool exchangeStep;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : /// Flag for restart
+<span class="lineNum">     138 </span>            :   bool restart;
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : /// Flag for checkpointig
+<span class="lineNum">     141 </span>            :   bool doCheckPoint;
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :   std::set&lt;FileBase*&gt; files;
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : /// Stuff to make plumed stop the MD code cleanly
+<span class="lineNum">     146 </span>            :   int* stopFlag;
+<span class="lineNum">     147 </span>            :   bool stopNow;
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : /// Stack for update flags.
+<span class="lineNum">     150 </span>            : /// Store information used in class \ref generic::UpdateIf
+<span class="lineNum">     151 </span>            :   std::stack&lt;bool&gt; updateFlags;
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : public:
+<span class="lineNum">     154 </span>            : /// Flag to switch off virial calculation (for debug and MD codes with no barostat)
+<span class="lineNum">     155 </span>            :   bool novirial;
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : /// Flag to switch on detailed timers
+<span class="lineNum">     158 </span>            :   bool detailedTimers;
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : /// Generic map string -&gt; double
+<span class="lineNum">     161 </span>            : /// intended to pass information across Actions
+<span class="lineNum">     162 </span>            :   std::map&lt;std::string,double&gt; passMap;
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : /// Add a citation, returning a string containing the reference number, something like &quot;[10]&quot;
+<span class="lineNum">     165 </span>            :   std::string cite(const std::string&amp;);
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : /// Get number of threads that can be used by openmp
+<span class="lineNum">     168 </span>            :   unsigned getNumThreads()const;
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : /// Get a reasonable number of threads so as to access to an array of size s located at x
+<span class="lineNum">     171 </span>            :   template&lt;typename T&gt;
+<span class="lineNum">     172 </span>            :   unsigned getGoodNumThreads(const T*x,unsigned s)const;
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : /// Get a reasonable number of threads so as to access to vector v;
+<span class="lineNum">     175 </span>            :   template&lt;typename T&gt;
+<span class="lineNum">     176 </span>            :   unsigned getGoodNumThreads(const std::vector&lt;T&gt; &amp; v)const;
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : public:
+<span class="lineNum">     179 </span>            :   PlumedMain();
+<span class="lineNum">     180 </span>            : // this is to access to WithCmd versions of cmd (allowing overloading of a virtual method)
+<span class="lineNum">     181 </span>            :   using WithCmd::cmd;
+<span class="lineNum">     182 </span>            :   /**
+<span class="lineNum">     183 </span>            :    cmd method, accessible with standard Plumed.h interface.
+<span class="lineNum">     184 </span>            :    \param key The name of the command to be executed.
+<span class="lineNum">     185 </span>            :    \param val The argument of the command to be executed.
+<span class="lineNum">     186 </span>            :    It is called as plumed_cmd() or as PLMD::Plumed::cmd()
+<span class="lineNum">     187 </span>            :    It is the interpreter for plumed commands. It basically contains the definition of the plumed interface.
+<span class="lineNum">     188 </span>            :    If you want to add a new functionality to the interface between plumed
+<span class="lineNum">     189 </span>            :    and an MD engine, this is the right place
+<span class="lineNum">     190 </span>            :    Notice that this interface should always keep retro-compatibility
+<span class="lineNum">     191 </span>            :   */
+<span class="lineNum">     192 </span>            :   void cmd(const std::string&amp;key,void*val=NULL);
+<span class="lineNum">     193 </span>            :   ~PlumedMain();
+<span class="lineNum">     194 </span>            :   /**
+<span class="lineNum">     195 </span>            :     Read an input file.
+<span class="lineNum">     196 </span>            :     \param str name of the file
+<span class="lineNum">     197 </span>            :   */
+<span class="lineNum">     198 </span>            :   void readInputFile(std::string str);
+<span class="lineNum">     199 </span>            :   /**
+<span class="lineNum">     200 </span>            :     Read an input string.
+<span class="lineNum">     201 </span>            :     \param str name of the string
+<span class="lineNum">     202 </span>            :   */
+<span class="lineNum">     203 </span>            :   void readInputWords(const std::vector&lt;std::string&gt; &amp;  str);
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :   /**
+<span class="lineNum">     206 </span>            :     Read an input string.
+<span class="lineNum">     207 </span>            :     \param str name of the string
+<span class="lineNum">     208 </span>            :     At variance with readInputWords(), this is splitting the string into words
+<span class="lineNum">     209 </span>            :   */
+<span class="lineNum">     210 </span>            :   void readInputLine(const std::string &amp; str);
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :   /**
+<span class="lineNum">     213 </span>            :     Initialize the object.
+<span class="lineNum">     214 </span>            :     Should be called once.
+<span class="lineNum">     215 </span>            :   */
+<span class="lineNum">     216 </span>            :   void init();
+<span class="lineNum">     217 </span>            :   /**
+<span class="lineNum">     218 </span>            :     Prepare the calculation.
+<span class="lineNum">     219 </span>            :     Here it is checked which are the active Actions and communication of the relevant atoms is initiated.
+<span class="lineNum">     220 </span>            :     Shortcut for prepareDependencies() + shareData()
+<span class="lineNum">     221 </span>            :   */
+<span class="lineNum">     222 </span>            :   void prepareCalc();
+<span class="lineNum">     223 </span>            :   /**
+<span class="lineNum">     224 </span>            :     Prepare the list of active Actions and needed atoms.
+<span class="lineNum">     225 </span>            :     Scan the Actions to see which are active and which are not, so as to prepare a list of
+<span class="lineNum">     226 </span>            :     the atoms needed at this step.
+<span class="lineNum">     227 </span>            :   */
+<span class="lineNum">     228 </span>            :   void prepareDependencies();
+<span class="lineNum">     229 </span>            :   /**
+<span class="lineNum">     230 </span>            :     Share the needed atoms.
+<span class="lineNum">     231 </span>            :     In asynchronous implementations, this method sends the required atoms to all the plumed processes,
+<span class="lineNum">     232 </span>            :     without waiting for the communication to complete.
+<span class="lineNum">     233 </span>            :   */
+<span class="lineNum">     234 </span>            :   void shareData();
+<span class="lineNum">     235 </span>            :   /**
+<span class="lineNum">     236 </span>            :     Perform the calculation.
+<span class="lineNum">     237 </span>            :     Shortcut for waitData() + justCalculate() + justApply().
+<span class="lineNum">     238 </span>            :     Equivalently: waitData() + justCalculate() + backwardPropagate() + update().
+<span class="lineNum">     239 </span>            :   */
+<span class="lineNum">     240 </span>            :   void performCalc();
+<span class="lineNum">     241 </span>            :   /**
+<span class="lineNum">     242 </span>            :     Perform the calculation without update()
+<span class="lineNum">     243 </span>            :     Shortcut for: waitData() + justCalculate() + backwardPropagate()
+<span class="lineNum">     244 </span>            :   */
+<span class="lineNum">     245 </span>            :   void performCalcNoUpdate();
+<span class="lineNum">     246 </span>            :   /**
+<span class="lineNum">     247 </span>            :     Complete PLUMED calculation.
+<span class="lineNum">     248 </span>            :     Shortcut for prepareCalc() + performCalc()
+<span class="lineNum">     249 </span>            :   */
+<span class="lineNum">     250 </span>            :   void calc();
+<span class="lineNum">     251 </span>            :   /**
+<span class="lineNum">     252 </span>            :     Scatters the needed atoms.
+<span class="lineNum">     253 </span>            :     In asynchronous implementations, this method waits for the communications started in shareData()
+<span class="lineNum">     254 </span>            :     to be completed. Otherwise, just send around needed atoms.
+<span class="lineNum">     255 </span>            :   */
+<span class="lineNum">     256 </span>            :   void waitData();
+<span class="lineNum">     257 </span>            :   /**
+<span class="lineNum">     258 </span>            :     Perform the forward loop on active actions.
+<span class="lineNum">     259 </span>            :   */
+<span class="lineNum">     260 </span>            :   void justCalculate();
+<span class="lineNum">     261 </span>            :   /**
+<span class="lineNum">     262 </span>            :     Backward propagate and update.
+<span class="lineNum">     263 </span>            :     Shortcut for backwardPropagate() + update()
+<span class="lineNum">     264 </span>            :     I leave it here for backward compatibility
+<span class="lineNum">     265 </span>            :   */
+<span class="lineNum">     266 </span>            :   void justApply();
+<span class="lineNum">     267 </span>            :   /**
+<span class="lineNum">     268 </span>            :     Perform the backward loop on active actions.
+<span class="lineNum">     269 </span>            :     Needed to apply the forces back.
+<span class="lineNum">     270 </span>            :   */
+<span class="lineNum">     271 </span>            :   void backwardPropagate();
+<span class="lineNum">     272 </span>            :   /**
+<span class="lineNum">     273 </span>            :     Call the update() method.
+<span class="lineNum">     274 </span>            :   */
+<span class="lineNum">     275 </span>            :   void update();
+<span class="lineNum">     276 </span>            :   /**
+<span class="lineNum">     277 </span>            :     If there are calculations that need to be done at the very end of the calculations this
+<span class="lineNum">     278 </span>            :     makes sures they are done
+<span class="lineNum">     279 </span>            :   */
+<span class="lineNum">     280 </span>            :   void runJobsAtEndOfCalculation();
+<span class="lineNum">     281 </span>            : /// Reference to atoms object
+<span class="lineNum">     282 </span>            :   Atoms&amp; getAtoms();
+<span class="lineNum">     283 </span>            : /// Reference to the list of Action's
+<span class="lineNum">     284 </span>            :   const ActionSet &amp; getActionSet()const;
+<span class="lineNum">     285 </span>            : /// Referenge to the log stream
+<span class="lineNum">     286 </span>            :   Log &amp; getLog();
+<span class="lineNum">     287 </span>            : /// Return the number of the step
+<span class="lineNum">     288 </span><span class="lineCov">    1146902 :   long int getStep()const {return step;}</span>
+<span class="lineNum">     289 </span>            : /// Stop the run
+<span class="lineNum">     290 </span>            :   void exit(int c=0);
+<span class="lineNum">     291 </span>            : /// Load a shared library
+<span class="lineNum">     292 </span>            :   void load(const std::string&amp;);
+<span class="lineNum">     293 </span>            : /// Get the suffix string
+<span class="lineNum">     294 </span>            :   const std::string &amp; getSuffix()const;
+<span class="lineNum">     295 </span>            : /// Set the suffix string
+<span class="lineNum">     296 </span>            :   void setSuffix(const std::string&amp;);
+<span class="lineNum">     297 </span>            : /// get the value of the bias
+<span class="lineNum">     298 </span>            :   double getBias()const;
+<span class="lineNum">     299 </span>            : /// get the value of the work
+<span class="lineNum">     300 </span>            :   double getWork()const;
+<span class="lineNum">     301 </span>            : /// Opens a file.
+<span class="lineNum">     302 </span>            : /// Similar to plain fopen, but, if it finds an error in opening the file, it also tries with
+<span class="lineNum">     303 </span>            : /// path+suffix.  This trick is useful for multiple replica simulations.
+<span class="lineNum">     304 </span>            :   FILE* fopen(const char *path, const char *mode);
+<span class="lineNum">     305 </span>            : /// Closes a file opened with PlumedMain::fopen()
+<span class="lineNum">     306 </span>            :   int fclose(FILE*fp);
+<span class="lineNum">     307 </span>            : /// Insert a file
+<span class="lineNum">     308 </span>            :   void insertFile(FileBase&amp;);
+<span class="lineNum">     309 </span>            : /// Erase a file
+<span class="lineNum">     310 </span>            :   void eraseFile(FileBase&amp;);
+<span class="lineNum">     311 </span>            : /// Flush all files
+<span class="lineNum">     312 </span>            :   void fflush();
+<span class="lineNum">     313 </span>            : /// Check if restarting
+<span class="lineNum">     314 </span>            :   bool getRestart()const;
+<span class="lineNum">     315 </span>            : /// Set restart flag
+<span class="lineNum">     316 </span><span class="lineCov">         38 :   void setRestart(bool f) {restart=f;}</span>
+<span class="lineNum">     317 </span>            : /// Check if checkpointing
+<span class="lineNum">     318 </span>            :   bool getCPT()const;
+<span class="lineNum">     319 </span>            : /// Set exchangeStep flag
+<span class="lineNum">     320 </span>            :   void setExchangeStep(bool f);
+<span class="lineNum">     321 </span>            : /// Get exchangeStep flag
+<span class="lineNum">     322 </span>            :   bool getExchangeStep()const;
+<span class="lineNum">     323 </span>            : /// Stop the calculation cleanly (both the MD code and plumed)
+<span class="lineNum">     324 </span>            :   void stop();
+<span class="lineNum">     325 </span>            : /// Enforce active flag.
+<span class="lineNum">     326 </span>            : /// This is a (bit dirty) hack to solve a bug. When there is no active ActionPilot,
+<span class="lineNum">     327 </span>            : /// several shortcuts are used. However, these shortcuts can block GREX module.
+<span class="lineNum">     328 </span>            : /// This function allows to enforce active plumed when doing exchanges,
+<span class="lineNum">     329 </span>            : /// thus fixing the bug.
+<span class="lineNum">     330 </span>            :   void resetActive(bool active);
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            : /// Access to exchange patterns
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :   ExchangePatterns&amp; getExchangePatterns() {return exchangePatterns;}</span>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            : /// Push a state to update flags
+<span class="lineNum">     336 </span>            :   void updateFlagsPush(bool);
+<span class="lineNum">     337 </span>            : /// Pop a state from update flags
+<span class="lineNum">     338 </span>            :   void updateFlagsPop();
+<span class="lineNum">     339 </span>            : /// Get top of update flags
+<span class="lineNum">     340 </span>            :   bool updateFlagsTop();
+<span class="lineNum">     341 </span>            : /// Set end of input file
+<span class="lineNum">     342 </span>            :   void setEndPlumed();
+<span class="lineNum">     343 </span>            : };
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            : /////
+<span class="lineNum">     346 </span>            : // FAST INLINE METHODS:
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : inline
+<span class="lineNum">     349 </span>            : const ActionSet &amp; PlumedMain::getActionSet()const {
+<span class="lineNum">     350 </span><span class="lineCov">      37469 :   return actionSet;</span>
+<span class="lineNum">     351 </span>            : }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            : inline
+<span class="lineNum">     354 </span>            : Atoms&amp; PlumedMain::getAtoms() {
+<span class="lineNum">     355 </span><span class="lineCov">     951401 :   return atoms;</span>
+<span class="lineNum">     356 </span>            : }
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : inline
+<span class="lineNum">     359 </span>            : const std::string &amp; PlumedMain::getSuffix()const {
+<span class="lineNum">     360 </span>            :   return suffix;
+<span class="lineNum">     361 </span>            : }
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            : inline
+<span class="lineNum">     364 </span>            : void PlumedMain::setSuffix(const std::string&amp;s) {
+<span class="lineNum">     365 </span><span class="lineCov">        309 :   suffix=s;</span>
+<span class="lineNum">     366 </span>            : }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            : inline
+<span class="lineNum">     369 </span>            : bool PlumedMain::getRestart()const {
+<span class="lineNum">     370 </span><span class="lineCov">       5316 :   return restart;</span>
+<span class="lineNum">     371 </span>            : }
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            : inline
+<span class="lineNum">     374 </span>            : bool PlumedMain::getCPT()const {
+<span class="lineNum">     375 </span><span class="lineCov">       6050 :   return doCheckPoint;</span>
+<span class="lineNum">     376 </span>            : }
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            : inline
+<span class="lineNum">     379 </span>            : void PlumedMain::setExchangeStep(bool s) {
+<span class="lineNum">     380 </span><span class="lineCov">        168 :   exchangeStep=s;</span>
+<span class="lineNum">     381 </span>            : }
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            : inline
+<span class="lineNum">     384 </span>            : bool PlumedMain::getExchangeStep()const {
+<span class="lineNum">     385 </span><span class="lineCov">      13718 :   return exchangeStep;</span>
+<span class="lineNum">     386 </span>            : }
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            : inline
+<span class="lineNum">     389 </span>            : void PlumedMain::resetActive(bool active) {
+<span class="lineNum">     390 </span><span class="lineCov">         84 :   this-&gt;active=active;</span>
+<span class="lineNum">     391 </span>            : }
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            : inline
+<span class="lineNum">     394 </span>            : void PlumedMain::updateFlagsPush(bool on) {
+<span class="lineNum">     395 </span>            :   updateFlags.push(on);
+<span class="lineNum">     396 </span>            : }
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            : inline
+<span class="lineNum">     399 </span>            : void PlumedMain::updateFlagsPop() {
+<span class="lineNum">     400 </span>            :   updateFlags.pop();
+<span class="lineNum">     401 </span>            : }
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            : inline
+<span class="lineNum">     404 </span>            : bool PlumedMain::updateFlagsTop() {
+<span class="lineNum">     405 </span><span class="lineCov">     186629 :   return updateFlags.top();</span>
+<span class="lineNum">     406 </span>            : }
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span>            : inline
+<span class="lineNum">     409 </span>            : void PlumedMain::setEndPlumed() {
+<span class="lineNum">     410 </span><span class="lineCov">        190 :   endPlumed=true;</span>
+<span class="lineNum">     411 </span>            : }
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            : }
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            : #endif
+<span class="lineNum">     416 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

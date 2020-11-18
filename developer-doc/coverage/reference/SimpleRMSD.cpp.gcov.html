@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - reference/SimpleRMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">reference</a> - SimpleRMSD.cpp<span style="font-size: 80%;"> (source / <a href="SimpleRMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryMed">86.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;RMSDBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;MetricRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/RMSD.h&quot;
+<span class="lineNum">      25 </span>            : 
+<a name="26"><span class="lineNum">      26 </span>            : namespace PLMD {</a>
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">         60 : class SimpleRMSD : public RMSDBase {</span>
+<span class="lineNum">      29 </span>            : private:
+<span class="lineNum">      30 </span>            :   RMSD myrmsd;
+<span class="lineNum">      31 </span>            : public:
+<span class="lineNum">      32 </span>            :   explicit SimpleRMSD( const ReferenceConfigurationOptions&amp; ro );
+<a name="33"><span class="lineNum">      33 </span>            :   void read( const PDB&amp; );</a>
+<a name="34"><span class="lineNum">      34 </span>            :   double calc( const std::vector&lt;Vector&gt;&amp; pos, ReferenceValuePack&amp; myder, const bool&amp; squared ) const ;</a>
+<span class="lineNum">      35 </span><span class="lineCov">          3 :   bool pcaIsEnabledForThisReference() { return true; }</span>
+<span class="lineNum">      36 </span><span class="lineCov">         67 :   void setupPCAStorage( ReferenceValuePack&amp; mypack ) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">         67 :     mypack.switchOnPCAOption(); mypack.getAtomsDisplacementVector().resize( getNumberOfAtoms() );</span>
+<span class="lineNum">      38 </span><span class="lineCov">         67 :   }</span>
+<span class="lineNum">      39 </span>            :   void extractAtomicDisplacement( const std::vector&lt;Vector&gt;&amp; pos, std::vector&lt;Vector&gt;&amp; direction ) const ;
+<span class="lineNum">      40 </span>            :   double projectAtomicDisplacementOnVector( const bool&amp; normalized, const std::vector&lt;Vector&gt;&amp; vecs, ReferenceValuePack&amp; mypack ) const ;
+<a name="41"><span class="lineNum">      41 </span>            : };</a>
+<span class="lineNum">      42 </span>            : 
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">       6485 : PLUMED_REGISTER_METRIC(SimpleRMSD,&quot;SIMPLE&quot;)</span></a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">         33 : SimpleRMSD::SimpleRMSD( const ReferenceConfigurationOptions&amp; ro ):</span>
+<span class="lineNum">      46 </span>            :   ReferenceConfiguration( ro ),
+<span class="lineNum">      47 </span><span class="lineCov">         33 :   RMSDBase( ro )</span>
+<span class="lineNum">      48 </span>            : {
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">         33 : }</span></a>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">         27 : void SimpleRMSD::read( const PDB&amp; pdb ) {</span>
+<span class="lineNum">      52 </span><span class="lineCov">         27 :   readReference( pdb );</span>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">         25 : }</span></a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">        149 : double SimpleRMSD::calc( const std::vector&lt;Vector&gt;&amp; pos, ReferenceValuePack&amp; myder, const bool&amp; squared ) const {</span>
+<span class="lineNum">      56 </span><span class="lineCov">        181 :   if( myder.getAtomsDisplacementVector().size()!=pos.size() ) myder.getAtomsDisplacementVector().resize( pos.size() );</span>
+<span class="lineNum">      57 </span><span class="lineCov">        447 :   double d=myrmsd.simpleAlignment( getAlign(), getDisplace(), pos, getReferencePositions(), myder.getAtomVector(), myder.getAtomsDisplacementVector(), squared );</span>
+<span class="lineNum">      58 </span><span class="lineCov">       4842 :   myder.clear(); for(unsigned i=0; i&lt;pos.size(); ++i) myder.setAtomDerivatives( i, myder.getAtomVector()[i] );</span>
+<span class="lineNum">      59 </span><span class="lineCov">        149 :   if( !myder.updateComplete() ) myder.updateDynamicLists();</span>
+<span class="lineNum">      60 </span><span class="lineCov">        149 :   return d;</span>
+<a name="61"><span class="lineNum">      61 </span>            : }</a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 : void SimpleRMSD::extractAtomicDisplacement( const std::vector&lt;Vector&gt;&amp; pos, std::vector&lt;Vector&gt;&amp; direction ) const {</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :   std::vector&lt;Vector&gt; tder( getNumberOfAtoms() );</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :   double d=myrmsd.simpleAlignment( getAlign(), getDisplace(), pos, getReferencePositions(), tder, direction, true );</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;pos.size(); ++i) direction[i] = getDisplace()[i]*direction[i];</span>
+<a name="67"><span class="lineNum">      67 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">         66 : double SimpleRMSD::projectAtomicDisplacementOnVector( const bool&amp; normalized, const std::vector&lt;Vector&gt;&amp; vecs, ReferenceValuePack&amp; mypack ) const {</span>
+<span class="lineNum">      70 </span><span class="lineCov">         66 :   plumed_dbg_assert( mypack.calcUsingPCAOption() ); Vector comder; comder.zero();</span>
+<span class="lineNum">      71 </span><span class="lineCov">       1056 :   for(unsigned j=0; j&lt;vecs.size(); ++j) {</span>
+<span class="lineNum">      72 </span><span class="lineCov">       3080 :     for(unsigned k=0; k&lt;3; ++k) comder[k] += getAlign()[j]*vecs[j][k];</span>
+<span class="lineNum">      73 </span>            :   }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">         66 :   double proj=0; mypack.clear();</span>
+<span class="lineNum">      76 </span><span class="lineCov">        748 :   for(unsigned j=0; j&lt;vecs.size(); ++j) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">       2156 :     for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">      78 </span><span class="lineCov">       1848 :       proj += vecs[j][k]*mypack.getAtomsDisplacementVector()[j][k];</span>
+<span class="lineNum">      79 </span>            :     }
+<span class="lineNum">      80 </span><span class="lineCov">        308 :     mypack.setAtomDerivatives( j, vecs[j] - comder );</span>
+<span class="lineNum">      81 </span>            :   }
+<span class="lineNum">      82 </span><span class="lineCov">         66 :   if( !mypack.updateComplete() ) mypack.updateDynamicLists();</span>
+<span class="lineNum">      83 </span><span class="lineCov">         66 :   return proj;</span>
+<a name="84"><span class="lineNum">      84 </span>            : }</a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

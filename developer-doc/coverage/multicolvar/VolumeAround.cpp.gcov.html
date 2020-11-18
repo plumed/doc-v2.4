@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/VolumeAround.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - VolumeAround.cpp<span style="font-size: 80%;"> (source / <a href="VolumeAround.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">50</td>
+            <td class="headerCovTableEntry">50</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionVolume.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC VOLUMES AROUND
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : This quantity can be used to calculate functions of the distribution of collective
+<span class="lineNum">      29 </span>            : variables for the atoms that lie in a particular, user-specified part of of the cell.
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : Each of the base quantities calculated by a multicolvar can can be assigned to a particular point in three
+<span class="lineNum">      32 </span>            : dimensional space. For example, if we have the coordination numbers for all the atoms in the
+<span class="lineNum">      33 </span>            : system each coordination number can be assumed to lie on the position of the central atom.
+<span class="lineNum">      34 </span>            : Because each base quantity can be assigned to a particular point in space we can calculate functions of the
+<span class="lineNum">      35 </span>            : distribution of base quantities in a particular part of the box by using:
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : \f[
+<span class="lineNum">      38 </span>            : \overline{s}_{\tau} = \frac{ \sum_i f(s_i) w(x_i,y_i,z_i) }{ \sum_i w(x_i,y_i,z_i) }
+<span class="lineNum">      39 </span>            : \f]
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : where the sum is over the collective variables, \f$s_i\f$, each of which can be thought to be at \f$ (x_i,y_i,z_i)\f$.
+<span class="lineNum">      42 </span>            : The function \f$ w(x_i,y_i,z_i) \f$ measures whether or not the system is in the subregion of interest. It
+<span class="lineNum">      43 </span>            : is equal to:
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \f[
+<span class="lineNum">      46 </span>            : w(x_i,y_i,z_i) = \int_{xl}^{xu} \int_{yl}^{yu} \int_{zl}^{zu} \textrm{d}x\textrm{d}y\textrm{d}z K\left( \frac{x - x_i}{\sigma} \right)K\left( \frac{y - y_i}{\sigma} \right)K\left( \frac{z - z_i}{\sigma} \right)
+<span class="lineNum">      47 </span>            : \f]
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : where \f$K\f$ is one of the kernel functions described on \ref histogrambead and \f$\sigma\f$ is a bandwidth parameter.
+<span class="lineNum">      50 </span>            : The function \f$(s_i)\f$ can be any of the usual LESS_THAN, MORE_THAN, WITHIN etc that are used in all other multicolvars.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : When AROUND is used with the \ref DENSITY action the number of atoms in the specified region is calculated
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : \par Examples
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : The following commands tell plumed to calculate the average coordination number for the atoms
+<span class="lineNum">      57 </span>            : that have x (in fractional coordinates) within 2.0 nm of the com of mass c1. The final value will be labeled s.mean.
+<span class="lineNum">      58 </span>            : \plumedfile
+<span class="lineNum">      59 </span>            : COM ATOMS=1-100 LABEL=c1
+<span class="lineNum">      60 </span>            : COORDINATIONNUMBER SPECIES=1-100 R_0=1.0 LABEL=c
+<span class="lineNum">      61 </span>            : AROUND DATA=c ORIGIN=c1 XLOWER=-2.0 XUPPER=2.0 SIGMA=0.1 MEAN LABEL=s
+<span class="lineNum">      62 </span>            : \endplumedfile
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : */
+<span class="lineNum">      65 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : namespace PLMD {
+<a name="68"><span class="lineNum">      68 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">         44 : class VolumeAround : public ActionVolume {</span>
+<span class="lineNum">      71 </span>            : private:
+<span class="lineNum">      72 </span>            :   Vector origin;
+<span class="lineNum">      73 </span>            :   bool dox, doy, doz;
+<span class="lineNum">      74 </span>            :   double xlow, xhigh;
+<span class="lineNum">      75 </span>            :   double ylow, yhigh;
+<span class="lineNum">      76 </span>            :   double zlow, zhigh;
+<span class="lineNum">      77 </span>            : public:
+<span class="lineNum">      78 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      79 </span>            :   explicit VolumeAround(const ActionOptions&amp; ao);
+<span class="lineNum">      80 </span>            :   void setupRegions();
+<span class="lineNum">      81 </span>            :   double calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const ;
+<a name="82"><span class="lineNum">      82 </span>            : };</a>
+<span class="lineNum">      83 </span>            : 
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">       6474 : PLUMED_REGISTER_ACTION(VolumeAround,&quot;AROUND&quot;)</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         23 : void VolumeAround::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      87 </span><span class="lineCov">         23 :   ActionVolume::registerKeywords( keys );</span>
+<span class="lineNum">      88 </span><span class="lineCov">         92 :   keys.add(&quot;atoms&quot;,&quot;ATOM&quot;,&quot;the atom whose vicinity we are interested in examining&quot;);</span>
+<span class="lineNum">      89 </span><span class="lineCov">        115 :   keys.add(&quot;compulsory&quot;,&quot;XLOWER&quot;,&quot;0.0&quot;,&quot;the lower boundary in x relative to the x coordinate of the atom (0 indicates use full extent of box).&quot;);</span>
+<span class="lineNum">      90 </span><span class="lineCov">        115 :   keys.add(&quot;compulsory&quot;,&quot;XUPPER&quot;,&quot;0.0&quot;,&quot;the upper boundary in x relative to the x coordinate of the atom (0 indicates use full extent of box).&quot;);</span>
+<span class="lineNum">      91 </span><span class="lineCov">        115 :   keys.add(&quot;compulsory&quot;,&quot;YLOWER&quot;,&quot;0.0&quot;,&quot;the lower boundary in y relative to the y coordinate of the atom (0 indicates use full extent of box).&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">        115 :   keys.add(&quot;compulsory&quot;,&quot;YUPPER&quot;,&quot;0.0&quot;,&quot;the upper boundary in y relative to the y coordinate of the atom (0 indicates use full extent of box).&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">        115 :   keys.add(&quot;compulsory&quot;,&quot;ZLOWER&quot;,&quot;0.0&quot;,&quot;the lower boundary in z relative to the z coordinate of the atom (0 indicates use full extent of box).&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">        115 :   keys.add(&quot;compulsory&quot;,&quot;ZUPPER&quot;,&quot;0.0&quot;,&quot;the upper boundary in z relative to the z coordinate of the atom (0 indicates use full extent of box).&quot;);</span>
+<a name="95"><span class="lineNum">      95 </span><span class="lineCov">         23 : }</span></a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">         22 : VolumeAround::VolumeAround(const ActionOptions&amp; ao):</span>
+<span class="lineNum">      98 </span>            :   Action(ao),
+<span class="lineNum">      99 </span><span class="lineCov">         22 :   ActionVolume(ao)</span>
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span>            :   std::vector&lt;AtomNumber&gt; atom;
+<span class="lineNum">     102 </span><span class="lineCov">         44 :   parseAtomList(&quot;ATOM&quot;,atom);</span>
+<span class="lineNum">     103 </span><span class="lineCov">         22 :   if( atom.size()!=1 ) error(&quot;should only be one atom specified&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">         44 :   log.printf(&quot;  boundaries for region are calculated based on positions of atom : %d\n&quot;,atom[0].serial() );</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">         66 :   dox=true; parse(&quot;XLOWER&quot;,xlow); parse(&quot;XUPPER&quot;,xhigh);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         66 :   doy=true; parse(&quot;YLOWER&quot;,ylow); parse(&quot;YUPPER&quot;,yhigh);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         66 :   doz=true; parse(&quot;ZLOWER&quot;,zlow); parse(&quot;ZUPPER&quot;,zhigh);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         22 :   if( xlow==0.0 &amp;&amp; xhigh==0.0 ) dox=false;</span>
+<span class="lineNum">     110 </span><span class="lineCov">         22 :   if( ylow==0.0 &amp;&amp; yhigh==0.0 ) doy=false;</span>
+<span class="lineNum">     111 </span><span class="lineCov">         22 :   if( zlow==0.0 &amp;&amp; zhigh==0.0 ) doz=false;</span>
+<span class="lineNum">     112 </span><span class="lineCov">         22 :   if( !dox &amp;&amp; !doy &amp;&amp; !doz ) error(&quot;no subregion defined use XLOWER, XUPPER, YLOWER, YUPPER, ZLOWER, ZUPPER&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">         22 :   log.printf(&quot;  boundaries for region (region of interest about atom) : x %f %f, y %f %f, z %f %f \n&quot;,xlow,xhigh,ylow,yhigh,zlow,zhigh);</span>
+<span class="lineNum">     114 </span><span class="lineCov">         22 :   checkRead(); requestAtoms(atom);</span>
+<a name="115"><span class="lineNum">     115 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">     116 </span>            : 
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">        317 : void VolumeAround::setupRegions() { }</span></a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">      56393 : double VolumeAround::calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const {</span>
+<span class="lineNum">     120 </span>            :   // Setup the histogram bead
+<span class="lineNum">     121 </span><span class="lineCov">     169179 :   HistogramBead bead; bead.isNotPeriodic(); bead.setKernelType( getKernelType() );</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :   // Calculate position of atom wrt to origin
+<span class="lineNum">     124 </span><span class="lineCov">     112786 :   Vector fpos=pbcDistance( getPosition(0), cpos );</span>
+<span class="lineNum">     125 </span>            :   double xcontr, ycontr, zcontr, xder, yder, zder;
+<span class="lineNum">     126 </span><span class="lineCov">      56393 :   if( dox ) {</span>
+<span class="lineNum">     127 </span><span class="lineCov">      32393 :     bead.set( xlow, xhigh, getSigma() );</span>
+<span class="lineNum">     128 </span><span class="lineCov">      32393 :     xcontr=bead.calculate( fpos[0], xder );</span>
+<span class="lineNum">     129 </span>            :   } else {
+<span class="lineNum">     130 </span><span class="lineCov">      24000 :     xcontr=1.; xder=0.;</span>
+<span class="lineNum">     131 </span>            :   }
+<span class="lineNum">     132 </span><span class="lineCov">      56393 :   if( doy ) {</span>
+<span class="lineNum">     133 </span><span class="lineCov">      32000 :     bead.set( ylow, yhigh, getSigma() );</span>
+<span class="lineNum">     134 </span><span class="lineCov">      32000 :     ycontr=bead.calculate( fpos[1], yder );</span>
+<span class="lineNum">     135 </span>            :   } else {
+<span class="lineNum">     136 </span><span class="lineCov">      24393 :     ycontr=1.; yder=0.;</span>
+<span class="lineNum">     137 </span>            :   }
+<span class="lineNum">     138 </span><span class="lineCov">      56393 :   if( doz ) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">      32000 :     bead.set( zlow, zhigh, getSigma() );</span>
+<span class="lineNum">     140 </span><span class="lineCov">      32000 :     zcontr=bead.calculate( fpos[2], zder );</span>
+<span class="lineNum">     141 </span>            :   } else {
+<span class="lineNum">     142 </span><span class="lineCov">      24393 :     zcontr=1.; zder=0.;</span>
+<span class="lineNum">     143 </span>            :   }
+<span class="lineNum">     144 </span><span class="lineCov">      56393 :   derivatives[0]=xder*ycontr*zcontr;</span>
+<span class="lineNum">     145 </span><span class="lineCov">      56393 :   derivatives[1]=xcontr*yder*zcontr;</span>
+<span class="lineNum">     146 </span><span class="lineCov">      56393 :   derivatives[2]=xcontr*ycontr*zder;</span>
+<span class="lineNum">     147 </span>            :   // Add derivatives wrt to position of origin atom
+<span class="lineNum">     148 </span><span class="lineCov">      56393 :   refders[0] = -derivatives;</span>
+<span class="lineNum">     149 </span>            :   // Add virial contribution
+<span class="lineNum">     150 </span><span class="lineCov">      56393 :   vir -= Tensor(fpos,derivatives);</span>
+<span class="lineNum">     151 </span><span class="lineCov">      56393 :   return xcontr*ycontr*zcontr;</span>
+<span class="lineNum">     152 </span>            : }
+<a name="153"><span class="lineNum">     153 </span>            : </a>
+<span class="lineNum">     154 </span>            : }
+<span class="lineNum">     155 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

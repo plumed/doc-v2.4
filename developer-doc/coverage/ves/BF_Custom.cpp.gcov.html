@@ -1,0 +1,447 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/BF_Custom.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - BF_Custom.cpp<span style="font-size: 80%;"> (source / <a href="BF_Custom.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">113</td>
+            <td class="headerCovTableEntry">137</td>
+            <td class="headerCovTableEntryMed">82.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;lepton/Lepton.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace ves {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">       3226 : static std::map&lt;std::string, double&gt; leptonConstants= {</span>
+<span class="lineNum">      33 </span>            :   {&quot;e&quot;, std::exp(1.0)},
+<span class="lineNum">      34 </span>            :   {&quot;log2e&quot;, 1.0/std::log(2.0)},
+<span class="lineNum">      35 </span>            :   {&quot;log10e&quot;, 1.0/std::log(10.0)},
+<span class="lineNum">      36 </span>            :   {&quot;ln2&quot;, std::log(2.0)},
+<span class="lineNum">      37 </span>            :   {&quot;ln10&quot;, std::log(10.0)},
+<span class="lineNum">      38 </span>            :   {&quot;pi&quot;, pi},
+<span class="lineNum">      39 </span>            :   {&quot;pi_2&quot;, pi*0.5},
+<span class="lineNum">      40 </span>            :   {&quot;pi_4&quot;, pi*0.25},
+<span class="lineNum">      41 </span>            : //  {&quot;1_pi&quot;, 1.0/pi},
+<span class="lineNum">      42 </span>            : //  {&quot;2_pi&quot;, 2.0/pi},
+<span class="lineNum">      43 </span>            : //  {&quot;2_sqrtpi&quot;, 2.0/std::sqrt(pi)},
+<span class="lineNum">      44 </span>            :   {&quot;sqrt2&quot;, std::sqrt(2.0)},
+<span class="lineNum">      45 </span>            :   {&quot;sqrt1_2&quot;, std::sqrt(0.5)}
+<span class="lineNum">      46 </span>            : };
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : //+PLUMEDOC VES_BASISF BF_CUSTOM
+<span class="lineNum">      50 </span>            : /*
+<span class="lineNum">      51 </span>            : Basis functions given by arbitrary mathematical expressions.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : This allows you to define basis functions using arbitrary mathematical expressions
+<span class="lineNum">      54 </span>            : that are parsed using the lepton library.
+<span class="lineNum">      55 </span>            : The basis functions
+<span class="lineNum">      56 </span>            : \f$f_{i}(x)\f$ are given in mathematical expressions with _x_ as a variable using
+<span class="lineNum">      57 </span>            : the numbered FUNC keywords that start from
+<span class="lineNum">      58 </span>            : FUNC1. Consistent with other basis functions is \f$f_{0}(x)=1\f$ defined as
+<span class="lineNum">      59 </span>            : the constant. The interval on which the basis functions are defined is
+<span class="lineNum">      60 </span>            : given using the MINIMUM and MAXIMUM keywords.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : Using the TRANSFORM keyword it is possible to define a function \f$x(t)\f$ that
+<span class="lineNum">      63 </span>            : is used to transform the argument before calculating the basis functions
+<span class="lineNum">      64 </span>            : values. The variables _min_ and _max_ can be used to indicate the minimum
+<span class="lineNum">      65 </span>            : and the maximum of the interval. By default the arguments are not transformed,
+<span class="lineNum">      66 </span>            : i.e. \f$x(t)=t\f$.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : For periodic basis functions you should use the PERIODIC flag to indicate
+<span class="lineNum">      69 </span>            : that they are periodic.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : The basis functions \f$f_{i}(x)\f$ and the transform function \f$x(t)\f$ need
+<span class="lineNum">      72 </span>            : to be well behaved in the interval on which the basis functions are defined,
+<span class="lineNum">      73 </span>            : e.g. not result in a not a number (nan) or infinity (inf).
+<span class="lineNum">      74 </span>            : The code will not perform checks to make sure that this is the case unless the
+<span class="lineNum">      75 </span>            : flag CHECK_NAN_INF is enabled.
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : \par Examples
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : Defining Legendre polynomial basis functions of order 6 using BF_CUSTOM
+<span class="lineNum">      80 </span>            : where the appropriate transform function is given by the TRANSFORM keyword.
+<span class="lineNum">      81 </span>            : This is just an example of what can be done, in practice you should use
+<span class="lineNum">      82 </span>            : \ref BF_LEGENDRE for Legendre polynomial basis functions.
+<span class="lineNum">      83 </span>            : \plumedfile
+<span class="lineNum">      84 </span>            : BF_CUSTOM ...
+<span class="lineNum">      85 </span>            :  TRANSFORM=(t-(min+max)/2)/((max-min)/2)
+<span class="lineNum">      86 </span>            :  FUNC1=x
+<span class="lineNum">      87 </span>            :  FUNC2=(1/2)*(3*x^2-1)
+<span class="lineNum">      88 </span>            :  FUNC3=(1/2)*(5*x^3-3*x)
+<span class="lineNum">      89 </span>            :  FUNC4=(1/8)*(35*x^4-30*x^2+3)
+<span class="lineNum">      90 </span>            :  FUNC5=(1/8)*(63*x^5-70*x^3+15*x)
+<span class="lineNum">      91 </span>            :  FUNC6=(1/16)*(231*x^6-315*x^4+105*x^2-5)
+<span class="lineNum">      92 </span>            :  MINIMUM=-4.0
+<span class="lineNum">      93 </span>            :  MAXIMUM=4.0
+<span class="lineNum">      94 </span>            :  LABEL=bf1
+<span class="lineNum">      95 </span>            : ... BF_CUSTOM
+<span class="lineNum">      96 </span>            : \endplumedfile
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : Defining Fourier basis functions of order 3 using BF_CUSTOM where the
+<span class="lineNum">     100 </span>            : periodicity is indicated using the PERIODIC flag. This is just an example
+<span class="lineNum">     101 </span>            : of what can be done, in practice you should use \ref BF_FOURIER
+<span class="lineNum">     102 </span>            : for Fourier basis functions.
+<span class="lineNum">     103 </span>            : \plumedfile
+<span class="lineNum">     104 </span>            : BF_CUSTOM ...
+<span class="lineNum">     105 </span>            :  FUNC1=cos(x)
+<span class="lineNum">     106 </span>            :  FUNC2=sin(x)
+<span class="lineNum">     107 </span>            :  FUNC3=cos(2*x)
+<span class="lineNum">     108 </span>            :  FUNC4=sin(2*x)
+<span class="lineNum">     109 </span>            :  FUNC5=cos(3*x)
+<span class="lineNum">     110 </span>            :  FUNC6=sin(3*x)
+<span class="lineNum">     111 </span>            :  MINIMUM=-pi
+<span class="lineNum">     112 </span>            :  MAXIMUM=+pi
+<span class="lineNum">     113 </span>            :  LABEL=bf1
+<span class="lineNum">     114 </span>            :  PERIODIC
+<span class="lineNum">     115 </span>            : ... BF_CUSTOM
+<span class="lineNum">     116 </span>            : \endplumedfile
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : */
+<span class="lineNum">     120 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : class BF_Custom : public BasisFunctions {
+<span class="lineNum">     123 </span>            : private:
+<span class="lineNum">     124 </span>            :   lepton::CompiledExpression transf_value_expression_;
+<span class="lineNum">     125 </span>            :   lepton::CompiledExpression transf_deriv_expression_;
+<span class="lineNum">     126 </span>            :   std::vector&lt;lepton::CompiledExpression&gt; bf_values_expressions_;
+<span class="lineNum">     127 </span>            :   std::vector&lt;lepton::CompiledExpression&gt; bf_derivs_expressions_;
+<span class="lineNum">     128 </span>            :   std::string variable_str_;
+<span class="lineNum">     129 </span>            :   std::string transf_variable_str_;
+<span class="lineNum">     130 </span>            :   bool do_transf_;
+<span class="lineNum">     131 </span>            :   bool check_nan_inf_;
+<span class="lineNum">     132 </span>            : public:
+<a name="133"><span class="lineNum">     133 </span>            :   static void registerKeywords( Keywords&amp;);</a>
+<span class="lineNum">     134 </span>            :   explicit BF_Custom(const ActionOptions&amp;);
+<span class="lineNum">     135 </span><span class="lineCov">         30 :   ~BF_Custom() {};</span>
+<span class="lineNum">     136 </span>            :   void getAllValues(const double, double&amp;, bool&amp;, std::vector&lt;double&gt;&amp;, std::vector&lt;double&gt;&amp;) const;
+<a name="137"><span class="lineNum">     137 </span>            : };</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">       6462 : PLUMED_REGISTER_ACTION(BF_Custom,&quot;BF_CUSTOM&quot;)</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">         11 : void BF_Custom::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">         11 :   BasisFunctions::registerKeywords(keys);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         22 :   keys.remove(&quot;ORDER&quot;);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         44 :   keys.add(&quot;numbered&quot;,&quot;FUNC&quot;,&quot;The basis functions f_i(x) given in mathematical expressions using _x_ as a variable.&quot;);</span>
+<span class="lineNum">     145 </span><span class="lineCov">         44 :   keys.add(&quot;optional&quot;,&quot;TRANSFORM&quot;,&quot;An optional function that can be used to transform the argument before calculating the basis function values. You should use _t_ as a variable. You can use the variables _min_ and _max_ to give the minimum and the maximum of the interval.&quot;);</span>
+<span class="lineNum">     146 </span><span class="lineCov">         33 :   keys.addFlag(&quot;PERIODIC&quot;,false,&quot;Indicate that the basis functions are periodic.&quot;);</span>
+<span class="lineNum">     147 </span><span class="lineCov">         33 :   keys.addFlag(&quot;CHECK_NAN_INF&quot;,false,&quot;Check that the basis functions do not result in a not a number (nan) or infinity (inf).&quot;);</span>
+<span class="lineNum">     148 </span><span class="lineCov">         22 :   keys.remove(&quot;NUMERICAL_INTEGRALS&quot;);</span>
+<span class="lineNum">     149 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">         10 : BF_Custom::BF_Custom(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     153 </span>            :   PLUMED_VES_BASISFUNCTIONS_INIT(ao),
+<span class="lineNum">     154 </span>            :   bf_values_expressions_(0),
+<span class="lineNum">     155 </span>            :   bf_derivs_expressions_(0),
+<span class="lineNum">     156 </span>            :   variable_str_(&quot;x&quot;),
+<span class="lineNum">     157 </span>            :   transf_variable_str_(&quot;t&quot;),
+<span class="lineNum">     158 </span>            :   do_transf_(false),
+<span class="lineNum">     159 </span><span class="lineCov">         10 :   check_nan_inf_(false)</span>
+<span class="lineNum">     160 </span>            : {
+<span class="lineNum">     161 </span><span class="lineCov">         10 :   std::vector&lt;std::string&gt; bf_str;</span>
+<span class="lineNum">     162 </span><span class="lineCov">         10 :   std::string str_t1=&quot;1&quot;;</span>
+<span class="lineNum">     163 </span><span class="lineCov">         10 :   bf_str.push_back(str_t1);</span>
+<span class="lineNum">     164 </span><span class="lineCov">         46 :   for(int i=1;; i++) {</span>
+<span class="lineNum">     165 </span>            :     std::string str_t2;
+<span class="lineNum">     166 </span><span class="lineCov">        112 :     if(!parseNumbered(&quot;FUNC&quot;,i,str_t2)) {break;}</span>
+<span class="lineNum">     167 </span><span class="lineCov">         46 :     std::string is; Tools::convert(i,is);</span>
+<span class="lineNum">     168 </span><span class="lineCov">        138 :     addKeywordToList(&quot;FUNC&quot;+is,str_t2);</span>
+<span class="lineNum">     169 </span><span class="lineCov">         46 :     bf_str.push_back(str_t2);</span>
+<span class="lineNum">     170 </span><span class="lineCov">         46 :   }</span>
+<span class="lineNum">     171 </span>            :   //
+<span class="lineNum">     172 </span><span class="lineCov">         10 :   if(bf_str.size()==1) {plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: No FUNC keywords given&quot;);}</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">         10 :   setOrder(bf_str.size()-1);</span>
+<span class="lineNum">     175 </span><span class="lineCov">         10 :   setNumberOfBasisFunctions(getOrder()+1);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         10 :   setIntrinsicInterval(intervalMin(),intervalMax());</span>
+<span class="lineNum">     177 </span><span class="lineCov">         10 :   bool periodic = false;</span>
+<span class="lineNum">     178 </span><span class="lineCov">         30 :   parseFlag(&quot;PERIODIC&quot;,periodic); addKeywordToList(&quot;PERIODIC&quot;,periodic);</span>
+<span class="lineNum">     179 </span><span class="lineCov">         10 :   if(periodic) {setPeriodic();}</span>
+<span class="lineNum">     180 </span>            :   else {setNonPeriodic();}
+<span class="lineNum">     181 </span>            :   setIntervalBounded();
+<span class="lineNum">     182 </span><span class="lineCov">         20 :   setType(&quot;custom_functions&quot;);</span>
+<span class="lineNum">     183 </span><span class="lineCov">         20 :   setDescription(&quot;Custom Functions&quot;);</span>
+<span class="lineNum">     184 </span>            :   //
+<span class="lineNum">     185 </span><span class="lineCov">         20 :   std::vector&lt;std::string&gt; bf_values_parsed(getNumberOfBasisFunctions());</span>
+<span class="lineNum">     186 </span><span class="lineCov">         20 :   std::vector&lt;std::string&gt; bf_derivs_parsed(getNumberOfBasisFunctions());</span>
+<span class="lineNum">     187 </span>            :   bf_values_parsed[0] = &quot;1&quot;;
+<span class="lineNum">     188 </span>            :   bf_derivs_parsed[0] = &quot;0&quot;;
+<span class="lineNum">     189 </span>            :   //
+<span class="lineNum">     190 </span><span class="lineCov">         10 :   bf_values_expressions_.resize(getNumberOfBasisFunctions());</span>
+<span class="lineNum">     191 </span><span class="lineCov">         10 :   bf_derivs_expressions_.resize(getNumberOfBasisFunctions());</span>
+<span class="lineNum">     192 </span>            :   //
+<span class="lineNum">     193 </span><span class="lineCov">        102 :   for(unsigned int i=1; i&lt;getNumberOfBasisFunctions(); i++) {</span>
+<span class="lineNum">     194 </span><span class="lineCov">         46 :     std::string is; Tools::convert(i,is);</span>
+<span class="lineNum">     195 </span>            :     try {
+<span class="lineNum">     196 </span><span class="lineCov">        138 :       lepton::ParsedExpression pe_value = lepton::Parser::parse(bf_str[i]).optimize(leptonConstants);</span>
+<span class="lineNum">     197 </span><span class="lineCov">         92 :       std::ostringstream tmp_stream; tmp_stream &lt;&lt; pe_value;</span>
+<span class="lineNum">     198 </span><span class="lineCov">         92 :       bf_values_parsed[i] = tmp_stream.str();</span>
+<span class="lineNum">     199 </span><span class="lineCov">         92 :       bf_values_expressions_[i] = pe_value.createCompiledExpression();</span>
+<span class="lineNum">     200 </span>            :     }
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :     catch(PLMD::lepton::Exception&amp; exc) {</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;There was some problem in parsing the function &quot;+bf_str[i]+&quot; given in FUNC&quot;+is + &quot; with lepton&quot;);</span>
+<span class="lineNum">     203 </span>            :     }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">         46 :     std::vector&lt;std::string&gt; var_str;</span>
+<span class="lineNum">     206 </span><span class="lineCov">        138 :     for(auto &amp;p: bf_values_expressions_[i].getVariables()) {</span>
+<span class="lineNum">     207 </span><span class="lineCov">         46 :       var_str.push_back(p);</span>
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span><span class="lineCov">         46 :     if(var_str.size()!=1) {</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;Problem with function &quot;+bf_str[i]+&quot; given in FUNC&quot;+is+&quot;: there should only be one variable&quot;);</span>
+<span class="lineNum">     211 </span>            :     }
+<span class="lineNum">     212 </span><span class="lineCov">         46 :     if(var_str[0]!=variable_str_) {</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;Problem with function &quot;+bf_str[i]+&quot; given in FUNC&quot;+is+&quot;: you should use &quot;+variable_str_+&quot; as a variable&quot;);</span>
+<span class="lineNum">     214 </span>            :     }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :     try {
+<span class="lineNum">     217 </span><span class="lineCov">        138 :       lepton::ParsedExpression pe_deriv = lepton::Parser::parse(bf_str[i]).differentiate(variable_str_).optimize(leptonConstants);</span>
+<span class="lineNum">     218 </span><span class="lineCov">         92 :       std::ostringstream tmp_stream2; tmp_stream2 &lt;&lt; pe_deriv;</span>
+<span class="lineNum">     219 </span><span class="lineCov">         92 :       bf_derivs_parsed[i] = tmp_stream2.str();</span>
+<span class="lineNum">     220 </span><span class="lineCov">         92 :       bf_derivs_expressions_[i] = pe_deriv.createCompiledExpression();</span>
+<span class="lineNum">     221 </span>            :     }
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :     catch(PLMD::lepton::Exception&amp; exc) {</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;There was some problem in parsing the derivative of the function &quot;+bf_str[i]+&quot; given in FUNC&quot;+is + &quot; with lepton&quot;);</span>
+<span class="lineNum">     224 </span>            :     }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :   std::string transf_value_parsed;
+<span class="lineNum">     229 </span>            :   std::string transf_deriv_parsed;
+<span class="lineNum">     230 </span>            :   std::string transf_str;
+<span class="lineNum">     231 </span><span class="lineCov">         20 :   parse(&quot;TRANSFORM&quot;,transf_str);</span>
+<span class="lineNum">     232 </span><span class="lineCov">         10 :   if(transf_str.size()&gt;0) {</span>
+<span class="lineNum">     233 </span><span class="lineCov">          6 :     do_transf_ = true;</span>
+<span class="lineNum">     234 </span><span class="lineCov">         18 :     addKeywordToList(&quot;TRANSFORM&quot;,transf_str);</span>
+<span class="lineNum">     235 </span>            :     for(unsigned int k=0;; k++) {
+<span class="lineNum">     236 </span><span class="lineCov">         22 :       if(transf_str.find(&quot;min&quot;)!=std::string::npos) {transf_str.replace(transf_str.find(&quot;min&quot;), std::string(&quot;min&quot;).length(),intervalMinStr());}</span>
+<span class="lineNum">     237 </span>            :       else {break;}
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span>            :     for(unsigned int k=0;; k++) {
+<span class="lineNum">     240 </span><span class="lineCov">         22 :       if(transf_str.find(&quot;max&quot;)!=std::string::npos) {transf_str.replace(transf_str.find(&quot;max&quot;), std::string(&quot;max&quot;).length(),intervalMaxStr());}</span>
+<span class="lineNum">     241 </span>            :       else {break;}
+<span class="lineNum">     242 </span>            :     }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            :     try {
+<span class="lineNum">     245 </span><span class="lineCov">         12 :       lepton::ParsedExpression pe_value = lepton::Parser::parse(transf_str).optimize(leptonConstants);;</span>
+<span class="lineNum">     246 </span><span class="lineCov">         12 :       std::ostringstream tmp_stream; tmp_stream &lt;&lt; pe_value;</span>
+<span class="lineNum">     247 </span><span class="lineCov">         12 :       transf_value_parsed = tmp_stream.str();</span>
+<span class="lineNum">     248 </span><span class="lineCov">          6 :       transf_value_expression_ = pe_value.createCompiledExpression();</span>
+<span class="lineNum">     249 </span>            :     }
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :     catch(PLMD::lepton::Exception&amp; exc) {</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;There was some problem in parsing the function &quot;+transf_str+&quot; given in TRANSFORM with lepton&quot;);</span>
+<span class="lineNum">     252 </span>            :     }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span><span class="lineCov">          6 :     std::vector&lt;std::string&gt; var_str;</span>
+<span class="lineNum">     255 </span><span class="lineCov">         18 :     for(auto &amp;p: transf_value_expression_.getVariables()) {</span>
+<span class="lineNum">     256 </span><span class="lineCov">          6 :       var_str.push_back(p);</span>
+<span class="lineNum">     257 </span>            :     }
+<span class="lineNum">     258 </span><span class="lineCov">          6 :     if(var_str.size()!=1) {</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;Problem with function &quot;+transf_str+&quot; given in TRANSFORM: there should only be one variable&quot;);</span>
+<span class="lineNum">     260 </span>            :     }
+<span class="lineNum">     261 </span><span class="lineCov">          6 :     if(var_str[0]!=transf_variable_str_) {</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;Problem with function &quot;+transf_str+&quot; given in TRANSFORM: you should use &quot;+transf_variable_str_+&quot; as a variable&quot;);</span>
+<span class="lineNum">     263 </span>            :     }
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :     try {
+<span class="lineNum">     266 </span><span class="lineCov">         18 :       lepton::ParsedExpression pe_deriv = lepton::Parser::parse(transf_str).differentiate(transf_variable_str_).optimize(leptonConstants);;</span>
+<span class="lineNum">     267 </span><span class="lineCov">         12 :       std::ostringstream tmp_stream2; tmp_stream2 &lt;&lt; pe_deriv;</span>
+<span class="lineNum">     268 </span><span class="lineCov">         12 :       transf_deriv_parsed = tmp_stream2.str();</span>
+<span class="lineNum">     269 </span><span class="lineCov">          6 :       transf_deriv_expression_ = pe_deriv.createCompiledExpression();</span>
+<span class="lineNum">     270 </span>            :     }
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :     catch(PLMD::lepton::Exception&amp; exc) {</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;There was some problem in parsing the derivative of the function &quot;+transf_str+&quot; given in TRANSFORM with lepton&quot;);</span>
+<span class="lineNum">     273 </span>            :     }
+<span class="lineNum">     274 </span>            :   }
+<span class="lineNum">     275 </span>            :   //
+<span class="lineNum">     276 </span><span class="lineCov">         10 :   log.printf(&quot;  Using the following functions [lepton parsed function and derivative]:\n&quot;);</span>
+<span class="lineNum">     277 </span><span class="lineCov">        122 :   for(unsigned int i=0; i&lt;getNumberOfBasisFunctions(); i++) {</span>
+<span class="lineNum">     278 </span><span class="lineCov">        112 :     log.printf(&quot;   %u:  %s   [   %s   |   %s   ] \n&quot;,i,bf_str[i].c_str(),bf_values_parsed[i].c_str(),bf_derivs_parsed[i].c_str());</span>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :   }
+<span class="lineNum">     281 </span>            :   //
+<span class="lineNum">     282 </span><span class="lineCov">         10 :   if(do_transf_) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">          6 :     log.printf(&quot;  Arguments are transformed using the following function [lepton parsed function and derivative]:\n&quot;);</span>
+<span class="lineNum">     284 </span><span class="lineCov">         12 :     log.printf(&quot;   %s   [   %s   |   %s   ] \n&quot;,transf_str.c_str(),transf_value_parsed.c_str(),transf_deriv_parsed.c_str());</span>
+<span class="lineNum">     285 </span>            :   }
+<span class="lineNum">     286 </span>            :   else {
+<span class="lineNum">     287 </span><span class="lineCov">          4 :     log.printf(&quot;  Arguments are not transformed\n&quot;);</span>
+<span class="lineNum">     288 </span>            :   }
+<span class="lineNum">     289 </span>            :   //
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineCov">         30 :   parseFlag(&quot;CHECK_NAN_INF&quot;,check_nan_inf_); addKeywordToList(&quot;CHECK_NAN_INF&quot;,check_nan_inf_);</span>
+<span class="lineNum">     292 </span><span class="lineCov">         10 :   if(check_nan_inf_) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">          6 :     log.printf(&quot;  The code will check that values given are numercially stable, e.g. do not result in a not a number (nan) or infinity (inf).\n&quot;);</span>
+<span class="lineNum">     294 </span>            :   }
+<span class="lineNum">     295 </span>            :   else {
+<span class="lineNum">     296 </span><span class="lineCov">          4 :     log.printf(&quot;  The code will NOT check that values given are numercially stable, e.g. do not result in a not a number (nan) or infinity (inf).\n&quot;);</span>
+<span class="lineNum">     297 </span>            :   }
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineCov">         10 :   setupBF();</span>
+<span class="lineNum">     300 </span><span class="lineCov">         10 :   checkRead();</span>
+<span class="lineNum">     301 </span><span class="lineCov">         10 : }</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">      26010 : void BF_Custom::getAllValues(const double arg, double&amp; argT, bool&amp; inside_range, std::vector&lt;double&gt;&amp; values, std::vector&lt;double&gt;&amp; derivs) const {</span>
+<span class="lineNum">     305 </span><span class="lineCov">      26010 :   inside_range=true;</span>
+<span class="lineNum">     306 </span><span class="lineCov">      26010 :   argT=checkIfArgumentInsideInterval(arg,inside_range);</span>
+<span class="lineNum">     307 </span>            :   double transf_derivf=1.0;
+<span class="lineNum">     308 </span>            :   //
+<span class="lineNum">     309 </span><span class="lineCov">      26010 :   if(do_transf_) {</span>
+<span class="lineNum">     310 </span>            :     // has to copy as the function is const
+<span class="lineNum">     311 </span><span class="lineCov">      30532 :     lepton::CompiledExpression ce_value = transf_value_expression_;</span>
+<span class="lineNum">     312 </span>            :     try {
+<span class="lineNum">     313 </span><span class="lineCov">      15266 :       ce_value.getVariableReference(transf_variable_str_) = argT;</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :     } catch(PLMD::lepton::Exception&amp; exc) {}</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">      30532 :     lepton::CompiledExpression ce_deriv = transf_deriv_expression_;</span>
+<span class="lineNum">     317 </span>            :     try {
+<span class="lineNum">     318 </span><span class="lineCov">      15266 :       ce_deriv.getVariableReference(transf_variable_str_) = argT;</span>
+<span class="lineNum">     319 </span><span class="lineCov">       8539 :     } catch(PLMD::lepton::Exception&amp; exc) {}</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineCov">      15266 :     argT = ce_value.evaluate();</span>
+<span class="lineNum">     322 </span><span class="lineCov">      15266 :     transf_derivf = ce_deriv.evaluate();</span>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineCov">      23901 :     if(check_nan_inf_ &amp;&amp; (std::isnan(argT) || std::isinf(argT)) ) {</span>
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 :       std::string vs; Tools::convert(argT,vs);</span>
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: problem with the transform function, it gives &quot; + vs);</span>
+<span class="lineNum">     327 </span>            :     }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineCov">      23901 :     if(check_nan_inf_ &amp;&amp; (std::isnan(transf_derivf) || std::isinf(transf_derivf)) ) {</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :       std::string vs; Tools::convert(transf_derivf,vs);</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: problem with the transform function, its derivative gives &quot; + vs);</span>
+<span class="lineNum">     332 </span>            :     }
+<span class="lineNum">     333 </span>            :   }
+<span class="lineNum">     334 </span>            :   //
+<span class="lineNum">     335 </span><span class="lineCov">      26010 :   values[0]=1.0;</span>
+<span class="lineNum">     336 </span><span class="lineCov">      26010 :   derivs[0]=0.0;</span>
+<span class="lineNum">     337 </span><span class="lineCov">     269434 :   for(unsigned int i=1; i &lt; getNumberOfBasisFunctions(); i++) {</span>
+<span class="lineNum">     338 </span><span class="lineCov">     365136 :     lepton::CompiledExpression ce_value = bf_values_expressions_[i];</span>
+<span class="lineNum">     339 </span>            :     try {
+<span class="lineNum">     340 </span><span class="lineCov">     121712 :       ce_value.getVariableReference(variable_str_) = argT;</span>
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :     } catch(PLMD::lepton::Exception&amp; exc) {}</span>
+<span class="lineNum">     342 </span><span class="lineCov">     121712 :     values[i] = ce_value.evaluate();</span>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span><span class="lineCov">     243424 :     lepton::CompiledExpression ce_deriv = bf_derivs_expressions_[i];</span>
+<span class="lineNum">     345 </span>            :     try {
+<span class="lineNum">     346 </span><span class="lineCov">     121712 :       ce_deriv.getVariableReference(variable_str_) = argT;</span>
+<span class="lineNum">     347 </span><span class="lineCov">      20894 :     } catch(PLMD::lepton::Exception&amp; exc) {}</span>
+<span class="lineNum">     348 </span><span class="lineCov">     121712 :     derivs[i] = ce_deriv.evaluate();</span>
+<span class="lineNum">     349 </span><span class="lineCov">     196038 :     if(do_transf_) {derivs[i]*=transf_derivf;}</span>
+<span class="lineNum">     350 </span>            :     // NaN checks
+<span class="lineNum">     351 </span><span class="lineCov">     236592 :     if(check_nan_inf_ &amp;&amp; (std::isnan(values[i]) || std::isinf(values[i])) ) {</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :       std::string vs; Tools::convert(values[i],vs);</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :       std::string is; Tools::convert(i,is);</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: problem with the basis function given in FUNC&quot;+is+&quot;, it gives &quot;+vs);</span>
+<span class="lineNum">     355 </span>            :     }
+<span class="lineNum">     356 </span>            :     //
+<span class="lineNum">     357 </span><span class="lineCov">     236592 :     if(check_nan_inf_ &amp;&amp; (std::isnan(derivs[i])|| std::isinf(derivs[i])) ) {</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :       std::string vs; Tools::convert(derivs[i],vs);</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :       std::string is; Tools::convert(i,is);</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: problem with derivative of the basis function given in FUNC&quot;+is+&quot;, it gives &quot;+vs);</span>
+<span class="lineNum">     361 </span>            :     }
+<span class="lineNum">     362 </span>            :   }
+<span class="lineNum">     363 </span><span class="lineCov">      29729 :   if(!inside_range) {for(unsigned int i=0; i&lt;derivs.size(); i++) {derivs[i]=0.0;}}</span>
+<span class="lineNum">     364 </span><span class="lineCov">      26010 : }</span>
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            : 
+<a name="368"><span class="lineNum">     368 </span>            : </a>
+<span class="lineNum">     369 </span>            : }
+<span class="lineNum">     370 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

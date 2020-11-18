@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/StoreDataVessel.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - StoreDataVessel.h<span style="font-size: 80%;"> (source / <a href="StoreDataVessel.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryHi">92.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_vesselbase_StoreDataVessel_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_vesselbase_StoreDataVessel_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;string&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &quot;Vessel.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace vesselbase {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : /**
+<span class="lineNum">      34 </span>            : \ingroup TOOLBOX
+<span class="lineNum">      35 </span>            : Objects that inherit from FunctionVessel can be used (in tandem with PLMD::vesselbase::ActionWithVessel)
+<span class="lineNum">      36 </span>            : to store values and derivatives for a set of scalars or vectors that are calculated by a
+<span class="lineNum">      37 </span>            : PLMD::vesselbase::ActionWithVessel.  Functions of these stored quantities can then be calculated in a
+<span class="lineNum">      38 </span>            : second step.
+<a name="39"><span class="lineNum">      39 </span>            : */</a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">        328 : class StoreDataVessel : public Vessel {</span>
+<span class="lineNum">      42 </span>            :   friend class Moments;
+<span class="lineNum">      43 </span>            : private:
+<span class="lineNum">      44 </span>            : /// Do the quantities being stored in here need derivatives
+<span class="lineNum">      45 </span>            :   bool hasderiv;
+<span class="lineNum">      46 </span>            : /// What is the maximum number of vectors we are going to
+<span class="lineNum">      47 </span>            : /// have to store when using lowmem option
+<span class="lineNum">      48 </span>            :   unsigned max_lowmem_stash;
+<span class="lineNum">      49 </span>            : /// The size of the vector we are computing
+<span class="lineNum">      50 </span>            :   unsigned vecsize;
+<span class="lineNum">      51 </span>            : /// The amount of data per vector element
+<span class="lineNum">      52 </span>            :   unsigned nspace;
+<span class="lineNum">      53 </span>            : /// The currently active values
+<span class="lineNum">      54 </span>            : //  std::vector&lt;unsigned&gt; active_val;
+<span class="lineNum">      55 </span>            : /// The active derivative elements
+<span class="lineNum">      56 </span>            :   std::vector&lt;unsigned&gt; active_der;
+<span class="lineNum">      57 </span>            : /// The buffer
+<span class="lineNum">      58 </span>            :   std::vector&lt;double&gt; local_buffer;
+<span class="lineNum">      59 </span>            : /// The actions that are going to use the stored data
+<span class="lineNum">      60 </span>            :   std::vector&lt;ActionWithVessel*&gt; userActions;
+<span class="lineNum">      61 </span>            : /// We create a vector of tempory MultiValues here so as to avoid
+<span class="lineNum">      62 </span>            : /// lots of vector resizing
+<span class="lineNum">      63 </span>            :   unsigned tmp_index;
+<span class="lineNum">      64 </span>            :   std::vector&lt;MultiValue&gt; my_tmp_vals;
+<span class="lineNum">      65 </span>            : protected:
+<span class="lineNum">      66 </span>            : /// Is the weight differentiable
+<span class="lineNum">      67 </span>            :   bool weightHasDerivatives();
+<span class="lineNum">      68 </span>            : /// Are we using low mem option
+<span class="lineNum">      69 </span>            :   bool usingLowMem();
+<span class="lineNum">      70 </span>            : /// Finish the setup of the storage object by setting how much
+<span class="lineNum">      71 </span>            : /// data has to be stored
+<span class="lineNum">      72 </span>            :   void completeSetup( const unsigned&amp;, const unsigned&amp; );
+<span class="lineNum">      73 </span>            : /// Return value of nspace
+<span class="lineNum">      74 </span>            :   unsigned getNumberOfDerivativeSpacesPerComponent() const ;
+<span class="lineNum">      75 </span>            : /// Retrieve the values from the underlying ActionWithVessel
+<span class="lineNum">      76 </span>            :   void storeValues( const unsigned&amp;, MultiValue&amp;, std::vector&lt;double&gt;&amp; ) const ;
+<span class="lineNum">      77 </span>            : /// This stores the data we get from the calculation
+<span class="lineNum">      78 </span>            :   void storeDerivatives( const unsigned&amp;, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp;, std::vector&lt;unsigned&gt;&amp; ) const ;
+<span class="lineNum">      79 </span>            : /// Get the ibuf'th local derivative value
+<span class="lineNum">      80 </span>            :   double getLocalDerivative( const unsigned&amp; ibuf );
+<span class="lineNum">      81 </span>            : /// Set the ibuf'th local derivative value
+<span class="lineNum">      82 </span>            :   void setLocalDerivative( const unsigned&amp; ibuf, const double&amp; val );
+<span class="lineNum">      83 </span>            : public:
+<span class="lineNum">      84 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      85 </span>            :   explicit StoreDataVessel( const VesselOptions&amp; );
+<span class="lineNum">      86 </span>            : /// Get the number of values that have been stored
+<span class="lineNum">      87 </span>            :   virtual unsigned getNumberOfStoredValues() const ;
+<span class="lineNum">      88 </span>            : /// Get the index to store a particular index inside
+<span class="lineNum">      89 </span>            :   unsigned getStoreIndex( const unsigned&amp; ) const ;
+<span class="lineNum">      90 </span>            : /// Get the true index of a quantity from the index it is stored in
+<span class="lineNum">      91 </span>            :   unsigned getTrueIndex( const unsigned&amp; ) const ;
+<span class="lineNum">      92 </span>            : /// Recalculate one of the base quantities
+<span class="lineNum">      93 </span>            :   void recalculateStoredQuantity( const unsigned&amp; myelm, MultiValue&amp; myvals );
+<span class="lineNum">      94 </span>            : /// Set a hard cutoff on the weight of an element
+<span class="lineNum">      95 </span>            :   void setHardCutoffOnWeight( const double&amp; mytol );
+<span class="lineNum">      96 </span>            : /// Add an action that uses this data
+<span class="lineNum">      97 </span>            :   void addActionThatUses( ActionWithVessel* actionThatUses );
+<span class="lineNum">      98 </span>            : /// Return the number of components in the vector
+<span class="lineNum">      99 </span><span class="lineCov">       3905 :   unsigned getNumberOfComponents() const { return vecsize; }</span>
+<span class="lineNum">     100 </span>            : /// Get the values of all the components in the vector
+<span class="lineNum">     101 </span>            :   void retrieveSequentialValue( const unsigned&amp; myelem, const bool&amp; normed, std::vector&lt;double&gt;&amp; values ) const ;
+<span class="lineNum">     102 </span>            :   void retrieveValueWithIndex( const unsigned&amp; myelem, const bool&amp; normed, std::vector&lt;double&gt;&amp; values ) const ;
+<span class="lineNum">     103 </span>            :   double retrieveWeightWithIndex( const unsigned&amp; myelem ) const ;
+<span class="lineNum">     104 </span>            : /// Get the derivatives for one of the components in the vector
+<span class="lineNum">     105 </span>            :   void retrieveDerivatives( const unsigned&amp; myelem, const bool&amp; normed, MultiValue&amp; myvals );
+<span class="lineNum">     106 </span>            : /// Do all resizing of data
+<a name="107"><span class="lineNum">     107 </span>            :   virtual void resize();</a>
+<span class="lineNum">     108 </span>            : ///
+<span class="lineNum">     109 </span><span class="lineCov">        111 :   virtual std::string description() { return &quot;&quot;; }</span>
+<span class="lineNum">     110 </span>            : /// Get the number of derivatives for the ith value
+<span class="lineNum">     111 </span>            :   unsigned getNumberOfDerivatives( const unsigned&amp; );
+<span class="lineNum">     112 </span>            : /// Get the size of the derivative list
+<span class="lineNum">     113 </span>            :   unsigned getSizeOfDerivativeList() const ;
+<span class="lineNum">     114 </span>            : /// This stores the data when not using lowmem
+<span class="lineNum">     115 </span>            :   virtual void calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_index ) const ;
+<span class="lineNum">     116 </span>            : /// Final step in gathering data
+<span class="lineNum">     117 </span>            :   virtual void finish( const std::vector&lt;double&gt;&amp; buffer );
+<span class="lineNum">     118 </span>            : /// Is a particular stored value active at the present time
+<span class="lineNum">     119 </span>            :   bool storedValueIsActive( const unsigned&amp; iatom ) const ;
+<span class="lineNum">     120 </span>            : /// Set the active values
+<a name="121"><span class="lineNum">     121 </span>            :   void setActiveValsAndDerivatives( const std::vector&lt;unsigned&gt;&amp; der_index );</a>
+<span class="lineNum">     122 </span>            : /// Activate indexes (this is used at end of chain rule)
+<a name="123"><span class="lineNum">     123 </span><span class="lineNoCov">          0 :   virtual void activateIndices( ActionWithVessel* ) {}</span></a>
+<span class="lineNum">     124 </span>            : /// Forces on vectors should always be applied elsewhere
+<span class="lineNum">     125 </span><span class="lineCov">        499 :   virtual bool applyForce(std::vector&lt;double&gt;&amp;) { return false; }</span>
+<span class="lineNum">     126 </span>            : ///  Get the number of data users
+<span class="lineNum">     127 </span>            :   unsigned getNumberOfDataUsers() const ;
+<span class="lineNum">     128 </span>            : /// Get one of the ith data user
+<span class="lineNum">     129 </span>            :   ActionWithVessel* getDataUser( const unsigned&amp; );
+<span class="lineNum">     130 </span>            : /// Set the number of tempory multivalues we need
+<span class="lineNum">     131 </span>            :   void resizeTemporyMultiValues( const unsigned&amp; nvals );
+<span class="lineNum">     132 </span>            : /// Return a tempory multi value - we do this so as to avoid vector resizing
+<span class="lineNum">     133 </span>            :   MultiValue&amp; getTemporyMultiValue( const unsigned&amp; ind );
+<span class="lineNum">     134 </span>            : };
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : inline
+<span class="lineNum">     137 </span>            : bool StoreDataVessel::weightHasDerivatives() {
+<span class="lineNum">     138 </span>            :   return getAction()-&gt;weightHasDerivatives;
+<span class="lineNum">     139 </span>            : }
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : inline
+<span class="lineNum">     142 </span>            : bool StoreDataVessel::usingLowMem() {
+<span class="lineNum">     143 </span>            :   return getAction()-&gt;lowmem;
+<span class="lineNum">     144 </span>            : }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : inline
+<span class="lineNum">     147 </span>            : unsigned StoreDataVessel::getNumberOfDerivativeSpacesPerComponent() const {
+<span class="lineNum">     148 </span>            :   return nspace;
+<span class="lineNum">     149 </span>            : }
+<a name="150"><span class="lineNum">     150 </span>            : </a>
+<span class="lineNum">     151 </span>            : inline
+<span class="lineNum">     152 </span><span class="lineCov">      57466 : bool StoreDataVessel::storedValueIsActive( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">     153 </span><span class="lineCov">      57466 :   if( !getAction()-&gt;taskIsCurrentlyActive( iatom ) ) return false;</span>
+<span class="lineNum">     154 </span><span class="lineCov">      45701 :   unsigned jatom = getStoreIndex( iatom );</span>
+<span class="lineNum">     155 </span>            :   plumed_dbg_assert( jatom&lt;getNumberOfStoredValues() );
+<span class="lineNum">     156 </span><span class="lineCov">      91402 :   return local_buffer[jatom*vecsize*nspace]&gt;epsilon;</span>
+<span class="lineNum">     157 </span>            : }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : inline
+<span class="lineNum">     160 </span>            : unsigned StoreDataVessel::getSizeOfDerivativeList() const {
+<span class="lineNum">     161 </span>            :   return active_der.size();
+<span class="lineNum">     162 </span>            : }
+<a name="163"><span class="lineNum">     163 </span>            : </a>
+<span class="lineNum">     164 </span>            : inline
+<span class="lineNum">     165 </span><span class="lineCov">     606989 : unsigned StoreDataVessel::getNumberOfStoredValues() const {</span>
+<span class="lineNum">     166 </span><span class="lineCov">     606989 :   return getAction()-&gt;nactive_tasks;</span>
+<span class="lineNum">     167 </span>            : }
+<a name="168"><span class="lineNum">     168 </span>            : </a>
+<span class="lineNum">     169 </span>            : inline
+<span class="lineNum">     170 </span><span class="lineCov">    1540774 : unsigned StoreDataVessel::getStoreIndex( const unsigned&amp; ind ) const {</span>
+<span class="lineNum">     171 </span><span class="lineCov">    3081548 :   if( getAction()-&gt;nactive_tasks==getAction()-&gt;getFullNumberOfTasks() ) return ind;</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :   // Binary search for required element - faster scaling than sequential search
+<span class="lineNum">     174 </span><span class="lineCov">      64159 :   unsigned l=0, r=getAction()-&gt;nactive_tasks-1;</span>
+<span class="lineNum">     175 </span><span class="lineCov">    1328441 :   for(unsigned i=0; i&lt;getAction()-&gt;nactive_tasks; ++i) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">     696300 :     plumed_assert( l&lt;=r );</span>
+<span class="lineNum">     177 </span><span class="lineCov">     696300 :     unsigned m = std::floor( (l + r)/2 );</span>
+<span class="lineNum">     178 </span><span class="lineCov">    1392600 :     if( ind==getAction()-&gt;indexOfTaskInFullList[m] ) return m;</span>
+<span class="lineNum">     179 </span><span class="lineCov">     632141 :     else if( getAction()-&gt;indexOfTaskInFullList[m]&lt;ind ) l=m+1;</span>
+<span class="lineNum">     180 </span><span class="lineCov">     302100 :     else if( getAction()-&gt;indexOfTaskInFullList[m]&gt;ind ) r=m-1;</span>
+<span class="lineNum">     181 </span>            :   }
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;requested task is not active&quot;);</span>
+<span class="lineNum">     183 </span>            : }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : inline
+<span class="lineNum">     186 </span>            : unsigned StoreDataVessel::getTrueIndex( const unsigned&amp; ind ) const {
+<span class="lineNum">     187 </span><span class="lineCov">        600 :   return getAction()-&gt;indexOfTaskInFullList[ind];</span>
+<span class="lineNum">     188 </span>            : }
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : inline
+<span class="lineNum">     191 </span>            : void StoreDataVessel::recalculateStoredQuantity( const unsigned&amp; myelem, MultiValue&amp; myvals ) {
+<span class="lineNum">     192 </span><span class="lineCov">     203316 :   getAction()-&gt;performTask( myelem, getAction()-&gt;getTaskCode(myelem), myvals );</span>
+<span class="lineNum">     193 </span>            : }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : inline
+<span class="lineNum">     196 </span>            : unsigned StoreDataVessel::getNumberOfDataUsers() const {
+<span class="lineNum">     197 </span><span class="lineCov">        643 :   return userActions.size();</span>
+<span class="lineNum">     198 </span>            : }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : inline
+<span class="lineNum">     201 </span>            : ActionWithVessel* StoreDataVessel::getDataUser( const unsigned&amp; idata ) {
+<span class="lineNum">     202 </span><span class="lineCov">         98 :   plumed_dbg_assert( idata&lt;userActions.size() ); return userActions[idata];</span>
+<span class="lineNum">     203 </span>            : }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : }
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : #endif
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

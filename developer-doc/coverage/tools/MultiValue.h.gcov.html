@@ -1,0 +1,317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/MultiValue.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - MultiValue.h<span style="font-size: 80%;"> (source / <a href="MultiValue.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_MultiValue_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_MultiValue_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      26 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;DynamicList.h&quot;
+<span class="lineNum">      28 </span>            : 
+<a name="29"><span class="lineNum">      29 </span>            : namespace PLMD {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">     224514 : class MultiValue {</span>
+<span class="lineNum">      32 </span>            : private:
+<span class="lineNum">      33 </span>            : /// Used to ensure rapid accumulation of derivatives
+<span class="lineNum">      34 </span>            :   DynamicList&lt;unsigned&gt; hasDerivatives;
+<span class="lineNum">      35 </span>            : /// Values of quantities
+<span class="lineNum">      36 </span>            :   std::vector&lt;double&gt; values;
+<span class="lineNum">      37 </span>            : /// Number of derivatives per value
+<span class="lineNum">      38 </span>            :   unsigned nderivatives;
+<span class="lineNum">      39 </span>            : /// Derivatives
+<span class="lineNum">      40 </span>            :   std::vector&lt;double&gt; derivatives;
+<span class="lineNum">      41 </span>            : /// Tempory value
+<span class="lineNum">      42 </span>            :   double tmpval;
+<span class="lineNum">      43 </span>            : /// Tempory vector of derivatives (used for calculating quotients
+<span class="lineNum">      44 </span>            :   std::vector&lt;double&gt; tmpder;
+<span class="lineNum">      45 </span>            : /// Logical to check if any derivatives were set
+<span class="lineNum">      46 </span>            :   bool atLeastOneSet;
+<span class="lineNum">      47 </span>            : /// This is a fudge to save on vector resizing in MultiColvar
+<span class="lineNum">      48 </span>            :   std::vector&lt;unsigned&gt; indices, sort_indices;
+<span class="lineNum">      49 </span>            :   std::vector&lt;Vector&gt; tmp_atoms;
+<span class="lineNum">      50 </span>            : public:
+<span class="lineNum">      51 </span>            :   MultiValue( const unsigned&amp;, const unsigned&amp; );
+<span class="lineNum">      52 </span>            :   void resize( const unsigned&amp;, const unsigned&amp; );
+<span class="lineNum">      53 </span>            : ///
+<span class="lineNum">      54 </span>            :   std::vector&lt;unsigned&gt;&amp; getIndices();
+<span class="lineNum">      55 </span>            :   std::vector&lt;unsigned&gt;&amp; getSortIndices();
+<span class="lineNum">      56 </span>            :   std::vector&lt;Vector&gt;&amp; getAtomVector();
+<span class="lineNum">      57 </span>            : /// Get the number of values in the stash
+<span class="lineNum">      58 </span>            :   unsigned getNumberOfValues() const ;
+<span class="lineNum">      59 </span>            : /// Get the number of derivatives in the stash
+<span class="lineNum">      60 </span>            :   unsigned getNumberOfDerivatives() const ;
+<span class="lineNum">      61 </span>            : /// Set value numbered
+<span class="lineNum">      62 </span>            :   void setValue( const unsigned&amp;,  const double&amp; );
+<span class="lineNum">      63 </span>            : /// Add value numbered
+<span class="lineNum">      64 </span>            :   void addValue( const unsigned&amp;,  const double&amp; );
+<span class="lineNum">      65 </span>            : /// Add derivative
+<span class="lineNum">      66 </span>            :   void addDerivative( const unsigned&amp;, const unsigned&amp;, const double&amp; );
+<span class="lineNum">      67 </span>            : /// Add to the tempory value
+<span class="lineNum">      68 </span>            :   void addTemporyValue( const double&amp; val );
+<span class="lineNum">      69 </span>            : /// Add tempory derivatives - this is used for calculating quotients
+<span class="lineNum">      70 </span>            :   void addTemporyDerivative( const unsigned&amp; jder, const double&amp; der );
+<span class="lineNum">      71 </span>            : /// Set the value of the derivative
+<span class="lineNum">      72 </span>            :   void setDerivative( const unsigned&amp; ival, const unsigned&amp; jder, const double&amp; der);
+<span class="lineNum">      73 </span>            : /// Return the ith value
+<span class="lineNum">      74 </span>            :   double get( const unsigned&amp; ) const ;
+<span class="lineNum">      75 </span>            : /// Return a derivative value
+<span class="lineNum">      76 </span>            :   double getDerivative( const unsigned&amp;, const unsigned&amp; ) const ;
+<span class="lineNum">      77 </span>            : /// Get one of the tempory derivatives
+<span class="lineNum">      78 </span>            :   double getTemporyDerivative( const unsigned&amp; jder ) const ;
+<span class="lineNum">      79 </span>            : /// Clear all values
+<span class="lineNum">      80 </span>            :   void clearAll();
+<span class="lineNum">      81 </span>            : /// Clear the tempory derivatives
+<span class="lineNum">      82 </span>            :   void clearTemporyDerivatives();
+<span class="lineNum">      83 </span>            : /// Clear a value
+<span class="lineNum">      84 </span>            :   void clear( const unsigned&amp; );
+<span class="lineNum">      85 </span>            : /// Functions for accessing active list
+<span class="lineNum">      86 </span>            :   bool updateComplete();
+<span class="lineNum">      87 </span>            :   void emptyActiveMembers();
+<span class="lineNum">      88 </span>            :   void putIndexInActiveArray( const unsigned &amp; );
+<span class="lineNum">      89 </span>            :   void updateIndex( const unsigned&amp; );
+<span class="lineNum">      90 </span>            :   void sortActiveList();
+<span class="lineNum">      91 </span>            :   void completeUpdate();
+<span class="lineNum">      92 </span>            :   void updateDynamicList();
+<span class="lineNum">      93 </span>            :   bool isActive( const unsigned&amp; ind ) const ;
+<span class="lineNum">      94 </span>            : ///
+<span class="lineNum">      95 </span>            :   unsigned getNumberActive() const ;
+<span class="lineNum">      96 </span>            : ///
+<span class="lineNum">      97 </span>            :   unsigned getActiveIndex( const unsigned&amp; ) const ;
+<span class="lineNum">      98 </span>            : /// Transfer derivatives to buffer
+<span class="lineNum">      99 </span>            :   void chainRule( const unsigned&amp;, const unsigned&amp;, const unsigned&amp;, const unsigned&amp;, const double&amp;, const unsigned&amp;, std::vector&lt;double&gt;&amp; buffer );
+<span class="lineNum">     100 </span>            : ///
+<span class="lineNum">     101 </span>            :   void copyValues( MultiValue&amp; ) const ;
+<span class="lineNum">     102 </span>            : ///
+<span class="lineNum">     103 </span>            :   void copyDerivatives( MultiValue&amp; );
+<span class="lineNum">     104 </span>            : ///
+<span class="lineNum">     105 </span>            :   void quotientRule( const unsigned&amp; nder, const unsigned&amp; oder );
+<span class="lineNum">     106 </span>            : };
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : inline
+<span class="lineNum">     109 </span>            : unsigned MultiValue::getNumberOfValues() const {
+<span class="lineNum">     110 </span><span class="lineCov">  172154129 :   return values.size();</span>
+<span class="lineNum">     111 </span>            : }
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : inline
+<span class="lineNum">     114 </span>            : unsigned MultiValue::getNumberOfDerivatives() const {
+<span class="lineNum">     115 </span><span class="lineCov">   31048373 :   return nderivatives; //derivatives.ncols();</span>
+<span class="lineNum">     116 </span>            : }
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : inline
+<span class="lineNum">     119 </span>            : double MultiValue::get( const unsigned&amp; ival ) const {
+<span class="lineNum">     120 </span>            :   plumed_dbg_assert( ival&lt;=values.size() );
+<span class="lineNum">     121 </span><span class="lineCov">  344302971 :   return values[ival];</span>
+<span class="lineNum">     122 </span>            : }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : inline
+<span class="lineNum">     125 </span>            : void MultiValue::setValue( const unsigned&amp; ival,  const double&amp; val) {
+<span class="lineNum">     126 </span>            :   plumed_dbg_assert( ival&lt;=values.size() );
+<span class="lineNum">     127 </span><span class="lineCov">    2388879 :   values[ival]=val;</span>
+<span class="lineNum">     128 </span>            : }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : inline
+<span class="lineNum">     131 </span>            : void MultiValue::addValue( const unsigned&amp; ival,  const double&amp; val) {
+<span class="lineNum">     132 </span>            :   plumed_dbg_assert( ival&lt;=values.size() );
+<span class="lineNum">     133 </span><span class="lineCov">  115739240 :   values[ival]+=val;</span>
+<span class="lineNum">     134 </span>            : }
+<a name="135"><span class="lineNum">     135 </span>            : </a>
+<span class="lineNum">     136 </span>            : inline
+<span class="lineNum">     137 </span><span class="lineCov"> 1308808595 : void MultiValue::addDerivative( const unsigned&amp; ival, const unsigned&amp; jder, const double&amp; der) {</span>
+<span class="lineNum">     138 </span><span class="lineCov"> 1308808595 :   plumed_dbg_assert( ival&lt;=values.size() &amp;&amp; jder&lt;nderivatives ); atLeastOneSet=true;</span>
+<span class="lineNum">     139 </span><span class="lineCov"> 2617617190 :   hasDerivatives.activate(jder); derivatives[nderivatives*ival+jder] += der;</span>
+<span class="lineNum">     140 </span><span class="lineCov"> 1308808595 : }</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : inline
+<span class="lineNum">     143 </span>            : void MultiValue::addTemporyValue( const double&amp; val ) {
+<span class="lineNum">     144 </span><span class="lineCov">    2752171 :   tmpval += val;</span>
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : inline
+<span class="lineNum">     148 </span>            : void MultiValue::addTemporyDerivative( const unsigned&amp; jder, const double&amp; der ) {
+<span class="lineNum">     149 </span><span class="lineCov">   35713254 :   plumed_dbg_assert( jder&lt;nderivatives ); atLeastOneSet=true;</span>
+<span class="lineNum">     150 </span><span class="lineCov">   71426508 :   hasDerivatives.activate(jder); tmpder[jder] += der;</span>
+<span class="lineNum">     151 </span>            : }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : inline
+<span class="lineNum">     155 </span>            : void MultiValue::setDerivative( const unsigned&amp; ival, const unsigned&amp; jder, const double&amp; der) {
+<span class="lineNum">     156 </span><span class="lineCov">  127331615 :   plumed_dbg_assert( ival&lt;=values.size() &amp;&amp; jder&lt;nderivatives ); atLeastOneSet=true;</span>
+<span class="lineNum">     157 </span><span class="lineCov">  289755628 :   hasDerivatives.activate(jder); derivatives[nderivatives*ival+jder]=der;</span>
+<span class="lineNum">     158 </span>            : }
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : inline
+<span class="lineNum">     162 </span>            : double MultiValue::getDerivative( const unsigned&amp; ival, const unsigned&amp; jder ) const {
+<span class="lineNum">     163 </span>            :   plumed_dbg_assert( jder&lt;nderivatives &amp;&amp; hasDerivatives.isActive(jder) );
+<span class="lineNum">     164 </span><span class="lineCov"> 1245581886 :   return derivatives[nderivatives*ival+jder];</span>
+<span class="lineNum">     165 </span>            : }
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : inline
+<span class="lineNum">     168 </span>            : double MultiValue::getTemporyDerivative( const unsigned&amp; jder ) const {
+<span class="lineNum">     169 </span>            :   plumed_dbg_assert( jder&lt;nderivatives &amp;&amp; hasDerivatives.isActive(jder) );
+<span class="lineNum">     170 </span><span class="lineCov">      99408 :   return tmpder[jder];</span>
+<span class="lineNum">     171 </span>            : }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : inline
+<span class="lineNum">     174 </span>            : bool MultiValue::updateComplete() {
+<span class="lineNum">     175 </span><span class="lineCov">    1384306 :   return hasDerivatives.updateComplete();</span>
+<span class="lineNum">     176 </span>            : }
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : inline
+<span class="lineNum">     179 </span>            : void MultiValue::emptyActiveMembers() {
+<span class="lineNum">     180 </span><span class="lineCov">     946777 :   hasDerivatives.emptyActiveMembers();</span>
+<span class="lineNum">     181 </span>            : }
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : inline
+<span class="lineNum">     184 </span>            : void MultiValue::putIndexInActiveArray( const unsigned&amp; ind ) {
+<span class="lineNum">     185 </span><span class="lineCov">   78336980 :   hasDerivatives.putIndexInActiveArray( ind );</span>
+<span class="lineNum">     186 </span>            : }
+<a name="187"><span class="lineNum">     187 </span>            : </a>
+<span class="lineNum">     188 </span>            : inline
+<span class="lineNum">     189 </span><span class="lineCov">     222000 : void MultiValue::updateIndex( const unsigned&amp; ind ) {</span>
+<span class="lineNum">     190 </span><span class="lineCov">     222000 :   if( hasDerivatives.isActive(ind) ) hasDerivatives.putIndexInActiveArray( ind );</span>
+<span class="lineNum">     191 </span><span class="lineCov">     222000 : }</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : inline
+<span class="lineNum">     194 </span>            : void MultiValue::sortActiveList() {
+<span class="lineNum">     195 </span><span class="lineCov">      56130 :   hasDerivatives.sortActiveList();</span>
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : inline
+<span class="lineNum">     199 </span>            : void MultiValue::completeUpdate() {
+<span class="lineNum">     200 </span><span class="lineCov">     890647 :   hasDerivatives.completeUpdate();</span>
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : inline
+<span class="lineNum">     204 </span>            : unsigned MultiValue::getNumberActive() const {
+<span class="lineNum">     205 </span><span class="lineCov">   41483825 :   return hasDerivatives.getNumberActive();</span>
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : inline
+<span class="lineNum">     209 </span>            : unsigned MultiValue::getActiveIndex( const unsigned&amp; ind ) const {
+<span class="lineNum">     210 </span>            :   plumed_dbg_assert( ind&lt;hasDerivatives.getNumberActive() );
+<span class="lineNum">     211 </span>            :   return hasDerivatives[ind];
+<span class="lineNum">     212 </span>            : }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : inline
+<span class="lineNum">     215 </span>            : void MultiValue::updateDynamicList() {
+<span class="lineNum">     216 </span><span class="lineCov">     140603 :   if( atLeastOneSet ) hasDerivatives.updateActiveMembers();</span>
+<span class="lineNum">     217 </span>            : }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : inline
+<span class="lineNum">     220 </span>            : std::vector&lt;unsigned&gt;&amp; MultiValue::getIndices() {
+<span class="lineNum">     221 </span><span class="lineCov">     683668 :   return indices;</span>
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : inline
+<span class="lineNum">     225 </span>            : std::vector&lt;unsigned&gt;&amp; MultiValue::getSortIndices() {
+<span class="lineNum">     226 </span><span class="lineCov">     462029 :   return sort_indices;</span>
+<span class="lineNum">     227 </span>            : }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : inline
+<span class="lineNum">     230 </span>            : std::vector&lt;Vector&gt;&amp; MultiValue::getAtomVector() {
+<span class="lineNum">     231 </span><span class="lineCov">     690641 :   return tmp_atoms;</span>
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : inline
+<span class="lineNum">     235 </span>            : bool MultiValue::isActive( const unsigned&amp; ind ) const {
+<span class="lineNum">     236 </span><span class="lineCov">  421032144 :   return hasDerivatives.isActive( ind );</span>
+<span class="lineNum">     237 </span>            : }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : }
+<span class="lineNum">     240 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

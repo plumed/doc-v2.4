@@ -1,0 +1,1291 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/EEFSolv.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - EEFSolv.cpp<span style="font-size: 80%;"> (source / <a href="EEFSolv.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">149</td>
+            <td class="headerCovTableEntry">166</td>
+            <td class="headerCovTableEntryMed">89.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryHi">93.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : /* This class was originally written by Thomas Loehr */
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/OpenMP.h&quot;
+<span class="lineNum">      31 </span>            : #include &lt;initializer_list&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #define INV_PI_SQRT_PI 0.179587122
+<span class="lineNum">      34 </span>            : #define KCAL_TO_KJ 4.184
+<span class="lineNum">      35 </span>            : #define ANG_TO_NM 0.1
+<span class="lineNum">      36 </span>            : #define ANG3_TO_NM3 0.001
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : using namespace std;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace PLMD {
+<span class="lineNum">      41 </span>            : namespace colvar {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : //+PLUMEDOC COLVAR EEFSOLV
+<span class="lineNum">      44 </span>            : /*
+<span class="lineNum">      45 </span>            : Calculates EEF1 solvation free energy for a group of atoms.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : EEF1 is a solvent-accessible surface area based model, where the free energy of solvation is computed using a pairwise interaction term for non-hydrogen atoms:
+<span class="lineNum">      48 </span>            : \f[
+<span class="lineNum">      49 </span>            :     \Delta G^\mathrm{solv}_i = \Delta G^\mathrm{ref}_i - \sum_{j \neq i} f_i(r_{ij}) V_j
+<span class="lineNum">      50 </span>            : \f]
+<span class="lineNum">      51 </span>            : where \f$\Delta G^\mathrm{solv}_i\f$ is the free energy of solvation, \f$\Delta G^\mathrm{ref}_i\f$ is the reference solvation free energy, \f$V_j\f$ is the volume of atom \f$j\f$ and
+<span class="lineNum">      52 </span>            : \f[
+<span class="lineNum">      53 </span>            :     f_i(r) 4\pi r^2 = \frac{2}{\sqrt{\pi}} \frac{\Delta G^\mathrm{free}_i}{\lambda_i} \exp\left\{ - \frac{(r-R_i)^2}{\lambda^2_i}\right\}
+<span class="lineNum">      54 </span>            : \f]
+<span class="lineNum">      55 </span>            : where \f$\Delta G^\mathrm{free}_i\f$ is the solvation free energy of the isolated group, \f$\lambda_i\f$ is the correlation length equal to the width of the first solvation shell and \f$R_i\f$ is the van der Waals radius of atom \f$i\f$.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : The output from this collective variable, the free energy of solvation, can be used with the \ref BIASVALUE keyword to provide implicit solvation to a system. All parameters are designed to be used with a modified CHARMM36 force field. It takes only non-hydrogen atoms as input, these can be conveniently specified using the \ref GROUP action with the NDX_GROUP parameter. To speed up the calculation, EEFSOLV internally uses a neighbourlist with a cutoff dependent on the type of atom (maximum of 1.95 nm). This cutoff can be extended further by using the NL_BUFFER keyword.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : \par Examples
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : \plumedfile
+<span class="lineNum">      62 </span>            : MOLINFO MOLTYPE=protein STRUCTURE=peptide.pdb
+<span class="lineNum">      63 </span>            : WHOLEMOLECULES ENTITY0=1-111
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : # This allows us to select only non-hydrogen atoms
+<span class="lineNum">      66 </span>            : protein-h: GROUP NDX_FILE=index.ndx NDX_GROUP=Protein-H
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : # We extend the cutoff by 0.2 nm and update the neighbourlist every 10 steps
+<span class="lineNum">      69 </span>            : solv: EEFSOLV ATOMS=protein-h NL_STRIDE=10 NL_BUFFER=0.2
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : # Here we actually add our calculated energy back to the potential
+<span class="lineNum">      72 </span>            : bias: BIASVALUE ARG=solv
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : PRINT ARG=solv FILE=SOLV
+<span class="lineNum">      75 </span>            : \endplumedfile
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : */
+<a name="78"><span class="lineNum">      78 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          4 : class EEFSolv : public Colvar {</span>
+<span class="lineNum">      81 </span>            : private:
+<span class="lineNum">      82 </span>            :   bool pbc;
+<span class="lineNum">      83 </span>            :   double buffer;
+<span class="lineNum">      84 </span>            :   double delta_g_ref;
+<span class="lineNum">      85 </span>            :   unsigned stride;
+<span class="lineNum">      86 </span>            :   unsigned nl_update;
+<span class="lineNum">      87 </span>            :   vector&lt;vector&lt;unsigned&gt; &gt; nl;
+<span class="lineNum">      88 </span>            :   vector&lt;vector&lt;bool&gt; &gt; nlexpo;
+<span class="lineNum">      89 </span>            :   vector&lt;vector&lt;double&gt; &gt; parameter;
+<span class="lineNum">      90 </span>            :   void setupConstants(const vector&lt;AtomNumber&gt; &amp;atoms, vector&lt;vector&lt;double&gt; &gt; &amp;parameter, bool tcorr);
+<span class="lineNum">      91 </span>            :   map&lt;string, map&lt;string, string&gt; &gt; setupTypeMap();
+<span class="lineNum">      92 </span>            :   map&lt;string, vector&lt;double&gt; &gt; setupValueMap();
+<span class="lineNum">      93 </span>            :   void update_neighb();
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : public:
+<span class="lineNum">      96 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      97 </span>            :   explicit EEFSolv(const ActionOptions&amp;);
+<span class="lineNum">      98 </span>            :   virtual void calculate();
+<a name="99"><span class="lineNum">      99 </span>            : };</a>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(EEFSolv,&quot;EEFSOLV&quot;)</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">          3 : void EEFSolv::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">          3 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">     105 </span><span class="lineCov">          3 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     106 </span><span class="lineCov">          3 :   useCustomisableComponents(keys);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;, &quot;ATOMS&quot;, &quot;The atoms to be included in the calculation, e.g. the whole protein.&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;, &quot;NL_BUFFER&quot;, &quot;The buffer to the intrinsic cutoff used when calculating pairwise interactions.&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;, &quot;NL_STRIDE&quot;, &quot;The frequency with which the neighbourlist is updated.&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">          9 :   keys.addFlag(&quot;TEMP_CORRECTION&quot;, false, &quot;Correct free energy of solvation constants for temperatures different from 298.15 K&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">          2 : EEFSolv::EEFSolv(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     114 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">     115 </span>            :   pbc(true),
+<span class="lineNum">     116 </span>            :   buffer(0.1),
+<span class="lineNum">     117 </span>            :   delta_g_ref(0.),
+<span class="lineNum">     118 </span>            :   stride(10),
+<span class="lineNum">     119 </span><span class="lineCov">          6 :   nl_update(0)</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     122 </span><span class="lineCov">          4 :   parseAtomList(&quot;ATOMS&quot;, atoms);</span>
+<span class="lineNum">     123 </span>            :   const unsigned size = atoms.size();
+<span class="lineNum">     124 </span><span class="lineCov">          2 :   bool tcorr = false;</span>
+<span class="lineNum">     125 </span><span class="lineCov">          4 :   parseFlag(&quot;TEMP_CORRECTION&quot;, tcorr);</span>
+<span class="lineNum">     126 </span><span class="lineCov">          4 :   parse(&quot;NL_BUFFER&quot;, buffer);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          4 :   parse(&quot;NL_STRIDE&quot;, stride);</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">          2 :   bool nopbc = !pbc;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          4 :   parseFlag(&quot;NOPBC&quot;, nopbc);</span>
+<span class="lineNum">     131 </span><span class="lineCov">          2 :   pbc = !nopbc;</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">          6 :   log &lt;&lt; &quot;  Bibliography &quot; &lt;&lt; plumed.cite(&quot;Lazaridis T, Karplus M, Proteins Struct. Funct. Genet. 35, 133 (1999)&quot;); log &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">          2 :   nl.resize(size);</span>
+<span class="lineNum">     139 </span><span class="lineCov">          2 :   nlexpo.resize(size);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          4 :   parameter.resize(size, vector&lt;double&gt;(4, 0));</span>
+<span class="lineNum">     141 </span><span class="lineCov">          2 :   setupConstants(atoms, parameter, tcorr);</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">          2 :   addValueWithDerivatives();</span>
+<span class="lineNum">     144 </span><span class="lineCov">          2 :   setNotPeriodic();</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :   requestAtoms(atoms);</span>
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">       1146 : void EEFSolv::update_neighb() {</span>
+<span class="lineNum">     149 </span>            :   const double lower_c2 = 0.24 * 0.24; // this is the cut-off for bonded atoms
+<span class="lineNum">     150 </span>            :   const unsigned size = getNumberOfAtoms();
+<span class="lineNum">     151 </span><span class="lineCov">     138666 :   for (unsigned i=0; i&lt;size; ++i) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">      68760 :     nl[i].clear();</span>
+<span class="lineNum">     153 </span>            :     nlexpo[i].clear();
+<span class="lineNum">     154 </span><span class="lineCov">     137520 :     const Vector posi = getPosition(i);</span>
+<span class="lineNum">     155 </span>            :     // Loop through neighboring atoms, add the ones below cutoff
+<span class="lineNum">     156 </span><span class="lineCov">    2097180 :     for (unsigned j=i+1; j&lt;size; ++j) {</span>
+<span class="lineNum">     157 </span><span class="lineCov">    4056840 :       const double d2 = delta(posi, getPosition(j)).modulo2();</span>
+<span class="lineNum">     158 </span><span class="lineCov">    2028420 :       if (d2 &lt; lower_c2 &amp;&amp; j &lt; i+14) {</span>
+<span class="lineNum">     159 </span>            :         // crude approximation for i-i+1/2 interactions,
+<span class="lineNum">     160 </span>            :         // we want to exclude atoms separated by less than three bonds
+<span class="lineNum">     161 </span><span class="lineCov">     102949 :         continue;</span>
+<span class="lineNum">     162 </span>            :       }
+<span class="lineNum">     163 </span>            :       // We choose the maximum lambda value and use a more conservative cutoff
+<span class="lineNum">     164 </span><span class="lineCov">    1925471 :       double mlambda = 1./parameter[i][2];</span>
+<span class="lineNum">     165 </span><span class="lineCov">    3850942 :       if (1./parameter[j][2] &gt; mlambda) mlambda = 1./parameter[j][2];</span>
+<span class="lineNum">     166 </span><span class="lineCov">    1925471 :       const double c2 = (4. * mlambda + buffer) * (4. * mlambda + buffer);</span>
+<span class="lineNum">     167 </span><span class="lineCov">    1925471 :       if (d2 &lt; c2 ) {</span>
+<span class="lineNum">     168 </span><span class="lineCov">    1925089 :         nl[i].push_back(j);</span>
+<span class="lineNum">     169 </span><span class="lineCov">    3850178 :         if(parameter[i][2] == parameter[j][2] &amp;&amp; parameter[i][3] == parameter[j][3]) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">     420964 :           nlexpo[i].push_back(true);</span>
+<span class="lineNum">     171 </span><span class="lineCov">    1504125 :         } else nlexpo[i].push_back(false);</span>
+<span class="lineNum">     172 </span>            :       }
+<span class="lineNum">     173 </span>            :     }
+<span class="lineNum">     174 </span>            :   }
+<a name="175"><span class="lineNum">     175 </span><span class="lineCov">       1146 : }</span></a>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">       1146 : void EEFSolv::calculate() {</span>
+<span class="lineNum">     178 </span><span class="lineCov">       1146 :   if(pbc) makeWhole();</span>
+<span class="lineNum">     179 </span><span class="lineCov">       1146 :   if(getExchangeStep()) nl_update = 0;</span>
+<span class="lineNum">     180 </span><span class="lineCov">       1146 :   if (nl_update == 0) {</span>
+<span class="lineNum">     181 </span><span class="lineCov">       1146 :     update_neighb();</span>
+<span class="lineNum">     182 </span>            :   }
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :   const unsigned size=getNumberOfAtoms();
+<span class="lineNum">     185 </span>            :   double bias = 0.0;
+<span class="lineNum">     186 </span><span class="lineCov">       1146 :   Tensor deriv_box;</span>
+<span class="lineNum">     187 </span><span class="lineCov">       1146 :   unsigned nt=OpenMP::getNumThreads();</span>
+<span class="lineNum">     188 </span><span class="lineCov">       1146 :   const unsigned nn=nl.size();</span>
+<span class="lineNum">     189 </span><span class="lineCov">       1146 :   if(nt*10&gt;nn) nt=1;</span>
+<span class="lineNum">     190 </span><span class="lineCov">       3438 :   #pragma omp parallel num_threads(nt)</span>
+<span class="lineNum">     191 </span>            :   {
+<span class="lineNum">     192 </span><span class="lineCov">       2292 :     vector&lt;Vector&gt; deriv_omp(size);</span>
+<span class="lineNum">     193 </span><span class="lineCov">       2292 :     #pragma omp for reduction(+:bias)</span>
+<span class="lineNum">     194 </span>            :     for (unsigned i=0; i&lt;size; ++i) {
+<span class="lineNum">     195 </span><span class="lineCov">     137520 :       const Vector posi = getPosition(i);</span>
+<span class="lineNum">     196 </span>            :       double fedensity = 0.0;
+<span class="lineNum">     197 </span><span class="lineCov">      68760 :       Vector deriv_i;</span>
+<span class="lineNum">     198 </span><span class="lineCov">     137520 :       const double vdw_volume_i   = parameter[i][0];</span>
+<span class="lineNum">     199 </span><span class="lineCov">      68760 :       const double delta_g_free_i = parameter[i][1];</span>
+<span class="lineNum">     200 </span><span class="lineCov">      68760 :       const double inv_lambda_i   = parameter[i][2];</span>
+<span class="lineNum">     201 </span><span class="lineCov">      68760 :       const double vdw_radius_i   = parameter[i][3];</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :       // The pairwise interactions are unsymmetric, but we can get away with calculating the distance only once
+<span class="lineNum">     204 </span><span class="lineCov">    5912787 :       for (unsigned i_nl=0; i_nl&lt;nl[i].size(); ++i_nl) {</span>
+<span class="lineNum">     205 </span><span class="lineCov">    1925089 :         const unsigned j = nl[i][i_nl];</span>
+<span class="lineNum">     206 </span><span class="lineCov">    3850178 :         const double vdw_volume_j   = parameter[j][0];</span>
+<span class="lineNum">     207 </span><span class="lineCov">    1925089 :         const double delta_g_free_j = parameter[j][1];</span>
+<span class="lineNum">     208 </span><span class="lineCov">    1925089 :         const double inv_lambda_j   = parameter[j][2];</span>
+<span class="lineNum">     209 </span><span class="lineCov">    1925089 :         const double vdw_radius_j   = parameter[j][3];</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineCov">    3850178 :         const Vector dist     = delta(posi, getPosition(j));</span>
+<span class="lineNum">     212 </span><span class="lineCov">    1925089 :         const double rij      = dist.modulo();</span>
+<span class="lineNum">     213 </span><span class="lineCov">    1925089 :         const double inv_rij  = 1.0 / rij;</span>
+<span class="lineNum">     214 </span><span class="lineCov">    1925089 :         const double inv_rij2 = inv_rij * inv_rij;</span>
+<span class="lineNum">     215 </span><span class="lineCov">    1925089 :         const double fact_ij  = inv_rij2 * delta_g_free_i * vdw_volume_j * INV_PI_SQRT_PI* inv_lambda_i;</span>
+<span class="lineNum">     216 </span><span class="lineCov">    1925089 :         const double fact_ji  = inv_rij2 * delta_g_free_j * vdw_volume_i * INV_PI_SQRT_PI* inv_lambda_j;</span>
+<span class="lineNum">     217 </span>            :         double deriv = 0.;
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :         // in this case we can calculate a single exponential
+<span class="lineNum">     220 </span><span class="lineCov">    1925089 :         if(!nlexpo[i][i_nl]) {</span>
+<span class="lineNum">     221 </span>            :           // i-j interaction
+<span class="lineNum">     222 </span><span class="lineCov">    1504125 :           if(inv_rij &gt; 0.25*inv_lambda_i)</span>
+<span class="lineNum">     223 </span>            :           {
+<span class="lineNum">     224 </span><span class="lineCov">    1457521 :             const double inv_lambda2_i = inv_lambda_i * inv_lambda_i;</span>
+<span class="lineNum">     225 </span><span class="lineCov">    1457521 :             const double rij_vdwr_diff = rij - vdw_radius_i;</span>
+<span class="lineNum">     226 </span><span class="lineCov">    1457521 :             const double expo = exp(-inv_lambda2_i * rij_vdwr_diff * rij_vdwr_diff);</span>
+<span class="lineNum">     227 </span><span class="lineCov">    1457521 :             const double fact = expo * fact_ij;</span>
+<span class="lineNum">     228 </span><span class="lineCov">    1457521 :             fedensity += fact;</span>
+<span class="lineNum">     229 </span><span class="lineCov">    1457521 :             deriv     += inv_rij * fact * (inv_rij + rij_vdwr_diff * inv_lambda2_i);</span>
+<span class="lineNum">     230 </span>            :           }
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :           // j-i interaction
+<span class="lineNum">     233 </span><span class="lineCov">    1504125 :           if(inv_rij &gt; 0.25*inv_lambda_j)</span>
+<span class="lineNum">     234 </span>            :           {
+<span class="lineNum">     235 </span><span class="lineCov">    1419703 :             const double inv_lambda2_j = inv_lambda_j * inv_lambda_j;</span>
+<span class="lineNum">     236 </span><span class="lineCov">    1419703 :             const double rij_vdwr_diff = rij - vdw_radius_j;</span>
+<span class="lineNum">     237 </span><span class="lineCov">    1419703 :             const double expo = exp(-inv_lambda2_j * rij_vdwr_diff * rij_vdwr_diff);</span>
+<span class="lineNum">     238 </span><span class="lineCov">    1419703 :             const double fact = expo * fact_ji;</span>
+<span class="lineNum">     239 </span><span class="lineCov">    1419703 :             fedensity += fact;</span>
+<span class="lineNum">     240 </span><span class="lineCov">    1419703 :             deriv     += inv_rij * fact * (inv_rij + rij_vdwr_diff * inv_lambda2_j);</span>
+<span class="lineNum">     241 </span>            :           }
+<span class="lineNum">     242 </span>            :         } else {
+<span class="lineNum">     243 </span>            :           // i-j interaction
+<span class="lineNum">     244 </span><span class="lineCov">     420964 :           if(inv_rij &gt; 0.25*inv_lambda_i)</span>
+<span class="lineNum">     245 </span>            :           {
+<span class="lineNum">     246 </span><span class="lineCov">     417717 :             const double inv_lambda2 = inv_lambda_i * inv_lambda_i;</span>
+<span class="lineNum">     247 </span><span class="lineCov">     417717 :             const double rij_vdwr_diff = rij - vdw_radius_i;</span>
+<span class="lineNum">     248 </span><span class="lineCov">     417717 :             const double expo = exp(-inv_lambda2 * rij_vdwr_diff * rij_vdwr_diff);</span>
+<span class="lineNum">     249 </span><span class="lineCov">     417717 :             const double fact = expo*(fact_ij + fact_ji);</span>
+<span class="lineNum">     250 </span><span class="lineCov">     417717 :             fedensity += fact;</span>
+<span class="lineNum">     251 </span><span class="lineCov">     417717 :             deriv     += inv_rij * fact * (inv_rij + rij_vdwr_diff * inv_lambda2);</span>
+<span class="lineNum">     252 </span>            :           }
+<span class="lineNum">     253 </span>            :         }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span><span class="lineCov">    1925089 :         const Vector dd = deriv*dist;</span>
+<span class="lineNum">     256 </span><span class="lineCov">    1925089 :         deriv_i      += dd;</span>
+<span class="lineNum">     257 </span><span class="lineCov">    1925089 :         deriv_omp[j] -= dd;</span>
+<span class="lineNum">     258 </span>            :       }
+<span class="lineNum">     259 </span><span class="lineCov">      68760 :       deriv_omp[i] += deriv_i;</span>
+<span class="lineNum">     260 </span><span class="lineCov">      68760 :       bias += - 0.5 * fedensity;</span>
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span><span class="lineCov">       4584 :     #pragma omp critical</span>
+<span class="lineNum">     263 </span><span class="lineCov">     277332 :     for(unsigned i=0; i&lt;size; i++) {</span>
+<span class="lineNum">     264 </span><span class="lineCov">     412560 :       setAtomsDerivatives(i, -deriv_omp[i]);</span>
+<span class="lineNum">     265 </span><span class="lineCov">     275040 :       deriv_box += Tensor(getPosition(i), -deriv_omp[i]);</span>
+<span class="lineNum">     266 </span>            :     }
+<span class="lineNum">     267 </span>            :   }
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span><span class="lineCov">       2292 :   setBoxDerivatives(-deriv_box);</span>
+<span class="lineNum">     270 </span><span class="lineCov">       1146 :   setValue(delta_g_ref + bias);</span>
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :   // Keep track of the neighbourlist updates
+<span class="lineNum">     273 </span><span class="lineCov">       1146 :   ++nl_update;</span>
+<span class="lineNum">     274 </span><span class="lineCov">       1146 :   if (nl_update == stride) {</span>
+<span class="lineNum">     275 </span><span class="lineCov">       1146 :     nl_update = 0;</span>
+<span class="lineNum">     276 </span>            :   }
+<span class="lineNum">     277 </span><span class="lineCov">       1146 : }</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">          2 : void EEFSolv::setupConstants(const vector&lt;AtomNumber&gt; &amp;atoms, vector&lt;vector&lt;double&gt; &gt; &amp;parameter, bool tcorr) {</span>
+<span class="lineNum">     280 </span><span class="lineCov">          2 :   vector&lt;vector&lt;double&gt; &gt; parameter_temp;</span>
+<span class="lineNum">     281 </span><span class="lineCov">          2 :   parameter_temp.resize(atoms.size());</span>
+<span class="lineNum">     282 </span>            :   map&lt;string, vector&lt;double&gt; &gt; valuemap;
+<span class="lineNum">     283 </span>            :   map&lt;string, map&lt;string, string&gt; &gt; typemap;
+<span class="lineNum">     284 </span><span class="lineCov">          4 :   valuemap = setupValueMap();</span>
+<span class="lineNum">     285 </span><span class="lineCov">          4 :   typemap  = setupTypeMap();</span>
+<span class="lineNum">     286 </span><span class="lineCov">          4 :   vector&lt;SetupMolInfo*&gt; moldat = plumed.getActionSet().select&lt;SetupMolInfo*&gt;();</span>
+<span class="lineNum">     287 </span>            :   bool cter=false;
+<span class="lineNum">     288 </span><span class="lineCov">          2 :   if (moldat.size() == 1) {</span>
+<span class="lineNum">     289 </span><span class="lineCov">          2 :     log &lt;&lt; &quot;  MOLINFO DATA found, using proper atom names\n&quot;;</span>
+<span class="lineNum">     290 </span><span class="lineCov">        364 :     for(unsigned i=0; i&lt;atoms.size(); ++i) {</span>
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :       // Get atom and residue names
+<span class="lineNum">     293 </span><span class="lineCov">        240 :       string Aname = moldat[0]-&gt;getAtomName(atoms[i]);</span>
+<span class="lineNum">     294 </span><span class="lineCov">        240 :       string Rname = moldat[0]-&gt;getResidueName(atoms[i]);</span>
+<span class="lineNum">     295 </span><span class="lineCov">        120 :       string Atype = typemap[Rname][Aname];</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :       // Check for terminal COOH or COO- (different atomtypes &amp; parameters!)
+<span class="lineNum">     298 </span><span class="lineCov">        960 :       if (moldat[0]-&gt;getAtomName(atoms[i]) == &quot;OT1&quot; || moldat[0]-&gt;getAtomName(atoms[i]) == &quot;OXT&quot;) {</span>
+<span class="lineNum">     299 </span>            :         // We create a temporary AtomNumber object to access future atoms
+<span class="lineNum">     300 </span>            :         unsigned ai = atoms[i].index();
+<span class="lineNum">     301 </span>            :         AtomNumber tmp_an;
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :         tmp_an.setIndex(ai + 2);</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :         if (moldat[0]-&gt;getAtomName(tmp_an) == &quot;HT2&quot;) {</span>
+<span class="lineNum">     304 </span>            :           // COOH
+<span class="lineNum">     305 </span>            :           Atype = &quot;OB&quot;;
+<span class="lineNum">     306 </span>            :         } else {
+<span class="lineNum">     307 </span>            :           // COO-
+<span class="lineNum">     308 </span>            :           Atype = &quot;OC&quot;;
+<span class="lineNum">     309 </span>            :         }
+<span class="lineNum">     310 </span>            :         cter = true;
+<span class="lineNum">     311 </span>            :       }
+<span class="lineNum">     312 </span><span class="lineCov">        600 :       if (moldat[0]-&gt;getAtomName(atoms[i]) == &quot;OT2&quot; || (cter == true &amp;&amp; moldat[0]-&gt;getAtomName(atoms[i]) == &quot;O&quot;)) {</span>
+<span class="lineNum">     313 </span>            :         unsigned ai = atoms[i].index();
+<span class="lineNum">     314 </span>            :         AtomNumber tmp_an;
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :         tmp_an.setIndex(ai + 1);</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :         if (moldat[0]-&gt;getAtomName(tmp_an) == &quot;HT2&quot;) {</span>
+<span class="lineNum">     317 </span>            :           // COOH
+<span class="lineNum">     318 </span>            :           Atype = &quot;OH1&quot;;
+<span class="lineNum">     319 </span>            :         } else {
+<span class="lineNum">     320 </span>            :           // COO-
+<span class="lineNum">     321 </span>            :           Atype = &quot;OC&quot;;
+<span class="lineNum">     322 </span>            :         }
+<span class="lineNum">     323 </span>            :       }
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :       // Check for H-atoms
+<span class="lineNum">     326 </span>            :       char type;
+<span class="lineNum">     327 </span><span class="lineCov">        120 :       char first = Aname.at(0);</span>
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :       // GOLDEN RULE: type is first letter, if not a number
+<span class="lineNum">     330 </span><span class="lineCov">        120 :       if (!isdigit(first)) {</span>
+<span class="lineNum">     331 </span>            :         type = first;
+<span class="lineNum">     332 </span>            :         // otherwise is the second
+<span class="lineNum">     333 </span>            :       } else {
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :         type = Aname.at(1);</span>
+<span class="lineNum">     335 </span>            :       }
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span><span class="lineCov">        120 :       if (type == 'H') {</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :         error(&quot;EEF1-SB does not allow the use of hydrogen atoms!\n&quot;);</span>
+<span class="lineNum">     339 </span>            :       }
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            :       // Lookup atomtype in table or throw exception if its not there
+<span class="lineNum">     342 </span>            :       try {
+<span class="lineNum">     343 </span><span class="lineCov">        240 :         parameter_temp[i] = valuemap.at(Atype);</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :       } catch (exception &amp;e) {</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :         log &lt;&lt; &quot;Type: &quot; &lt;&lt; Atype &lt;&lt; &quot;  Name: &quot; &lt;&lt; Aname &lt;&lt; &quot;  Residue: &quot; &lt;&lt; Rname &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :         error(&quot;Invalid atom type!\n&quot;);</span>
+<span class="lineNum">     347 </span>            :       }
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            :       // Temperature correction
+<span class="lineNum">     350 </span><span class="lineCov">        120 :       if (tcorr &amp;&amp; parameter[i][1] &gt; 0.0) {</span>
+<span class="lineNum">     351 </span>            :         const double t0 = 298.15;
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :         const double delta_g_ref_t0 = parameter_temp[i][1];</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :         const double delta_h_ref_t0 = parameter_temp[i][3];</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :         const double delta_cp = parameter_temp[i][4];</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :         const double delta_s_ref_t0 = (delta_h_ref_t0 - delta_g_ref_t0) / t0;</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :         const double t = plumed.getAtoms().getKbT() / plumed.getAtoms().getKBoltzmann();</span>
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :         parameter_temp[i][1] -= delta_s_ref_t0 * (t - t0) - delta_cp * t * std::log(t / t0) + delta_cp * (t - t0);</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :         parameter_temp[i][2] *= parameter_temp[i][1] / delta_g_ref_t0;</span>
+<span class="lineNum">     359 </span>            :       }
+<span class="lineNum">     360 </span><span class="lineCov">        120 :       parameter[i][0] = parameter_temp[i][0];</span>
+<span class="lineNum">     361 </span><span class="lineCov">        120 :       parameter[i][1] = parameter_temp[i][2];</span>
+<span class="lineNum">     362 </span><span class="lineCov">        120 :       parameter[i][2] = parameter_temp[i][5];</span>
+<span class="lineNum">     363 </span><span class="lineCov">        120 :       parameter[i][3] = parameter_temp[i][6];</span>
+<span class="lineNum">     364 </span>            :     }
+<span class="lineNum">     365 </span>            :   } else {
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :     error(&quot;MOLINFO DATA not found\n&quot;);</span>
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span><span class="lineCov">        364 :   for(unsigned i=0; i&lt;atoms.size(); ++i) delta_g_ref += parameter_temp[i][1];</span>
+<a name="369"><span class="lineNum">     369 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineCov">          2 : map&lt;string, map&lt;string, string&gt; &gt; EEFSolv::setupTypeMap()  {</span>
+<span class="lineNum">     372 </span>            :   map&lt;string, map&lt;string, string&gt; &gt; typemap;
+<span class="lineNum">     373 </span><span class="lineCov">       1000 :   typemap = {</span>
+<span class="lineNum">     374 </span>            :     { &quot;ACE&quot;, {
+<span class="lineNum">     375 </span>            :         {&quot;CH3&quot;, &quot;CT3&quot;},
+<span class="lineNum">     376 </span>            :         {&quot;HH31&quot;,&quot;HA3&quot;},
+<span class="lineNum">     377 </span>            :         {&quot;HH32&quot;,&quot;HA3&quot;},
+<span class="lineNum">     378 </span>            :         {&quot;HH33&quot;,&quot;HA3&quot;},
+<span class="lineNum">     379 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     380 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     381 </span>            :       }
+<span class="lineNum">     382 </span>            :     },
+<span class="lineNum">     383 </span>            :     { &quot;ALA&quot;, {
+<span class="lineNum">     384 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     385 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     386 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     387 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     388 </span>            :         {&quot;CB&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     389 </span>            :         {&quot;HB1&quot;, &quot;HA3&quot;},
+<span class="lineNum">     390 </span>            :         {&quot;HB2&quot;, &quot;HA3&quot;},
+<span class="lineNum">     391 </span>            :         {&quot;HB3&quot;, &quot;HA3&quot;},
+<span class="lineNum">     392 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     393 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     394 </span>            :       }
+<span class="lineNum">     395 </span>            :     },
+<span class="lineNum">     396 </span>            :     { &quot;ARG&quot;, {
+<span class="lineNum">     397 </span>            :         {&quot;N&quot;,    &quot;NH1&quot;},
+<span class="lineNum">     398 </span>            :         {&quot;HN&quot;,   &quot;H&quot;  },
+<span class="lineNum">     399 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     400 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot;},
+<span class="lineNum">     401 </span>            :         {&quot;CB&quot;,   &quot;CT2&quot;},
+<span class="lineNum">     402 </span>            :         {&quot;HB1&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     403 </span>            :         {&quot;HB2&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     404 </span>            :         {&quot;CG&quot;,   &quot;CT2&quot;},
+<span class="lineNum">     405 </span>            :         {&quot;HG1&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     406 </span>            :         {&quot;HG2&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     407 </span>            :         {&quot;CD&quot;,   &quot;CT2&quot;},
+<span class="lineNum">     408 </span>            :         {&quot;HD1&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     409 </span>            :         {&quot;HD2&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     410 </span>            :         {&quot;NE&quot;,   &quot;NC2&quot;},
+<span class="lineNum">     411 </span>            :         {&quot;HE&quot;,   &quot;HC&quot; },
+<span class="lineNum">     412 </span>            :         {&quot;CZ&quot;,   &quot;C&quot;  },
+<span class="lineNum">     413 </span>            :         {&quot;NH1&quot;,  &quot;NC2&quot;},
+<span class="lineNum">     414 </span>            :         {&quot;HH11&quot;, &quot;HC&quot; },
+<span class="lineNum">     415 </span>            :         {&quot;HH12&quot;, &quot;HC&quot; },
+<span class="lineNum">     416 </span>            :         {&quot;NH2&quot;,  &quot;NC2&quot;},
+<span class="lineNum">     417 </span>            :         {&quot;HH21&quot;, &quot;HC&quot; },
+<span class="lineNum">     418 </span>            :         {&quot;HH22&quot;, &quot;HC&quot; },
+<span class="lineNum">     419 </span>            :         {&quot;C&quot;,    &quot;C&quot;  },
+<span class="lineNum">     420 </span>            :         {&quot;O&quot;,    &quot;O&quot;  }
+<span class="lineNum">     421 </span>            :       }
+<span class="lineNum">     422 </span>            :     },
+<span class="lineNum">     423 </span>            :     { &quot;ASN&quot;, {
+<span class="lineNum">     424 </span>            :         {&quot;N&quot;,    &quot;NH1&quot;},
+<span class="lineNum">     425 </span>            :         {&quot;HN&quot;,   &quot;H&quot;  },
+<span class="lineNum">     426 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     427 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot;},
+<span class="lineNum">     428 </span>            :         {&quot;CB&quot;,   &quot;CT2&quot;},
+<span class="lineNum">     429 </span>            :         {&quot;HB1&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     430 </span>            :         {&quot;HB2&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     431 </span>            :         {&quot;CG&quot;,   &quot;CC&quot; },
+<span class="lineNum">     432 </span>            :         {&quot;OD1&quot;,  &quot;O&quot;  },
+<span class="lineNum">     433 </span>            :         {&quot;ND2&quot;,  &quot;NH2&quot;},
+<span class="lineNum">     434 </span>            :         {&quot;HD21&quot;, &quot;H&quot;  },
+<span class="lineNum">     435 </span>            :         {&quot;HD22&quot;, &quot;H&quot;  },
+<span class="lineNum">     436 </span>            :         {&quot;C&quot;,    &quot;C&quot;  },
+<span class="lineNum">     437 </span>            :         {&quot;O&quot;,    &quot;O&quot;  }
+<span class="lineNum">     438 </span>            :       }
+<span class="lineNum">     439 </span>            :     },
+<span class="lineNum">     440 </span>            :     { &quot;ASPP&quot;, {
+<span class="lineNum">     441 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     442 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     443 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     444 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     445 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     446 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     447 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     448 </span>            :         {&quot;CG&quot;,  &quot;CD&quot; },
+<span class="lineNum">     449 </span>            :         {&quot;OD1&quot;, &quot;OB&quot; },
+<span class="lineNum">     450 </span>            :         {&quot;OD2&quot;, &quot;OH1&quot;},
+<span class="lineNum">     451 </span>            :         {&quot;HD2&quot;, &quot;H&quot;  },
+<span class="lineNum">     452 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     453 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     454 </span>            :       }
+<span class="lineNum">     455 </span>            :     },
+<span class="lineNum">     456 </span>            :     { &quot;ASP&quot;, {
+<span class="lineNum">     457 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     458 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     459 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     460 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     461 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     462 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     463 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     464 </span>            :         {&quot;CG&quot;,  &quot;CC&quot; },
+<span class="lineNum">     465 </span>            :         {&quot;OD1&quot;, &quot;OC&quot; },
+<span class="lineNum">     466 </span>            :         {&quot;OD2&quot;, &quot;OC&quot; },
+<span class="lineNum">     467 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     468 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     469 </span>            :       }
+<span class="lineNum">     470 </span>            :     },
+<span class="lineNum">     471 </span>            :     { &quot;CYS&quot;, {
+<span class="lineNum">     472 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     473 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     474 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     475 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     476 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     477 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     478 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     479 </span>            :         {&quot;SG&quot;,  &quot;S&quot;  },
+<span class="lineNum">     480 </span>            :         {&quot;HG1&quot;, &quot;HS&quot; },
+<span class="lineNum">     481 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     482 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     483 </span>            :       }
+<span class="lineNum">     484 </span>            :     },
+<span class="lineNum">     485 </span>            :     { &quot;GLN&quot;, {
+<span class="lineNum">     486 </span>            :         {&quot;N&quot;,    &quot;NH1&quot; },
+<span class="lineNum">     487 </span>            :         {&quot;HN&quot;,   &quot;H&quot;   },
+<span class="lineNum">     488 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot; },
+<span class="lineNum">     489 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot; },
+<span class="lineNum">     490 </span>            :         {&quot;CB&quot;,   &quot;CT2&quot; },
+<span class="lineNum">     491 </span>            :         {&quot;HB1&quot;,  &quot;HA2&quot; },
+<span class="lineNum">     492 </span>            :         {&quot;HB2&quot;,  &quot;HA2&quot; },
+<span class="lineNum">     493 </span>            :         {&quot;CG&quot;,   &quot;CT2&quot; },
+<span class="lineNum">     494 </span>            :         {&quot;HG1&quot;,  &quot;HA2&quot; },
+<span class="lineNum">     495 </span>            :         {&quot;HG2&quot;,  &quot;HA2&quot; },
+<span class="lineNum">     496 </span>            :         {&quot;CD&quot;,   &quot;CC&quot;  },
+<span class="lineNum">     497 </span>            :         {&quot;OE1&quot;,  &quot;O&quot;   },
+<span class="lineNum">     498 </span>            :         {&quot;NE2&quot;,  &quot;NH2&quot; },
+<span class="lineNum">     499 </span>            :         {&quot;HE21&quot;, &quot;H&quot;   },
+<span class="lineNum">     500 </span>            :         {&quot;HE22&quot;, &quot;H&quot;   },
+<span class="lineNum">     501 </span>            :         {&quot;C&quot;,    &quot;C&quot;   },
+<span class="lineNum">     502 </span>            :         {&quot;O&quot;,    &quot;O&quot;   }
+<span class="lineNum">     503 </span>            :       }
+<span class="lineNum">     504 </span>            :     },
+<span class="lineNum">     505 </span>            :     { &quot;GLUP&quot;, {
+<span class="lineNum">     506 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     507 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     508 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     509 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     510 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     511 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     512 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     513 </span>            :         {&quot;CG&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     514 </span>            :         {&quot;HG1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     515 </span>            :         {&quot;HG2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     516 </span>            :         {&quot;CD&quot;,  &quot;CD&quot; },
+<span class="lineNum">     517 </span>            :         {&quot;OE1&quot;, &quot;OB&quot; },
+<span class="lineNum">     518 </span>            :         {&quot;OE2&quot;, &quot;OH1&quot;},
+<span class="lineNum">     519 </span>            :         {&quot;HE2&quot;, &quot;H&quot;  },
+<span class="lineNum">     520 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     521 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     522 </span>            :       }
+<span class="lineNum">     523 </span>            :     },
+<span class="lineNum">     524 </span>            :     { &quot;GLU&quot;, {
+<span class="lineNum">     525 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     526 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     527 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     528 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     529 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     530 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     531 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     532 </span>            :         {&quot;CG&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     533 </span>            :         {&quot;HG1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     534 </span>            :         {&quot;HG2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     535 </span>            :         {&quot;CD&quot;,  &quot;CC&quot; },
+<span class="lineNum">     536 </span>            :         {&quot;OE1&quot;, &quot;OC&quot; },
+<span class="lineNum">     537 </span>            :         {&quot;OE2&quot;, &quot;OC&quot; },
+<span class="lineNum">     538 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     539 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     540 </span>            :       }
+<span class="lineNum">     541 </span>            :     },
+<span class="lineNum">     542 </span>            :     { &quot;GLY&quot;, {
+<span class="lineNum">     543 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     544 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     545 </span>            :         {&quot;CA&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     546 </span>            :         {&quot;HA1&quot;, &quot;HB2&quot;},
+<span class="lineNum">     547 </span>            :         {&quot;HA2&quot;, &quot;HB2&quot;},
+<span class="lineNum">     548 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     549 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     550 </span>            :       }
+<span class="lineNum">     551 </span>            :     },
+<span class="lineNum">     552 </span>            :     { &quot;HSD&quot;, {
+<span class="lineNum">     553 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     554 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     555 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     556 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     557 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     558 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     559 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     560 </span>            :         {&quot;ND1&quot;, &quot;NR1&quot;},
+<span class="lineNum">     561 </span>            :         {&quot;HD1&quot;, &quot;H&quot;  },
+<span class="lineNum">     562 </span>            :         {&quot;CG&quot;,  &quot;CPH1&quot;},
+<span class="lineNum">     563 </span>            :         {&quot;CE1&quot;, &quot;CPH2&quot;},
+<span class="lineNum">     564 </span>            :         {&quot;HE1&quot;, &quot;HR1&quot;},
+<span class="lineNum">     565 </span>            :         {&quot;NE2&quot;, &quot;NR2&quot;},
+<span class="lineNum">     566 </span>            :         {&quot;CD2&quot;, &quot;CPH1&quot;},
+<span class="lineNum">     567 </span>            :         {&quot;HD2&quot;, &quot;HR3&quot;},
+<span class="lineNum">     568 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     569 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     570 </span>            :       }
+<span class="lineNum">     571 </span>            :     },
+<span class="lineNum">     572 </span>            :     { &quot;HIS&quot;, {
+<span class="lineNum">     573 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     574 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     575 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     576 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     577 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     578 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     579 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     580 </span>            :         {&quot;ND1&quot;, &quot;NR2&quot;},
+<span class="lineNum">     581 </span>            :         {&quot;CG&quot;,  &quot;CPH1&quot;},
+<span class="lineNum">     582 </span>            :         {&quot;CE1&quot;, &quot;CPH2&quot;},
+<span class="lineNum">     583 </span>            :         {&quot;HE1&quot;, &quot;HR1&quot;},
+<span class="lineNum">     584 </span>            :         {&quot;NE2&quot;, &quot;NR1&quot;},
+<span class="lineNum">     585 </span>            :         {&quot;HE2&quot;, &quot;H&quot;  },
+<span class="lineNum">     586 </span>            :         {&quot;CD2&quot;, &quot;CPH1&quot;},
+<span class="lineNum">     587 </span>            :         {&quot;HD2&quot;, &quot;HR3&quot;},
+<span class="lineNum">     588 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     589 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     590 </span>            :       }
+<span class="lineNum">     591 </span>            :     },
+<span class="lineNum">     592 </span>            :     { &quot;HSE&quot;, {
+<span class="lineNum">     593 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     594 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     595 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     596 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     597 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     598 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     599 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     600 </span>            :         {&quot;ND1&quot;, &quot;NR2&quot;},
+<span class="lineNum">     601 </span>            :         {&quot;CG&quot;,  &quot;CPH1&quot;},
+<span class="lineNum">     602 </span>            :         {&quot;CE1&quot;, &quot;CPH2&quot;},
+<span class="lineNum">     603 </span>            :         {&quot;HE1&quot;, &quot;HR1&quot;},
+<span class="lineNum">     604 </span>            :         {&quot;NE2&quot;, &quot;NR1&quot;},
+<span class="lineNum">     605 </span>            :         {&quot;HE2&quot;, &quot;H&quot;  },
+<span class="lineNum">     606 </span>            :         {&quot;CD2&quot;, &quot;CPH1&quot;},
+<span class="lineNum">     607 </span>            :         {&quot;HD2&quot;, &quot;HR3&quot;},
+<span class="lineNum">     608 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     609 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     610 </span>            :       }
+<span class="lineNum">     611 </span>            :     },
+<span class="lineNum">     612 </span>            :     { &quot;HSP&quot;, {
+<span class="lineNum">     613 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     614 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     615 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     616 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     617 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     618 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     619 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     620 </span>            :         {&quot;CD2&quot;, &quot;CPH1&quot;},
+<span class="lineNum">     621 </span>            :         {&quot;HD2&quot;, &quot;HR1&quot;},
+<span class="lineNum">     622 </span>            :         {&quot;CG&quot;,  &quot;CPH1&quot;},
+<span class="lineNum">     623 </span>            :         {&quot;NE2&quot;, &quot;NR3&quot;},
+<span class="lineNum">     624 </span>            :         {&quot;HE2&quot;, &quot;H&quot;  },
+<span class="lineNum">     625 </span>            :         {&quot;ND1&quot;, &quot;NR3&quot;},
+<span class="lineNum">     626 </span>            :         {&quot;HD1&quot;, &quot;H&quot;  },
+<span class="lineNum">     627 </span>            :         {&quot;CE1&quot;, &quot;CPH2&quot;},
+<span class="lineNum">     628 </span>            :         {&quot;HE1&quot;, &quot;HR2&quot;},
+<span class="lineNum">     629 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     630 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     631 </span>            :       }
+<span class="lineNum">     632 </span>            :     },
+<span class="lineNum">     633 </span>            :     { &quot;ILE&quot;, {
+<span class="lineNum">     634 </span>            :         {&quot;N&quot;,    &quot;NH1&quot;},
+<span class="lineNum">     635 </span>            :         {&quot;HN&quot;,   &quot;H&quot;  },
+<span class="lineNum">     636 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     637 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot;},
+<span class="lineNum">     638 </span>            :         {&quot;CB&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     639 </span>            :         {&quot;HB&quot;,   &quot;HA1&quot;},
+<span class="lineNum">     640 </span>            :         {&quot;CG2&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     641 </span>            :         {&quot;HG21&quot;, &quot;HA3&quot;},
+<span class="lineNum">     642 </span>            :         {&quot;HG22&quot;, &quot;HA3&quot;},
+<span class="lineNum">     643 </span>            :         {&quot;HG23&quot;, &quot;HA3&quot;},
+<span class="lineNum">     644 </span>            :         {&quot;CG1&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     645 </span>            :         {&quot;HG11&quot;, &quot;HA2&quot;},
+<span class="lineNum">     646 </span>            :         {&quot;HG12&quot;, &quot;HA2&quot;},
+<span class="lineNum">     647 </span>            :         {&quot;CD&quot;,   &quot;CT3&quot;},
+<span class="lineNum">     648 </span>            :         {&quot;HD1&quot;,  &quot;HA3&quot;},
+<span class="lineNum">     649 </span>            :         {&quot;HD2&quot;,  &quot;HA3&quot;},
+<span class="lineNum">     650 </span>            :         {&quot;HD3&quot;,  &quot;HA3&quot;},
+<span class="lineNum">     651 </span>            :         {&quot;C&quot;,    &quot;C&quot;  },
+<span class="lineNum">     652 </span>            :         {&quot;O&quot;,    &quot;O&quot;  }
+<span class="lineNum">     653 </span>            :       }
+<span class="lineNum">     654 </span>            :     },
+<span class="lineNum">     655 </span>            :     { &quot;LEU&quot;, {
+<span class="lineNum">     656 </span>            :         {&quot;N&quot;,    &quot;NH1&quot;},
+<span class="lineNum">     657 </span>            :         {&quot;HN&quot;,   &quot;H&quot;  },
+<span class="lineNum">     658 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     659 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot;},
+<span class="lineNum">     660 </span>            :         {&quot;CB&quot;,   &quot;CT2&quot;},
+<span class="lineNum">     661 </span>            :         {&quot;HB1&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     662 </span>            :         {&quot;HB2&quot;,  &quot;HA2&quot;},
+<span class="lineNum">     663 </span>            :         {&quot;CG&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     664 </span>            :         {&quot;HG&quot;,   &quot;HA1&quot;},
+<span class="lineNum">     665 </span>            :         {&quot;CD1&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     666 </span>            :         {&quot;HD11&quot;, &quot;HA3&quot;},
+<span class="lineNum">     667 </span>            :         {&quot;HD12&quot;, &quot;HA3&quot;},
+<span class="lineNum">     668 </span>            :         {&quot;HD13&quot;, &quot;HA3&quot;},
+<span class="lineNum">     669 </span>            :         {&quot;CD2&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     670 </span>            :         {&quot;HD21&quot;, &quot;HA3&quot;},
+<span class="lineNum">     671 </span>            :         {&quot;HD22&quot;, &quot;HA3&quot;},
+<span class="lineNum">     672 </span>            :         {&quot;HD23&quot;, &quot;HA3&quot;},
+<span class="lineNum">     673 </span>            :         {&quot;C&quot;,    &quot;C&quot;  },
+<span class="lineNum">     674 </span>            :         {&quot;O&quot;,    &quot;O&quot;  }
+<span class="lineNum">     675 </span>            :       }
+<span class="lineNum">     676 </span>            :     },
+<span class="lineNum">     677 </span>            :     { &quot;LYS&quot;, {
+<span class="lineNum">     678 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     679 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     680 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     681 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     682 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     683 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     684 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     685 </span>            :         {&quot;CG&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     686 </span>            :         {&quot;HG1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     687 </span>            :         {&quot;HG2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     688 </span>            :         {&quot;CD&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     689 </span>            :         {&quot;HD1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     690 </span>            :         {&quot;HD2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     691 </span>            :         {&quot;CE&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     692 </span>            :         {&quot;HE1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     693 </span>            :         {&quot;HE2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     694 </span>            :         {&quot;NZ&quot;,  &quot;NH3&quot;},
+<span class="lineNum">     695 </span>            :         {&quot;HZ1&quot;, &quot;HC&quot; },
+<span class="lineNum">     696 </span>            :         {&quot;HZ2&quot;, &quot;HC&quot; },
+<span class="lineNum">     697 </span>            :         {&quot;HZ3&quot;, &quot;HC&quot; },
+<span class="lineNum">     698 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     699 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     700 </span>            :       }
+<span class="lineNum">     701 </span>            :     },
+<span class="lineNum">     702 </span>            :     { &quot;MET&quot;, {
+<span class="lineNum">     703 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     704 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     705 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     706 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     707 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     708 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     709 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     710 </span>            :         {&quot;CG&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     711 </span>            :         {&quot;HG1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     712 </span>            :         {&quot;HG2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     713 </span>            :         {&quot;SD&quot;,  &quot;S&quot;  },
+<span class="lineNum">     714 </span>            :         {&quot;CE&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     715 </span>            :         {&quot;HE1&quot;, &quot;HA3&quot;},
+<span class="lineNum">     716 </span>            :         {&quot;HE2&quot;, &quot;HA3&quot;},
+<span class="lineNum">     717 </span>            :         {&quot;HE3&quot;, &quot;HA3&quot;},
+<span class="lineNum">     718 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     719 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     720 </span>            :       }
+<span class="lineNum">     721 </span>            :     },
+<span class="lineNum">     722 </span>            :     { &quot;NMA&quot;, {
+<span class="lineNum">     723 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     724 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     725 </span>            :         {&quot;CH3&quot;, &quot;CT3&quot;},
+<span class="lineNum">     726 </span>            :         {&quot;HH31&quot;,&quot;HA3&quot;},
+<span class="lineNum">     727 </span>            :         {&quot;HH32&quot;,&quot;HA3&quot;},
+<span class="lineNum">     728 </span>            :         {&quot;HH33&quot;,&quot;HA3&quot;},
+<span class="lineNum">     729 </span>            :       }
+<span class="lineNum">     730 </span>            :     },
+<span class="lineNum">     731 </span>            :     { &quot;PHE&quot;, {
+<span class="lineNum">     732 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     733 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     734 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     735 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     736 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     737 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     738 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     739 </span>            :         {&quot;CG&quot;,  &quot;CA&quot; },
+<span class="lineNum">     740 </span>            :         {&quot;CD1&quot;, &quot;CA&quot; },
+<span class="lineNum">     741 </span>            :         {&quot;HD1&quot;, &quot;HP&quot; },
+<span class="lineNum">     742 </span>            :         {&quot;CE1&quot;, &quot;CA&quot; },
+<span class="lineNum">     743 </span>            :         {&quot;HE1&quot;, &quot;HP&quot; },
+<span class="lineNum">     744 </span>            :         {&quot;CZ&quot;,  &quot;CA&quot; },
+<span class="lineNum">     745 </span>            :         {&quot;HZ&quot;,  &quot;HP&quot; },
+<span class="lineNum">     746 </span>            :         {&quot;CD2&quot;, &quot;CA&quot; },
+<span class="lineNum">     747 </span>            :         {&quot;HD2&quot;, &quot;HP&quot; },
+<span class="lineNum">     748 </span>            :         {&quot;CE2&quot;, &quot;CA&quot; },
+<span class="lineNum">     749 </span>            :         {&quot;HE2&quot;, &quot;HP&quot; },
+<span class="lineNum">     750 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     751 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     752 </span>            :       }
+<span class="lineNum">     753 </span>            :     },
+<span class="lineNum">     754 </span>            :     { &quot;PRO&quot;, {
+<span class="lineNum">     755 </span>            :         {&quot;N&quot;,   &quot;N&quot;  },
+<span class="lineNum">     756 </span>            :         {&quot;CD&quot;,  &quot;CP3&quot;},
+<span class="lineNum">     757 </span>            :         {&quot;HD1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     758 </span>            :         {&quot;HD2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     759 </span>            :         {&quot;CA&quot;,  &quot;CP1&quot;},
+<span class="lineNum">     760 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     761 </span>            :         {&quot;CB&quot;,  &quot;CP2&quot;},
+<span class="lineNum">     762 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     763 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     764 </span>            :         {&quot;CG&quot;,  &quot;CP2&quot;},
+<span class="lineNum">     765 </span>            :         {&quot;HG1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     766 </span>            :         {&quot;HG2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     767 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     768 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     769 </span>            :       }
+<span class="lineNum">     770 </span>            :     },
+<span class="lineNum">     771 </span>            :     { &quot;SER&quot;, {
+<span class="lineNum">     772 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     773 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     774 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     775 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     776 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     777 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     778 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     779 </span>            :         {&quot;OG&quot;,  &quot;OH1&quot;},
+<span class="lineNum">     780 </span>            :         {&quot;HG1&quot;, &quot;H&quot;  },
+<span class="lineNum">     781 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     782 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     783 </span>            :       }
+<span class="lineNum">     784 </span>            :     },
+<span class="lineNum">     785 </span>            :     { &quot;THR&quot;, {
+<span class="lineNum">     786 </span>            :         {&quot;N&quot;,    &quot;NH1&quot;},
+<span class="lineNum">     787 </span>            :         {&quot;HN&quot;,   &quot;H&quot;  },
+<span class="lineNum">     788 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     789 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot;},
+<span class="lineNum">     790 </span>            :         {&quot;CB&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     791 </span>            :         {&quot;HB&quot;,   &quot;HA1&quot;},
+<span class="lineNum">     792 </span>            :         {&quot;OG1&quot;,  &quot;OH1&quot;},
+<span class="lineNum">     793 </span>            :         {&quot;HG1&quot;,  &quot;H&quot;  },
+<span class="lineNum">     794 </span>            :         {&quot;CG2&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     795 </span>            :         {&quot;HG21&quot;, &quot;HA3&quot;},
+<span class="lineNum">     796 </span>            :         {&quot;HG22&quot;, &quot;HA3&quot;},
+<span class="lineNum">     797 </span>            :         {&quot;HG23&quot;, &quot;HA3&quot;},
+<span class="lineNum">     798 </span>            :         {&quot;C&quot;,    &quot;C&quot;  },
+<span class="lineNum">     799 </span>            :         {&quot;O&quot;,    &quot;O&quot;  }
+<span class="lineNum">     800 </span>            :       }
+<span class="lineNum">     801 </span>            :     },
+<span class="lineNum">     802 </span>            :     { &quot;TRP&quot;, {
+<span class="lineNum">     803 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     804 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     805 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     806 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     807 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     808 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     809 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     810 </span>            :         {&quot;CG&quot;,  &quot;CY&quot; },
+<span class="lineNum">     811 </span>            :         {&quot;CD1&quot;, &quot;CA&quot; },
+<span class="lineNum">     812 </span>            :         {&quot;HD1&quot;, &quot;HP&quot; },
+<span class="lineNum">     813 </span>            :         {&quot;NE1&quot;, &quot;NY&quot; },
+<span class="lineNum">     814 </span>            :         {&quot;HE1&quot;, &quot;H&quot;  },
+<span class="lineNum">     815 </span>            :         {&quot;CE2&quot;, &quot;CPT&quot;},
+<span class="lineNum">     816 </span>            :         {&quot;CD2&quot;, &quot;CPT&quot;},
+<span class="lineNum">     817 </span>            :         {&quot;CE3&quot;, &quot;CAI&quot;},
+<span class="lineNum">     818 </span>            :         {&quot;HE3&quot;, &quot;HP&quot; },
+<span class="lineNum">     819 </span>            :         {&quot;CZ3&quot;, &quot;CA&quot; },
+<span class="lineNum">     820 </span>            :         {&quot;HZ3&quot;, &quot;HP&quot; },
+<span class="lineNum">     821 </span>            :         {&quot;CZ2&quot;, &quot;CAI&quot;},
+<span class="lineNum">     822 </span>            :         {&quot;HZ2&quot;, &quot;HP&quot; },
+<span class="lineNum">     823 </span>            :         {&quot;CH2&quot;, &quot;CA&quot; },
+<span class="lineNum">     824 </span>            :         {&quot;HH2&quot;, &quot;HP&quot; },
+<span class="lineNum">     825 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     826 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     827 </span>            :       }
+<span class="lineNum">     828 </span>            :     },
+<span class="lineNum">     829 </span>            :     { &quot;TYR&quot;, {
+<span class="lineNum">     830 </span>            :         {&quot;N&quot;,   &quot;NH1&quot;},
+<span class="lineNum">     831 </span>            :         {&quot;HN&quot;,  &quot;H&quot;  },
+<span class="lineNum">     832 </span>            :         {&quot;CA&quot;,  &quot;CT1&quot;},
+<span class="lineNum">     833 </span>            :         {&quot;HA&quot;,  &quot;HB1&quot;},
+<span class="lineNum">     834 </span>            :         {&quot;CB&quot;,  &quot;CT2&quot;},
+<span class="lineNum">     835 </span>            :         {&quot;HB1&quot;, &quot;HA2&quot;},
+<span class="lineNum">     836 </span>            :         {&quot;HB2&quot;, &quot;HA2&quot;},
+<span class="lineNum">     837 </span>            :         {&quot;CG&quot;,  &quot;CA&quot; },
+<span class="lineNum">     838 </span>            :         {&quot;CD1&quot;, &quot;CA&quot; },
+<span class="lineNum">     839 </span>            :         {&quot;HD1&quot;, &quot;HP&quot; },
+<span class="lineNum">     840 </span>            :         {&quot;CE1&quot;, &quot;CA&quot; },
+<span class="lineNum">     841 </span>            :         {&quot;HE1&quot;, &quot;HP&quot; },
+<span class="lineNum">     842 </span>            :         {&quot;CZ&quot;,  &quot;CA&quot; },
+<span class="lineNum">     843 </span>            :         {&quot;OH&quot;,  &quot;OH1&quot;},
+<span class="lineNum">     844 </span>            :         {&quot;HH&quot;,  &quot;H&quot;  },
+<span class="lineNum">     845 </span>            :         {&quot;CD2&quot;, &quot;CA&quot; },
+<span class="lineNum">     846 </span>            :         {&quot;HD2&quot;, &quot;HP&quot; },
+<span class="lineNum">     847 </span>            :         {&quot;CE2&quot;, &quot;CA&quot; },
+<span class="lineNum">     848 </span>            :         {&quot;HE2&quot;, &quot;HP&quot; },
+<span class="lineNum">     849 </span>            :         {&quot;C&quot;,   &quot;C&quot;  },
+<span class="lineNum">     850 </span>            :         {&quot;O&quot;,   &quot;O&quot;  }
+<span class="lineNum">     851 </span>            :       }
+<span class="lineNum">     852 </span>            :     },
+<span class="lineNum">     853 </span>            :     { &quot;VAL&quot;, {
+<span class="lineNum">     854 </span>            :         {&quot;N&quot;,    &quot;NH1&quot;},
+<span class="lineNum">     855 </span>            :         {&quot;HN&quot;,   &quot;H&quot;  },
+<span class="lineNum">     856 </span>            :         {&quot;CA&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     857 </span>            :         {&quot;HA&quot;,   &quot;HB1&quot;},
+<span class="lineNum">     858 </span>            :         {&quot;CB&quot;,   &quot;CT1&quot;},
+<span class="lineNum">     859 </span>            :         {&quot;HB&quot;,   &quot;HA1&quot;},
+<span class="lineNum">     860 </span>            :         {&quot;CG1&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     861 </span>            :         {&quot;HG11&quot;, &quot;HA3&quot;},
+<span class="lineNum">     862 </span>            :         {&quot;HG12&quot;, &quot;HA3&quot;},
+<span class="lineNum">     863 </span>            :         {&quot;HG13&quot;, &quot;HA3&quot;},
+<span class="lineNum">     864 </span>            :         {&quot;CG2&quot;,  &quot;CT3&quot;},
+<span class="lineNum">     865 </span>            :         {&quot;HG21&quot;, &quot;HA3&quot;},
+<span class="lineNum">     866 </span>            :         {&quot;HG22&quot;, &quot;HA3&quot;},
+<span class="lineNum">     867 </span>            :         {&quot;HG23&quot;, &quot;HA3&quot;},
+<span class="lineNum">     868 </span>            :         {&quot;C&quot;,    &quot;C&quot;  },
+<span class="lineNum">     869 </span>            :         {&quot;O&quot;,    &quot;O&quot;  }
+<span class="lineNum">     870 </span>            :       }
+<span class="lineNum">     871 </span>            :     }
+<span class="lineNum">     872 </span><span class="lineCov">        888 :   };</span>
+<span class="lineNum">     873 </span><span class="lineCov">          2 :   return typemap;</span>
+<span class="lineNum">     874 </span>            : }
+<span class="lineNum">     875 </span>            : 
+<span class="lineNum">     876 </span><span class="lineCov">          2 : map&lt;string, vector&lt;double&gt; &gt; EEFSolv::setupValueMap() {</span>
+<span class="lineNum">     877 </span>            :   // Volume ∆Gref ∆Gfree ∆H ∆Cp λ vdw_radius
+<span class="lineNum">     878 </span>            :   map&lt;string, vector&lt;double&gt; &gt; valuemap;
+<span class="lineNum">     879 </span><span class="lineCov">        202 :   valuemap = {</span>
+<span class="lineNum">     880 </span>            :     { &quot;C&quot;, {
+<span class="lineNum">     881 </span>            :         ANG3_TO_NM3 * 14.720,
+<span class="lineNum">     882 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">     883 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">     884 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">     885 </span>            :         KCAL_TO_KJ * 0.0,
+<span class="lineNum">     886 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     887 </span>            :         0.20,
+<span class="lineNum">     888 </span>            :       }
+<span class="lineNum">     889 </span>            :     },
+<span class="lineNum">     890 </span>            :     { &quot;CD&quot;, {
+<span class="lineNum">     891 </span>            :         ANG3_TO_NM3 * 14.720,
+<span class="lineNum">     892 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">     893 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">     894 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">     895 </span>            :         KCAL_TO_KJ * 0.0,
+<span class="lineNum">     896 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     897 </span>            :         0.20,
+<span class="lineNum">     898 </span>            :       }
+<span class="lineNum">     899 </span>            :     },
+<span class="lineNum">     900 </span>            :     { &quot;CT1&quot;, {
+<span class="lineNum">     901 </span>            :         ANG3_TO_NM3 * 11.507,
+<span class="lineNum">     902 </span>            :         KCAL_TO_KJ * -0.187,
+<span class="lineNum">     903 </span>            :         KCAL_TO_KJ * -0.187,
+<span class="lineNum">     904 </span>            :         KCAL_TO_KJ * 0.876,
+<span class="lineNum">     905 </span>            :         KCAL_TO_KJ * 0.0,
+<span class="lineNum">     906 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     907 </span>            :         0.20,
+<span class="lineNum">     908 </span>            :       }
+<span class="lineNum">     909 </span>            :     },
+<span class="lineNum">     910 </span>            :     { &quot;CT2&quot;, {
+<span class="lineNum">     911 </span>            :         ANG3_TO_NM3 * 18.850,
+<span class="lineNum">     912 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">     913 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">     914 </span>            :         KCAL_TO_KJ * -0.610,
+<span class="lineNum">     915 </span>            :         KCAL_TO_KJ * 18.6,
+<span class="lineNum">     916 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     917 </span>            :         0.20,
+<span class="lineNum">     918 </span>            :       }
+<span class="lineNum">     919 </span>            :     },
+<span class="lineNum">     920 </span>            :     { &quot;CT2A&quot;, {
+<span class="lineNum">     921 </span>            :         ANG3_TO_NM3 * 18.666,
+<span class="lineNum">     922 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">     923 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">     924 </span>            :         KCAL_TO_KJ * -0.610,
+<span class="lineNum">     925 </span>            :         KCAL_TO_KJ * 18.6,
+<span class="lineNum">     926 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     927 </span>            :         0.20,
+<span class="lineNum">     928 </span>            :       }
+<span class="lineNum">     929 </span>            :     },
+<span class="lineNum">     930 </span>            :     { &quot;CT3&quot;, {
+<span class="lineNum">     931 </span>            :         ANG3_TO_NM3 * 27.941,
+<span class="lineNum">     932 </span>            :         KCAL_TO_KJ * 1.089,
+<span class="lineNum">     933 </span>            :         KCAL_TO_KJ * 1.089,
+<span class="lineNum">     934 </span>            :         KCAL_TO_KJ * -1.779,
+<span class="lineNum">     935 </span>            :         KCAL_TO_KJ * 35.6,
+<span class="lineNum">     936 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     937 </span>            :         0.204,
+<span class="lineNum">     938 </span>            :       }
+<span class="lineNum">     939 </span>            :     },
+<span class="lineNum">     940 </span>            :     { &quot;CPH1&quot;, {
+<span class="lineNum">     941 </span>            :         ANG3_TO_NM3 * 5.275,
+<span class="lineNum">     942 </span>            :         KCAL_TO_KJ * 0.057,
+<span class="lineNum">     943 </span>            :         KCAL_TO_KJ * 0.080,
+<span class="lineNum">     944 </span>            :         KCAL_TO_KJ * -0.973,
+<span class="lineNum">     945 </span>            :         KCAL_TO_KJ * 6.9,
+<span class="lineNum">     946 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     947 </span>            :         0.18,
+<span class="lineNum">     948 </span>            :       }
+<span class="lineNum">     949 </span>            :     },
+<span class="lineNum">     950 </span>            :     { &quot;CPH2&quot;, {
+<span class="lineNum">     951 </span>            :         ANG3_TO_NM3 * 11.796,
+<span class="lineNum">     952 </span>            :         KCAL_TO_KJ * 0.057,
+<span class="lineNum">     953 </span>            :         KCAL_TO_KJ * 0.080,
+<span class="lineNum">     954 </span>            :         KCAL_TO_KJ * -0.973,
+<span class="lineNum">     955 </span>            :         KCAL_TO_KJ * 6.9,
+<span class="lineNum">     956 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     957 </span>            :         0.18,
+<span class="lineNum">     958 </span>            :       }
+<span class="lineNum">     959 </span>            :     },
+<span class="lineNum">     960 </span>            :     { &quot;CPT&quot;, {
+<span class="lineNum">     961 </span>            :         ANG3_TO_NM3 * 4.669,
+<span class="lineNum">     962 </span>            :         KCAL_TO_KJ * -0.890,
+<span class="lineNum">     963 </span>            :         KCAL_TO_KJ * -0.890,
+<span class="lineNum">     964 </span>            :         KCAL_TO_KJ * 2.220,
+<span class="lineNum">     965 </span>            :         KCAL_TO_KJ * 6.9,
+<span class="lineNum">     966 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     967 </span>            :         0.186,
+<span class="lineNum">     968 </span>            :       }
+<span class="lineNum">     969 </span>            :     },
+<span class="lineNum">     970 </span>            :     { &quot;CY&quot;, {
+<span class="lineNum">     971 </span>            :         ANG3_TO_NM3 * 10.507,
+<span class="lineNum">     972 </span>            :         KCAL_TO_KJ * -0.890,
+<span class="lineNum">     973 </span>            :         KCAL_TO_KJ * -0.890,
+<span class="lineNum">     974 </span>            :         KCAL_TO_KJ * 2.220,
+<span class="lineNum">     975 </span>            :         KCAL_TO_KJ * 6.9,
+<span class="lineNum">     976 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     977 </span>            :         0.199,
+<span class="lineNum">     978 </span>            :       }
+<span class="lineNum">     979 </span>            :     },
+<span class="lineNum">     980 </span>            :     { &quot;CP1&quot;, {
+<span class="lineNum">     981 </span>            :         ANG3_TO_NM3 * 25.458,
+<span class="lineNum">     982 </span>            :         KCAL_TO_KJ * -0.187,
+<span class="lineNum">     983 </span>            :         KCAL_TO_KJ * -0.187,
+<span class="lineNum">     984 </span>            :         KCAL_TO_KJ * 0.876,
+<span class="lineNum">     985 </span>            :         KCAL_TO_KJ * 0.0,
+<span class="lineNum">     986 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     987 </span>            :         0.227,
+<span class="lineNum">     988 </span>            :       }
+<span class="lineNum">     989 </span>            :     },
+<span class="lineNum">     990 </span>            :     { &quot;CP2&quot;, {
+<span class="lineNum">     991 </span>            :         ANG3_TO_NM3 * 19.880,
+<span class="lineNum">     992 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">     993 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">     994 </span>            :         KCAL_TO_KJ * -0.610,
+<span class="lineNum">     995 </span>            :         KCAL_TO_KJ * 18.6,
+<span class="lineNum">     996 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">     997 </span>            :         0.217,
+<span class="lineNum">     998 </span>            :       }
+<span class="lineNum">     999 </span>            :     },
+<span class="lineNum">    1000 </span>            :     { &quot;CP3&quot;, {
+<span class="lineNum">    1001 </span>            :         ANG3_TO_NM3 * 26.731,
+<span class="lineNum">    1002 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">    1003 </span>            :         KCAL_TO_KJ * 0.372,
+<span class="lineNum">    1004 </span>            :         KCAL_TO_KJ * -0.610,
+<span class="lineNum">    1005 </span>            :         KCAL_TO_KJ * 18.6,
+<span class="lineNum">    1006 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1007 </span>            :         0.217,
+<span class="lineNum">    1008 </span>            :       }
+<span class="lineNum">    1009 </span>            :     },
+<span class="lineNum">    1010 </span>            :     { &quot;CC&quot;, {
+<span class="lineNum">    1011 </span>            :         ANG3_TO_NM3 * 16.539,
+<span class="lineNum">    1012 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">    1013 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">    1014 </span>            :         KCAL_TO_KJ * 0.000,
+<span class="lineNum">    1015 </span>            :         KCAL_TO_KJ * 0.0,
+<span class="lineNum">    1016 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1017 </span>            :         0.20,
+<span class="lineNum">    1018 </span>            :       }
+<span class="lineNum">    1019 </span>            :     },
+<span class="lineNum">    1020 </span>            :     { &quot;CAI&quot;, {
+<span class="lineNum">    1021 </span>            :         ANG3_TO_NM3 * 18.249,
+<span class="lineNum">    1022 </span>            :         KCAL_TO_KJ * 0.057,
+<span class="lineNum">    1023 </span>            :         KCAL_TO_KJ * 0.057,
+<span class="lineNum">    1024 </span>            :         KCAL_TO_KJ * -0.973,
+<span class="lineNum">    1025 </span>            :         KCAL_TO_KJ * 6.9,
+<span class="lineNum">    1026 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1027 </span>            :         0.199,
+<span class="lineNum">    1028 </span>            :       }
+<span class="lineNum">    1029 </span>            :     },
+<span class="lineNum">    1030 </span>            :     { &quot;CA&quot;, {
+<span class="lineNum">    1031 </span>            :         ANG3_TO_NM3 * 18.249,
+<span class="lineNum">    1032 </span>            :         KCAL_TO_KJ * 0.057,
+<span class="lineNum">    1033 </span>            :         KCAL_TO_KJ * 0.057,
+<span class="lineNum">    1034 </span>            :         KCAL_TO_KJ * -0.973,
+<span class="lineNum">    1035 </span>            :         KCAL_TO_KJ * 6.9,
+<span class="lineNum">    1036 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1037 </span>            :         0.199,
+<span class="lineNum">    1038 </span>            :       }
+<span class="lineNum">    1039 </span>            :     },
+<span class="lineNum">    1040 </span>            :     { &quot;N&quot;, {
+<span class="lineNum">    1041 </span>            :         ANG3_TO_NM3 * 0.000,
+<span class="lineNum">    1042 </span>            :         KCAL_TO_KJ * -1.000,
+<span class="lineNum">    1043 </span>            :         KCAL_TO_KJ * -1.000,
+<span class="lineNum">    1044 </span>            :         KCAL_TO_KJ * -1.250,
+<span class="lineNum">    1045 </span>            :         KCAL_TO_KJ * 8.8,
+<span class="lineNum">    1046 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1047 </span>            :         0.185,
+<span class="lineNum">    1048 </span>            :       }
+<span class="lineNum">    1049 </span>            :     },
+<span class="lineNum">    1050 </span>            :     { &quot;NR1&quot;, {
+<span class="lineNum">    1051 </span>            :         ANG3_TO_NM3 * 15.273,
+<span class="lineNum">    1052 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1053 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1054 </span>            :         KCAL_TO_KJ * -9.059,
+<span class="lineNum">    1055 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1056 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1057 </span>            :         0.185,
+<span class="lineNum">    1058 </span>            :       }
+<span class="lineNum">    1059 </span>            :     },
+<span class="lineNum">    1060 </span>            :     { &quot;NR2&quot;, {
+<span class="lineNum">    1061 </span>            :         ANG3_TO_NM3 * 15.111,
+<span class="lineNum">    1062 </span>            :         KCAL_TO_KJ * -3.820,
+<span class="lineNum">    1063 </span>            :         KCAL_TO_KJ * -3.820,
+<span class="lineNum">    1064 </span>            :         KCAL_TO_KJ * -4.654,
+<span class="lineNum">    1065 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1066 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1067 </span>            :         0.185,
+<span class="lineNum">    1068 </span>            :       }
+<span class="lineNum">    1069 </span>            :     },
+<span class="lineNum">    1070 </span>            :     { &quot;NR3&quot;, {
+<span class="lineNum">    1071 </span>            :         ANG3_TO_NM3 * 15.071,
+<span class="lineNum">    1072 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1073 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1074 </span>            :         KCAL_TO_KJ * -9.059,
+<span class="lineNum">    1075 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1076 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1077 </span>            :         0.185,
+<span class="lineNum">    1078 </span>            :       }
+<span class="lineNum">    1079 </span>            :     },
+<span class="lineNum">    1080 </span>            :     { &quot;NH1&quot;, {
+<span class="lineNum">    1081 </span>            :         ANG3_TO_NM3 * 10.197,
+<span class="lineNum">    1082 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1083 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1084 </span>            :         KCAL_TO_KJ * -9.059,
+<span class="lineNum">    1085 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1086 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1087 </span>            :         0.185,
+<span class="lineNum">    1088 </span>            :       }
+<span class="lineNum">    1089 </span>            :     },
+<span class="lineNum">    1090 </span>            :     { &quot;NH2&quot;, {
+<span class="lineNum">    1091 </span>            :         ANG3_TO_NM3 * 18.182,
+<span class="lineNum">    1092 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1093 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1094 </span>            :         KCAL_TO_KJ * -9.059,
+<span class="lineNum">    1095 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1096 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1097 </span>            :         0.185,
+<span class="lineNum">    1098 </span>            :       }
+<span class="lineNum">    1099 </span>            :     },
+<span class="lineNum">    1100 </span>            :     { &quot;NH3&quot;, {
+<span class="lineNum">    1101 </span>            :         ANG3_TO_NM3 * 18.817,
+<span class="lineNum">    1102 </span>            :         KCAL_TO_KJ * -20.000,
+<span class="lineNum">    1103 </span>            :         KCAL_TO_KJ * -20.000,
+<span class="lineNum">    1104 </span>            :         KCAL_TO_KJ * -25.000,
+<span class="lineNum">    1105 </span>            :         KCAL_TO_KJ * -18.0,
+<span class="lineNum">    1106 </span>            :         1. / (ANG_TO_NM * 6.0),
+<span class="lineNum">    1107 </span>            :         0.185,
+<span class="lineNum">    1108 </span>            :       }
+<span class="lineNum">    1109 </span>            :     },
+<span class="lineNum">    1110 </span>            :     { &quot;NC2&quot;, {
+<span class="lineNum">    1111 </span>            :         ANG3_TO_NM3 * 18.215,
+<span class="lineNum">    1112 </span>            :         KCAL_TO_KJ * -10.000,
+<span class="lineNum">    1113 </span>            :         KCAL_TO_KJ * -10.000,
+<span class="lineNum">    1114 </span>            :         KCAL_TO_KJ * -12.000,
+<span class="lineNum">    1115 </span>            :         KCAL_TO_KJ * -7.0,
+<span class="lineNum">    1116 </span>            :         1. / (ANG_TO_NM * 6.0),
+<span class="lineNum">    1117 </span>            :         0.185,
+<span class="lineNum">    1118 </span>            :       }
+<span class="lineNum">    1119 </span>            :     },
+<span class="lineNum">    1120 </span>            :     { &quot;NY&quot;, {
+<span class="lineNum">    1121 </span>            :         ANG3_TO_NM3 * 12.001,
+<span class="lineNum">    1122 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1123 </span>            :         KCAL_TO_KJ * -5.950,
+<span class="lineNum">    1124 </span>            :         KCAL_TO_KJ * -9.059,
+<span class="lineNum">    1125 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1126 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1127 </span>            :         0.185,
+<span class="lineNum">    1128 </span>            :       }
+<span class="lineNum">    1129 </span>            :     },
+<span class="lineNum">    1130 </span>            :     { &quot;NP&quot;, {
+<span class="lineNum">    1131 </span>            :         ANG3_TO_NM3 * 4.993,
+<span class="lineNum">    1132 </span>            :         KCAL_TO_KJ * -20.000,
+<span class="lineNum">    1133 </span>            :         KCAL_TO_KJ * -20.000,
+<span class="lineNum">    1134 </span>            :         KCAL_TO_KJ * -25.000,
+<span class="lineNum">    1135 </span>            :         KCAL_TO_KJ * -18.0,
+<span class="lineNum">    1136 </span>            :         1. / (ANG_TO_NM * 6.0),
+<span class="lineNum">    1137 </span>            :         0.185,
+<span class="lineNum">    1138 </span>            :       }
+<span class="lineNum">    1139 </span>            :     },
+<span class="lineNum">    1140 </span>            :     { &quot;O&quot;, {
+<span class="lineNum">    1141 </span>            :         ANG3_TO_NM3 * 11.772,
+<span class="lineNum">    1142 </span>            :         KCAL_TO_KJ * -5.330,
+<span class="lineNum">    1143 </span>            :         KCAL_TO_KJ * -5.330,
+<span class="lineNum">    1144 </span>            :         KCAL_TO_KJ * -5.787,
+<span class="lineNum">    1145 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1146 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1147 </span>            :         0.170,
+<span class="lineNum">    1148 </span>            :       }
+<span class="lineNum">    1149 </span>            :     },
+<span class="lineNum">    1150 </span>            :     { &quot;OB&quot;, {
+<span class="lineNum">    1151 </span>            :         ANG3_TO_NM3 * 11.694,
+<span class="lineNum">    1152 </span>            :         KCAL_TO_KJ * -5.330,
+<span class="lineNum">    1153 </span>            :         KCAL_TO_KJ * -5.330,
+<span class="lineNum">    1154 </span>            :         KCAL_TO_KJ * -5.787,
+<span class="lineNum">    1155 </span>            :         KCAL_TO_KJ * -8.8,
+<span class="lineNum">    1156 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1157 </span>            :         0.170,
+<span class="lineNum">    1158 </span>            :       }
+<span class="lineNum">    1159 </span>            :     },
+<span class="lineNum">    1160 </span>            :     { &quot;OC&quot;, {
+<span class="lineNum">    1161 </span>            :         ANG3_TO_NM3 * 12.003,
+<span class="lineNum">    1162 </span>            :         KCAL_TO_KJ * -10.000,
+<span class="lineNum">    1163 </span>            :         KCAL_TO_KJ * -10.000,
+<span class="lineNum">    1164 </span>            :         KCAL_TO_KJ * -12.000,
+<span class="lineNum">    1165 </span>            :         KCAL_TO_KJ * -9.4,
+<span class="lineNum">    1166 </span>            :         1. / (ANG_TO_NM * 6.0),
+<span class="lineNum">    1167 </span>            :         0.170,
+<span class="lineNum">    1168 </span>            :       }
+<span class="lineNum">    1169 </span>            :     },
+<span class="lineNum">    1170 </span>            :     { &quot;OH1&quot;, {
+<span class="lineNum">    1171 </span>            :         ANG3_TO_NM3 * 15.528,
+<span class="lineNum">    1172 </span>            :         KCAL_TO_KJ * -5.920,
+<span class="lineNum">    1173 </span>            :         KCAL_TO_KJ * -5.920,
+<span class="lineNum">    1174 </span>            :         KCAL_TO_KJ * -9.264,
+<span class="lineNum">    1175 </span>            :         KCAL_TO_KJ * -11.2,
+<span class="lineNum">    1176 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1177 </span>            :         0.177,
+<span class="lineNum">    1178 </span>            :       }
+<span class="lineNum">    1179 </span>            :     },
+<span class="lineNum">    1180 </span>            :     { &quot;OS&quot;, {
+<span class="lineNum">    1181 </span>            :         ANG3_TO_NM3 * 6.774,
+<span class="lineNum">    1182 </span>            :         KCAL_TO_KJ * -2.900,
+<span class="lineNum">    1183 </span>            :         KCAL_TO_KJ * -2.900,
+<span class="lineNum">    1184 </span>            :         KCAL_TO_KJ * -3.150,
+<span class="lineNum">    1185 </span>            :         KCAL_TO_KJ * -4.8,
+<span class="lineNum">    1186 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1187 </span>            :         0.177,
+<span class="lineNum">    1188 </span>            :       }
+<span class="lineNum">    1189 </span>            :     },
+<span class="lineNum">    1190 </span>            :     { &quot;S&quot;, {
+<span class="lineNum">    1191 </span>            :         ANG3_TO_NM3 * 20.703,
+<span class="lineNum">    1192 </span>            :         KCAL_TO_KJ * -3.240,
+<span class="lineNum">    1193 </span>            :         KCAL_TO_KJ * -3.240,
+<span class="lineNum">    1194 </span>            :         KCAL_TO_KJ * -4.475,
+<span class="lineNum">    1195 </span>            :         KCAL_TO_KJ * -39.9,
+<span class="lineNum">    1196 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1197 </span>            :         0.20,
+<span class="lineNum">    1198 </span>            :       }
+<span class="lineNum">    1199 </span>            :     },
+<span class="lineNum">    1200 </span>            :     { &quot;SM&quot;, {
+<span class="lineNum">    1201 </span>            :         ANG3_TO_NM3 * 21.306,
+<span class="lineNum">    1202 </span>            :         KCAL_TO_KJ * -3.240,
+<span class="lineNum">    1203 </span>            :         KCAL_TO_KJ * -3.240,
+<span class="lineNum">    1204 </span>            :         KCAL_TO_KJ * -4.475,
+<span class="lineNum">    1205 </span>            :         KCAL_TO_KJ * -39.9,
+<span class="lineNum">    1206 </span>            :         1. / (ANG_TO_NM * 3.5),
+<span class="lineNum">    1207 </span>            :         0.197,
+<span class="lineNum">    1208 </span>            :       }
+<span class="lineNum">    1209 </span>            :     }
+<span class="lineNum">    1210 </span><span class="lineCov">         66 :   };</span>
+<span class="lineNum">    1211 </span><span class="lineCov">          2 :   return valuemap;</span>
+<a name="1212"><span class="lineNum">    1212 </span>            : }</a>
+<span class="lineNum">    1213 </span>            : }
+<span class="lineNum">    1214 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

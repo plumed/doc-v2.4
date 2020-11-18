@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/CoordinationBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - CoordinationBase.cpp<span style="font-size: 80%;"> (source / <a href="CoordinationBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">112</td>
+            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntryHi">98.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">72.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CoordinationBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/NeighborList.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/OpenMP.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<a name="32"><span class="lineNum">      32 </span>            : namespace colvar {</a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">        163 : void CoordinationBase::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      35 </span><span class="lineCov">        163 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">      36 </span><span class="lineCov">        489 :   keys.addFlag(&quot;SERIAL&quot;,false,&quot;Perform the calculation in serial - for debug purpose&quot;);</span>
+<span class="lineNum">      37 </span><span class="lineCov">        489 :   keys.addFlag(&quot;PAIR&quot;,false,&quot;Pair only 1st element of the 1st group with 1st element in the second, etc&quot;);</span>
+<span class="lineNum">      38 </span><span class="lineCov">        489 :   keys.addFlag(&quot;NLIST&quot;,false,&quot;Use a neighbour list to speed up the calculation&quot;);</span>
+<span class="lineNum">      39 </span><span class="lineCov">        652 :   keys.add(&quot;optional&quot;,&quot;NL_CUTOFF&quot;,&quot;The cutoff for the neighbour list&quot;);</span>
+<span class="lineNum">      40 </span><span class="lineCov">        652 :   keys.add(&quot;optional&quot;,&quot;NL_STRIDE&quot;,&quot;The frequency with which we are updating the atoms in the neighbour list&quot;);</span>
+<span class="lineNum">      41 </span><span class="lineCov">        652 :   keys.add(&quot;atoms&quot;,&quot;GROUPA&quot;,&quot;First list of atoms&quot;);</span>
+<span class="lineNum">      42 </span><span class="lineCov">        652 :   keys.add(&quot;atoms&quot;,&quot;GROUPB&quot;,&quot;Second list of atoms (if empty, N*(N-1)/2 pairs in GROUPA are counted)&quot;);</span>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">        163 : }</span></a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">        161 : CoordinationBase::CoordinationBase(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      46 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">      47 </span>            :   pbc(true),
+<span class="lineNum">      48 </span>            :   serial(false),
+<span class="lineNum">      49 </span>            :   invalidateList(true),
+<span class="lineNum">      50 </span><span class="lineCov">        161 :   firsttime(true)</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">        322 :   parseFlag(&quot;SERIAL&quot;,serial);</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   vector&lt;AtomNumber&gt; ga_lista,gb_lista;
+<span class="lineNum">      56 </span><span class="lineCov">        322 :   parseAtomList(&quot;GROUPA&quot;,ga_lista);</span>
+<span class="lineNum">      57 </span><span class="lineCov">        322 :   parseAtomList(&quot;GROUPB&quot;,gb_lista);</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">        161 :   bool nopbc=!pbc;</span>
+<span class="lineNum">      60 </span><span class="lineCov">        322 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">      61 </span><span class="lineCov">        161 :   pbc=!nopbc;</span>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : // pair stuff
+<span class="lineNum">      64 </span><span class="lineCov">        161 :   bool dopair=false;</span>
+<span class="lineNum">      65 </span><span class="lineCov">        322 :   parseFlag(&quot;PAIR&quot;,dopair);</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : // neighbor list stuff
+<span class="lineNum">      68 </span><span class="lineCov">        161 :   bool doneigh=false;</span>
+<span class="lineNum">      69 </span><span class="lineCov">        161 :   double nl_cut=0.0;</span>
+<span class="lineNum">      70 </span><span class="lineCov">        161 :   int nl_st=0;</span>
+<span class="lineNum">      71 </span><span class="lineCov">        322 :   parseFlag(&quot;NLIST&quot;,doneigh);</span>
+<span class="lineNum">      72 </span><span class="lineCov">        161 :   if(doneigh) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">         48 :     parse(&quot;NL_CUTOFF&quot;,nl_cut);</span>
+<span class="lineNum">      74 </span><span class="lineCov">         24 :     if(nl_cut&lt;=0.0) error(&quot;NL_CUTOFF should be explicitly specified and positive&quot;);</span>
+<span class="lineNum">      75 </span><span class="lineCov">         48 :     parse(&quot;NL_STRIDE&quot;,nl_st);</span>
+<span class="lineNum">      76 </span><span class="lineCov">         24 :     if(nl_st&lt;=0) error(&quot;NL_STRIDE should be explicitly specified and positive&quot;);</span>
+<span class="lineNum">      77 </span>            :   }
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">        161 :   addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">      80 </span><span class="lineCov">        161 :   if(gb_lista.size()&gt;0) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">        176 :     if(doneigh)  nl= new NeighborList(ga_lista,gb_lista,dopair,pbc,getPbc(),nl_cut,nl_st);</span>
+<span class="lineNum">      82 </span><span class="lineCov">        128 :     else         nl= new NeighborList(ga_lista,gb_lista,dopair,pbc,getPbc());</span>
+<span class="lineNum">      83 </span>            :   } else {
+<span class="lineNum">      84 </span><span class="lineCov">          9 :     if(doneigh)  nl= new NeighborList(ga_lista,pbc,getPbc(),nl_cut,nl_st);</span>
+<span class="lineNum">      85 </span><span class="lineCov">          9 :     else         nl= new NeighborList(ga_lista,pbc,getPbc());</span>
+<span class="lineNum">      86 </span>            :   }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">        161 :   requestAtoms(nl-&gt;getFullAtomList());</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">        483 :   log.printf(&quot;  between two groups of %u and %u atoms\n&quot;,static_cast&lt;unsigned&gt;(ga_lista.size()),static_cast&lt;unsigned&gt;(gb_lista.size()));</span>
+<span class="lineNum">      91 </span><span class="lineCov">        161 :   log.printf(&quot;  first group:\n&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">       7586 :   for(unsigned int i=0; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">       3632 :     if ( (i+1) % 25 == 0 ) log.printf(&quot;  \n&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">       7264 :     log.printf(&quot;  %d&quot;, ga_lista[i].serial());</span>
+<span class="lineNum">      95 </span>            :   }
+<span class="lineNum">      96 </span><span class="lineCov">        161 :   log.printf(&quot;  \n  second group:\n&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">      17450 :   for(unsigned int i=0; i&lt;gb_lista.size(); ++i) {</span>
+<span class="lineNum">      98 </span><span class="lineCov">       8564 :     if ( (i+1) % 25 == 0 ) log.printf(&quot;  \n&quot;);</span>
+<span class="lineNum">      99 </span><span class="lineCov">      17128 :     log.printf(&quot;  %d&quot;, gb_lista[i].serial());</span>
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span><span class="lineCov">        161 :   log.printf(&quot;  \n&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">        161 :   if(pbc) log.printf(&quot;  using periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :   else    log.printf(&quot;  without periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">        161 :   if(dopair) log.printf(&quot;  with PAIR option\n&quot;);</span>
+<span class="lineNum">     105 </span><span class="lineCov">        161 :   if(doneigh) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">         24 :     log.printf(&quot;  using neighbor lists with\n&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         24 :     log.printf(&quot;  update every %d steps and cutoff %f\n&quot;,nl_st,nl_cut);</span>
+<span class="lineNum">     108 </span>            :   }
+<a name="109"><span class="lineNum">     109 </span><span class="lineCov">        161 : }</span></a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">        322 : CoordinationBase::~CoordinationBase() {</span>
+<span class="lineNum">     112 </span><span class="lineCov">        161 :   delete nl;</span>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">        161 : }</span></a>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">       1842 : void CoordinationBase::prepare() {</span>
+<span class="lineNum">     116 </span><span class="lineCov">       1842 :   if(nl-&gt;getStride()&gt;0) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">        180 :     if(firsttime || (getStep()%nl-&gt;getStride()==0)) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">        161 :       requestAtoms(nl-&gt;getFullAtomList());</span>
+<span class="lineNum">     119 </span><span class="lineCov">        161 :       invalidateList=true;</span>
+<span class="lineNum">     120 </span><span class="lineCov">        161 :       firsttime=false;</span>
+<span class="lineNum">     121 </span>            :     } else {
+<span class="lineNum">     122 </span><span class="lineCov">         19 :       requestAtoms(nl-&gt;getReducedAtomList());</span>
+<span class="lineNum">     123 </span><span class="lineCov">         19 :       invalidateList=false;</span>
+<span class="lineNum">     124 </span><span class="lineCov">         19 :       if(getExchangeStep()) error(&quot;Neighbor lists should be updated on exchange steps - choose a NL_STRIDE which divides the exchange stride!&quot;);</span>
+<span class="lineNum">     125 </span>            :     }
+<span class="lineNum">     126 </span><span class="lineCov">        180 :     if(getExchangeStep()) firsttime=true;</span>
+<span class="lineNum">     127 </span>            :   }
+<span class="lineNum">     128 </span><span class="lineCov">       1842 : }</span>
+<a name="129"><span class="lineNum">     129 </span>            : </a>
+<span class="lineNum">     130 </span>            : // calculator
+<span class="lineNum">     131 </span><span class="lineCov">       1662 : void CoordinationBase::calculate()</span>
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">       1662 :   double ncoord=0.;</span>
+<span class="lineNum">     135 </span><span class="lineCov">       1662 :   Tensor virial;</span>
+<span class="lineNum">     136 </span><span class="lineCov">       1662 :   vector&lt;Vector&gt; deriv(getNumberOfAtoms());</span>
+<span class="lineNum">     137 </span>            : // deriv.resize(getPositions().size());
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">       1662 :   if(nl-&gt;getStride()&gt;0 &amp;&amp; invalidateList) {</span>
+<span class="lineNum">     140 </span><span class="lineCov">        250 :     nl-&gt;update(getPositions());</span>
+<span class="lineNum">     141 </span>            :   }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :   unsigned stride;
+<span class="lineNum">     144 </span>            :   unsigned rank;
+<span class="lineNum">     145 </span><span class="lineCov">       1662 :   if(serial) {</span>
+<span class="lineNum">     146 </span>            :     stride=1;
+<span class="lineNum">     147 </span>            :     rank=0;
+<span class="lineNum">     148 </span>            :   } else {
+<span class="lineNum">     149 </span><span class="lineCov">       1662 :     stride=comm.Get_size();</span>
+<span class="lineNum">     150 </span><span class="lineCov">       1662 :     rank=comm.Get_rank();</span>
+<span class="lineNum">     151 </span>            :   }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">       1662 :   unsigned nt=OpenMP::getNumThreads();</span>
+<span class="lineNum">     154 </span><span class="lineCov">       1662 :   const unsigned nn=nl-&gt;size();</span>
+<a name="155"><span class="lineNum">     155 </span><span class="lineCov">       1662 :   if(nt*stride*10&gt;nn) nt=1;</span></a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">       4508 :   #pragma omp parallel num_threads(nt)</span>
+<span class="lineNum">     158 </span>            :   {
+<span class="lineNum">     159 </span><span class="lineCov">       2846 :     std::vector&lt;Vector&gt; omp_deriv(getPositions().size());</span>
+<span class="lineNum">     160 </span><span class="lineCov">       2846 :     Tensor omp_virial;</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">       2846 :     #pragma omp for reduction(+:ncoord) nowait</span>
+<span class="lineNum">     163 </span>            :     for(unsigned int i=rank; i&lt;nn; i+=stride) {
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">    6125234 :       Vector distance;</span>
+<span class="lineNum">     166 </span><span class="lineCov">    6125234 :       unsigned i0=nl-&gt;getClosePair(i).first;</span>
+<span class="lineNum">     167 </span><span class="lineCov">    6125234 :       unsigned i1=nl-&gt;getClosePair(i).second;</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">   18425552 :       if(getAbsoluteIndex(i0)==getAbsoluteIndex(i1)) continue;</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">    6075384 :       if(pbc) {</span>
+<span class="lineNum">     172 </span><span class="lineCov">   12150768 :         distance=pbcDistance(getPosition(i0),getPosition(i1));</span>
+<span class="lineNum">     173 </span>            :       } else {
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         distance=delta(getPosition(i0),getPosition(i1));</span>
+<span class="lineNum">     175 </span>            :       }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">    6075384 :       double dfunc=0.;</span>
+<span class="lineNum">     178 </span><span class="lineCov">    6075384 :       ncoord += pairing(distance.modulo2(), dfunc,i0,i1);</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">    6075384 :       Vector dd(dfunc*distance);</span>
+<span class="lineNum">     181 </span><span class="lineCov">    6075384 :       Tensor vv(dd,distance);</span>
+<span class="lineNum">     182 </span><span class="lineCov">    6075384 :       if(nt&gt;1) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">   10763040 :         omp_deriv[i0]-=dd;</span>
+<span class="lineNum">     184 </span><span class="lineCov">   10763040 :         omp_deriv[i1]+=dd;</span>
+<span class="lineNum">     185 </span><span class="lineCov">    5381520 :         omp_virial-=vv;</span>
+<span class="lineNum">     186 </span>            :       } else {
+<span class="lineNum">     187 </span><span class="lineCov">    1387728 :         deriv[i0]-=dd;</span>
+<span class="lineNum">     188 </span><span class="lineCov">    1387728 :         deriv[i1]+=dd;</span>
+<span class="lineNum">     189 </span><span class="lineCov">     693864 :         virial-=vv;</span>
+<span class="lineNum">     190 </span>            :       }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :     }
+<span class="lineNum">     193 </span><span class="lineCov">       5692 :     #pragma omp critical</span>
+<span class="lineNum">     194 </span><span class="lineCov">       2846 :     if(nt&gt;1) {</span>
+<span class="lineNum">     195 </span><span class="lineCov">    1214448 :       for(int i=0; i&lt;getPositions().size(); i++) deriv[i]+=omp_deriv[i];</span>
+<span class="lineNum">     196 </span><span class="lineCov">       2368 :       virial+=omp_virial;</span>
+<span class="lineNum">     197 </span>            :     }
+<span class="lineNum">     198 </span>            :   }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">       1662 :   if(!serial) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">       1662 :     comm.Sum(ncoord);</span>
+<span class="lineNum">     202 </span><span class="lineCov">       3324 :     if(!deriv.empty()) comm.Sum(&amp;deriv[0][0],3*deriv.size());</span>
+<span class="lineNum">     203 </span><span class="lineCov">       1662 :     comm.Sum(virial);</span>
+<span class="lineNum">     204 </span>            :   }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">     741516 :   for(unsigned i=0; i&lt;deriv.size(); ++i) setAtomsDerivatives(i,deriv[i]);</span>
+<span class="lineNum">     207 </span><span class="lineCov">       1662 :   setValue           (ncoord);</span>
+<span class="lineNum">     208 </span><span class="lineCov">       1662 :   setBoxDerivatives  (virial);</span>
+<span class="lineNum">     209 </span>            : 
+<a name="210"><span class="lineNum">     210 </span><span class="lineCov">       1662 : }</span></a>
+<span class="lineNum">     211 </span>            : }
+<span class="lineNum">     212 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

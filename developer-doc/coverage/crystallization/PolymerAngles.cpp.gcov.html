@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/PolymerAngles.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - PolymerAngles.cpp<span style="font-size: 80%;"> (source / <a href="PolymerAngles.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2017-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;OrientationSphere.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : //+PLUMEDOC MCOLVARF POLYMER_ANGLES
+<span class="lineNum">      26 </span>            : /*
+<span class="lineNum">      27 </span>            : Calculate a function to investigate the relative orientations of polymer angles
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : This CV takes the vectors calculated by a \ref PLANES action as input and computes the following function
+<span class="lineNum">      30 </span>            : of the relative angles, \f$\theta\f$, between the normals of pairs of input vectors:
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : \f[
+<span class="lineNum">      33 </span>            : s = \frac{ 3 \cos \theta - 1 }{ 2 }
+<span class="lineNum">      34 </span>            : \f]
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : This average of this quantity over all the vectors in the first coordination sphere around each of the PLANES specified
+<span class="lineNum">      37 </span>            : is then calculated.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \par Examples
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : The example below calculates a set of vectors using the \ref PLANES action.  The average number for the function \f$s\f$
+<span class="lineNum">      42 </span>            : defined above is then computed over the first coordination sphere of each of the centers of mass of the molecules that were
+<span class="lineNum">      43 </span>            : used to define the planes.  Finally the average of these quantities is computed an printed to a file.
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \plumedfile
+<span class="lineNum">      46 </span>            : PLANES ...
+<span class="lineNum">      47 </span>            : MOL1=9,10,11
+<span class="lineNum">      48 </span>            : MOL2=89,90,91
+<span class="lineNum">      49 </span>            : MOL3=473,474,475
+<span class="lineNum">      50 </span>            : MOL4=1161,1162,1163
+<span class="lineNum">      51 </span>            : MOL5=1521,1522,1523
+<span class="lineNum">      52 </span>            : MOL6=1593,1594,1595
+<span class="lineNum">      53 </span>            : MOL7=1601,1602,1603
+<span class="lineNum">      54 </span>            : MOL8=2201,2202,2203
+<span class="lineNum">      55 </span>            : LABEL=m3
+<span class="lineNum">      56 </span>            : ... PLANES
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : s3: POLYMER_ANGLES SPECIES=m3 LOWMEM SWITCH={RATIONAL R_0=0.6} MEAN
+<span class="lineNum">      59 </span>            : PRINT ARG=s3.mean FILE=colvar
+<span class="lineNum">      60 </span>            : \endplumedfile
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : */
+<span class="lineNum">      63 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : namespace PLMD {
+<a name="66"><span class="lineNum">      66 </span>            : namespace crystallization {</a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">          2 : class PolymerAngles : public OrientationSphere {</span>
+<span class="lineNum">      69 </span>            : public:
+<span class="lineNum">      70 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      71 </span>            :   explicit PolymerAngles(const ActionOptions&amp; ao);
+<span class="lineNum">      72 </span>            :   double computeVectorFunction( const Vector&amp; conn, const std::vector&lt;double&gt;&amp; vec1, const std::vector&lt;double&gt;&amp; vec2,
+<span class="lineNum">      73 </span>            :                                 Vector&amp; dconn, std::vector&lt;double&gt;&amp; dvec1, std::vector&lt;double&gt;&amp; dvec2 ) const ;
+<a name="74"><span class="lineNum">      74 </span>            : };</a>
+<span class="lineNum">      75 </span>            : 
+<a name="76"><span class="lineNum">      76 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(PolymerAngles,&quot;POLYMER_ANGLES&quot;)</span></a>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">          2 : void PolymerAngles::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">          2 :   OrientationSphere::registerKeywords(keys);</span>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">          1 : PolymerAngles::PolymerAngles(const ActionOptions&amp; ao):</span>
+<span class="lineNum">      83 </span>            :   Action(ao),
+<span class="lineNum">      84 </span><span class="lineCov">          1 :   OrientationSphere(ao)</span>
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span><span class="lineCov">          1 :   if( mybasemulticolvars.size()==0 ) error(&quot;SMAC must take multicolvar as input&quot;);</span>
+<span class="lineNum">      87 </span><span class="lineCov">          5 :   for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">      88 </span><span class="lineCov">          1 :     if( (mybasemulticolvars[i]-&gt;getNumberOfQuantities()-2)%3!=0 ) error(&quot;POLYMER_ANGLES is only possible with three dimensional vectors&quot;);</span>
+<span class="lineNum">      89 </span>            :   }
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">        616 : double PolymerAngles::computeVectorFunction( const Vector&amp; conn, const std::vector&lt;double&gt;&amp; vec1, const std::vector&lt;double&gt;&amp; vec2,</span>
+<span class="lineNum">      93 </span>            :     Vector&amp; dconn, std::vector&lt;double&gt;&amp; dvec1, std::vector&lt;double&gt;&amp; dvec2 ) const {
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">        616 :   plumed_assert( (vec1.size()-2)==3 );</span>
+<span class="lineNum">      96 </span><span class="lineCov">       6160 :   double dot = 0; for(unsigned k=0; k&lt;3; ++k) dot += vec1[2+k]*vec2[2+k];</span>
+<span class="lineNum">      97 </span><span class="lineCov">       8008 :   double ans = 1.5*dot - 0.5; for(unsigned k=0; k&lt;3; ++k) { dvec1[2+k]=1.5*vec2[2+k]; dvec2[2+k]=1.5*vec1[2+k]; }</span>
+<span class="lineNum">      98 </span><span class="lineCov">        616 :   return ans;</span>
+<span class="lineNum">      99 </span>            : }
+<a name="100"><span class="lineNum">     100 </span>            : </a>
+<span class="lineNum">     101 </span>            : }
+<span class="lineNum">     102 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

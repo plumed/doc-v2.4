@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/Coordination.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - Coordination.cpp<span style="font-size: 80%;"> (source / <a href="Coordination.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CoordinationBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : using namespace std;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace colvar {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC COLVAR COORDINATION
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Calculate coordination numbers.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : This keyword can be used to calculate the number of contacts between two groups of atoms
+<span class="lineNum">      38 </span>            : and is defined as
+<span class="lineNum">      39 </span>            : \f[
+<span class="lineNum">      40 </span>            : \sum_{i\in A} \sum_{i\in B} s_{ij}
+<span class="lineNum">      41 </span>            : \f]
+<span class="lineNum">      42 </span>            : where \f$s_{ij}\f$ is 1 if the contact between atoms \f$i\f$ and \f$j\f$ is formed,
+<span class="lineNum">      43 </span>            : zero otherwise.
+<span class="lineNum">      44 </span>            : In practise, \f$s_{ij}\f$ is replaced with a switching function to make it differentiable.
+<span class="lineNum">      45 </span>            : The default switching function is:
+<span class="lineNum">      46 </span>            : \f[
+<span class="lineNum">      47 </span>            : s_{ij} = \frac{ 1 - \left(\frac{{\bf r}_{ij}-d_0}{r_0}\right)^n } { 1 - \left(\frac{{\bf r}_{ij}-d_0}{r_0}\right)^m }
+<span class="lineNum">      48 </span>            : \f]
+<span class="lineNum">      49 </span>            : but it can be changed using the optional SWITCH option.
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : To make your calculation faster you can use a neighbor list, which makes it that only a
+<span class="lineNum">      52 </span>            : relevant subset of the pairwise distance are calculated at every step.
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : If GROUPB is empty, it will sum the \f$\frac{N(N-1)}{2}\f$ pairs in GROUPA. This avoids computing
+<span class="lineNum">      55 </span>            : twice permuted indexes (e.g. pair (i,j) and (j,i)) thus running at twice the speed.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : Notice that if there are common atoms between GROUPA and GROUPB the switching function should be
+<span class="lineNum">      58 </span>            : equal to one. These &quot;self contacts&quot; are discarded by plumed (since version 2.1),
+<span class="lineNum">      59 </span>            : so that they actually count as &quot;zero&quot;.
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : \par Examples
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : The following example instructs plumed to calculate the total coordination number of the atoms in group 1-10 with the atoms in group 20-100.  For atoms 1-10 coordination numbers are calculated that count the number of atoms from the second group that are within 0.3 nm of the central atom.  A neighbour list is used to make this calculation faster, this neighbour list is updated every 100 steps.
+<span class="lineNum">      65 </span>            : \plumedfile
+<span class="lineNum">      66 </span>            : COORDINATION GROUPA=1-10 GROUPB=20-100 R_0=0.3 NLIST NL_CUTOFF=0.5 NL_STRIDE=100
+<span class="lineNum">      67 </span>            : \endplumedfile
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : The following is a dummy example which should compute the value 0 because the self interaction
+<span class="lineNum">      70 </span>            : of atom 1 is skipped. Notice that in plumed 2.0 &quot;self interactions&quot; were not skipped, and the
+<span class="lineNum">      71 </span>            : same calculation should return 1.
+<span class="lineNum">      72 </span>            : \plumedfile
+<span class="lineNum">      73 </span>            : c: COORDINATION GROUPA=1 GROUPB=1 R_0=0.3
+<span class="lineNum">      74 </span>            : PRINT ARG=c STRIDE=10
+<span class="lineNum">      75 </span>            : \endplumedfile
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : Here's an example that shows what happens when providing COORDINATION with
+<span class="lineNum">      78 </span>            : a single group:
+<span class="lineNum">      79 </span>            : \plumedfile
+<span class="lineNum">      80 </span>            : # define some huge group:
+<span class="lineNum">      81 </span>            : group: GROUP ATOMS=1-1000
+<span class="lineNum">      82 </span>            : # Here's coordination of a group against itself:
+<span class="lineNum">      83 </span>            : c1: COORDINATION GROUPA=group GROUPB=group R_0=0.3
+<span class="lineNum">      84 </span>            : # Here's coordination within a single group:
+<span class="lineNum">      85 </span>            : x: COORDINATION GROUPA=group R_0=0.3
+<span class="lineNum">      86 </span>            : # This is just multiplying times 2 the variable x:
+<span class="lineNum">      87 </span>            : c2: COMBINE ARG=x COEFFICIENTS=2
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : # the two variables c1 and c2 should be identical, but the calculation of c2 is twice faster
+<span class="lineNum">      90 </span>            : # since it runs on half of the pairs.
+<span class="lineNum">      91 </span>            : PRINT ARG=c1,c2 STRIDE=10
+<span class="lineNum">      92 </span>            : \endplumedfile
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : */
+<a name="97"><span class="lineNum">      97 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">        300 : class Coordination : public CoordinationBase {</span>
+<span class="lineNum">     100 </span>            :   SwitchingFunction switchingFunction;
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : public:
+<span class="lineNum">     103 </span>            :   explicit Coordination(const ActionOptions&amp;);
+<span class="lineNum">     104 </span>            : // active methods:
+<span class="lineNum">     105 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     106 </span>            :   virtual double pairing(double distance,double&amp;dfunc,unsigned i,unsigned j)const;
+<a name="107"><span class="lineNum">     107 </span>            : };</a>
+<span class="lineNum">     108 </span>            : 
+<a name="109"><span class="lineNum">     109 </span><span class="lineCov">       6605 : PLUMED_REGISTER_ACTION(Coordination,&quot;COORDINATION&quot;)</span></a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">        154 : void Coordination::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">        154 :   CoordinationBase::registerKeywords(keys);</span>
+<span class="lineNum">     113 </span><span class="lineCov">        770 :   keys.add(&quot;compulsory&quot;,&quot;NN&quot;,&quot;6&quot;,&quot;The n parameter of the switching function &quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">        770 :   keys.add(&quot;compulsory&quot;,&quot;MM&quot;,&quot;0&quot;,&quot;The m parameter of the switching function; 0 implies 2*NN&quot;);</span>
+<span class="lineNum">     115 </span><span class="lineCov">        770 :   keys.add(&quot;compulsory&quot;,&quot;D_0&quot;,&quot;0.0&quot;,&quot;The d_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineCov">        616 :   keys.add(&quot;compulsory&quot;,&quot;R_0&quot;,&quot;The r_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">     117 </span><span class="lineCov">        616 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;This keyword is used if you want to employ an alternative to the continuous swiching function defined above. &quot;</span>
+<span class="lineNum">     118 </span>            :            &quot;The following provides information on the \\ref switchingfunction that are available. &quot;
+<span class="lineNum">     119 </span>            :            &quot;When this keyword is present you no longer need the NN, MM, D_0 and R_0 keywords.&quot;);
+<a name="120"><span class="lineNum">     120 </span><span class="lineCov">        154 : }</span></a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">        153 : Coordination::Coordination(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     123 </span>            :   Action(ao),
+<span class="lineNum">     124 </span><span class="lineCov">        156 :   CoordinationBase(ao)</span>
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :   string sw,errors;
+<span class="lineNum">     128 </span><span class="lineCov">        306 :   parse(&quot;SWITCH&quot;,sw);</span>
+<span class="lineNum">     129 </span><span class="lineCov">        153 :   if(sw.length()&gt;0) {</span>
+<span class="lineNum">     130 </span><span class="lineCov">        111 :     switchingFunction.set(sw,errors);</span>
+<span class="lineNum">     131 </span><span class="lineCov">        114 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     132 </span>            :   } else {
+<span class="lineNum">     133 </span><span class="lineCov">         42 :     int nn=6;</span>
+<span class="lineNum">     134 </span><span class="lineCov">         42 :     int mm=0;</span>
+<span class="lineNum">     135 </span><span class="lineCov">         42 :     double d0=0.0;</span>
+<span class="lineNum">     136 </span><span class="lineCov">         42 :     double r0=0.0;</span>
+<span class="lineNum">     137 </span><span class="lineCov">         84 :     parse(&quot;R_0&quot;,r0);</span>
+<span class="lineNum">     138 </span><span class="lineCov">         42 :     if(r0&lt;=0.0) error(&quot;R_0 should be explicitly specified and positive&quot;);</span>
+<span class="lineNum">     139 </span><span class="lineCov">         84 :     parse(&quot;D_0&quot;,d0);</span>
+<span class="lineNum">     140 </span><span class="lineCov">         84 :     parse(&quot;NN&quot;,nn);</span>
+<span class="lineNum">     141 </span><span class="lineCov">         80 :     parse(&quot;MM&quot;,mm);</span>
+<span class="lineNum">     142 </span><span class="lineCov">         40 :     switchingFunction.set(nn,mm,r0,d0);</span>
+<span class="lineNum">     143 </span>            :   }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineCov">        150 :   checkRead();</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">        303 :   log&lt;&lt;&quot;  contacts are counted with cutoff &quot;&lt;&lt;switchingFunction.description()&lt;&lt;&quot;\n&quot;;</span>
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">        150 : }</span></a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">    6074544 : double Coordination::pairing(double distance,double&amp;dfunc,unsigned i,unsigned j)const {</span>
+<span class="lineNum">     151 </span>            :   (void) i; // avoid warnings
+<span class="lineNum">     152 </span>            :   (void) j; // avoid warnings
+<span class="lineNum">     153 </span><span class="lineCov">    6074544 :   return switchingFunction.calculateSqr(distance,dfunc);</span>
+<span class="lineNum">     154 </span>            : }
+<span class="lineNum">     155 </span>            : 
+<a name="156"><span class="lineNum">     156 </span>            : }</a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

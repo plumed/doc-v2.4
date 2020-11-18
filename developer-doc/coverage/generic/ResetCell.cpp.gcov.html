@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/ResetCell.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - ResetCell.cpp<span style="font-size: 80%;"> (source / <a href="ResetCell.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntryHi">97.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/AtomNumber.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      33 </span>            : #include &lt;string&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : using namespace std;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace PLMD {
+<span class="lineNum">      38 </span>            : namespace generic {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : //+PLUMEDOC GENERIC RESET_CELL
+<span class="lineNum">      41 </span>            : /*
+<span class="lineNum">      42 </span>            : This action is used to rotate the full cell
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : This can be used to modify the periodic box. Notice that
+<span class="lineNum">      45 </span>            : this is done at fixed scaled coordinates,
+<span class="lineNum">      46 </span>            : so that also atomic coordinates for the entire system are affected.
+<span class="lineNum">      47 </span>            : To see what effect try
+<span class="lineNum">      48 </span>            : the \ref DUMPATOMS directive to output the atomic positions.
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : Also notice that PLUMED propagate forces correctly so that you can add a bias on a CV computed
+<span class="lineNum">      51 </span>            : after rotation. See also \ref FIT_TO_TEMPLATE
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : Currently, only TYPE=TRIANGULAR is implemented, which allows one to reset
+<span class="lineNum">      54 </span>            : the cell to a lower triangular one. Namely, a proper rotation is found that allows
+<span class="lineNum">      55 </span>            : rotating the box so that the first lattice vector is in the form (ax,0,0),
+<span class="lineNum">      56 </span>            : the second lattice vector is in the form (bx,by,0), and the third lattice vector is
+<span class="lineNum">      57 </span>            : arbitrary.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : \attention
+<span class="lineNum">      60 </span>            : The implementation of this action is available but should be considered in testing phase. Please report any
+<span class="lineNum">      61 </span>            : strange behavior.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : \attention
+<span class="lineNum">      64 </span>            : This directive modifies the stored position at the precise moment
+<span class="lineNum">      65 </span>            : it is executed. This means that only collective variables
+<span class="lineNum">      66 </span>            : which are below it in the input script will see the corrected positions.
+<span class="lineNum">      67 </span>            : Unless you
+<span class="lineNum">      68 </span>            : know exactly what you are doing, leave the default stride (1), so that
+<span class="lineNum">      69 </span>            : this action is performed at every MD step.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : \par Examples
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : Reset cell to be triangular after a rototranslational fit
+<span class="lineNum">      74 </span>            : \plumedfile
+<span class="lineNum">      75 </span>            : DUMPATOMS FILE=dump-original.xyz ATOMS=1-20
+<span class="lineNum">      76 </span>            : FIT_TO_TEMPLATE STRIDE=1 REFERENCE=ref.pdb TYPE=OPTIMAL
+<span class="lineNum">      77 </span>            : DUMPATOMS FILE=dump-fit.xyz ATOMS=1-20
+<span class="lineNum">      78 </span>            : RESET_CELL TYPE=TRIANGULAR
+<span class="lineNum">      79 </span>            : DUMPATOMS FILE=dump-reset.xyz ATOMS=1-20
+<span class="lineNum">      80 </span>            : \endplumedfile
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : */
+<span class="lineNum">      84 </span>            : //+ENDPLUMEDOC
+<a name="85"><span class="lineNum">      85 </span>            : </a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          8 : class ResetCell:</span>
+<span class="lineNum">      88 </span>            :   public ActionPilot,
+<span class="lineNum">      89 </span>            :   public ActionAtomistic
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span>            :   std::string type;
+<span class="lineNum">      92 </span>            :   Tensor rotation,newbox;
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : public:
+<span class="lineNum">      95 </span>            :   explicit ResetCell(const ActionOptions&amp;ao);
+<span class="lineNum">      96 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      97 </span>            :   void calculate();
+<span class="lineNum">      98 </span>            :   void apply();
+<a name="99"><span class="lineNum">      99 </span>            : };</a>
+<span class="lineNum">     100 </span>            : 
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(ResetCell,&quot;RESET_CELL&quot;)</span></a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">          3 : void ResetCell::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">          3 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">     105 </span><span class="lineCov">          3 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">     106 </span><span class="lineCov">         15 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which molecules are reassembled.  Unless you are completely certain about what you are doing leave this set equal to 1!&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         15 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;TRIANGULAR&quot;,&quot;the manner in which the cell is reset&quot;);</span>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">          2 : ResetCell::ResetCell(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     111 </span>            :   Action(ao),
+<span class="lineNum">     112 </span>            :   ActionPilot(ao),
+<span class="lineNum">     113 </span><span class="lineCov">          4 :   ActionAtomistic(ao)</span>
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span><span class="lineCov">          2 :   type.assign(&quot;TRIANGULAR&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineCov">          4 :   parse(&quot;TYPE&quot;,type);</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">          2 :   log&lt;&lt;&quot;  type: &quot;&lt;&lt;type&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     119 </span><span class="lineCov">          2 :   if(type==&quot;TRIANGULAR&quot;) {</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :   } else error(&quot;undefined type &quot;+type);</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 : }</span>
+<a name="124"><span class="lineNum">     124 </span>            : </a>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">         17 : void ResetCell::calculate() {</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :   Pbc &amp; pbc(modifyGlobalPbc());
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">         17 :   Tensor box=pbc.getBox();</span>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : // moduli of lattice vectors
+<span class="lineNum">     133 </span><span class="lineCov">         17 :   double a=modulo(box.getRow(0));</span>
+<span class="lineNum">     134 </span><span class="lineCov">         17 :   double b=modulo(box.getRow(1));</span>
+<span class="lineNum">     135 </span><span class="lineCov">         17 :   double c=modulo(box.getRow(2));</span>
+<span class="lineNum">     136 </span>            : // cos-angle between lattice vectors
+<span class="lineNum">     137 </span><span class="lineCov">         17 :   double ab=dotProduct(box.getRow(0),box.getRow(1))/(a*b);</span>
+<span class="lineNum">     138 </span><span class="lineCov">         17 :   double ac=dotProduct(box.getRow(0),box.getRow(2))/(a*c);</span>
+<span class="lineNum">     139 </span><span class="lineCov">         17 :   double bc=dotProduct(box.getRow(1),box.getRow(2))/(b*c);</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : // generate a new set of lattice vectors as a lower triangular matrix
+<span class="lineNum">     142 </span><span class="lineCov">         17 :   newbox[0][0]=a;</span>
+<span class="lineNum">     143 </span><span class="lineCov">         17 :   newbox[1][0]=b*ab;</span>
+<span class="lineNum">     144 </span><span class="lineCov">         17 :   newbox[1][1]=std::sqrt(b*b-newbox[1][0]*newbox[1][0]);</span>
+<span class="lineNum">     145 </span><span class="lineCov">         17 :   newbox[2][0]=c*ac;</span>
+<span class="lineNum">     146 </span><span class="lineCov">         17 :   newbox[2][1]=c*(bc-ac*ab)/std::sqrt(1-ab*ab);</span>
+<span class="lineNum">     147 </span><span class="lineCov">         17 :   newbox[2][2]=std::sqrt(c*c-newbox[2][0]*newbox[2][0]-newbox[2][1]*newbox[2][1]);</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         17 :   if(determinant(newbox)*determinant(box)&lt;0) newbox[2][2]=-newbox[2][2];</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : // rotation matrix from old to new coordinates
+<span class="lineNum">     152 </span><span class="lineCov">         17 :   rotation=transpose(matmul(inverse(box),newbox));</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : // rotate all coordinates
+<span class="lineNum">     155 </span><span class="lineCov">       3205 :   for(unsigned i=0; i&lt;getTotAtoms(); i++) {</span>
+<span class="lineNum">     156 </span>            :     Vector &amp; ato (modifyPosition(AtomNumber::index(i)));
+<span class="lineNum">     157 </span><span class="lineCov">       1594 :     ato=matmul(rotation,ato);</span>
+<span class="lineNum">     158 </span>            :   }
+<span class="lineNum">     159 </span>            : // rotate box
+<span class="lineNum">     160 </span><span class="lineCov">         17 :   pbc.setBox(newbox);</span>
+<a name="161"><span class="lineNum">     161 </span><span class="lineCov">         17 : }</span></a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">         17 : void ResetCell::apply() {</span>
+<span class="lineNum">     164 </span>            : // rotate back forces
+<span class="lineNum">     165 </span><span class="lineCov">       3205 :   for(unsigned i=0; i&lt;getTotAtoms(); i++) {</span>
+<span class="lineNum">     166 </span>            :     Vector &amp; f(modifyGlobalForce(AtomNumber::index(i)));
+<span class="lineNum">     167 </span><span class="lineCov">       1594 :     f=matmul(transpose(rotation),f);</span>
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   Tensor&amp; virial(modifyGlobalVirial());
+<span class="lineNum">     171 </span>            : // I have no mathematical derivation for this.
+<span class="lineNum">     172 </span>            : // The reasoning is the following.
+<span class="lineNum">     173 </span>            : // virial= h^T * dU/dh, where h is the box matrix and dU/dh its derivatives.
+<span class="lineNum">     174 </span>            : // The final virial should be rotationally invariant, that is symmetric.
+<span class="lineNum">     175 </span>            : // in the rotated frame, dU/dh elements [0][1], [0][2], and [1][2] should
+<span class="lineNum">     176 </span>            : // be changed so as to enforce rotational invariance. Thus we here have to
+<span class="lineNum">     177 </span>            : // make the virial matrix symmetric.
+<span class="lineNum">     178 </span>            : // Since h^T is upper triangular, it can be shown that any change in these elements
+<span class="lineNum">     179 </span>            : // will only affect the corresponding elements of the virial matrix.
+<span class="lineNum">     180 </span>            : // Thus, the only possibility is to set the corresponding elements
+<span class="lineNum">     181 </span>            : // of the virial matrix equal to their symmetric ones.
+<span class="lineNum">     182 </span>            : // GB
+<span class="lineNum">     183 </span><span class="lineCov">         17 :   virial[0][1]=virial[1][0];</span>
+<span class="lineNum">     184 </span><span class="lineCov">         17 :   virial[0][2]=virial[2][0];</span>
+<span class="lineNum">     185 </span><span class="lineCov">         17 :   virial[1][2]=virial[2][1];</span>
+<span class="lineNum">     186 </span>            : // rotate back virial
+<span class="lineNum">     187 </span><span class="lineCov">         17 :   virial=matmul(transpose(rotation),matmul(virial,rotation));</span>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">         17 : }</span>
+<a name="192"><span class="lineNum">     192 </span>            : </a>
+<span class="lineNum">     193 </span>            : }
+<span class="lineNum">     194 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

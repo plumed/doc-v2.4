@@ -1,0 +1,845 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/VesBias.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - VesBias.cpp<span style="font-size: 80%;"> (source / <a href="VesBias.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">299</td>
+            <td class="headerCovTableEntry">400</td>
+            <td class="headerCovTableEntryLo">74.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntryLo">62.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;VesBias.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;CoeffsVector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;CoeffsMatrix.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Optimizer.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;FermiSwitchingFunction.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;VesTools.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace PLMD {
+<span class="lineNum">      40 </span>            : namespace ves {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">         82 : VesBias::VesBias(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      43 </span>            :   Action(ao),
+<span class="lineNum">      44 </span>            :   Bias(ao),
+<span class="lineNum">      45 </span>            :   ncoeffssets_(0),
+<span class="lineNum">      46 </span>            :   coeffs_pntrs_(0),
+<span class="lineNum">      47 </span>            :   targetdist_averages_pntrs_(0),
+<span class="lineNum">      48 </span>            :   gradient_pntrs_(0),
+<span class="lineNum">      49 </span>            :   hessian_pntrs_(0),
+<span class="lineNum">      50 </span>            :   sampled_averages(0),
+<span class="lineNum">      51 </span>            :   sampled_cross_averages(0),
+<span class="lineNum">      52 </span>            :   use_multiple_coeffssets_(false),
+<span class="lineNum">      53 </span>            :   coeffs_fnames(0),
+<span class="lineNum">      54 </span>            :   ncoeffs_total_(0),
+<span class="lineNum">      55 </span>            :   optimizer_pntr_(NULL),
+<span class="lineNum">      56 </span>            :   optimize_coeffs_(false),
+<span class="lineNum">      57 </span>            :   compute_hessian_(false),
+<span class="lineNum">      58 </span>            :   diagonal_hessian_(true),
+<span class="lineNum">      59 </span>            :   aver_counters(0),
+<span class="lineNum">      60 </span>            :   kbt_(0.0),
+<span class="lineNum">      61 </span>            :   targetdist_pntrs_(0),
+<span class="lineNum">      62 </span>            :   dynamic_targetdist_(false),
+<span class="lineNum">      63 </span>            :   grid_bins_(0),
+<span class="lineNum">      64 </span>            :   grid_min_(0),
+<span class="lineNum">      65 </span>            :   grid_max_(0),
+<span class="lineNum">      66 </span>            :   bias_filename_(&quot;&quot;),
+<span class="lineNum">      67 </span>            :   fes_filename_(&quot;&quot;),
+<span class="lineNum">      68 </span>            :   targetdist_filename_(&quot;&quot;),
+<span class="lineNum">      69 </span>            :   coeffs_id_prefix_(&quot;c-&quot;),
+<span class="lineNum">      70 </span>            :   bias_file_fmt_(&quot;14.9f&quot;),
+<span class="lineNum">      71 </span>            :   fes_file_fmt_(&quot;14.9f&quot;),
+<span class="lineNum">      72 </span>            :   targetdist_file_fmt_(&quot;14.9f&quot;),
+<span class="lineNum">      73 </span>            :   targetdist_restart_file_fmt_(&quot;30.16e&quot;),
+<span class="lineNum">      74 </span>            :   filenames_have_iteration_number_(false),
+<span class="lineNum">      75 </span>            :   bias_fileoutput_active_(false),
+<span class="lineNum">      76 </span>            :   fes_fileoutput_active_(false),
+<span class="lineNum">      77 </span>            :   fesproj_fileoutput_active_(false),
+<span class="lineNum">      78 </span>            :   dynamic_targetdist_fileoutput_active_(false),
+<span class="lineNum">      79 </span>            :   static_targetdist_fileoutput_active_(true),
+<span class="lineNum">      80 </span>            :   bias_cutoff_active_(false),
+<span class="lineNum">      81 </span>            :   bias_cutoff_value_(0.0),
+<span class="lineNum">      82 </span>            :   bias_current_max_value(0.0),
+<span class="lineNum">      83 </span>            :   bias_cutoff_swfunc_pntr_(NULL),
+<span class="lineNum">      84 </span><span class="lineCov">        246 :   calc_reweightfactor_(false)</span>
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span><span class="lineCov">         82 :   log.printf(&quot;  VES bias, please read and cite &quot;);</span>
+<span class="lineNum">      87 </span><span class="lineCov">        246 :   log &lt;&lt; plumed.cite(&quot;Valsson and Parrinello, Phys. Rev. Lett. 113, 090601 (2014)&quot;);</span>
+<span class="lineNum">      88 </span><span class="lineCov">         82 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">         82 :   double temp=0.0;</span>
+<span class="lineNum">      91 </span><span class="lineCov">        164 :   parse(&quot;TEMP&quot;,temp);</span>
+<span class="lineNum">      92 </span><span class="lineCov">         82 :   if(temp&gt;0.0) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">        164 :     kbt_=plumed.getAtoms().getKBoltzmann()*temp;</span>
+<span class="lineNum">      94 </span>            :   }
+<span class="lineNum">      95 </span>            :   else {
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :     kbt_=plumed.getAtoms().getKbT();</span>
+<span class="lineNum">      97 </span>            :   }
+<span class="lineNum">      98 </span><span class="lineCov">         82 :   if(kbt_&gt;0.0) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">         82 :     log.printf(&quot;  KbT: %f\n&quot;,kbt_);</span>
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span>            :   // NOTE: the check for that the temperature is given is done when linking the optimizer later on.
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;COEFFS&quot;)) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">        164 :     parseVector(&quot;COEFFS&quot;,coeffs_fnames);</span>
+<span class="lineNum">     105 </span>            :   }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;GRID_BINS&quot;)) {</span>
+<span class="lineNum">     108 </span><span class="lineCov">        246 :     parseMultipleValues&lt;unsigned int&gt;(&quot;GRID_BINS&quot;,grid_bins_,getNumberOfArguments(),100);</span>
+<span class="lineNum">     109 </span>            :   }
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">        246 :   if(keywords.exists(&quot;GRID_MIN&quot;) &amp;&amp; keywords.exists(&quot;GRID_MAX&quot;)) {</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     parseMultipleValues(&quot;GRID_MIN&quot;,grid_min_,getNumberOfArguments());</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :     parseMultipleValues(&quot;GRID_MAX&quot;,grid_max_,getNumberOfArguments());</span>
+<span class="lineNum">     114 </span>            :   }
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         82 :   std::vector&lt;std::string&gt; targetdist_labels;</span>
+<span class="lineNum">     117 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;TARGET_DISTRIBUTION&quot;)) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">        164 :     parseVector(&quot;TARGET_DISTRIBUTION&quot;,targetdist_labels);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         82 :     if(targetdist_labels.size()&gt;1) {</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :       plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: multiple target distribution labels not allowed&quot;);</span>
+<span class="lineNum">     121 </span>            :     }
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :   else if(keywords.exists(&quot;TARGET_DISTRIBUTIONS&quot;)) {</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :     parseVector(&quot;TARGET_DISTRIBUTIONS&quot;,targetdist_labels);</span>
+<span class="lineNum">     125 </span>            :   }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">         82 :   std::string error_msg = &quot;&quot;;</span>
+<span class="lineNum">     128 </span><span class="lineCov">        246 :   targetdist_pntrs_ = VesTools::getPointersFromLabels&lt;TargetDistribution*&gt;(targetdist_labels,plumed.getActionSet(),error_msg);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         82 :   if(error_msg.size()&gt;0) {plumed_merror(&quot;Problem with target distribution in &quot;+getName()+&quot;: &quot;+error_msg);}</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">        284 :   for(unsigned int i=0; i&lt;targetdist_pntrs_.size(); i++) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">         40 :     targetdist_pntrs_[i]-&gt;linkVesBias(this);</span>
+<span class="lineNum">     133 </span>            :   }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">         82 :   if(getNumberOfArguments()&gt;2) {</span>
+<span class="lineNum">     137 </span>            :     disableStaticTargetDistFileOutput();
+<span class="lineNum">     138 </span>            :   }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;BIAS_FILE&quot;)) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">        164 :     parse(&quot;BIAS_FILE&quot;,bias_filename_);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         82 :     if(bias_filename_.size()==0) {</span>
+<span class="lineNum">     144 </span><span class="lineCov">        328 :       bias_filename_ = &quot;bias.&quot; + getLabel() + &quot;.data&quot;;</span>
+<span class="lineNum">     145 </span>            :     }
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;FES_FILE&quot;)) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">        164 :     parse(&quot;FES_FILE&quot;,fes_filename_);</span>
+<span class="lineNum">     149 </span><span class="lineCov">         82 :     if(fes_filename_.size()==0) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">        328 :       fes_filename_ = &quot;fes.&quot; + getLabel() + &quot;.data&quot;;</span>
+<span class="lineNum">     151 </span>            :     }
+<span class="lineNum">     152 </span>            :   }
+<span class="lineNum">     153 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;TARGETDIST_FILE&quot;)) {</span>
+<span class="lineNum">     154 </span><span class="lineCov">        164 :     parse(&quot;TARGETDIST_FILE&quot;,targetdist_filename_);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         82 :     if(targetdist_filename_.size()==0) {</span>
+<span class="lineNum">     156 </span><span class="lineCov">        328 :       targetdist_filename_ = &quot;targetdist.&quot; + getLabel() + &quot;.data&quot;;</span>
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span>            :   }
+<span class="lineNum">     159 </span>            :   //
+<span class="lineNum">     160 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;BIAS_FILE_FMT&quot;)) {</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     parse(&quot;BIAS_FILE_FMT&quot;,bias_file_fmt_);</span>
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;FES_FILE_FMT&quot;)) {</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :     parse(&quot;FES_FILE_FMT&quot;,fes_file_fmt_);</span>
+<span class="lineNum">     165 </span>            :   }
+<span class="lineNum">     166 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;TARGETDIST_FILE_FMT&quot;)) {</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     parse(&quot;TARGETDIST_FILE_FMT&quot;,targetdist_file_fmt_);</span>
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;TARGETDIST_RESTART_FILE_FMT&quot;)) {</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     parse(&quot;TARGETDIST_RESTART_FILE_FMT&quot;,targetdist_restart_file_fmt_);</span>
+<span class="lineNum">     171 </span>            :   }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :   //
+<span class="lineNum">     174 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;BIAS_CUTOFF&quot;)) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">         82 :     double cutoff_value=0.0;</span>
+<span class="lineNum">     176 </span><span class="lineCov">        164 :     parse(&quot;BIAS_CUTOFF&quot;,cutoff_value);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         82 :     if(cutoff_value&lt;0.0) {</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;the value given in BIAS_CUTOFF doesn't make sense, it should be larger than 0.0&quot;);</span>
+<span class="lineNum">     179 </span>            :     }
+<span class="lineNum">     180 </span>            :     //
+<span class="lineNum">     181 </span><span class="lineCov">         82 :     if(cutoff_value&gt;0.0) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">          3 :       double fermi_lambda=10.0;</span>
+<span class="lineNum">     183 </span><span class="lineCov">          6 :       parse(&quot;BIAS_CUTOFF_FERMI_LAMBDA&quot;,fermi_lambda);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          3 :       setupBiasCutoff(cutoff_value,fermi_lambda);</span>
+<span class="lineNum">     185 </span><span class="lineCov">          3 :       log.printf(&quot;  Employing a bias cutoff of %f (the lambda value for the Fermi switching function is %f), see and cite &quot;,cutoff_value,fermi_lambda);</span>
+<span class="lineNum">     186 </span><span class="lineCov">          9 :       log &lt;&lt; plumed.cite(&quot;McCarty, Valsson, Tiwary, and Parrinello, Phys. Rev. Lett. 115, 070601 (2015)&quot;);</span>
+<span class="lineNum">     187 </span><span class="lineCov">          3 :       log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span>            :   }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;PROJ_ARG&quot;)) {</span>
+<span class="lineNum">     193 </span><span class="lineCov">         82 :     std::vector&lt;std::string&gt; proj_arg;</span>
+<span class="lineNum">     194 </span><span class="lineCov">         16 :     for(int i=1;; i++) {</span>
+<span class="lineNum">     195 </span><span class="lineCov">        196 :       if(!parseNumberedVector(&quot;PROJ_ARG&quot;,i,proj_arg)) {break;}</span>
+<span class="lineNum">     196 </span>            :       // checks
+<span class="lineNum">     197 </span><span class="lineCov">         16 :       if(proj_arg.size() &gt; (getNumberOfArguments()-1) ) {</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :         plumed_merror(&quot;PROJ_ARG must be a subset of ARG&quot;);</span>
+<span class="lineNum">     199 </span>            :       }
+<span class="lineNum">     200 </span>            :       //
+<span class="lineNum">     201 </span><span class="lineCov">         48 :       for(unsigned int k=0; k&lt;proj_arg.size(); k++) {</span>
+<span class="lineNum">     202 </span>            :         bool found = false;
+<span class="lineNum">     203 </span><span class="lineCov">         32 :         for(unsigned int l=0; l&lt;getNumberOfArguments(); l++) {</span>
+<span class="lineNum">     204 </span><span class="lineCov">         24 :           if(proj_arg[k]==getPntrToArgument(l)-&gt;getName()) {</span>
+<span class="lineNum">     205 </span>            :             found = true;
+<span class="lineNum">     206 </span>            :             break;
+<span class="lineNum">     207 </span>            :           }
+<span class="lineNum">     208 </span>            :         }
+<span class="lineNum">     209 </span><span class="lineCov">         16 :         if(!found) {</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :           std::string s1; Tools::convert(i,s1);</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :           std::string error = &quot;PROJ_ARG&quot; + s1 + &quot;: label &quot; + proj_arg[k] + &quot; is not among the arguments given in ARG&quot;;</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :           plumed_merror(error);</span>
+<span class="lineNum">     213 </span>            :         }
+<span class="lineNum">     214 </span>            :       }
+<span class="lineNum">     215 </span>            :       //
+<span class="lineNum">     216 </span><span class="lineCov">         16 :       projection_args_.push_back(proj_arg);</span>
+<span class="lineNum">     217 </span><span class="lineCov">         16 :     }</span>
+<span class="lineNum">     218 </span>            :   }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">        164 :   if(keywords.exists(&quot;CALC_REWEIGHT_FACTOR&quot;)) {</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :     parseFlag(&quot;CALC_REWEIGHT_FACTOR&quot;,calc_reweightfactor_);</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :     if(calc_reweightfactor_) {</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :       addComponent(&quot;rct&quot;); componentIsNotPeriodic(&quot;rct&quot;);</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :       updateReweightFactor();</span>
+<span class="lineNum">     225 </span>            :     }
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span><span class="lineCov">         82 : }</span>
+<a name="230"><span class="lineNum">     230 </span>            : </a>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span><span class="lineCov">        328 : VesBias::~VesBias() {</span>
+<span class="lineNum">     233 </span><span class="lineCov">        410 :   for(unsigned int i=0; i&lt;coeffs_pntrs_.size(); i++) {</span>
+<span class="lineNum">     234 </span><span class="lineCov">         82 :     delete coeffs_pntrs_[i];</span>
+<span class="lineNum">     235 </span>            :   }
+<span class="lineNum">     236 </span><span class="lineCov">        410 :   for(unsigned int i=0; i&lt;targetdist_averages_pntrs_.size(); i++) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">         82 :     delete targetdist_averages_pntrs_[i];</span>
+<span class="lineNum">     238 </span>            :   }
+<span class="lineNum">     239 </span><span class="lineCov">        410 :   for(unsigned int i=0; i&lt;gradient_pntrs_.size(); i++) {</span>
+<span class="lineNum">     240 </span><span class="lineCov">         82 :     delete gradient_pntrs_[i];</span>
+<span class="lineNum">     241 </span>            :   }
+<span class="lineNum">     242 </span><span class="lineCov">        410 :   for(unsigned int i=0; i&lt;hessian_pntrs_.size(); i++) {</span>
+<span class="lineNum">     243 </span><span class="lineCov">         82 :     delete hessian_pntrs_[i];</span>
+<span class="lineNum">     244 </span>            :   }
+<span class="lineNum">     245 </span><span class="lineCov">         82 :   if(bias_cutoff_swfunc_pntr_!=NULL) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">          3 :     delete bias_cutoff_swfunc_pntr_;</span>
+<span class="lineNum">     247 </span>            :   }
+<span class="lineNum">     248 </span><span class="lineCov">         82 : }</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineCov">         83 : void VesBias::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     252 </span><span class="lineCov">         83 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">     253 </span><span class="lineCov">        332 :   keys.add(&quot;optional&quot;,&quot;TEMP&quot;,&quot;the system temperature - this is needed if the MD code does not pass the temperature to PLUMED.&quot;);</span>
+<span class="lineNum">     254 </span>            :   //
+<span class="lineNum">     255 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;COEFFS&quot;,&quot;read in the coefficents from files.&quot;);</span>
+<span class="lineNum">     256 </span>            :   //
+<span class="lineNum">     257 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;TARGET_DISTRIBUTION&quot;,&quot;the label of the target distribution to be used.&quot;);</span>
+<span class="lineNum">     258 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;TARGET_DISTRIBUTIONS&quot;,&quot;the label of the target distribution to be used. Here you are allows to use multiple labels.&quot;);</span>
+<span class="lineNum">     259 </span>            :   //
+<span class="lineNum">     260 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;GRID_BINS&quot;,&quot;the number of bins used for the grid. The default value is 100 bins per dimension.&quot;);</span>
+<span class="lineNum">     261 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;GRID_MIN&quot;,&quot;the lower bounds used for the grid.&quot;);</span>
+<span class="lineNum">     262 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;GRID_MAX&quot;,&quot;the upper bounds used for the grid.&quot;);</span>
+<span class="lineNum">     263 </span>            :   //
+<span class="lineNum">     264 </span><span class="lineCov">        332 :   keys.add(&quot;optional&quot;,&quot;BIAS_FILE&quot;,&quot;filename of the file on which the bias should be written out. By default it is bias.LABEL.data. Note that suffixes indicating the iteration number (iter-#) are added to the filename when optimizing coefficients.&quot;);</span>
+<span class="lineNum">     265 </span><span class="lineCov">        332 :   keys.add(&quot;optional&quot;,&quot;FES_FILE&quot;,&quot;filename of the file on which the FES should be written out. By default it is fes.LABEL.data. Note that suffixes indicating the iteration number (iter-#) are added to the filename when optimizing coefficients.&quot;);</span>
+<span class="lineNum">     266 </span><span class="lineCov">        332 :   keys.add(&quot;optional&quot;,&quot;TARGETDIST_FILE&quot;,&quot;filename of the file on which the target distribution should be written out. By default it is targetdist.LABEL.data. Note that suffixes indicating the iteration number (iter-#) are added to the filename when optimizing coefficients and the target distribution is dynamic.&quot;);</span>
+<span class="lineNum">     267 </span>            :   //
+<span class="lineNum">     268 </span>            :   // keys.add(&quot;optional&quot;,&quot;BIAS_FILE_FMT&quot;,&quot;the format of the bias files, by default it is %14.9f.&quot;);
+<span class="lineNum">     269 </span>            :   // keys.add(&quot;optional&quot;,&quot;FES_FILE_FMT&quot;,&quot;the format of the FES files, by default it is %14.9f.&quot;);
+<span class="lineNum">     270 </span>            :   // keys.add(&quot;optional&quot;,&quot;TARGETDIST_FILE_FMT&quot;,&quot;the format of the target distribution files, by default it is %14.9f.&quot;);
+<span class="lineNum">     271 </span>            :   // keys.add(&quot;hidden&quot;,&quot;TARGETDIST_RESTART_FILE_FMT&quot;,&quot;the format of the target distribution files that are used for restarting, by default it is %30.16e.&quot;);
+<span class="lineNum">     272 </span>            :   //
+<span class="lineNum">     273 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;BIAS_CUTOFF&quot;,&quot;cutoff the bias such that it only fills the free energy surface up to certain level F_cutoff, here you should give the value of the F_cutoff.&quot;);</span>
+<span class="lineNum">     274 </span><span class="lineCov">        332 :   keys.reserve(&quot;optional&quot;,&quot;BIAS_CUTOFF_FERMI_LAMBDA&quot;,&quot;the lambda value used in the Fermi switching function for the bias cutoff (BIAS_CUTOFF), the default value is 10.0.&quot;);</span>
+<span class="lineNum">     275 </span>            :   //
+<span class="lineNum">     276 </span><span class="lineCov">        332 :   keys.reserve(&quot;numbered&quot;,&quot;PROJ_ARG&quot;,&quot;arguments for doing projections of the FES or the target distribution.&quot;);</span>
+<span class="lineNum">     277 </span>            :   //
+<span class="lineNum">     278 </span><span class="lineCov">        249 :   keys.reserveFlag(&quot;CALC_REWEIGHT_FACTOR&quot;,false,&quot;enable the calculation of the reweight factor c(t). You should also give a stride for updating the reweight factor in the optimizer by using the REWEIGHT_FACTOR_STRIDE keyword if the coefficients are updated.&quot;);</span>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineCov">         83 : void VesBias::useInitialCoeffsKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     284 </span><span class="lineCov">        166 :   keys.use(&quot;COEFFS&quot;);</span>
+<span class="lineNum">     285 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">         83 : void VesBias::useTargetDistributionKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     289 </span><span class="lineCov">        166 :   plumed_massert(!keys.exists(&quot;TARGET_DISTRIBUTIONS&quot;),&quot;you cannot use both useTargetDistributionKeywords and useMultipleTargetDistributionKeywords&quot;);</span>
+<span class="lineNum">     290 </span><span class="lineCov">        166 :   keys.use(&quot;TARGET_DISTRIBUTION&quot;);</span>
+<span class="lineNum">     291 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 : void VesBias::useMultipleTargetDistributionKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :   plumed_massert(!keys.exists(&quot;TARGET_DISTRIBUTION&quot;),&quot;you cannot use both useTargetDistributionKeywords and useMultipleTargetDistributionKeywords&quot;);</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :   keys.use(&quot;TARGET_DISTRIBUTIONS&quot;);</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span><span class="lineCov">         83 : void VesBias::useGridBinKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     301 </span><span class="lineCov">        166 :   keys.use(&quot;GRID_BINS&quot;);</span>
+<span class="lineNum">     302 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 : void VesBias::useGridLimitsKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :   keys.use(&quot;GRID_MIN&quot;);</span>
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :   keys.use(&quot;GRID_MAX&quot;);</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span><span class="lineCov">         83 : void VesBias::useBiasCutoffKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     312 </span><span class="lineCov">        166 :   keys.use(&quot;BIAS_CUTOFF&quot;);</span>
+<span class="lineNum">     313 </span><span class="lineCov">        166 :   keys.use(&quot;BIAS_CUTOFF_FERMI_LAMBDA&quot;);</span>
+<span class="lineNum">     314 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">         83 : void VesBias::useProjectionArgKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     318 </span><span class="lineCov">        166 :   keys.use(&quot;PROJ_ARG&quot;);</span>
+<span class="lineNum">     319 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 : void VesBias::useReweightFactorKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :   keys.use(&quot;CALC_REWEIGHT_FACTOR&quot;);</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :   keys.addOutputComponent(&quot;rct&quot;,&quot;CALC_REWEIGHT_FACTOR&quot;,&quot;the reweight factor c(t).&quot;);</span>
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 : void VesBias::addCoeffsSet(const std::vector&lt;std::string&gt;&amp; dimension_labels,const std::vector&lt;unsigned int&gt;&amp; indices_shape) {</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :   CoeffsVector* coeffs_pntr_tmp = new CoeffsVector(&quot;coeffs&quot;,dimension_labels,indices_shape,comm,true);</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :   initializeCoeffs(coeffs_pntr_tmp);</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span><span class="lineCov">         82 : void VesBias::addCoeffsSet(std::vector&lt;Value*&gt;&amp; args,std::vector&lt;BasisFunctions*&gt;&amp; basisf) {</span>
+<span class="lineNum">     335 </span><span class="lineCov">        164 :   CoeffsVector* coeffs_pntr_tmp = new CoeffsVector(&quot;coeffs&quot;,args,basisf,comm,true);</span>
+<span class="lineNum">     336 </span><span class="lineCov">         82 :   initializeCoeffs(coeffs_pntr_tmp);</span>
+<span class="lineNum">     337 </span><span class="lineCov">         82 : }</span>
+<a name="338"><span class="lineNum">     338 </span>            : </a>
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 : void VesBias::addCoeffsSet(CoeffsVector* coeffs_pntr_in) {</span>
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :   initializeCoeffs(coeffs_pntr_in);</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">         82 : void VesBias::initializeCoeffs(CoeffsVector* coeffs_pntr_in) {</span>
+<span class="lineNum">     346 </span>            :   //
+<span class="lineNum">     347 </span><span class="lineCov">         82 :   coeffs_pntr_in-&gt;linkVesBias(this);</span>
+<span class="lineNum">     348 </span>            :   //
+<span class="lineNum">     349 </span>            :   std::string label;
+<span class="lineNum">     350 </span><span class="lineCov">         82 :   if(!use_multiple_coeffssets_ &amp;&amp; ncoeffssets_==1) {</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;you are not allowed to use multiple coefficient sets&quot;);</span>
+<span class="lineNum">     352 </span>            :   }
+<span class="lineNum">     353 </span>            :   //
+<span class="lineNum">     354 </span><span class="lineCov">        246 :   label = getCoeffsSetLabelString(&quot;coeffs&quot;,ncoeffssets_);</span>
+<span class="lineNum">     355 </span><span class="lineCov">         82 :   coeffs_pntr_in-&gt;setLabels(label);</span>
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span><span class="lineCov">         82 :   coeffs_pntrs_.push_back(coeffs_pntr_in);</span>
+<span class="lineNum">     358 </span><span class="lineCov">         82 :   CoeffsVector* aver_ps_tmp = new CoeffsVector(*coeffs_pntr_in);</span>
+<span class="lineNum">     359 </span><span class="lineCov">        246 :   label = getCoeffsSetLabelString(&quot;targetdist_averages&quot;,ncoeffssets_);</span>
+<span class="lineNum">     360 </span><span class="lineCov">         82 :   aver_ps_tmp-&gt;setLabels(label);</span>
+<span class="lineNum">     361 </span><span class="lineCov">         82 :   aver_ps_tmp-&gt;setValues(0.0);</span>
+<span class="lineNum">     362 </span><span class="lineCov">         82 :   targetdist_averages_pntrs_.push_back(aver_ps_tmp);</span>
+<span class="lineNum">     363 </span>            :   //
+<span class="lineNum">     364 </span><span class="lineCov">         82 :   CoeffsVector* gradient_tmp = new CoeffsVector(*coeffs_pntr_in);</span>
+<span class="lineNum">     365 </span><span class="lineCov">        246 :   label = getCoeffsSetLabelString(&quot;gradient&quot;,ncoeffssets_);</span>
+<span class="lineNum">     366 </span><span class="lineCov">         82 :   gradient_tmp-&gt;setLabels(label);</span>
+<span class="lineNum">     367 </span><span class="lineCov">         82 :   gradient_pntrs_.push_back(gradient_tmp);</span>
+<span class="lineNum">     368 </span>            :   //
+<span class="lineNum">     369 </span><span class="lineCov">        246 :   label = getCoeffsSetLabelString(&quot;hessian&quot;,ncoeffssets_);</span>
+<span class="lineNum">     370 </span><span class="lineCov">         82 :   CoeffsMatrix* hessian_tmp = new CoeffsMatrix(label,coeffs_pntr_in,comm,diagonal_hessian_);</span>
+<span class="lineNum">     371 </span><span class="lineCov">         82 :   hessian_pntrs_.push_back(hessian_tmp);</span>
+<span class="lineNum">     372 </span>            :   //
+<span class="lineNum">     373 </span>            :   std::vector&lt;double&gt; aver_sampled_tmp;
+<span class="lineNum">     374 </span><span class="lineCov">        164 :   aver_sampled_tmp.assign(coeffs_pntr_in-&gt;numberOfCoeffs(),0.0);</span>
+<span class="lineNum">     375 </span><span class="lineCov">         82 :   sampled_averages.push_back(aver_sampled_tmp);</span>
+<span class="lineNum">     376 </span>            :   //
+<span class="lineNum">     377 </span>            :   std::vector&lt;double&gt; cross_aver_sampled_tmp;
+<span class="lineNum">     378 </span><span class="lineCov">        164 :   cross_aver_sampled_tmp.assign(hessian_tmp-&gt;getSize(),0.0);</span>
+<span class="lineNum">     379 </span><span class="lineCov">         82 :   sampled_cross_averages.push_back(cross_aver_sampled_tmp);</span>
+<span class="lineNum">     380 </span>            :   //
+<span class="lineNum">     381 </span><span class="lineCov">        164 :   aver_counters.push_back(0);</span>
+<span class="lineNum">     382 </span>            :   //
+<span class="lineNum">     383 </span><span class="lineCov">         82 :   ncoeffssets_++;</span>
+<span class="lineNum">     384 </span><span class="lineCov">         82 : }</span>
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineCov">         82 : bool VesBias::readCoeffsFromFiles() {</span>
+<span class="lineNum">     388 </span><span class="lineCov">         82 :   plumed_assert(ncoeffssets_&gt;0);</span>
+<span class="lineNum">     389 </span><span class="lineCov">        164 :   plumed_massert(keywords.exists(&quot;COEFFS&quot;),&quot;you are not allowed to use this function as the COEFFS keyword is not enabled&quot;);</span>
+<span class="lineNum">     390 </span>            :   bool read_coeffs = false;
+<span class="lineNum">     391 </span><span class="lineCov">         82 :   if(coeffs_fnames.size()&gt;0) {</span>
+<span class="lineNum">     392 </span><span class="lineCov">          4 :     plumed_massert(coeffs_fnames.size()==ncoeffssets_,&quot;COEFFS keyword is of the wrong size&quot;);</span>
+<span class="lineNum">     393 </span><span class="lineCov">          4 :     if(ncoeffssets_==1) {</span>
+<span class="lineNum">     394 </span><span class="lineCov">          4 :       log.printf(&quot;  Read in coefficents from file &quot;);</span>
+<span class="lineNum">     395 </span>            :     }
+<span class="lineNum">     396 </span>            :     else {
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :       log.printf(&quot;  Read in coefficents from files:\n&quot;);</span>
+<span class="lineNum">     398 </span>            :     }
+<span class="lineNum">     399 </span><span class="lineCov">         12 :     for(unsigned int i=0; i&lt;ncoeffssets_; i++) {</span>
+<span class="lineNum">     400 </span><span class="lineCov">          8 :       IFile ifile;</span>
+<span class="lineNum">     401 </span><span class="lineCov">          4 :       ifile.link(*this);</span>
+<span class="lineNum">     402 </span><span class="lineCov">          8 :       ifile.open(coeffs_fnames[i]);</span>
+<span class="lineNum">     403 </span><span class="lineCov">         12 :       if(!ifile.FieldExist(coeffs_pntrs_[i]-&gt;getDataLabel())) {</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :         std::string error_msg = &quot;Problem with reading coefficents from file &quot; + ifile.getPath() + &quot;: no field with name &quot; + coeffs_pntrs_[i]-&gt;getDataLabel() + &quot;\n&quot;;</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :         plumed_merror(error_msg);</span>
+<span class="lineNum">     406 </span>            :       }
+<span class="lineNum">     407 </span><span class="lineCov">          4 :       size_t ncoeffs_read = coeffs_pntrs_[i]-&gt;readFromFile(ifile,false,false);</span>
+<span class="lineNum">     408 </span><span class="lineCov">          4 :       coeffs_pntrs_[i]-&gt;setIterationCounterAndTime(0,getTime());</span>
+<span class="lineNum">     409 </span><span class="lineCov">          4 :       if(ncoeffssets_==1) {</span>
+<span class="lineNum">     410 </span><span class="lineCov">         16 :         log.printf(&quot;%s (read %zu of %zu values)\n&quot;, ifile.getPath().c_str(),ncoeffs_read,coeffs_pntrs_[i]-&gt;numberOfCoeffs());</span>
+<span class="lineNum">     411 </span>            :       }
+<span class="lineNum">     412 </span>            :       else {
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :         log.printf(&quot;   coefficent %u: %s (read %zu of %zu values)\n&quot;,i,ifile.getPath().c_str(),ncoeffs_read,coeffs_pntrs_[i]-&gt;numberOfCoeffs());</span>
+<span class="lineNum">     414 </span>            :       }
+<span class="lineNum">     415 </span><span class="lineCov">          4 :       ifile.close();</span>
+<span class="lineNum">     416 </span>            :     }
+<span class="lineNum">     417 </span>            :     read_coeffs = true;
+<span class="lineNum">     418 </span>            :   }
+<span class="lineNum">     419 </span><span class="lineCov">         82 :   return read_coeffs;</span>
+<span class="lineNum">     420 </span>            : }
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span><span class="lineCov">        770 : void VesBias::updateGradientAndHessian(const bool use_mwalkers_mpi) {</span>
+<span class="lineNum">     424 </span><span class="lineCov">       2310 :   for(unsigned int k=0; k&lt;ncoeffssets_; k++) {</span>
+<span class="lineNum">     425 </span>            :     //
+<span class="lineNum">     426 </span><span class="lineCov">       1540 :     comm.Sum(sampled_averages[k]);</span>
+<span class="lineNum">     427 </span><span class="lineCov">       1540 :     comm.Sum(sampled_cross_averages[k]);</span>
+<span class="lineNum">     428 </span><span class="lineCov">        770 :     if(use_mwalkers_mpi) {</span>
+<span class="lineNum">     429 </span>            :       double walker_weight=1.0;
+<span class="lineNum">     430 </span><span class="lineCov">        120 :       if(aver_counters[k]==0) {walker_weight=0.0;}</span>
+<span class="lineNum">     431 </span><span class="lineCov">        120 :       multiSimSumAverages(k,walker_weight);</span>
+<span class="lineNum">     432 </span>            :     }
+<span class="lineNum">     433 </span>            :     // NOTE: this assumes that all walkers have the same TargetDist, might change later on!!
+<span class="lineNum">     434 </span><span class="lineCov">        770 :     Gradient(k).setValues( TargetDistAverages(k) - sampled_averages[k] );</span>
+<span class="lineNum">     435 </span><span class="lineCov">       2310 :     Hessian(k) = computeCovarianceFromAverages(k);</span>
+<span class="lineNum">     436 </span><span class="lineCov">       1540 :     Hessian(k) *= getBeta();</span>
+<span class="lineNum">     437 </span>            :     //
+<span class="lineNum">     438 </span>            :     Gradient(k).activate();
+<span class="lineNum">     439 </span>            :     Hessian(k).activate();
+<span class="lineNum">     440 </span>            :     //
+<span class="lineNum">     441 </span>            :     // Check the total number of samples (from all walkers) and deactivate the Gradient and Hessian if it
+<span class="lineNum">     442 </span>            :     // is zero
+<span class="lineNum">     443 </span><span class="lineCov">        770 :     unsigned int total_samples = aver_counters[k];</span>
+<span class="lineNum">     444 </span><span class="lineCov">        770 :     if(use_mwalkers_mpi) {</span>
+<span class="lineNum">     445 </span><span class="lineCov">        120 :       if(comm.Get_rank()==0) {multi_sim_comm.Sum(total_samples);}</span>
+<span class="lineNum">     446 </span><span class="lineCov">        120 :       comm.Bcast(total_samples,0);</span>
+<span class="lineNum">     447 </span>            :     }
+<span class="lineNum">     448 </span><span class="lineCov">        770 :     if(total_samples==0) {</span>
+<span class="lineNum">     449 </span>            :       Gradient(k).deactivate();
+<span class="lineNum">     450 </span><span class="lineCov">         90 :       Gradient(k).clear();</span>
+<span class="lineNum">     451 </span>            :       Hessian(k).deactivate();
+<span class="lineNum">     452 </span><span class="lineCov">         90 :       Hessian(k).clear();</span>
+<span class="lineNum">     453 </span>            :     }
+<span class="lineNum">     454 </span>            :     //
+<span class="lineNum">     455 </span><span class="lineCov">       1540 :     std::fill(sampled_averages[k].begin(), sampled_averages[k].end(), 0.0);</span>
+<span class="lineNum">     456 </span><span class="lineCov">       1540 :     std::fill(sampled_cross_averages[k].begin(), sampled_cross_averages[k].end(), 0.0);</span>
+<span class="lineNum">     457 </span><span class="lineCov">        770 :     aver_counters[k]=0;</span>
+<span class="lineNum">     458 </span>            :   }
+<span class="lineNum">     459 </span><span class="lineCov">        770 : }</span>
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineCov">        120 : void VesBias::multiSimSumAverages(const unsigned int c_id, const double walker_weight) {</span>
+<span class="lineNum">     463 </span><span class="lineCov">        120 :   plumed_massert(walker_weight&gt;=0.0,&quot;the weight of the walker cannot be negative!&quot;);</span>
+<span class="lineNum">     464 </span><span class="lineCov">        120 :   if(walker_weight!=1.0) {</span>
+<span class="lineNum">     465 </span><span class="lineCov">      23520 :     for(size_t i=0; i&lt;sampled_averages[c_id].size(); i++) {</span>
+<span class="lineNum">     466 </span><span class="lineCov">       7800 :       sampled_averages[c_id][i] *= walker_weight;</span>
+<span class="lineNum">     467 </span>            :     }
+<span class="lineNum">     468 </span><span class="lineCov">      15660 :     for(size_t i=0; i&lt;sampled_cross_averages[c_id].size(); i++) {</span>
+<span class="lineNum">     469 </span><span class="lineCov">       7800 :       sampled_cross_averages[c_id][i] *= walker_weight;</span>
+<span class="lineNum">     470 </span>            :     }
+<span class="lineNum">     471 </span>            :   }
+<span class="lineNum">     472 </span>            :   //
+<span class="lineNum">     473 </span><span class="lineCov">        120 :   if(comm.Get_rank()==0) {</span>
+<span class="lineNum">     474 </span><span class="lineCov">        240 :     multi_sim_comm.Sum(sampled_averages[c_id]);</span>
+<span class="lineNum">     475 </span><span class="lineCov">        240 :     multi_sim_comm.Sum(sampled_cross_averages[c_id]);</span>
+<span class="lineNum">     476 </span><span class="lineCov">        120 :     double norm_weights = walker_weight;</span>
+<span class="lineNum">     477 </span><span class="lineCov">        120 :     multi_sim_comm.Sum(norm_weights);</span>
+<span class="lineNum">     478 </span><span class="lineCov">        120 :     if(norm_weights&gt;0.0) {norm_weights=1.0/norm_weights;}</span>
+<span class="lineNum">     479 </span><span class="lineCov">      17040 :     for(size_t i=0; i&lt;sampled_averages[c_id].size(); i++) {</span>
+<span class="lineNum">     480 </span><span class="lineCov">       8460 :       sampled_averages[c_id][i] *= norm_weights;</span>
+<span class="lineNum">     481 </span>            :     }
+<span class="lineNum">     482 </span><span class="lineCov">      17040 :     for(size_t i=0; i&lt;sampled_cross_averages[c_id].size(); i++) {</span>
+<span class="lineNum">     483 </span><span class="lineCov">       8460 :       sampled_cross_averages[c_id][i] *= norm_weights;</span>
+<span class="lineNum">     484 </span>            :     }
+<span class="lineNum">     485 </span>            :   }
+<span class="lineNum">     486 </span><span class="lineCov">        240 :   comm.Bcast(sampled_averages[c_id],0);</span>
+<span class="lineNum">     487 </span><span class="lineCov">        240 :   comm.Bcast(sampled_cross_averages[c_id],0);</span>
+<span class="lineNum">     488 </span><span class="lineCov">        120 : }</span>
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            : 
+<span class="lineNum">     491 </span><span class="lineCov">       1473 : void VesBias::addToSampledAverages(const std::vector&lt;double&gt;&amp; values, const unsigned int c_id) {</span>
+<span class="lineNum">     492 </span>            :   /*
+<span class="lineNum">     493 </span>            :   use the following online equation to calculate the average and covariance
+<span class="lineNum">     494 </span>            :   (see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Covariance)
+<span class="lineNum">     495 </span>            :       xm[n+1] = xm[n] + (x[n+1]-xm[n])/(n+1)
+<span class="lineNum">     496 </span>            :   */
+<span class="lineNum">     497 </span><span class="lineCov">       2946 :   double counter_dbl = static_cast&lt;double&gt;(aver_counters[c_id]);</span>
+<span class="lineNum">     498 </span>            :   size_t ncoeffs = numberOfCoeffs(c_id);
+<span class="lineNum">     499 </span><span class="lineCov">       1473 :   std::vector&lt;double&gt; deltas(ncoeffs,0.0);</span>
+<span class="lineNum">     500 </span><span class="lineCov">       1473 :   size_t stride = comm.Get_size();</span>
+<span class="lineNum">     501 </span><span class="lineCov">       1473 :   size_t rank = comm.Get_rank();</span>
+<span class="lineNum">     502 </span>            :   // update average and diagonal part of Hessian
+<span class="lineNum">     503 </span><span class="lineCov">      70721 :   for(size_t i=rank; i&lt;ncoeffs; i+=stride) {</span>
+<span class="lineNum">     504 </span>            :     size_t midx = getHessianIndex(i,i,c_id);
+<span class="lineNum">     505 </span><span class="lineCov">     103872 :     deltas[i] = (values[i]-sampled_averages[c_id][i])/(counter_dbl+1); // (x[n+1]-xm[n])/(n+1)</span>
+<span class="lineNum">     506 </span><span class="lineCov">      69248 :     sampled_averages[c_id][i] += deltas[i];</span>
+<span class="lineNum">     507 </span><span class="lineCov">      69248 :     sampled_cross_averages[c_id][midx] += (values[i]*values[i]-sampled_cross_averages[c_id][midx])/(counter_dbl+1);</span>
+<span class="lineNum">     508 </span>            :   }
+<span class="lineNum">     509 </span><span class="lineCov">       1473 :   comm.Sum(deltas);</span>
+<span class="lineNum">     510 </span>            :   // update off-diagonal part of the Hessian
+<span class="lineNum">     511 </span><span class="lineCov">       1473 :   if(!diagonal_hessian_) {</span>
+<span class="lineNum">     512 </span><span class="lineNoCov">          0 :     for(size_t i=rank; i&lt;ncoeffs; i+=stride) {</span>
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :       for(size_t j=(i+1); j&lt;ncoeffs; j++) {</span>
+<span class="lineNum">     514 </span>            :         size_t midx = getHessianIndex(i,j,c_id);
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :         sampled_cross_averages[c_id][midx] += (values[i]*values[j]-sampled_cross_averages[c_id][midx])/(counter_dbl+1);</span>
+<span class="lineNum">     516 </span>            :       }
+<span class="lineNum">     517 </span>            :     }
+<span class="lineNum">     518 </span>            :   }
+<span class="lineNum">     519 </span>            :   // NOTE: the MPI sum for sampled_averages and sampled_cross_averages is done later
+<span class="lineNum">     520 </span><span class="lineCov">       1473 :   aver_counters[c_id] += 1;</span>
+<span class="lineNum">     521 </span><span class="lineCov">       1473 : }</span>
+<a name="522"><span class="lineNum">     522 </span>            : </a>
+<span class="lineNum">     523 </span>            : 
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 : void VesBias::setTargetDistAverages(const std::vector&lt;double&gt;&amp; coeffderivs_aver_ps, const unsigned int coeffs_id) {</span>
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :   TargetDistAverages(coeffs_id) = coeffderivs_aver_ps;</span>
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :   TargetDistAverages(coeffs_id).setIterationCounterAndTime(this-&gt;getIterationCounter(),this-&gt;getTime());</span>
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 : }</span>
+<a name="528"><span class="lineNum">     528 </span>            : </a>
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span><span class="lineCov">        421 : void VesBias::setTargetDistAverages(const CoeffsVector&amp; coeffderivs_aver_ps, const unsigned int coeffs_id) {</span>
+<span class="lineNum">     531 </span><span class="lineCov">        421 :   TargetDistAverages(coeffs_id).setValues( coeffderivs_aver_ps );</span>
+<span class="lineNum">     532 </span><span class="lineCov">        421 :   TargetDistAverages(coeffs_id).setIterationCounterAndTime(this-&gt;getIterationCounter(),this-&gt;getTime());</span>
+<span class="lineNum">     533 </span><span class="lineCov">        421 : }</span>
+<a name="534"><span class="lineNum">     534 </span>            : </a>
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 : void VesBias::setTargetDistAveragesToZero(const unsigned int coeffs_id) {</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :   TargetDistAverages(coeffs_id).setAllValuesToZero();</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :   TargetDistAverages(coeffs_id).setIterationCounterAndTime(this-&gt;getIterationCounter(),this-&gt;getTime());</span>
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span><span class="lineCov">        159 : void VesBias::checkThatTemperatureIsGiven() {</span>
+<span class="lineNum">     543 </span><span class="lineCov">        159 :   if(kbt_==0.0) {</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :     std::string err_msg = &quot;VES bias &quot; + getLabel() + &quot; of type &quot; + getName() + &quot;: the temperature is needed so you need to give it using the TEMP keyword as the MD engine does not pass it to PLUMED.&quot;;</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :     plumed_merror(err_msg);</span>
+<span class="lineNum">     546 </span>            :   }
+<span class="lineNum">     547 </span><span class="lineCov">        159 : }</span>
+<span class="lineNum">     548 </span>            : 
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span><span class="lineCov">        937 : unsigned int VesBias::getIterationCounter() const {</span>
+<span class="lineNum">     551 </span>            :   unsigned int iteration = 0;
+<span class="lineNum">     552 </span><span class="lineCov">        937 :   if(optimizeCoeffs()) {</span>
+<span class="lineNum">     553 </span>            :     iteration = getOptimizerPntr()-&gt;getIterationCounter();
+<span class="lineNum">     554 </span>            :   }
+<span class="lineNum">     555 </span>            :   else {
+<span class="lineNum">     556 </span><span class="lineCov">        210 :     iteration = getCoeffsPntrs()[0]-&gt;getIterationCounter();</span>
+<span class="lineNum">     557 </span>            :   }
+<span class="lineNum">     558 </span><span class="lineCov">        937 :   return iteration;</span>
+<span class="lineNum">     559 </span>            : }
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span><span class="lineCov">         77 : void VesBias::linkOptimizer(Optimizer* optimizer_pntr_in) {</span>
+<span class="lineNum">     563 </span>            :   //
+<span class="lineNum">     564 </span><span class="lineCov">         77 :   if(optimizer_pntr_==NULL) {</span>
+<span class="lineNum">     565 </span><span class="lineCov">         77 :     optimizer_pntr_ = optimizer_pntr_in;</span>
+<span class="lineNum">     566 </span>            :   }
+<span class="lineNum">     567 </span>            :   else {
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 :     std::string err_msg = &quot;VES bias &quot; + getLabel() + &quot; of type &quot; + getName() + &quot; has already been linked with optimizer &quot; + optimizer_pntr_-&gt;getLabel() + &quot; of type &quot; + optimizer_pntr_-&gt;getName() + &quot;. You cannot link two optimizer to the same VES bias.&quot;;</span>
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :     plumed_merror(err_msg);</span>
+<span class="lineNum">     570 </span>            :   }
+<span class="lineNum">     571 </span><span class="lineCov">         77 :   checkThatTemperatureIsGiven();</span>
+<span class="lineNum">     572 </span><span class="lineCov">         77 :   optimize_coeffs_ = true;</span>
+<span class="lineNum">     573 </span><span class="lineCov">         77 :   filenames_have_iteration_number_ = true;</span>
+<span class="lineNum">     574 </span><span class="lineCov">         77 : }</span>
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span><span class="lineCov">         77 : void VesBias::enableHessian(const bool diagonal_hessian) {</span>
+<span class="lineNum">     578 </span><span class="lineCov">         77 :   compute_hessian_=true;</span>
+<span class="lineNum">     579 </span><span class="lineCov">         77 :   diagonal_hessian_=diagonal_hessian;</span>
+<span class="lineNum">     580 </span><span class="lineCov">         77 :   sampled_cross_averages.clear();</span>
+<span class="lineNum">     581 </span><span class="lineCov">        231 :   for (unsigned int i=0; i&lt;ncoeffssets_; i++) {</span>
+<span class="lineNum">     582 </span><span class="lineCov">        154 :     delete hessian_pntrs_[i];</span>
+<span class="lineNum">     583 </span><span class="lineCov">        154 :     std::string label = getCoeffsSetLabelString(&quot;hessian&quot;,i);</span>
+<span class="lineNum">     584 </span><span class="lineCov">        154 :     hessian_pntrs_[i] = new CoeffsMatrix(label,coeffs_pntrs_[i],comm,diagonal_hessian_);</span>
+<span class="lineNum">     585 </span>            :     //
+<span class="lineNum">     586 </span>            :     std::vector&lt;double&gt; cross_aver_sampled_tmp;
+<span class="lineNum">     587 </span><span class="lineCov">        231 :     cross_aver_sampled_tmp.assign(hessian_pntrs_[i]-&gt;getSize(),0.0);</span>
+<span class="lineNum">     588 </span><span class="lineCov">         77 :     sampled_cross_averages.push_back(cross_aver_sampled_tmp);</span>
+<span class="lineNum">     589 </span>            :   }
+<span class="lineNum">     590 </span><span class="lineCov">         77 : }</span>
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span>            : 
+<span class="lineNum">     593 </span><span class="lineNoCov">          0 : void VesBias::disableHessian() {</span>
+<span class="lineNum">     594 </span><span class="lineNoCov">          0 :   compute_hessian_=false;</span>
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 :   diagonal_hessian_=true;</span>
+<span class="lineNum">     596 </span><span class="lineNoCov">          0 :   sampled_cross_averages.clear();</span>
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :   for (unsigned int i=0; i&lt;ncoeffssets_; i++) {</span>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :     delete hessian_pntrs_[i];</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :     std::string label = getCoeffsSetLabelString(&quot;hessian&quot;,i);</span>
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :     hessian_pntrs_[i] = new CoeffsMatrix(label,coeffs_pntrs_[i],comm,diagonal_hessian_);</span>
+<span class="lineNum">     601 </span>            :     //
+<span class="lineNum">     602 </span>            :     std::vector&lt;double&gt; cross_aver_sampled_tmp;
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :     cross_aver_sampled_tmp.assign(hessian_pntrs_[i]-&gt;getSize(),0.0);</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :     sampled_cross_averages.push_back(cross_aver_sampled_tmp);</span>
+<span class="lineNum">     605 </span>            :   }
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 : }</span>
+<a name="607"><span class="lineNum">     607 </span>            : </a>
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span><span class="lineCov">       1662 : void VesBias::apply() {</span>
+<span class="lineNum">     610 </span><span class="lineCov">       1662 :   Bias::apply();</span>
+<span class="lineNum">     611 </span><span class="lineCov">       1662 : }</span>
+<span class="lineNum">     612 </span>            : 
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span><span class="lineCov">        405 : std::string VesBias::getCoeffsSetLabelString(const std::string&amp; type, const unsigned int coeffs_id) const {</span>
+<span class="lineNum">     615 </span><span class="lineCov">        810 :   std::string label_prefix = getLabel() + &quot;.&quot;;</span>
+<span class="lineNum">     616 </span><span class="lineCov">        405 :   std::string label_postfix = &quot;&quot;;</span>
+<span class="lineNum">     617 </span><span class="lineCov">        405 :   if(use_multiple_coeffssets_) {</span>
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :     Tools::convert(coeffs_id,label_postfix);</span>
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 :     label_postfix = &quot;-&quot; + label_postfix;</span>
+<span class="lineNum">     620 </span>            :   }
+<span class="lineNum">     621 </span><span class="lineCov">       1215 :   return label_prefix+type+label_postfix;</span>
+<span class="lineNum">     622 </span>            : }
+<span class="lineNum">     623 </span>            : 
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span><span class="lineCov">        531 : OFile* VesBias::getOFile(const std::string&amp; filepath, const bool multi_sim_single_file, const bool enforce_backup) {</span>
+<span class="lineNum">     626 </span><span class="lineCov">        531 :   OFile* ofile_pntr = new OFile();</span>
+<span class="lineNum">     627 </span>            :   std::string fp = filepath;
+<span class="lineNum">     628 </span><span class="lineCov">        531 :   ofile_pntr-&gt;link(*static_cast&lt;Action*&gt;(this));</span>
+<span class="lineNum">     629 </span><span class="lineCov">        531 :   if(enforce_backup) {ofile_pntr-&gt;enforceBackup();}</span>
+<span class="lineNum">     630 </span><span class="lineCov">        531 :   if(multi_sim_single_file) {</span>
+<span class="lineNum">     631 </span><span class="lineCov">         56 :     unsigned int r=0;</span>
+<span class="lineNum">     632 </span><span class="lineCov">         56 :     if(comm.Get_rank()==0) {r=multi_sim_comm.Get_rank();}</span>
+<span class="lineNum">     633 </span><span class="lineCov">         56 :     comm.Bcast(r,0);</span>
+<span class="lineNum">     634 </span><span class="lineCov">         56 :     if(r&gt;0) {fp=&quot;/dev/null&quot;;}</span>
+<span class="lineNum">     635 </span><span class="lineCov">        112 :     ofile_pntr-&gt;enforceSuffix(&quot;&quot;);</span>
+<span class="lineNum">     636 </span>            :   }
+<span class="lineNum">     637 </span><span class="lineCov">        531 :   ofile_pntr-&gt;open(fp);</span>
+<span class="lineNum">     638 </span><span class="lineCov">        531 :   return ofile_pntr;</span>
+<span class="lineNum">     639 </span>            : }
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span>            : 
+<span class="lineNum">     642 </span><span class="lineNoCov">          0 : void VesBias::setGridBins(const std::vector&lt;unsigned int&gt;&amp; grid_bins_in) {</span>
+<span class="lineNum">     643 </span><span class="lineNoCov">          0 :   plumed_massert(grid_bins_in.size()==getNumberOfArguments(),&quot;the number of grid bins given doesn't match the number of arguments&quot;);</span>
+<span class="lineNum">     644 </span><span class="lineNoCov">          0 :   grid_bins_=grid_bins_in;</span>
+<span class="lineNum">     645 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     646 </span>            : 
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span><span class="lineNoCov">          0 : void VesBias::setGridBins(const unsigned int nbins) {</span>
+<span class="lineNum">     649 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned int&gt; grid_bins_in(getNumberOfArguments(),nbins);</span>
+<span class="lineNum">     650 </span><span class="lineNoCov">          0 :   grid_bins_=grid_bins_in;</span>
+<span class="lineNum">     651 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span>            : 
+<span class="lineNum">     654 </span><span class="lineNoCov">          0 : void VesBias::setGridMin(const std::vector&lt;double&gt;&amp; grid_min_in) {</span>
+<span class="lineNum">     655 </span><span class="lineNoCov">          0 :   plumed_massert(grid_min_in.size()==getNumberOfArguments(),&quot;the number of lower bounds given for the grid doesn't match the number of arguments&quot;);</span>
+<span class="lineNum">     656 </span><span class="lineNoCov">          0 :   grid_min_=grid_min_in;</span>
+<span class="lineNum">     657 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     658 </span>            : 
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span><span class="lineNoCov">          0 : void VesBias::setGridMax(const std::vector&lt;double&gt;&amp; grid_max_in) {</span>
+<span class="lineNum">     661 </span><span class="lineNoCov">          0 :   plumed_massert(grid_max_in.size()==getNumberOfArguments(),&quot;the number of upper bounds given for the grid doesn't match the number of arguments&quot;);</span>
+<span class="lineNum">     662 </span><span class="lineNoCov">          0 :   grid_max_=grid_max_in;</span>
+<span class="lineNum">     663 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span><span class="lineCov">        367 : std::string VesBias::getCurrentOutputFilename(const std::string&amp; base_filename, const std::string&amp; suffix) const {</span>
+<span class="lineNum">     667 </span>            :   std::string filename = base_filename;
+<span class="lineNum">     668 </span><span class="lineCov">        367 :   if(suffix.size()&gt;0) {</span>
+<span class="lineNum">     669 </span><span class="lineCov">        123 :     filename = FileBase::appendSuffix(filename,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     670 </span>            :   }
+<span class="lineNum">     671 </span><span class="lineCov">        367 :   if(filenamesIncludeIterationNumber()) {</span>
+<span class="lineNum">     672 </span><span class="lineCov">       1448 :     filename = FileBase::appendSuffix(filename,&quot;.&quot;+getIterationFilenameSuffix());</span>
+<span class="lineNum">     673 </span>            :   }
+<span class="lineNum">     674 </span><span class="lineCov">        367 :   return filename;</span>
+<span class="lineNum">     675 </span>            : }
+<span class="lineNum">     676 </span>            : 
+<span class="lineNum">     677 </span>            : 
+<span class="lineNum">     678 </span><span class="lineCov">        172 : std::string VesBias::getCurrentTargetDistOutputFilename(const std::string&amp; suffix) const {</span>
+<span class="lineNum">     679 </span>            :   std::string filename = targetdist_filename_;
+<span class="lineNum">     680 </span><span class="lineCov">        172 :   if(suffix.size()&gt;0) {</span>
+<span class="lineNum">     681 </span><span class="lineCov">        276 :     filename = FileBase::appendSuffix(filename,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     682 </span>            :   }
+<span class="lineNum">     683 </span><span class="lineCov">        338 :   if(filenamesIncludeIterationNumber() &amp;&amp; dynamicTargetDistribution()) {</span>
+<span class="lineNum">     684 </span><span class="lineCov">        616 :     filename = FileBase::appendSuffix(filename,&quot;.&quot;+getIterationFilenameSuffix());</span>
+<span class="lineNum">     685 </span>            :   }
+<span class="lineNum">     686 </span><span class="lineCov">        172 :   return filename;</span>
+<span class="lineNum">     687 </span>            : }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            : 
+<span class="lineNum">     690 </span><span class="lineCov">        516 : std::string VesBias::getIterationFilenameSuffix() const {</span>
+<span class="lineNum">     691 </span>            :   std::string iter_str;
+<span class="lineNum">     692 </span><span class="lineCov">        516 :   Tools::convert(getIterationCounter(),iter_str);</span>
+<span class="lineNum">     693 </span><span class="lineCov">       1032 :   iter_str = &quot;iter-&quot; + iter_str;</span>
+<span class="lineNum">     694 </span><span class="lineCov">        516 :   return iter_str;</span>
+<span class="lineNum">     695 </span>            : }
+<span class="lineNum">     696 </span>            : 
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span><span class="lineNoCov">          0 : std::string VesBias::getCoeffsSetFilenameSuffix(const unsigned int coeffs_id) const {</span>
+<span class="lineNum">     699 </span><span class="lineNoCov">          0 :   std::string suffix = &quot;&quot;;</span>
+<span class="lineNum">     700 </span><span class="lineNoCov">          0 :   if(use_multiple_coeffssets_) {</span>
+<span class="lineNum">     701 </span><span class="lineNoCov">          0 :     Tools::convert(coeffs_id,suffix);</span>
+<span class="lineNum">     702 </span><span class="lineNoCov">          0 :     suffix = coeffs_id_prefix_ + suffix;</span>
+<span class="lineNum">     703 </span>            :   }
+<span class="lineNum">     704 </span><span class="lineNoCov">          0 :   return suffix;</span>
+<span class="lineNum">     705 </span>            : }
+<span class="lineNum">     706 </span>            : 
+<span class="lineNum">     707 </span>            : 
+<span class="lineNum">     708 </span><span class="lineCov">          3 : void VesBias::setupBiasCutoff(const double bias_cutoff_value, const double fermi_lambda) {</span>
+<span class="lineNum">     709 </span>            :   //
+<span class="lineNum">     710 </span>            :   double fermi_exp_max = 100.0;
+<span class="lineNum">     711 </span>            :   //
+<span class="lineNum">     712 </span>            :   std::string str_bias_cutoff_value; VesTools::convertDbl2Str(bias_cutoff_value,str_bias_cutoff_value);
+<span class="lineNum">     713 </span>            :   std::string str_fermi_lambda; VesTools::convertDbl2Str(fermi_lambda,str_fermi_lambda);
+<span class="lineNum">     714 </span>            :   std::string str_fermi_exp_max; VesTools::convertDbl2Str(fermi_exp_max,str_fermi_exp_max);
+<span class="lineNum">     715 </span><span class="lineCov">         15 :   std::string swfunc_keywords = &quot;FERMI R_0=&quot; + str_bias_cutoff_value + &quot; FERMI_LAMBDA=&quot; + str_fermi_lambda + &quot; FERMI_EXP_MAX=&quot; + str_fermi_exp_max;</span>
+<span class="lineNum">     716 </span>            :   //
+<span class="lineNum">     717 </span><span class="lineCov">          3 :   if(bias_cutoff_swfunc_pntr_!=NULL) {delete bias_cutoff_swfunc_pntr_;}</span>
+<span class="lineNum">     718 </span><span class="lineCov">          3 :   std::string swfunc_errors=&quot;&quot;;</span>
+<span class="lineNum">     719 </span><span class="lineCov">          3 :   bias_cutoff_swfunc_pntr_ = new FermiSwitchingFunction();</span>
+<span class="lineNum">     720 </span><span class="lineCov">          3 :   bias_cutoff_swfunc_pntr_-&gt;set(swfunc_keywords,swfunc_errors);</span>
+<span class="lineNum">     721 </span><span class="lineCov">          3 :   if(swfunc_errors.size()&gt;0) {</span>
+<span class="lineNum">     722 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;problem with setting up Fermi switching function: &quot; + swfunc_errors);</span>
+<span class="lineNum">     723 </span>            :   }
+<span class="lineNum">     724 </span>            :   //
+<span class="lineNum">     725 </span><span class="lineCov">          3 :   bias_cutoff_value_=bias_cutoff_value;</span>
+<span class="lineNum">     726 </span><span class="lineCov">          3 :   bias_cutoff_active_=true;</span>
+<span class="lineNum">     727 </span>            :   enableDynamicTargetDistribution();
+<span class="lineNum">     728 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span><span class="lineCov">       3263 : double VesBias::getBiasCutoffSwitchingFunction(const double bias, double&amp; deriv_factor) const {</span>
+<span class="lineNum">     732 </span><span class="lineCov">       3263 :   plumed_massert(bias_cutoff_active_,&quot;The bias cutoff is not active so you cannot call this function&quot;);</span>
+<span class="lineNum">     733 </span><span class="lineCov">       3263 :   double arg = -(bias-bias_current_max_value);</span>
+<span class="lineNum">     734 </span><span class="lineCov">       3263 :   double deriv=0.0;</span>
+<span class="lineNum">     735 </span><span class="lineCov">       3263 :   double value = bias_cutoff_swfunc_pntr_-&gt;calculate(arg,deriv);</span>
+<span class="lineNum">     736 </span>            :   // as FermiSwitchingFunction class has different behavior from normal SwitchingFunction class
+<span class="lineNum">     737 </span>            :   // I was having problems with NaN as it was dividing with zero
+<span class="lineNum">     738 </span>            :   // deriv *= arg;
+<span class="lineNum">     739 </span><span class="lineCov">       3263 :   deriv_factor = value-bias*deriv;</span>
+<span class="lineNum">     740 </span><span class="lineCov">       3263 :   return value;</span>
+<span class="lineNum">     741 </span>            : }
+<a name="742"><span class="lineNum">     742 </span>            : </a>
+<span class="lineNum">     743 </span>            : 
+<span class="lineNum">     744 </span><span class="lineCov">        531 : bool VesBias::useMultipleWalkers() const {</span>
+<span class="lineNum">     745 </span>            :   bool use_mwalkers_mpi=false;
+<span class="lineNum">     746 </span><span class="lineCov">       1029 :   if(optimizeCoeffs() &amp;&amp; getOptimizerPntr()-&gt;useMultipleWalkers()) {</span>
+<span class="lineNum">     747 </span>            :     use_mwalkers_mpi=true;
+<span class="lineNum">     748 </span>            :   }
+<span class="lineNum">     749 </span><span class="lineCov">        531 :   return use_mwalkers_mpi;</span>
+<span class="lineNum">     750 </span>            : }
+<span class="lineNum">     751 </span>            : 
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span><span class="lineNoCov">          0 : void VesBias::updateReweightFactor() {</span>
+<span class="lineNum">     754 </span><span class="lineNoCov">          0 :   if(calc_reweightfactor_) {</span>
+<span class="lineNum">     755 </span><span class="lineNoCov">          0 :     double value = calculateReweightFactor();</span>
+<span class="lineNum">     756 </span><span class="lineNoCov">          0 :     getPntrToComponent(&quot;rct&quot;)-&gt;set(value);</span>
+<span class="lineNum">     757 </span>            :   }
+<span class="lineNum">     758 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     759 </span>            : 
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span><span class="lineNoCov">          0 : double VesBias::calculateReweightFactor() const {</span>
+<span class="lineNum">     762 </span><span class="lineNoCov">          0 :   plumed_merror(getName()+&quot; with label &quot;+getLabel()+&quot;: calculation of the reweight factor c(t) has not been implemented for this type of VES bias&quot;);</span>
+<span class="lineNum">     763 </span>            :   return 0.0;
+<span class="lineNum">     764 </span>            : }
+<span class="lineNum">     765 </span>            : 
+<a name="766"><span class="lineNum">     766 </span>            : </a>
+<span class="lineNum">     767 </span>            : }
+<span class="lineNum">     768 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

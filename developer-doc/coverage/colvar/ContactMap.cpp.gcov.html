@@ -1,0 +1,414 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/ContactMap.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - ContactMap.cpp<span style="font-size: 80%;"> (source / <a href="ContactMap.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">119</td>
+            <td class="headerCovTableEntry">130</td>
+            <td class="headerCovTableEntryHi">91.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryMed">76.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/NeighborList.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace colvar {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC COLVAR CONTACTMAP
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Calculate the distances between a number of pairs of atoms and transform each distance by a switching function.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : The transformed distance can be compared with a reference value in order to calculate the squared distance
+<span class="lineNum">      40 </span>            : between two contact maps. Each distance can also be weighted for a given value. CONTACTMAP can be used together
+<span class="lineNum">      41 </span>            : with \ref FUNCPATHMSD to define a path in the contactmap space.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The individual contact map distances related to each contact can be accessed as components
+<span class="lineNum">      44 </span>            : named `cm.contact-1`, `cm.contact-2`, etc, assuming that the label of the CONTACTMAP is `cm`.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : \par Examples
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : The following example calculates switching functions based on the distances between atoms
+<span class="lineNum">      49 </span>            : 1 and 2, 3 and 4 and 4 and 5. The values of these three switching functions are then output
+<span class="lineNum">      50 </span>            : to a file named colvar.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : \plumedfile
+<span class="lineNum">      53 </span>            : CONTACTMAP ATOMS1=1,2 ATOMS2=3,4 ATOMS3=4,5 ATOMS4=5,6 SWITCH={RATIONAL R_0=1.5} LABEL=f1
+<span class="lineNum">      54 </span>            : PRINT ARG=f1.* FILE=colvar
+<span class="lineNum">      55 </span>            : \endplumedfile
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : The following example calculates the difference of the current contact map with respect
+<span class="lineNum">      58 </span>            : to a reference provided. In this case REFERENCE is the fraction of contact that is formed
+<span class="lineNum">      59 </span>            : (i.e. the distance between two atoms transformed with the SWITH), while R_0 is the contact
+<span class="lineNum">      60 </span>            : distance. WEIGHT gives the relative weight of each contact to the final distance measure.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : \plumedfile
+<span class="lineNum">      63 </span>            : CONTACTMAP ...
+<span class="lineNum">      64 </span>            : ATOMS1=1,2 REFERENCE1=0.1 WEIGHT1=0.5
+<span class="lineNum">      65 </span>            : ATOMS2=3,4 REFERENCE2=0.5 WEIGHT2=1.0
+<span class="lineNum">      66 </span>            : ATOMS3=4,5 REFERENCE3=0.25 WEIGHT3=1.0
+<span class="lineNum">      67 </span>            : ATOMS4=5,6 REFERENCE4=0.0 WEIGHT4=0.5
+<span class="lineNum">      68 </span>            : SWITCH={RATIONAL R_0=1.5}
+<span class="lineNum">      69 </span>            : LABEL=cmap
+<span class="lineNum">      70 </span>            : CMDIST
+<span class="lineNum">      71 </span>            : ... CONTACTMAP
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : PRINT ARG=cmap FILE=colvar
+<span class="lineNum">      74 </span>            : \endplumedfile
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : The next example calculates calculates fraction of native contacts (Q)
+<span class="lineNum">      77 </span>            : for Trp-cage mini-protein. R_0 is the distance at which the switch function is guaranteed to
+<span class="lineNum">      78 </span>            : be 1.0 – it doesn't really matter for Q and  should be something very small, like 1 A.
+<span class="lineNum">      79 </span>            : REF is the reference distance for the contact, e.g. the distance from a crystal structure.
+<span class="lineNum">      80 </span>            : LAMBDA is the tolerance for the distance – if set to 1.0, the contact would have to have exactly
+<span class="lineNum">      81 </span>            : the reference value to be formed; instead for lambda values of 1.5–1.8 are usually used to allow some slack.
+<span class="lineNum">      82 </span>            : BETA is the softness of the switch function, default is 50nm.
+<span class="lineNum">      83 </span>            : WEIGHT is the 1/(number of contacts) giving equal weight to each contact.
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : When using native contact Q switch function, please cite \cite best2013
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : \plumedfile
+<span class="lineNum">      88 </span>            : # Full example available in regtest/basic/rt72/
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : CONTACTMAP ...
+<span class="lineNum">      91 </span>            : ATOMS1=1,67 SWITCH1={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.4059} WEIGHT1=0.003597
+<span class="lineNum">      92 </span>            : ATOMS2=1,68 SWITCH2={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.4039} WEIGHT2=0.003597
+<span class="lineNum">      93 </span>            : ATOMS3=1,69 SWITCH3={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.3215} WEIGHT3=0.003597
+<span class="lineNum">      94 </span>            : [snip]
+<span class="lineNum">      95 </span>            : ATOMS275=183,213 SWITCH275={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.355} WEIGHT275=0.003597
+<span class="lineNum">      96 </span>            : ATOMS276=183,234 SWITCH276={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.428} WEIGHT276=0.003597
+<span class="lineNum">      97 </span>            : ATOMS277=183,250 SWITCH277={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.3832} WEIGHT277=0.003597
+<span class="lineNum">      98 </span>            : ATOMS278=197,220 SWITCH278={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=0.3827} WEIGHT278=0.003597
+<span class="lineNum">      99 </span>            : LABEL=cmap
+<span class="lineNum">     100 </span>            : SUM
+<span class="lineNum">     101 </span>            : ... CONTACTMAP
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : PRINT ARG=cmap FILE=colvar
+<span class="lineNum">     104 </span>            : \endplumedfile
+<span class="lineNum">     105 </span>            : (See also \ref switchingfunction)
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : */
+<span class="lineNum">     108 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : class ContactMap : public Colvar {
+<span class="lineNum">     111 </span>            : private:
+<span class="lineNum">     112 </span>            :   bool pbc, serial, docomp, dosum, docmdist;
+<span class="lineNum">     113 </span>            :   NeighborList *nl;
+<span class="lineNum">     114 </span>            :   std::vector&lt;SwitchingFunction&gt; sfs;
+<span class="lineNum">     115 </span>            :   vector&lt;double&gt; reference, weight;
+<span class="lineNum">     116 </span>            : public:
+<span class="lineNum">     117 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     118 </span>            :   explicit ContactMap(const ActionOptions&amp;);
+<span class="lineNum">     119 </span>            :   ~ContactMap();
+<a name="120"><span class="lineNum">     120 </span>            : // active methods:</a>
+<span class="lineNum">     121 </span>            :   virtual void calculate();
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :   void checkFieldsAllowed() {}</span>
+<a name="123"><span class="lineNum">     123 </span>            : };</a>
+<span class="lineNum">     124 </span>            : 
+<a name="125"><span class="lineNum">     125 </span><span class="lineCov">       6456 : PLUMED_REGISTER_ACTION(ContactMap,&quot;CONTACTMAP&quot;)</span></a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">          5 : void ContactMap::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">          5 :   Colvar::registerKeywords( keys );</span>
+<span class="lineNum">     129 </span><span class="lineCov">         20 :   keys.add(&quot;numbered&quot;,&quot;ATOMS&quot;,&quot;the atoms involved in each of the contacts you wish to calculate. &quot;</span>
+<span class="lineNum">     130 </span>            :            &quot;Keywords like ATOMS1, ATOMS2, ATOMS3,... should be listed and one contact will be &quot;
+<span class="lineNum">     131 </span>            :            &quot;calculated for each ATOM keyword you specify.&quot;);
+<span class="lineNum">     132 </span><span class="lineCov">         15 :   keys.reset_style(&quot;ATOMS&quot;,&quot;atoms&quot;);</span>
+<span class="lineNum">     133 </span><span class="lineCov">         20 :   keys.add(&quot;numbered&quot;,&quot;SWITCH&quot;,&quot;The switching functions to use for each of the contacts in your map. &quot;</span>
+<span class="lineNum">     134 </span>            :            &quot;You can either specify a global switching function using SWITCH or one &quot;
+<span class="lineNum">     135 </span>            :            &quot;switching function for each contact. Details of the various switching &quot;
+<span class="lineNum">     136 </span>            :            &quot;functions you can use are provided on \\ref switchingfunction.&quot;);
+<span class="lineNum">     137 </span><span class="lineCov">         20 :   keys.add(&quot;numbered&quot;,&quot;REFERENCE&quot;,&quot;A reference value for a given contact, by default is 0.0 &quot;</span>
+<span class="lineNum">     138 </span>            :            &quot;You can either specify a global reference value using REFERENCE or one &quot;
+<span class="lineNum">     139 </span>            :            &quot;reference value for each contact.&quot;);
+<span class="lineNum">     140 </span><span class="lineCov">         20 :   keys.add(&quot;numbered&quot;,&quot;WEIGHT&quot;,&quot;A weight value for a given contact, by default is 1.0 &quot;</span>
+<span class="lineNum">     141 </span>            :            &quot;You can either specify a global weight value using WEIGHT or one &quot;
+<span class="lineNum">     142 </span>            :            &quot;weight value for each contact.&quot;);
+<span class="lineNum">     143 </span><span class="lineCov">         15 :   keys.reset_style(&quot;SWITCH&quot;,&quot;compulsory&quot;);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         15 :   keys.addFlag(&quot;SUM&quot;,false,&quot;calculate the sum of all the contacts in the input&quot;);</span>
+<span class="lineNum">     145 </span><span class="lineCov">         15 :   keys.addFlag(&quot;CMDIST&quot;,false,&quot;calculate the distance with respect to the provided reference contant map&quot;);</span>
+<span class="lineNum">     146 </span><span class="lineCov">         15 :   keys.addFlag(&quot;SERIAL&quot;,false,&quot;Perform the calculation in serial - for debug purpose&quot;);</span>
+<span class="lineNum">     147 </span><span class="lineCov">         20 :   keys.addOutputComponent(&quot;contact&quot;,&quot;default&quot;,&quot;By not using SUM or CMDIST each contact will be stored in a component&quot;);</span>
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">          4 : ContactMap::ContactMap(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     151 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">     152 </span>            :   pbc(true),
+<span class="lineNum">     153 </span>            :   serial(false),
+<span class="lineNum">     154 </span>            :   docomp(true),
+<span class="lineNum">     155 </span>            :   dosum(false),
+<span class="lineNum">     156 </span><span class="lineCov">         12 :   docmdist(false)</span>
+<span class="lineNum">     157 </span>            : {
+<span class="lineNum">     158 </span><span class="lineCov">          8 :   parseFlag(&quot;SERIAL&quot;,serial);</span>
+<span class="lineNum">     159 </span><span class="lineCov">          8 :   parseFlag(&quot;SUM&quot;,dosum);</span>
+<span class="lineNum">     160 </span><span class="lineCov">          8 :   parseFlag(&quot;CMDIST&quot;,docmdist);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          4 :   if(docmdist==true&amp;&amp;dosum==true) error(&quot;You cannot use SUM and CMDIST together&quot;);</span>
+<span class="lineNum">     162 </span><span class="lineCov">          4 :   bool nopbc=!pbc;</span>
+<span class="lineNum">     163 </span><span class="lineCov">          8 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     164 </span><span class="lineCov">          4 :   pbc=!nopbc;</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   // Read in the atoms
+<span class="lineNum">     167 </span>            :   std::vector&lt;AtomNumber&gt; t, ga_lista, gb_lista;
+<span class="lineNum">     168 </span><span class="lineCov">        293 :   for(int i=1;; ++i ) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">        594 :     parseAtomList(&quot;ATOMS&quot;, i, t );</span>
+<span class="lineNum">     170 </span><span class="lineCov">        297 :     if( t.empty() ) break;</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">        293 :     if( t.size()!=2 ) {</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :       std::string ss; Tools::convert(i,ss);</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :       error(&quot;ATOMS&quot; + ss + &quot; keyword has the wrong number of atoms&quot;);</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span><span class="lineCov">        586 :     ga_lista.push_back(t[0]); gb_lista.push_back(t[1]);</span>
+<span class="lineNum">     177 </span><span class="lineCov">        293 :     t.resize(0);</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :     // Add a value for this contact
+<span class="lineNum">     180 </span><span class="lineCov">        293 :     std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     181 </span><span class="lineCov">        303 :     if(!dosum&amp;&amp;!docmdist) {addComponentWithDerivatives(&quot;contact-&quot;+num); componentIsNotPeriodic(&quot;contact-&quot;+num);}</span>
+<span class="lineNum">     182 </span><span class="lineCov">        293 :   }</span>
+<span class="lineNum">     183 </span>            :   // Create neighbour lists
+<span class="lineNum">     184 </span><span class="lineCov">          8 :   nl= new NeighborList(ga_lista,gb_lista,true,pbc,getPbc());</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :   // Read in switching functions
+<span class="lineNum">     187 </span><span class="lineCov">          4 :   std::string errors; sfs.resize( ga_lista.size() ); unsigned nswitch=0;</span>
+<span class="lineNum">     188 </span><span class="lineCov">        887 :   for(unsigned i=0; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">     189 </span><span class="lineCov">        293 :     std::string num, sw1; Tools::convert(i+1, num);</span>
+<span class="lineNum">     190 </span><span class="lineCov">        586 :     if( !parseNumbered( &quot;SWITCH&quot;, i+1, sw1 ) ) break;</span>
+<span class="lineNum">     191 </span><span class="lineCov">        293 :     nswitch++; sfs[i].set(sw1,errors);</span>
+<span class="lineNum">     192 </span><span class="lineCov">        293 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH&quot; + num + &quot; keyword : &quot; + errors );</span>
+<span class="lineNum">     193 </span>            :   }
+<span class="lineNum">     194 </span><span class="lineCov">          4 :   if( nswitch==0 ) {</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     std::string sw; parse(&quot;SWITCH&quot;,sw);</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :     if(sw.length()==0) error(&quot;no switching function specified use SWITCH keyword&quot;);</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :       sfs[i].set(sw,errors);</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :       if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     200 </span>            :     }
+<span class="lineNum">     201 </span><span class="lineCov">          4 :   } else if( nswitch!=sfs.size()  ) {</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :     std::string num; Tools::convert(nswitch+1, num);</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :     error(&quot;missing SWITCH&quot; + num + &quot; keyword&quot;);</span>
+<span class="lineNum">     204 </span>            :   }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :   // Read in reference values
+<span class="lineNum">     207 </span>            :   nswitch=0;
+<span class="lineNum">     208 </span><span class="lineCov">          8 :   reference.resize(ga_lista.size(), 0.);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         28 :   for(unsigned i=0; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">         24 :     if( !parseNumbered( &quot;REFERENCE&quot;, i+1, reference[i] ) ) break;</span>
+<span class="lineNum">     211 </span>            :     nswitch++;
+<span class="lineNum">     212 </span>            :   }
+<span class="lineNum">     213 </span><span class="lineCov">          4 :   if( nswitch==0 ) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">          4 :     parse(&quot;REFERENCE&quot;,reference[0]);</span>
+<span class="lineNum">     215 </span><span class="lineCov">        847 :     for(unsigned i=1; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">     216 </span><span class="lineCov">        281 :       reference[i]=reference[0];</span>
+<span class="lineNum">     217 </span><span class="lineCov">        281 :       nswitch++;</span>
+<span class="lineNum">     218 </span>            :     }
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span><span class="lineCov">          4 :   if(nswitch == 0 &amp;&amp; docmdist) error(&quot;with CMDIST one must use REFERENCE to setup the reference contact map&quot;);</span>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :   // Read in weight values
+<span class="lineNum">     223 </span>            :   nswitch=0;
+<span class="lineNum">     224 </span><span class="lineCov">          8 :   weight.resize(ga_lista.size(), 1.0);</span>
+<span class="lineNum">     225 </span><span class="lineCov">        584 :   for(unsigned i=0; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">        578 :     if( !parseNumbered( &quot;WEIGHT&quot;, i+1, weight[i] ) ) break;</span>
+<span class="lineNum">     227 </span>            :     nswitch++;
+<span class="lineNum">     228 </span>            :   }
+<span class="lineNum">     229 </span><span class="lineCov">          4 :   if( nswitch==0 ) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">          2 :     parse(&quot;WEIGHT&quot;,weight[0]);</span>
+<span class="lineNum">     231 </span><span class="lineCov">         14 :     for(unsigned i=1; i&lt;ga_lista.size(); ++i) {</span>
+<span class="lineNum">     232 </span><span class="lineCov">          4 :       weight[i]=weight[0];</span>
+<span class="lineNum">     233 </span>            :     }
+<span class="lineNum">     234 </span>            :     nswitch = ga_lista.size();
+<span class="lineNum">     235 </span>            :   }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   // Ouput details of all contacts
+<span class="lineNum">     238 </span><span class="lineCov">        887 :   for(unsigned i=0; i&lt;sfs.size(); ++i) {</span>
+<span class="lineNum">     239 </span><span class="lineCov">        879 :     log.printf(&quot;  The %uth contact is calculated from atoms : %d %d. Inflection point of switching function is at %s. Reference contact value is %f\n&quot;,</span>
+<span class="lineNum">     240 </span><span class="lineCov">        586 :                i+1, ga_lista[i].serial(), gb_lista[i].serial(), ( sfs[i].description() ).c_str(), reference[i] );</span>
+<span class="lineNum">     241 </span>            :   }
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span><span class="lineCov">          4 :   if(dosum) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">          1 :     addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">     245 </span><span class="lineCov">          1 :     log.printf(&quot;  colvar is sum of all contacts in contact map\n&quot;);</span>
+<span class="lineNum">     246 </span>            :   }
+<span class="lineNum">     247 </span><span class="lineCov">          4 :   if(docmdist) {</span>
+<span class="lineNum">     248 </span><span class="lineCov">          2 :     addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">     249 </span><span class="lineCov">          2 :     log.printf(&quot;  colvar is distance between the contact map matrix and the provided reference matrix\n&quot;);</span>
+<span class="lineNum">     250 </span>            :   }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">          4 :   if(dosum || docmdist) {</span>
+<span class="lineNum">     253 </span><span class="lineCov">          3 :     docomp=false;</span>
+<span class="lineNum">     254 </span>            :   } else {
+<span class="lineNum">     255 </span><span class="lineCov">          1 :     serial=true;</span>
+<span class="lineNum">     256 </span><span class="lineCov">          1 :     docomp=true;</span>
+<span class="lineNum">     257 </span>            :   }
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :   // Set up if it is just a list of contacts
+<span class="lineNum">     260 </span><span class="lineCov">          4 :   requestAtoms(nl-&gt;getFullAtomList());</span>
+<span class="lineNum">     261 </span><span class="lineCov">          4 :   checkRead();</span>
+<a name="262"><span class="lineNum">     262 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">         12 : ContactMap::~ContactMap() {</span>
+<span class="lineNum">     265 </span><span class="lineCov">          4 :   delete nl;</span>
+<a name="266"><span class="lineNum">     266 </span><span class="lineCov">          8 : }</span></a>
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">        211 : void ContactMap::calculate() {</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineCov">        211 :   double ncoord=0.;</span>
+<span class="lineNum">     271 </span><span class="lineCov">        211 :   Tensor virial;</span>
+<span class="lineNum">     272 </span><span class="lineCov">        211 :   std::vector&lt;Vector&gt; deriv(getNumberOfAtoms());</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :   unsigned stride;
+<span class="lineNum">     275 </span>            :   unsigned rank;
+<span class="lineNum">     276 </span><span class="lineCov">        211 :   if(serial) {</span>
+<span class="lineNum">     277 </span>            :     // when using components the parallelisation do not work
+<span class="lineNum">     278 </span>            :     stride=1;
+<span class="lineNum">     279 </span>            :     rank=0;
+<span class="lineNum">     280 </span>            :   } else {
+<span class="lineNum">     281 </span><span class="lineCov">        206 :     stride=comm.Get_size();</span>
+<span class="lineNum">     282 </span><span class="lineCov">        206 :     rank=comm.Get_rank();</span>
+<span class="lineNum">     283 </span>            :   }
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            : // sum over close pairs
+<span class="lineNum">     286 </span><span class="lineCov">       2867 :   for(unsigned i=rank; i&lt;nl-&gt;size(); i+=stride) {</span>
+<span class="lineNum">     287 </span><span class="lineCov">       1328 :     Vector distance;</span>
+<span class="lineNum">     288 </span><span class="lineCov">       1328 :     unsigned i0=nl-&gt;getClosePair(i).first;</span>
+<span class="lineNum">     289 </span><span class="lineCov">       1328 :     unsigned i1=nl-&gt;getClosePair(i).second;</span>
+<span class="lineNum">     290 </span><span class="lineCov">       1328 :     if(pbc) {</span>
+<span class="lineNum">     291 </span><span class="lineCov">       3984 :       distance=pbcDistance(getPosition(i0),getPosition(i1));</span>
+<span class="lineNum">     292 </span>            :     } else {
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :       distance=delta(getPosition(i0),getPosition(i1));</span>
+<span class="lineNum">     294 </span>            :     }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">       1328 :     double dfunc=0.;</span>
+<span class="lineNum">     297 </span><span class="lineCov">       5312 :     double coord = weight[i]*(sfs[i].calculate(distance.modulo(), dfunc) - reference[i]);</span>
+<span class="lineNum">     298 </span><span class="lineCov">       1328 :     Vector tmpder = weight[i]*dfunc*distance;</span>
+<span class="lineNum">     299 </span><span class="lineCov">       2656 :     Tensor tmpvir = weight[i]*dfunc*Tensor(distance,distance);</span>
+<span class="lineNum">     300 </span><span class="lineCov">       1328 :     if(!docmdist) {</span>
+<span class="lineNum">     301 </span><span class="lineCov">        606 :       deriv[i0] -= tmpder;</span>
+<span class="lineNum">     302 </span><span class="lineCov">        606 :       deriv[i1] += tmpder;</span>
+<span class="lineNum">     303 </span><span class="lineCov">        303 :       virial    -= tmpvir;</span>
+<span class="lineNum">     304 </span><span class="lineCov">        303 :       ncoord    += coord;</span>
+<span class="lineNum">     305 </span>            :     } else {
+<span class="lineNum">     306 </span><span class="lineCov">       1025 :       tmpder *= 2.*coord;</span>
+<span class="lineNum">     307 </span><span class="lineCov">       1025 :       tmpvir *= 2.*coord;</span>
+<span class="lineNum">     308 </span><span class="lineCov">       2050 :       deriv[i0] -= tmpder;</span>
+<span class="lineNum">     309 </span><span class="lineCov">       2050 :       deriv[i1] += tmpder;</span>
+<span class="lineNum">     310 </span><span class="lineCov">       1025 :       virial    -= tmpvir;</span>
+<span class="lineNum">     311 </span><span class="lineCov">       1025 :       ncoord    += coord*coord;</span>
+<span class="lineNum">     312 </span>            :     }
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span><span class="lineCov">       1328 :     if(docomp) {</span>
+<span class="lineNum">     315 </span><span class="lineCov">         25 :       Value* val=getPntrToComponent( i );</span>
+<span class="lineNum">     316 </span><span class="lineCov">         50 :       setAtomsDerivatives( val, i0, deriv[i0] );</span>
+<span class="lineNum">     317 </span><span class="lineCov">         50 :       setAtomsDerivatives( val, i1, deriv[i1] );</span>
+<span class="lineNum">     318 </span><span class="lineCov">         25 :       setBoxDerivatives( val, -tmpvir );</span>
+<span class="lineNum">     319 </span>            :       val-&gt;set(coord);
+<span class="lineNum">     320 </span>            :     }
+<span class="lineNum">     321 </span>            :   }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineCov">        211 :   if(!serial) {</span>
+<span class="lineNum">     324 </span><span class="lineCov">        206 :     comm.Sum(&amp;ncoord,1);</span>
+<span class="lineNum">     325 </span><span class="lineCov">        412 :     if(!deriv.empty()) comm.Sum(&amp;deriv[0][0],3*deriv.size());</span>
+<span class="lineNum">     326 </span><span class="lineCov">        206 :     comm.Sum(&amp;virial[0][0],9);</span>
+<span class="lineNum">     327 </span>            :   }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineCov">        211 :   if( !docomp ) {</span>
+<span class="lineNum">     330 </span><span class="lineCov">      10836 :     for(unsigned i=0; i&lt;deriv.size(); ++i) setAtomsDerivatives(i,deriv[i]);</span>
+<span class="lineNum">     331 </span><span class="lineCov">        206 :     setValue           (ncoord);</span>
+<span class="lineNum">     332 </span><span class="lineCov">        206 :     setBoxDerivatives  (virial);</span>
+<span class="lineNum">     333 </span>            :   }
+<span class="lineNum">     334 </span><span class="lineCov">        211 : }</span>
+<a name="335"><span class="lineNum">     335 </span>            : </a>
+<span class="lineNum">     336 </span>            : }
+<span class="lineNum">     337 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

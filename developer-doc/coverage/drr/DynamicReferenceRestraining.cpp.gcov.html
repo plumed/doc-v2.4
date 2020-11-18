@@ -1,0 +1,728 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - drr/DynamicReferenceRestraining.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">drr</a> - DynamicReferenceRestraining.cpp<span style="font-size: 80%;"> (source / <a href="DynamicReferenceRestraining.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">275</td>
+            <td class="headerCovTableEntry">301</td>
+            <td class="headerCovTableEntryHi">91.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryHi">93.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2017 of Haochuan Chen (excluding colvar_UIestimator.h)
+<span class="lineNum">       3 </span>            :     Copyright (c) 2017 of Haohao Fu (colvar_UIestimator.h)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       6 </span>            :     it under the terms of the GNU Lesser General Public License as published
+<span class="lineNum">       7 </span>            :     by the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       8 </span>            :     (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      13 </span>            :     GNU Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :     You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      16 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      17 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      18 </span>            : #ifdef __PLUMED_HAS_BOOST_SERIALIZATION
+<span class="lineNum">      19 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      20 </span>            : #include &quot;bias/Bias.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      22 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;DRR.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;colvar_UIestimator.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/archive/binary_iarchive.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/archive/binary_oarchive.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/serialization/vector.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      32 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      33 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      34 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      35 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      36 </span>            : #include &lt;random&gt;
+<span class="lineNum">      37 </span>            : #include &lt;string&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : using namespace PLMD;
+<span class="lineNum">      40 </span>            : using namespace bias;
+<span class="lineNum">      41 </span>            : using namespace std;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace PLMD {
+<span class="lineNum">      44 </span>            : namespace drr {
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : //+PLUMEDOC EABFMOD_BIAS DRR
+<span class="lineNum">      47 </span>            : /*
+<span class="lineNum">      48 </span>            : Used to performed extended-system adaptive biasing force(eABF) \cite Lelievre2007 method
+<span class="lineNum">      49 </span>            : on one or more collective variables. This method is also
+<span class="lineNum">      50 </span>            : called dynamic reference restraining(DRR) \cite Zheng2012 .
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : For each collective variable \f$\xi_i\f$, a fictitious variable \f$\lambda_i\f$
+<span class="lineNum">      53 </span>            : is attached through a spring. The fictitious variable \f$\lambda_i\f$ undergoes
+<span class="lineNum">      54 </span>            : overdamped langevin dynamics jusk like \ref EXTENDED_LAGRANGIAN. The ABF
+<span class="lineNum">      55 </span>            : algorithm applies bias force on \f$\lambda_i\f$. The bias force acts on
+<span class="lineNum">      56 </span>            : \f$\lambda_i\f$ is the negative average spring force on \f$\lambda_i\f$, which
+<span class="lineNum">      57 </span>            : enhances the sampling of \f$\lambda_i\f$.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : \f[
+<span class="lineNum">      60 </span>            : F_{bias}(\lambda_i)=k(\lambda_i-\langle\xi_i\rangle_{\lambda_i})
+<span class="lineNum">      61 </span>            : \f]
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : If spring force constant k is large enough, then \f$\xi_i\f$ synchronizes with
+<span class="lineNum">      64 </span>            : \f$\lambda_i\f$. The naive(ABF) estimator is just the negative
+<span class="lineNum">      65 </span>            : average spring force of \f$\lambda_i\f$.
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : The naive(ABF) estimator is biased. There are unbiased estimators such as
+<span class="lineNum">      68 </span>            : CZAR(Corrected z-averaged restraint) \cite Lesage2016 and UI(Umbrella
+<span class="lineNum">      69 </span>            : Integration).
+<span class="lineNum">      70 </span>            : The CZAR estimates the gradients as:
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : \f[
+<span class="lineNum">      73 </span>            : \frac{\partial{A}}{\partial{\xi_i}}\left({\xi}\right)=-\frac{1}{\beta}\frac{\partial\ln\tilde{\rho}\left(\xi\right)}{\partial{\xi_i}}+k\left(\langle\lambda_i\rangle_\xi-\xi_i\right)
+<span class="lineNum">      74 </span>            : \f]
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : The UI estimates the gradients as:
+<span class="lineNum">      77 </span>            : \f[
+<span class="lineNum">      78 </span>            : A'(\xi^*)=\frac{{\sum_\lambda}N\left(\xi^*,\lambda\right)\left[\frac{\xi^*-\langle\xi\rangle_\lambda}{\beta\sigma_\lambda^2}-k(\xi^*-\lambda)\right]}{{\sum_\lambda}N\left(\xi^*,\lambda\right)}
+<span class="lineNum">      79 </span>            : \f]
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : The code performing UI(colvar_UIestimator.h) is contributed by Haohao Fu \cite Fu2016 .
+<span class="lineNum">      82 </span>            : It may be slow. I only change the boltzmann constant and output
+<span class="lineNum">      83 </span>            : precision in it. For new version and issues, please see:
+<span class="lineNum">      84 </span>            : https://github.com/fhh2626/colvars
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : After running eABF/DRR, the \ref drr_tool utility can be used to extract the gradients and counts files from .drrstate. Naive(ABF) estimator's result is in .abf.grad and .abf.count files and CZAR estimator's result is in .czar.grad and .czar.count files. To get PMF, the abf_integrate(https://github.com/Colvars/colvars/tree/master/colvartools) is useful.
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : \par Examples
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : The following input tells plumed to perform a eABF/DRR simulation on two
+<span class="lineNum">      91 </span>            : torsional angles.
+<span class="lineNum">      92 </span>            : \plumedfile
+<span class="lineNum">      93 </span>            : phi: TORSION ATOMS=5,7,9,15
+<span class="lineNum">      94 </span>            : psi: TORSION ATOMS=7,9,15,17
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : DRR ...
+<span class="lineNum">      97 </span>            : LABEL=eabf
+<span class="lineNum">      98 </span>            : ARG=phi,psi
+<span class="lineNum">      99 </span>            : FULLSAMPLES=500
+<span class="lineNum">     100 </span>            : GRID_MIN=-pi,-pi
+<span class="lineNum">     101 </span>            : GRID_MAX=pi,pi
+<span class="lineNum">     102 </span>            : GRID_BIN=180,180
+<span class="lineNum">     103 </span>            : FRICTION=8.0,8.0
+<span class="lineNum">     104 </span>            : TAU=0.5,0.5
+<span class="lineNum">     105 </span>            : OUTPUTFREQ=50000
+<span class="lineNum">     106 </span>            : HISTORYFREQ=500000
+<span class="lineNum">     107 </span>            : ... DRR
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : # monitor the two variables, their fictitious variables and applied forces.
+<span class="lineNum">     110 </span>            : PRINT STRIDE=10 ARG=phi,psi,eabf.phi_fict,eabf.psi_fict,eabf.phi_biasforce,eabf.psi_biasforce FILE=COLVAR
+<span class="lineNum">     111 </span>            : \endplumedfile
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : The following input tells plumed to perform a eABF/DRR simulation on the
+<span class="lineNum">     114 </span>            : distance of atom 10 and 92. The distance is restraint by \ref LOWER_WALLS and
+<span class="lineNum">     115 </span>            : \ref UPPER_WALLS.
+<span class="lineNum">     116 </span>            : \plumedfile
+<span class="lineNum">     117 </span>            : dist1: DISTANCE ATOMS=10,92
+<span class="lineNum">     118 </span>            : eabf_winall: DRR ARG=dist1 FULLSAMPLES=2000 GRID_MIN=1.20 GRID_MAX=3.20 GRID_BIN=200 FRICTION=8.0 TAU=0.5 OUTPUTFREQ=5000 HISTORYFREQ=500000
+<span class="lineNum">     119 </span>            : uwall: UPPER_WALLS ARG=eabf_winall.dist1_fict AT=3.2 KAPPA=418.4
+<span class="lineNum">     120 </span>            : lwall: LOWER_WALLS ARG=eabf_winall.dist1_fict AT=1.2 KAPPA=418.4
+<span class="lineNum">     121 </span>            : PRINT STRIDE=10 ARG=dist1,eabf_winall.dist1_fict,eabf_winall.dist1_biasforce FILE=COLVAR
+<span class="lineNum">     122 </span>            : \endplumedfile
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :  */
+<span class="lineNum">     125 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : using std::vector;
+<a name="128"><span class="lineNum">     128 </span>            : using std::string;</a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">         16 : class DynamicReferenceRestraining : public Bias {</span>
+<span class="lineNum">     131 </span>            : private:
+<span class="lineNum">     132 </span>            :   bool firsttime;
+<span class="lineNum">     133 </span>            :   bool nobias;
+<span class="lineNum">     134 </span>            :   vector&lt;double&gt; fictNoPBC;
+<span class="lineNum">     135 </span>            :   vector&lt;double&gt; real;
+<span class="lineNum">     136 </span>            :   vector&lt;double&gt; springlength; // spring lengths
+<span class="lineNum">     137 </span>            :   vector&lt;double&gt; fict;         // coordinates of extended variables
+<span class="lineNum">     138 </span>            :   vector&lt;double&gt; vfict;        // velocities of extended variables
+<span class="lineNum">     139 </span>            :   vector&lt;double&gt; vfict_laststep;
+<span class="lineNum">     140 </span>            :   vector&lt;double&gt; ffict; // forces exerted on extended variables
+<span class="lineNum">     141 </span>            :   vector&lt;double&gt; fbias; // bias forces from eABF
+<span class="lineNum">     142 </span>            :   vector&lt;double&gt; kappa;
+<span class="lineNum">     143 </span>            :   vector&lt;double&gt; tau;
+<span class="lineNum">     144 </span>            :   vector&lt;double&gt; friction;
+<span class="lineNum">     145 </span>            :   vector&lt;double&gt; etemp;
+<span class="lineNum">     146 </span>            :   vector&lt;double&gt; ffict_measured;
+<span class="lineNum">     147 </span>            :   vector&lt;Value *&gt; biasforceValue;
+<span class="lineNum">     148 </span>            :   vector&lt;Value *&gt; fictValue;
+<span class="lineNum">     149 </span>            :   vector&lt;Value *&gt; vfictValue;
+<span class="lineNum">     150 </span>            :   vector&lt;double&gt; c1;
+<span class="lineNum">     151 </span>            :   vector&lt;double&gt; c2;
+<span class="lineNum">     152 </span>            :   vector&lt;double&gt; mass;
+<span class="lineNum">     153 </span>            :   vector&lt;DRRAxis&gt; delim;
+<span class="lineNum">     154 </span>            :   string outputname;
+<span class="lineNum">     155 </span>            :   string cptname;
+<span class="lineNum">     156 </span>            :   string outputprefix;
+<span class="lineNum">     157 </span>            :   const size_t ndims;
+<span class="lineNum">     158 </span>            :   double dt;
+<span class="lineNum">     159 </span>            :   double kbt;
+<span class="lineNum">     160 </span>            :   double outputfreq;
+<span class="lineNum">     161 </span>            :   double historyfreq;
+<span class="lineNum">     162 </span>            :   bool isRestart;
+<span class="lineNum">     163 </span>            :   bool useCZARestimator;
+<span class="lineNum">     164 </span>            :   bool useUIestimator;
+<span class="lineNum">     165 </span>            :   bool textoutput;
+<span class="lineNum">     166 </span>            :   ABF ABFGrid;
+<span class="lineNum">     167 </span>            :   CZAR CZARestimator;
+<span class="lineNum">     168 </span>            :   double fullsamples;
+<span class="lineNum">     169 </span>            :   UIestimator::UIestimator eabf_UI;
+<span class="lineNum">     170 </span>            :   Random rand;
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : public:
+<span class="lineNum">     173 </span>            :   explicit DynamicReferenceRestraining(const ActionOptions &amp;);
+<span class="lineNum">     174 </span>            :   void calculate();
+<span class="lineNum">     175 </span>            :   void update();
+<span class="lineNum">     176 </span>            :   void save(const string &amp;filename, long long int step);
+<span class="lineNum">     177 </span>            :   void load(const string &amp;filename);
+<span class="lineNum">     178 </span>            :   void backupFile(const string &amp;filename);
+<span class="lineNum">     179 </span>            :   static void registerKeywords(Keywords &amp;keys);
+<span class="lineNum">     180 </span>            :   bool is_file_exist(const char *fileName);
+<a name="181"><span class="lineNum">     181 </span>            : };</a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">       6456 : PLUMED_REGISTER_ACTION(DynamicReferenceRestraining, &quot;DRR&quot;)</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">          5 : void DynamicReferenceRestraining::registerKeywords(Keywords &amp;keys) {</span>
+<span class="lineNum">     186 </span><span class="lineCov">          5 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">     187 </span><span class="lineCov">         10 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;KAPPA&quot;, &quot;specifies that the restraint is harmonic and &quot;</span>
+<span class="lineNum">     189 </span>            :            &quot;what the values of the force constants on &quot;
+<span class="lineNum">     190 </span>            :            &quot;each of the variables are (default to &quot;
+<span class="lineNum">     191 </span>            :            &quot;kbt/(GRID_SPACING)^2)&quot;);
+<span class="lineNum">     192 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;, &quot;TAU&quot;, &quot;0.5&quot;, &quot;specifies relaxation time on each of &quot;</span>
+<span class="lineNum">     193 </span>            :            &quot;variables are, similar to &quot;
+<span class="lineNum">     194 </span>            :            &quot;extendedTimeConstant in Colvars&quot;);
+<span class="lineNum">     195 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;, &quot;FRICTION&quot;, &quot;8.0&quot;,</span>
+<span class="lineNum">     196 </span>            :            &quot;add a friction to the variable, similar to extendedLangevinDamping &quot;
+<span class="lineNum">     197 </span>            :            &quot;in Colvars&quot;);
+<span class="lineNum">     198 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;, &quot;GRID_MIN&quot;, &quot;the lower bounds for the grid (GRID_BIN &quot;</span>
+<span class="lineNum">     199 </span>            :            &quot;or GRID_SPACING should be specified)&quot;);
+<span class="lineNum">     200 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;, &quot;GRID_MAX&quot;, &quot;the upper bounds for the grid (GRID_BIN &quot;</span>
+<span class="lineNum">     201 </span>            :            &quot;or GRID_SPACING should be specified)&quot;);
+<span class="lineNum">     202 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;GRID_BIN&quot;, &quot;the number of bins for the grid&quot;);</span>
+<span class="lineNum">     203 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;GRID_SPACING&quot;, &quot;the approximate grid spacing (to be &quot;</span>
+<span class="lineNum">     204 </span>            :            &quot;used as an alternative or together &quot;
+<span class="lineNum">     205 </span>            :            &quot;with GRID_BIN)&quot;);
+<span class="lineNum">     206 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;, &quot;FULLSAMPLES&quot;, &quot;500&quot;,</span>
+<span class="lineNum">     207 </span>            :            &quot;number of samples in a bin prior to application of the ABF&quot;);
+<span class="lineNum">     208 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;, &quot;OUTPUTFREQ&quot;, &quot;write results to a file every N steps&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;HISTORYFREQ&quot;, &quot;save history to a file every N steps&quot;);</span>
+<span class="lineNum">     210 </span><span class="lineCov">         15 :   keys.addFlag(&quot;NOCZAR&quot;, false, &quot;disable the CZAR estimator&quot;);</span>
+<span class="lineNum">     211 </span><span class="lineCov">         15 :   keys.addFlag(&quot;UI&quot;, false,</span>
+<span class="lineNum">     212 </span>            :                &quot;enable the umbrella integration estimator&quot;);
+<span class="lineNum">     213 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;UIRESTARTPREFIX&quot;,</span>
+<span class="lineNum">     214 </span>            :            &quot;specify the restart files for umbrella integration&quot;);
+<span class="lineNum">     215 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;OUTPUTPREFIX&quot;,</span>
+<span class="lineNum">     216 </span>            :            &quot;specify the output prefix (default to the label name)&quot;);
+<span class="lineNum">     217 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;TEMP&quot;, &quot;the system temperature - needed when FRICTION &quot;</span>
+<span class="lineNum">     218 </span>            :            &quot;is present. If not provided will be taken from &quot;
+<span class="lineNum">     219 </span>            :            &quot;MD code (if available)&quot;);
+<span class="lineNum">     220 </span><span class="lineCov">         20 :   keys.add(</span>
+<span class="lineNum">     221 </span>            :     &quot;optional&quot;, &quot;EXTTEMP&quot;,
+<span class="lineNum">     222 </span>            :     &quot;the temperature of extended variables (default to system temperature)&quot;);
+<span class="lineNum">     223 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;, &quot;DRR_RFILE&quot;,</span>
+<span class="lineNum">     224 </span>            :            &quot;specifies the restart file (.drrstate file)&quot;);
+<span class="lineNum">     225 </span><span class="lineCov">         15 :   keys.addFlag(&quot;NOBIAS&quot;, false, &quot;DO NOT apply bias forces.&quot;);</span>
+<span class="lineNum">     226 </span><span class="lineCov">         15 :   keys.addFlag(&quot;TEXTOUTPUT&quot;, false, &quot;use text output for grad and count files &quot;</span>
+<span class="lineNum">     227 </span>            :                &quot;instead of boost::serialization binary &quot;
+<span class="lineNum">     228 </span>            :                &quot;output&quot;);
+<span class="lineNum">     229 </span><span class="lineCov">          5 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     230 </span><span class="lineCov">         20 :   keys.addOutputComponent(</span>
+<span class="lineNum">     231 </span>            :     &quot;_fict&quot;, &quot;default&quot;,
+<span class="lineNum">     232 </span>            :     &quot;one or multiple instances of this quantity will be refereceable &quot;
+<span class="lineNum">     233 </span>            :     &quot;elsewhere in the input file. &quot;
+<span class="lineNum">     234 </span>            :     &quot;These quantities will named with the arguments of the bias followed by &quot;
+<span class="lineNum">     235 </span>            :     &quot;the character string _tilde. It is possible to add forces on these &quot;
+<span class="lineNum">     236 </span>            :     &quot;variable.&quot;);
+<span class="lineNum">     237 </span><span class="lineCov">         20 :   keys.addOutputComponent(</span>
+<span class="lineNum">     238 </span>            :     &quot;_vfict&quot;, &quot;default&quot;,
+<span class="lineNum">     239 </span>            :     &quot;one or multiple instances of this quantity will be refereceable &quot;
+<span class="lineNum">     240 </span>            :     &quot;elsewhere in the input file. &quot;
+<span class="lineNum">     241 </span>            :     &quot;These quantities will named with the arguments of the bias followed by &quot;
+<span class="lineNum">     242 </span>            :     &quot;the character string _tilde. It is NOT possible to add forces on these &quot;
+<span class="lineNum">     243 </span>            :     &quot;variable.&quot;);
+<span class="lineNum">     244 </span><span class="lineCov">         20 :   keys.addOutputComponent(</span>
+<span class="lineNum">     245 </span>            :     &quot;_biasforce&quot;, &quot;default&quot;,
+<span class="lineNum">     246 </span>            :     &quot;The bias force from eABF/DRR of the fictitious particle.&quot;);
+<span class="lineNum">     247 </span><span class="lineCov">          5 : }</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span><span class="lineCov">          4 : DynamicReferenceRestraining::DynamicReferenceRestraining(</span>
+<span class="lineNum">     250 </span><span class="lineCov">          4 :   const ActionOptions &amp;ao)</span>
+<span class="lineNum">     251 </span>            :   : PLUMED_BIAS_INIT(ao), firsttime(true), nobias(false),
+<span class="lineNum">     252 </span>            :     fictNoPBC(getNumberOfArguments(), 0.0), real(getNumberOfArguments(), 0.0),
+<span class="lineNum">     253 </span>            :     springlength(getNumberOfArguments(), 0.0),
+<span class="lineNum">     254 </span>            :     fict(getNumberOfArguments(), 0.0), vfict(getNumberOfArguments(), 0.0),
+<span class="lineNum">     255 </span>            :     vfict_laststep(getNumberOfArguments(), 0.0),
+<span class="lineNum">     256 </span>            :     ffict(getNumberOfArguments(), 0.0), fbias(getNumberOfArguments(), 0.0),
+<span class="lineNum">     257 </span>            :     kappa(getNumberOfArguments(), 0.0), tau(getNumberOfArguments(), 0.0),
+<span class="lineNum">     258 </span>            :     friction(getNumberOfArguments(), 0.0), etemp(getNumberOfArguments(), 0.0),
+<span class="lineNum">     259 </span>            :     ffict_measured(getNumberOfArguments(), 0.0),
+<span class="lineNum">     260 </span>            :     biasforceValue(getNumberOfArguments(), NULL),
+<span class="lineNum">     261 </span>            :     fictValue(getNumberOfArguments(), NULL),
+<span class="lineNum">     262 </span>            :     vfictValue(getNumberOfArguments(), NULL), c1(getNumberOfArguments(), 0.0),
+<span class="lineNum">     263 </span>            :     c2(getNumberOfArguments(), 0.0), mass(getNumberOfArguments(), 0.0),
+<span class="lineNum">     264 </span>            :     delim(getNumberOfArguments()), outputname(&quot;&quot;), cptname(&quot;&quot;),
+<span class="lineNum">     265 </span><span class="lineCov">          4 :     outputprefix(&quot;&quot;), ndims(getNumberOfArguments()), dt(0.0), kbt(0.0),</span>
+<span class="lineNum">     266 </span>            :     outputfreq(0.0), historyfreq(-1.0), isRestart(false),
+<span class="lineNum">     267 </span><span class="lineCov">         92 :     useCZARestimator(true), useUIestimator(false), textoutput(false)</span>
+<span class="lineNum">     268 </span>            : {
+<span class="lineNum">     269 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: You now are using the extended adaptive biasing &quot;</span>
+<span class="lineNum">     270 </span>            :       &quot;force(eABF) method.&quot;
+<span class="lineNum">     271 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     272 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: Some people also refer to it as dynamic reference &quot;</span>
+<span class="lineNum">     273 </span>            :       &quot;restraining(DRR) method.&quot;
+<span class="lineNum">     274 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     275 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: Currently the CZAR and naive(ABF on extended variables) &quot;</span>
+<span class="lineNum">     276 </span>            :       &quot;estimator is enabled by default.&quot;
+<span class="lineNum">     277 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     278 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: For reasons of performance, the umbrella integration &quot;</span>
+<span class="lineNum">     279 </span>            :       &quot;estimator is not enabled by default.&quot;
+<span class="lineNum">     280 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     281 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: This method is originally implemented in &quot;</span>
+<span class="lineNum">     282 </span>            :       &quot;colvars(https://github.com/colvars/colvars).&quot;
+<span class="lineNum">     283 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     284 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: This code in plumed is heavily modified from &quot;</span>
+<span class="lineNum">     285 </span>            :       &quot;ExtendedLagrangian.cpp and doesn't implemented all variants of &quot;
+<span class="lineNum">     286 </span>            :       &quot;eABF/DRR.&quot;
+<span class="lineNum">     287 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     288 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: The thermostat using here maybe different from colvars.&quot;</span>
+<span class="lineNum">     289 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     290 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: To integrate the gradients file, you can use abf_integrate &quot;</span>
+<span class="lineNum">     291 </span>            :       &quot;from https://github.com/colvars/colvars/tree/master/colvartools.&quot;
+<span class="lineNum">     292 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     293 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: Please reading relevant articles and using this bias &quot;</span>
+<span class="lineNum">     294 </span>            :       &quot;method carefully!&quot;
+<span class="lineNum">     295 </span><span class="lineCov">          4 :       &lt;&lt; '\n';</span>
+<span class="lineNum">     296 </span><span class="lineCov">          8 :   parseFlag(&quot;NOBIAS&quot;, nobias);</span>
+<span class="lineNum">     297 </span><span class="lineCov">          8 :   parseFlag(&quot;UI&quot;, useUIestimator);</span>
+<span class="lineNum">     298 </span><span class="lineCov">          4 :   bool noCZAR = false;</span>
+<span class="lineNum">     299 </span><span class="lineCov">          8 :   parseFlag(&quot;NOCZAR&quot;, noCZAR);</span>
+<span class="lineNum">     300 </span><span class="lineCov">          4 :   noCZAR == false ? useCZARestimator = true : useCZARestimator = false;</span>
+<span class="lineNum">     301 </span><span class="lineCov">          8 :   parseFlag(&quot;TEXTOUTPUT&quot;, textoutput);</span>
+<span class="lineNum">     302 </span><span class="lineCov">          8 :   parseVector(&quot;TAU&quot;, tau);</span>
+<span class="lineNum">     303 </span><span class="lineCov">          8 :   parseVector(&quot;FRICTION&quot;, friction);</span>
+<span class="lineNum">     304 </span><span class="lineCov">          8 :   parseVector(&quot;EXTTEMP&quot;, etemp);</span>
+<span class="lineNum">     305 </span><span class="lineCov">          8 :   parseVector(&quot;KAPPA&quot;, kappa);</span>
+<span class="lineNum">     306 </span><span class="lineCov">          4 :   double temp = -1.0;</span>
+<span class="lineNum">     307 </span><span class="lineCov">          8 :   parse(&quot;TEMP&quot;, temp);</span>
+<span class="lineNum">     308 </span><span class="lineCov">          8 :   parse(&quot;FULLSAMPLES&quot;, fullsamples);</span>
+<span class="lineNum">     309 </span><span class="lineCov">          8 :   parse(&quot;OUTPUTFREQ&quot;, outputfreq);</span>
+<span class="lineNum">     310 </span><span class="lineCov">          8 :   parse(&quot;HISTORYFREQ&quot;, historyfreq);</span>
+<span class="lineNum">     311 </span><span class="lineCov">          8 :   parse(&quot;OUTPUTPREFIX&quot;, outputprefix);</span>
+<span class="lineNum">     312 </span>            :   string restartfilename;
+<span class="lineNum">     313 </span><span class="lineCov">          8 :   parse(&quot;DRR_RFILE&quot;, restartfilename);</span>
+<span class="lineNum">     314 </span>            :   string uirprefix;
+<span class="lineNum">     315 </span><span class="lineCov">          8 :   parse(&quot;UIRESTARTPREFIX&quot;, uirprefix);</span>
+<span class="lineNum">     316 </span><span class="lineCov">          4 :   if (temp &gt;= 0.0)</span>
+<span class="lineNum">     317 </span><span class="lineCov">          8 :     kbt = plumed.getAtoms().getKBoltzmann() * temp;</span>
+<span class="lineNum">     318 </span>            :   else
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :     kbt = plumed.getAtoms().getKbT();</span>
+<span class="lineNum">     320 </span><span class="lineCov">          4 :   if (fullsamples &lt; 0.5) {</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :     fullsamples = 500.0;</span>
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :     log &lt;&lt; &quot;eABF/DRR: The fullsamples parametre is not set. Set it to &quot;</span>
+<span class="lineNum">     323 </span>            :         &quot;500(default).&quot;
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     325 </span>            :   }
+<span class="lineNum">     326 </span><span class="lineCov">          4 :   if (getRestart()) {</span>
+<span class="lineNum">     327 </span><span class="lineCov">          1 :     if (restartfilename.length() != 0) {</span>
+<span class="lineNum">     328 </span><span class="lineCov">          1 :       isRestart = true;</span>
+<span class="lineNum">     329 </span><span class="lineCov">          1 :       firsttime = false;</span>
+<span class="lineNum">     330 </span><span class="lineCov">          1 :       load(restartfilename);</span>
+<span class="lineNum">     331 </span>            :     } else {
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :       log &lt;&lt; &quot;eABF/DRR: You don't specify the file for restarting.&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :       log &lt;&lt; &quot;eABF/DRR: So I assume you are splitting windows.&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :       isRestart = false;</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :       firsttime = true;</span>
+<span class="lineNum">     336 </span>            :     }
+<span class="lineNum">     337 </span>            :   }
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">          8 :   vector&lt;string&gt; gmin(ndims);</span>
+<span class="lineNum">     340 </span><span class="lineCov">          8 :   parseVector(&quot;GRID_MIN&quot;, gmin);</span>
+<span class="lineNum">     341 </span><span class="lineCov">          4 :   if (gmin.size() != ndims)</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :     error(&quot;eABF/DRR: not enough values for GRID_MIN&quot;);</span>
+<span class="lineNum">     343 </span><span class="lineCov">          8 :   vector&lt;string&gt; gmax(ndims);</span>
+<span class="lineNum">     344 </span><span class="lineCov">          8 :   parseVector(&quot;GRID_MAX&quot;, gmax);</span>
+<span class="lineNum">     345 </span><span class="lineCov">          4 :   if (gmax.size() != ndims)</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :     error(&quot;eABF/DRR: not enough values for GRID_MAX&quot;);</span>
+<span class="lineNum">     347 </span><span class="lineCov">          4 :   vector&lt;unsigned&gt; gbin(ndims);</span>
+<span class="lineNum">     348 </span><span class="lineCov">          4 :   vector&lt;double&gt; gspacing(ndims);</span>
+<span class="lineNum">     349 </span><span class="lineCov">          8 :   parseVector(&quot;GRID_BIN&quot;, gbin);</span>
+<span class="lineNum">     350 </span><span class="lineCov">          8 :   parseVector(&quot;GRID_SPACING&quot;, gspacing);</span>
+<span class="lineNum">     351 </span><span class="lineCov">          4 :   if (gbin.size() != ndims) {</span>
+<span class="lineNum">     352 </span><span class="lineCov">          2 :     log &lt;&lt; &quot;eABF/DRR: You didn't specify GRID_BIN. Trying to use GRID_SPACING &quot;</span>
+<span class="lineNum">     353 </span>            :         &quot;instead.&quot;
+<span class="lineNum">     354 </span><span class="lineCov">          2 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     355 </span><span class="lineCov">          2 :     if (gspacing.size() != ndims) {</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :       error(&quot;eABF/DRR: not enough values for GRID_BIN&quot;);</span>
+<span class="lineNum">     357 </span>            :     } else {
+<span class="lineNum">     358 </span><span class="lineCov">          2 :       gbin.resize(ndims);</span>
+<span class="lineNum">     359 </span><span class="lineCov">          4 :       for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     360 </span>            :         double l, h;
+<span class="lineNum">     361 </span><span class="lineCov">          2 :         PLMD::Tools::convert(gmin[i], l);</span>
+<span class="lineNum">     362 </span><span class="lineCov">          4 :         PLMD::Tools::convert(gmax[i], h);</span>
+<span class="lineNum">     363 </span><span class="lineCov">          6 :         gbin[i] = std::nearbyint((h - l) / gspacing[i]);</span>
+<span class="lineNum">     364 </span><span class="lineCov">          6 :         gspacing[i] = (h - l) / gbin[i];</span>
+<span class="lineNum">     365 </span><span class="lineCov">          4 :         log &lt;&lt; &quot;GRID_BIN[&quot; &lt;&lt; i &lt;&lt; &quot;] is &quot; &lt;&lt; gbin[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     366 </span>            :       }
+<span class="lineNum">     367 </span>            :     }
+<span class="lineNum">     368 </span>            :   }
+<span class="lineNum">     369 </span><span class="lineCov">          4 :   checkRead();</span>
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :   // Set up kbt for extended system
+<span class="lineNum">     372 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: The fullsamples is &quot; &lt;&lt; fullsamples &lt;&lt; '\n';</span>
+<span class="lineNum">     373 </span><span class="lineCov">          4 :   log &lt;&lt; &quot;eABF/DRR: The kbt(real system) is &quot; &lt;&lt; kbt &lt;&lt; '\n';</span>
+<span class="lineNum">     374 </span><span class="lineCov">          4 :   dt = getTimeStep();</span>
+<span class="lineNum">     375 </span><span class="lineCov">          4 :   vector&lt;double&gt; ekbt(ndims, 0.0);</span>
+<span class="lineNum">     376 </span><span class="lineCov">          4 :   if (etemp.size() != ndims) {</span>
+<span class="lineNum">     377 </span><span class="lineCov">         12 :     etemp.assign(ndims, kbt / plumed.getAtoms().getKBoltzmann());</span>
+<span class="lineNum">     378 </span>            :   }
+<span class="lineNum">     379 </span><span class="lineCov">          4 :   if (tau.size() != ndims) {</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :     tau.assign(ndims, 0.5);</span>
+<span class="lineNum">     381 </span>            :   }
+<span class="lineNum">     382 </span><span class="lineCov">          4 :   if (friction.size() != ndims) {</span>
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :     friction.assign(ndims, 8.0);</span>
+<span class="lineNum">     384 </span>            :   }
+<span class="lineNum">     385 </span><span class="lineCov">         10 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">         18 :     ekbt[i] = etemp[i] * plumed.getAtoms().getKBoltzmann();</span>
+<span class="lineNum">     387 </span><span class="lineCov">          6 :     log &lt;&lt; &quot;eABF/DRR: The kbt(extended system) of [&quot; &lt;&lt; i &lt;&lt; &quot;] is &quot; &lt;&lt; ekbt[i]</span>
+<span class="lineNum">     388 </span><span class="lineCov">         12 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     389 </span><span class="lineCov">         12 :     log &lt;&lt; &quot;eABF/DRR: relaxation time tau [&quot; &lt;&lt; i &lt;&lt; &quot;] is &quot; &lt;&lt; tau[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     390 </span><span class="lineCov">         12 :     log &lt;&lt; &quot;eABF/DRR: Extended variable [&quot; &lt;&lt; i &lt;&lt; &quot;] has friction: &quot; &lt;&lt; friction[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     391 </span>            :   }
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :   // Set up the force grid
+<span class="lineNum">     394 </span><span class="lineCov">         10 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     395 </span><span class="lineCov">          6 :     log &lt;&lt; &quot;eABF/DRR: The &quot; &lt;&lt; i &lt;&lt; &quot; dimensional grid minimum is &quot; &lt;&lt; gmin[i]</span>
+<span class="lineNum">     396 </span><span class="lineCov">         12 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     397 </span><span class="lineCov">          6 :     log &lt;&lt; &quot;eABF/DRR: The &quot; &lt;&lt; i &lt;&lt; &quot; dimensional grid maximum is &quot; &lt;&lt; gmax[i]</span>
+<span class="lineNum">     398 </span><span class="lineCov">         12 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     399 </span><span class="lineCov">          6 :     log &lt;&lt; &quot;eABF/DRR: The &quot; &lt;&lt; i &lt;&lt; &quot; dimensional grid has &quot; &lt;&lt; gbin[i]</span>
+<span class="lineNum">     400 </span><span class="lineCov">         12 :         &lt;&lt; &quot; bins&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     401 </span>            :     double l, h;
+<span class="lineNum">     402 </span><span class="lineCov">         12 :     PLMD::Tools::convert(gmin[i], l);</span>
+<span class="lineNum">     403 </span><span class="lineCov">         12 :     PLMD::Tools::convert(gmax[i], h);</span>
+<span class="lineNum">     404 </span><span class="lineCov">         12 :     delim[i].set(l, h, gbin[i]);</span>
+<span class="lineNum">     405 </span>            :   }
+<span class="lineNum">     406 </span><span class="lineCov">          4 :   if (kappa.size() != ndims) {</span>
+<span class="lineNum">     407 </span><span class="lineCov">          2 :     kappa.resize(ndims, 0.0);</span>
+<span class="lineNum">     408 </span><span class="lineCov">          6 :     for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     409 </span><span class="lineCov">          4 :       if (kappa[i] &lt;= 0) {</span>
+<span class="lineNum">     410 </span><span class="lineCov">          4 :         log &lt;&lt; &quot;eABF/DRR: The spring force constant kappa[&quot; &lt;&lt; i</span>
+<span class="lineNum">     411 </span><span class="lineCov">          4 :             &lt;&lt; &quot;] is not set.&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     412 </span><span class="lineCov">         16 :         kappa[i] = ekbt[i] / (delim[i].getWidth() * delim[i].getWidth());</span>
+<span class="lineNum">     413 </span><span class="lineCov">          4 :         log &lt;&lt; &quot;eABF/DRR: set kappa[&quot; &lt;&lt; i</span>
+<span class="lineNum">     414 </span><span class="lineCov">          4 :             &lt;&lt; &quot;] according to bin width(ekbt/(binWidth^2)).&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     415 </span>            :       }
+<span class="lineNum">     416 </span><span class="lineCov">          4 :       log &lt;&lt; &quot;eABF/DRR: The spring force constant kappa[&quot; &lt;&lt; i &lt;&lt; &quot;] is &quot;</span>
+<span class="lineNum">     417 </span><span class="lineCov">          8 :           &lt;&lt; std::fixed &lt;&lt; std::setprecision(10) &lt;&lt; kappa[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     418 </span>            :     }
+<span class="lineNum">     419 </span>            :   } else {
+<span class="lineNum">     420 </span><span class="lineCov">          2 :     log &lt;&lt; &quot;eABF/DRR: The kappa have been set manually.&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     421 </span><span class="lineCov">          4 :     for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     422 </span><span class="lineCov">          2 :       log &lt;&lt; &quot;eABF/DRR: The spring force constant kappa[&quot; &lt;&lt; i &lt;&lt; &quot;] is &quot;</span>
+<span class="lineNum">     423 </span><span class="lineCov">          4 :           &lt;&lt; std::fixed &lt;&lt; std::setprecision(10) &lt;&lt; kappa[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     424 </span>            :     }
+<span class="lineNum">     425 </span>            :   }
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span><span class="lineCov">         10 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     428 </span><span class="lineCov">         18 :     mass[i] = kappa[i] * tau[i] * tau[i] / (4 * pi * pi);</span>
+<span class="lineNum">     429 </span><span class="lineCov">         12 :     log &lt;&lt; &quot;eABF/DRR: Fictitious mass[&quot; &lt;&lt; i &lt;&lt; &quot;] is &quot; &lt;&lt; mass[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     430 </span><span class="lineCov">         18 :     c1[i] = exp(-0.5 * friction[i] * dt);</span>
+<span class="lineNum">     431 </span><span class="lineCov">         30 :     c2[i] = sqrt(ekbt[i] * (1.0 - c1[i] * c1[i]) / mass[i]);</span>
+<span class="lineNum">     432 </span>            :   }
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineCov">         16 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     435 </span>            :     // Position output
+<span class="lineNum">     436 </span><span class="lineCov">          6 :     string comp = getPntrToArgument(i)-&gt;getName() + &quot;_fict&quot;;</span>
+<span class="lineNum">     437 </span><span class="lineCov">          6 :     addComponentWithDerivatives(comp);</span>
+<span class="lineNum">     438 </span><span class="lineCov">          6 :     if (getPntrToArgument(i)-&gt;isPeriodic()) {</span>
+<span class="lineNum">     439 </span>            :       string a, b;
+<span class="lineNum">     440 </span>            :       double c, d;
+<span class="lineNum">     441 </span><span class="lineCov">          4 :       getPntrToArgument(i)-&gt;getDomain(a, b);</span>
+<span class="lineNum">     442 </span><span class="lineCov">          4 :       getPntrToArgument(i)-&gt;getDomain(c, d);</span>
+<span class="lineNum">     443 </span><span class="lineCov">          4 :       componentIsPeriodic(comp, a, b);</span>
+<span class="lineNum">     444 </span><span class="lineCov">          4 :       delim[i].setPeriodicity(c, d);</span>
+<span class="lineNum">     445 </span>            :     } else
+<span class="lineNum">     446 </span><span class="lineCov">          2 :       componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     447 </span><span class="lineCov">          6 :     fictValue[i] = getPntrToComponent(comp);</span>
+<span class="lineNum">     448 </span>            :     // Velocity output
+<span class="lineNum">     449 </span><span class="lineCov">         12 :     comp = getPntrToArgument(i)-&gt;getName() + &quot;_vfict&quot;;</span>
+<span class="lineNum">     450 </span><span class="lineCov">          6 :     addComponent(comp);</span>
+<span class="lineNum">     451 </span><span class="lineCov">          6 :     componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     452 </span><span class="lineCov">          6 :     vfictValue[i] = getPntrToComponent(comp);</span>
+<span class="lineNum">     453 </span>            :     // Bias force from eABF/DRR output
+<span class="lineNum">     454 </span><span class="lineCov">         12 :     comp = getPntrToArgument(i)-&gt;getName() + &quot;_biasforce&quot;;</span>
+<span class="lineNum">     455 </span><span class="lineCov">          6 :     addComponent(comp);</span>
+<span class="lineNum">     456 </span><span class="lineCov">          6 :     componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     457 </span><span class="lineCov">          6 :     biasforceValue[i] = getPntrToComponent(comp);</span>
+<span class="lineNum">     458 </span>            :   }
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineCov">          4 :   if (outputprefix.length() == 0)</span>
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :     outputprefix = getLabel();</span>
+<span class="lineNum">     462 </span><span class="lineCov">          8 :   outputname = outputprefix + &quot;.drrstate&quot;;</span>
+<span class="lineNum">     463 </span><span class="lineCov">          8 :   cptname = outputprefix + &quot;.cpt.drrstate&quot;;</span>
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span><span class="lineCov">          4 :   if (!isRestart) {</span>
+<span class="lineNum">     466 </span>            :     // If you want to use on-the-fly text output for CZAR and naive estimator,
+<span class="lineNum">     467 </span>            :     // you should turn it to true first!
+<span class="lineNum">     468 </span><span class="lineCov">          9 :     ABFGrid = ABF(delim, &quot;.abf&quot;, textoutput);</span>
+<span class="lineNum">     469 </span>            :     // Just initialize it even useCZARestimator is off.
+<span class="lineNum">     470 </span><span class="lineCov">          9 :     CZARestimator = CZAR(delim, &quot;.czar&quot;, kbt, textoutput);</span>
+<span class="lineNum">     471 </span><span class="lineCov">          3 :     log &lt;&lt; &quot;eABF/DRR: The init function of the grid is finished.&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     472 </span>            :   }
+<span class="lineNum">     473 </span><span class="lineCov">          4 :   if (useCZARestimator) {</span>
+<span class="lineNum">     474 </span><span class="lineCov">          3 :     log &lt;&lt; &quot;eABF/DRR: Using corrected z-average restraint estimator of gradients&quot; &lt;&lt; '\n';</span>
+<span class="lineNum">     475 </span><span class="lineCov">         12 :     log &lt;&lt; &quot;  Bibliography &quot; &lt;&lt; plumed.cite(&quot;Lesage, Lelièvre, Stoltz and Hénin, &quot;</span>
+<span class="lineNum">     476 </span><span class="lineCov">          3 :                                             &quot;J. Phys. Chem. B 3676, 121 (2017)&quot;);</span>
+<span class="lineNum">     477 </span><span class="lineCov">          9 :     log &lt;&lt; plumed.cite(&quot;Darve and Pohorille, J. Chem. Phys. 9169, 115 (2001)&quot;) &lt;&lt; '\n';</span>
+<span class="lineNum">     478 </span>            :   }
+<span class="lineNum">     479 </span><span class="lineCov">          4 :   if (useUIestimator) {</span>
+<span class="lineNum">     480 </span><span class="lineCov">          4 :     log &lt;&lt; &quot;eABF/DRR: Using umbrella integration(Zheng and Yang's) estimator &quot;</span>
+<span class="lineNum">     481 </span>            :         &quot;of gradients.&quot;
+<span class="lineNum">     482 </span><span class="lineCov">          4 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     483 </span><span class="lineCov">          4 :     log &lt;&lt; &quot;eABF/DRR: The UI estimator code is contributed by Haohao Fu.&quot;</span>
+<span class="lineNum">     484 </span><span class="lineCov">          4 :         &lt;&lt; '\n';</span>
+<span class="lineNum">     485 </span><span class="lineCov">         16 :     log &lt;&lt; &quot;  Bibliography &quot; &lt;&lt; plumed.cite(</span>
+<span class="lineNum">     486 </span><span class="lineCov">          4 :           &quot;Fu, Shao, Chipot and Cai, J. Chem. Theory Comput. 3506, 12 (2016)&quot;);</span>
+<span class="lineNum">     487 </span><span class="lineCov">         12 :     log &lt;&lt; plumed.cite(&quot;Zheng and Yang, J. Chem. Theory Comput. 810, 8 (2012)&quot;);</span>
+<span class="lineNum">     488 </span><span class="lineCov">         12 :     log &lt;&lt; plumed.cite(&quot;Darve and Pohorille, J. Chem. Phys. 9169, 115 (2001)&quot;) &lt;&lt; '\n';</span>
+<span class="lineNum">     489 </span><span class="lineCov">          8 :     vector&lt;double&gt; lowerboundary(delim.size(), 0);</span>
+<span class="lineNum">     490 </span><span class="lineCov">          8 :     vector&lt;double&gt; upperboundary(delim.size(), 0);</span>
+<span class="lineNum">     491 </span><span class="lineCov">          8 :     vector&lt;double&gt; width(delim.size(), 0);</span>
+<span class="lineNum">     492 </span><span class="lineCov">         16 :     for (size_t i = 0; i &lt; delim.size(); ++i) {</span>
+<span class="lineNum">     493 </span><span class="lineCov">          6 :       lowerboundary[i] = delim[i].getMin();</span>
+<span class="lineNum">     494 </span><span class="lineCov">          6 :       upperboundary[i] = delim[i].getMax();</span>
+<span class="lineNum">     495 </span><span class="lineCov">          6 :       width[i] = delim[i].getWidth();</span>
+<span class="lineNum">     496 </span>            :     }
+<span class="lineNum">     497 </span><span class="lineCov">          4 :     vector&lt;string&gt; input_filename;</span>
+<span class="lineNum">     498 </span>            :     bool uirestart = false;
+<span class="lineNum">     499 </span><span class="lineCov">          5 :     if (isRestart &amp;&amp; (uirprefix.length() != 0)) {</span>
+<span class="lineNum">     500 </span><span class="lineCov">          1 :       input_filename.push_back(uirprefix);</span>
+<span class="lineNum">     501 </span>            :       uirestart = true;
+<span class="lineNum">     502 </span>            :     }
+<span class="lineNum">     503 </span><span class="lineCov">          5 :     if (isRestart &amp;&amp; (uirprefix.length() == 0)) {</span>
+<span class="lineNum">     504 </span><span class="lineNoCov">          0 :       input_filename.push_back(getLabel());</span>
+<span class="lineNum">     505 </span>            :     }
+<span class="lineNum">     506 </span><span class="lineCov">         12 :     eabf_UI = UIestimator::UIestimator(</span>
+<span class="lineNum">     507 </span><span class="lineCov">          4 :                 lowerboundary, upperboundary, width, kappa, getLabel(), int(outputfreq),</span>
+<span class="lineNum">     508 </span><span class="lineCov">          8 :                 uirestart, input_filename, kbt / plumed.getAtoms().getKBoltzmann());</span>
+<span class="lineNum">     509 </span>            :   }
+<span class="lineNum">     510 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span><span class="lineCov">         34 : void DynamicReferenceRestraining::calculate() {</span>
+<span class="lineNum">     513 </span><span class="lineCov">         34 :   long long int step_now = getStep();</span>
+<span class="lineNum">     514 </span><span class="lineCov">         34 :   if (firsttime) {</span>
+<span class="lineNum">     515 </span><span class="lineCov">         11 :     for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     516 </span><span class="lineCov">          4 :       fict[i] = getArgument(i);</span>
+<span class="lineNum">     517 </span>            :     }
+<span class="lineNum">     518 </span><span class="lineCov">          3 :     firsttime = false;</span>
+<span class="lineNum">     519 </span>            :   }
+<span class="lineNum">     520 </span><span class="lineCov">         34 :   if (step_now != 0) {</span>
+<span class="lineNum">     521 </span><span class="lineCov">         30 :     if ((step_now % int(outputfreq)) == 0) {</span>
+<span class="lineNum">     522 </span><span class="lineCov">          6 :       save(outputname, step_now);</span>
+<span class="lineNum">     523 </span><span class="lineCov">          6 :       if (textoutput) {</span>
+<span class="lineNum">     524 </span><span class="lineCov">          4 :         ABFGrid.writeAll(outputprefix);</span>
+<span class="lineNum">     525 </span><span class="lineCov">          4 :         if (useCZARestimator) {</span>
+<span class="lineNum">     526 </span><span class="lineCov">          2 :           CZARestimator.writeAll(outputprefix);</span>
+<span class="lineNum">     527 </span>            :         }
+<span class="lineNum">     528 </span>            :       }
+<span class="lineNum">     529 </span>            :     }
+<span class="lineNum">     530 </span><span class="lineCov">         30 :     if (historyfreq &gt; 0 &amp;&amp; (step_now % int(historyfreq)) == 0) {</span>
+<span class="lineNum">     531 </span>            :       const string filename =
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :         outputprefix + &quot;.&quot; + std::to_string(step_now) + &quot;.drrstate&quot;;</span>
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :       save(filename, step_now);</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :       if (textoutput) {</span>
+<span class="lineNum">     535 </span>            :         const string textfilename =
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :           outputprefix + &quot;.&quot; + std::to_string(step_now);</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :         ABFGrid.writeAll(textfilename);</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :         if (useCZARestimator) {</span>
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 :           CZARestimator.writeAll(textfilename);</span>
+<span class="lineNum">     540 </span>            :         }
+<span class="lineNum">     541 </span>            :       }
+<span class="lineNum">     542 </span>            :     }
+<span class="lineNum">     543 </span><span class="lineCov">         30 :     if (getCPT()) {</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :       log &lt;&lt; &quot;eABF/DRR: The MD engine is writing checkpoint so we also write a &quot;</span>
+<span class="lineNum">     545 </span>            :           &quot;DRR state file at step: &quot;
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :           &lt;&lt; step_now &lt;&lt; &quot;.\n&quot;;</span>
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :       save(cptname, step_now);</span>
+<span class="lineNum">     548 </span>            :     }
+<span class="lineNum">     549 </span>            :   }
+<span class="lineNum">     550 </span>            :   double ene = 0.0;
+<span class="lineNum">     551 </span><span class="lineCov">        150 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     552 </span><span class="lineCov">         58 :     real[i] = getArgument(i);</span>
+<span class="lineNum">     553 </span><span class="lineCov">        174 :     springlength[i] = difference(i, fict[i], real[i]);</span>
+<span class="lineNum">     554 </span><span class="lineCov">        174 :     fictNoPBC[i] = real[i] - springlength[i];</span>
+<span class="lineNum">     555 </span><span class="lineCov">        116 :     double f = -kappa[i] * springlength[i];</span>
+<span class="lineNum">     556 </span><span class="lineCov">         58 :     ffict_measured[i] = -f;</span>
+<span class="lineNum">     557 </span><span class="lineCov">        116 :     ene += 0.5 * kappa[i] * springlength[i] * springlength[i];</span>
+<span class="lineNum">     558 </span>            :     setOutputForce(i, f);
+<span class="lineNum">     559 </span><span class="lineCov">         58 :     ffict[i] = -f;</span>
+<span class="lineNum">     560 </span><span class="lineCov">        174 :     fict[i] = fictValue[i]-&gt;bringBackInPbc(fict[i]);</span>
+<span class="lineNum">     561 </span><span class="lineCov">        116 :     fictValue[i]-&gt;set(fict[i]);</span>
+<span class="lineNum">     562 </span><span class="lineCov">        116 :     vfictValue[i]-&gt;set(vfict_laststep[i]);</span>
+<span class="lineNum">     563 </span>            :   }
+<span class="lineNum">     564 </span>            :   setBias(ene);
+<span class="lineNum">     565 </span><span class="lineCov">         34 :   ABFGrid.store_getbias(fict, ffict_measured, fbias, fullsamples);</span>
+<span class="lineNum">     566 </span><span class="lineCov">         34 :   if (useCZARestimator) {</span>
+<span class="lineNum">     567 </span><span class="lineCov">         29 :     CZARestimator.store(real, ffict_measured);</span>
+<span class="lineNum">     568 </span>            :   }
+<span class="lineNum">     569 </span><span class="lineCov">         34 :   if (useUIestimator) {</span>
+<span class="lineNum">     570 </span><span class="lineCov">         34 :     eabf_UI.update_output_filename(outputprefix);</span>
+<span class="lineNum">     571 </span><span class="lineCov">        102 :     eabf_UI.update(int(step_now), real, fictNoPBC);</span>
+<span class="lineNum">     572 </span>            :   }
+<a name="573"><span class="lineNum">     573 </span><span class="lineCov">         34 : }</span></a>
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span><span class="lineCov">         34 : void DynamicReferenceRestraining::update() {</span>
+<span class="lineNum">     576 </span><span class="lineCov">        150 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     577 </span>            :     // consider additional forces on the fictitious particle
+<span class="lineNum">     578 </span>            :     // (e.g. MetaD stuff)
+<span class="lineNum">     579 </span><span class="lineCov">        116 :     ffict[i] += fictValue[i]-&gt;getForce();</span>
+<span class="lineNum">     580 </span><span class="lineCov">         58 :     if (!nobias) {</span>
+<span class="lineNum">     581 </span><span class="lineCov">        116 :       ffict[i] += fbias[i];</span>
+<span class="lineNum">     582 </span>            :     }
+<span class="lineNum">     583 </span><span class="lineCov">        116 :     biasforceValue[i]-&gt;set(fbias[i]);</span>
+<span class="lineNum">     584 </span>            :     // update velocity (half step)
+<span class="lineNum">     585 </span><span class="lineCov">        174 :     vfict[i] += ffict[i] * 0.5 * dt / mass[i];</span>
+<span class="lineNum">     586 </span>            :     // thermostat (half step)
+<span class="lineNum">     587 </span><span class="lineCov">        232 :     vfict[i] = c1[i] * vfict[i] + c2[i] * rand.Gaussian();</span>
+<span class="lineNum">     588 </span>            :     // save full step velocity to be dumped at next step
+<span class="lineNum">     589 </span><span class="lineCov">         58 :     vfict_laststep[i] = vfict[i];</span>
+<span class="lineNum">     590 </span>            :     // thermostat (half step)
+<span class="lineNum">     591 </span><span class="lineCov">        232 :     vfict[i] = c1[i] * vfict[i] + c2[i] * rand.Gaussian();</span>
+<span class="lineNum">     592 </span>            :     // update velocity (half step)
+<span class="lineNum">     593 </span><span class="lineCov">        174 :     vfict[i] += ffict[i] * 0.5 * dt / mass[i];</span>
+<span class="lineNum">     594 </span>            :     // update position (full step)
+<span class="lineNum">     595 </span><span class="lineCov">        116 :     fict[i] += vfict[i] * dt;</span>
+<span class="lineNum">     596 </span>            :   }
+<a name="597"><span class="lineNum">     597 </span><span class="lineCov">         34 : }</span></a>
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span><span class="lineCov">          6 : void DynamicReferenceRestraining::save(const string &amp;filename,</span>
+<span class="lineNum">     600 </span>            :                                        long long int step) {
+<span class="lineNum">     601 </span><span class="lineCov">         12 :   std::ofstream out;</span>
+<span class="lineNum">     602 </span><span class="lineCov">          6 :   out.open(filename.c_str(), std::ios::binary);</span>
+<span class="lineNum">     603 </span>            :   boost::archive::binary_oarchive oa(out);
+<span class="lineNum">     604 </span><span class="lineCov">         30 :   oa &lt;&lt; step &lt;&lt; fict &lt;&lt; vfict &lt;&lt; vfict_laststep &lt;&lt; ffict &lt;&lt; ABFGrid</span>
+<span class="lineNum">     605 </span><span class="lineCov">          6 :      &lt;&lt; CZARestimator;</span>
+<span class="lineNum">     606 </span><span class="lineCov">          6 :   out.close();</span>
+<a name="607"><span class="lineNum">     607 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span><span class="lineCov">          1 : void DynamicReferenceRestraining::load(const string &amp;filename) {</span>
+<span class="lineNum">     610 </span><span class="lineCov">          2 :   std::ifstream in;</span>
+<span class="lineNum">     611 </span>            :   long long int step;
+<span class="lineNum">     612 </span><span class="lineCov">          1 :   in.open(filename.c_str(), std::ios::binary);</span>
+<span class="lineNum">     613 </span><span class="lineCov">          1 :   log &lt;&lt; &quot;eABF/DRR: Read restart file: &quot; &lt;&lt; filename &lt;&lt; '\n';</span>
+<span class="lineNum">     614 </span>            :   boost::archive::binary_iarchive ia(in);
+<span class="lineNum">     615 </span><span class="lineCov">          5 :   ia &gt;&gt; step &gt;&gt; fict &gt;&gt; vfict &gt;&gt; vfict_laststep &gt;&gt; ffict &gt;&gt; ABFGrid &gt;&gt;</span>
+<span class="lineNum">     616 </span><span class="lineCov">          1 :      CZARestimator;</span>
+<span class="lineNum">     617 </span><span class="lineCov">          1 :   in.close();</span>
+<span class="lineNum">     618 </span><span class="lineCov">          1 :   log &lt;&lt; &quot;eABF/DRR: Restart at step: &quot; &lt;&lt; step &lt;&lt; '\n';</span>
+<span class="lineNum">     619 </span><span class="lineCov">          1 :   backupFile(filename);</span>
+<span class="lineNum">     620 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     621 </span>            : 
+<span class="lineNum">     622 </span><span class="lineCov">          1 : void DynamicReferenceRestraining::backupFile(const string &amp;filename) {</span>
+<span class="lineNum">     623 </span>            :   bool isSuccess = false;
+<span class="lineNum">     624 </span>            :   long int i = 0;
+<span class="lineNum">     625 </span><span class="lineCov">          3 :   while (!isSuccess) {</span>
+<span class="lineNum">     626 </span>            :     // If libstdc++ support C++17 we can simplify following code.
+<span class="lineNum">     627 </span><span class="lineCov">          4 :     const string bckname = &quot;bck.&quot; + filename + &quot;.&quot; + std::to_string(i);</span>
+<span class="lineNum">     628 </span><span class="lineCov">          1 :     if (is_file_exist(bckname.c_str())) {</span>
+<span class="lineNum">     629 </span><span class="lineNoCov">          0 :       ++i;</span>
+<span class="lineNum">     630 </span>            :     } else {
+<span class="lineNum">     631 </span><span class="lineCov">          1 :       log &lt;&lt; &quot;eABF/DRR: Backup original restart file to &quot; &lt;&lt; bckname &lt;&lt; '\n';</span>
+<span class="lineNum">     632 </span><span class="lineCov">          2 :       std::ifstream src(filename.c_str(), std::ios::binary);</span>
+<span class="lineNum">     633 </span><span class="lineCov">          2 :       std::ofstream dst(bckname.c_str(), std::ios::binary);</span>
+<span class="lineNum">     634 </span><span class="lineCov">          1 :       dst &lt;&lt; src.rdbuf();</span>
+<span class="lineNum">     635 </span><span class="lineCov">          1 :       src.close();</span>
+<span class="lineNum">     636 </span><span class="lineCov">          1 :       dst.close();</span>
+<span class="lineNum">     637 </span>            :       isSuccess = true;
+<span class="lineNum">     638 </span>            :     }
+<span class="lineNum">     639 </span>            :   }
+<span class="lineNum">     640 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     641 </span>            : 
+<a name="642"><span class="lineNum">     642 </span>            : // Copy from</a>
+<span class="lineNum">     643 </span>            : // stackoverflow(https://stackoverflow.com/questions/12774207/fastest-way-to-check-if-a-file-exist-using-standard-c-c11-c)
+<span class="lineNum">     644 </span><span class="lineCov">          1 : bool DynamicReferenceRestraining::is_file_exist(const char *fileName) {</span>
+<span class="lineNum">     645 </span><span class="lineCov">          2 :   std::ifstream infile(fileName);</span>
+<span class="lineNum">     646 </span><span class="lineCov">          1 :   return infile.good();</span>
+<a name="647"><span class="lineNum">     647 </span>            : }</a>
+<span class="lineNum">     648 </span>            : }
+<span class="lineNum">     649 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     650 </span>            : 
+<span class="lineNum">     651 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

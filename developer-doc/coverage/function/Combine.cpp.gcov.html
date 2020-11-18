@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - function/Combine.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">function</a> - Combine.cpp<span style="font-size: 80%;"> (source / <a href="Combine.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntryHi">93.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Function.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace function {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC FUNCTION COMBINE
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Calculate a polynomial combination of a set of other variables.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : The functional form of this function is
+<span class="lineNum">      37 </span>            : \f[
+<span class="lineNum">      38 </span>            : C=\sum_{i=1}^{N_{arg}} c_i (x_i-a_i)^{p_i}
+<span class="lineNum">      39 </span>            : \f]
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : The coefficients c, the parameters a and the powers p are provided as vectors.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : Notice that COMBINE is not able to predict which will be periodic domain
+<span class="lineNum">      44 </span>            : of the computed value automatically. The user is thus forced to specify it
+<span class="lineNum">      45 </span>            : explicitly. Use PERIODIC=NO if the resulting variable is not periodic,
+<span class="lineNum">      46 </span>            : and PERIODIC=A,B where A and B are the two boundaries if the resulting variable
+<span class="lineNum">      47 </span>            : is periodic.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \par Examples
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : The following input tells plumed to print the distance between atoms 3 and 5
+<span class="lineNum">      54 </span>            : its square (as computed from the x,y,z components) and the distance
+<span class="lineNum">      55 </span>            : again as computed from the square root of the square.
+<span class="lineNum">      56 </span>            : \plumedfile
+<span class="lineNum">      57 </span>            : DISTANCE LABEL=dist      ATOMS=3,5 COMPONENTS
+<span class="lineNum">      58 </span>            : COMBINE  LABEL=distance2 ARG=dist.x,dist.y,dist.z POWERS=2,2,2 PERIODIC=NO
+<span class="lineNum">      59 </span>            : COMBINE  LABEL=distance  ARG=distance2 POWERS=0.5 PERIODIC=NO
+<span class="lineNum">      60 </span>            : PRINT ARG=distance,distance2
+<span class="lineNum">      61 </span>            : \endplumedfile
+<span class="lineNum">      62 </span>            : (See also \ref PRINT and \ref DISTANCE).
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : The following input tells plumed to add a restraint on the
+<span class="lineNum">      65 </span>            : cube of a dihedral angle. Notice that since the angle has a
+<span class="lineNum">      66 </span>            : periodic domain
+<span class="lineNum">      67 </span>            : -pi,pi its cube has a domain -pi**3,pi**3.
+<span class="lineNum">      68 </span>            : \plumedfile
+<span class="lineNum">      69 </span>            : t: TORSION ATOMS=1,3,5,7
+<span class="lineNum">      70 </span>            : c: COMBINE ARG=t POWERS=3 PERIODIC=-31.0062766802998,31.0062766802998
+<span class="lineNum">      71 </span>            : RESTRAINT ARG=c KAPPA=10 AT=0
+<span class="lineNum">      72 </span>            : \endplumedfile
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : */
+<span class="lineNum">      77 </span>            : //+ENDPLUMEDOC
+<a name="78"><span class="lineNum">      78 </span>            : </a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">        369 : class Combine :</span>
+<span class="lineNum">      81 </span>            :   public Function
+<span class="lineNum">      82 </span>            : {
+<span class="lineNum">      83 </span>            :   bool normalize;
+<span class="lineNum">      84 </span>            :   std::vector&lt;double&gt; coefficients;
+<span class="lineNum">      85 </span>            :   std::vector&lt;double&gt; parameters;
+<span class="lineNum">      86 </span>            :   std::vector&lt;double&gt; powers;
+<span class="lineNum">      87 </span>            : public:
+<span class="lineNum">      88 </span>            :   explicit Combine(const ActionOptions&amp;);
+<span class="lineNum">      89 </span>            :   void calculate();
+<span class="lineNum">      90 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      91 </span>            : };
+<a name="92"><span class="lineNum">      92 </span>            : </a>
+<span class="lineNum">      93 </span>            : 
+<a name="94"><span class="lineNum">      94 </span><span class="lineCov">       6578 : PLUMED_REGISTER_ACTION(Combine,&quot;COMBINE&quot;)</span></a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">        127 : void Combine::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      97 </span><span class="lineCov">        127 :   Function::registerKeywords(keys);</span>
+<span class="lineNum">      98 </span><span class="lineCov">        381 :   keys.use(&quot;ARG&quot;); keys.use(&quot;PERIODIC&quot;);</span>
+<span class="lineNum">      99 </span><span class="lineCov">        635 :   keys.add(&quot;compulsory&quot;,&quot;COEFFICIENTS&quot;,&quot;1.0&quot;,&quot;the coefficients of the arguments in your function&quot;);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        635 :   keys.add(&quot;compulsory&quot;,&quot;PARAMETERS&quot;,&quot;0.0&quot;,&quot;the parameters of the arguments in your function&quot;);</span>
+<span class="lineNum">     101 </span><span class="lineCov">        635 :   keys.add(&quot;compulsory&quot;,&quot;POWERS&quot;,&quot;1.0&quot;,&quot;the powers to which you are raising each of the arguments in your function&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">        381 :   keys.addFlag(&quot;NORMALIZE&quot;,false,&quot;normalize all the coefficents so that in total they are equal to one&quot;);</span>
+<a name="103"><span class="lineNum">     103 </span><span class="lineCov">        127 : }</span></a>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">        126 : Combine::Combine(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     106 </span>            :   Action(ao),
+<span class="lineNum">     107 </span>            :   Function(ao),
+<span class="lineNum">     108 </span>            :   normalize(false),
+<span class="lineNum">     109 </span>            :   coefficients(getNumberOfArguments(),1.0),
+<span class="lineNum">     110 </span>            :   parameters(getNumberOfArguments(),0.0),
+<span class="lineNum">     111 </span><span class="lineCov">        513 :   powers(getNumberOfArguments(),1.0)</span>
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineCov">        252 :   parseVector(&quot;COEFFICIENTS&quot;,coefficients);</span>
+<span class="lineNum">     114 </span><span class="lineCov">        125 :   if(coefficients.size()!=static_cast&lt;unsigned&gt;(getNumberOfArguments()))</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :     error(&quot;Size of COEFFICIENTS array should be the same as number for arguments&quot;);</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">        250 :   parseVector(&quot;PARAMETERS&quot;,parameters);</span>
+<span class="lineNum">     118 </span><span class="lineCov">        124 :   if(parameters.size()!=static_cast&lt;unsigned&gt;(getNumberOfArguments()))</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     error(&quot;Size of PARAMETERS array should be the same as number for arguments&quot;);</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">        248 :   parseVector(&quot;POWERS&quot;,powers);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        123 :   if(powers.size()!=static_cast&lt;unsigned&gt;(getNumberOfArguments()))</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :     error(&quot;Size of POWERS array should be the same as number for arguments&quot;);</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">        246 :   parseFlag(&quot;NORMALIZE&quot;,normalize);</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">        123 :   if(normalize) {</span>
+<span class="lineNum">     128 </span>            :     double n=0.0;
+<span class="lineNum">     129 </span><span class="lineCov">         46 :     for(unsigned i=0; i&lt;coefficients.size(); i++) n+=coefficients[i];</span>
+<span class="lineNum">     130 </span><span class="lineCov">         46 :     for(unsigned i=0; i&lt;coefficients.size(); i++) coefficients[i]*=(1.0/n);</span>
+<span class="lineNum">     131 </span>            :   }
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">        123 :   addValueWithDerivatives();</span>
+<span class="lineNum">     134 </span><span class="lineCov">        123 :   checkRead();</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">        123 :   log.printf(&quot;  with coefficients:&quot;);</span>
+<span class="lineNum">     137 </span><span class="lineCov">        990 :   for(unsigned i=0; i&lt;coefficients.size(); i++) log.printf(&quot; %f&quot;,coefficients[i]);</span>
+<span class="lineNum">     138 </span><span class="lineCov">        123 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     139 </span><span class="lineCov">        123 :   log.printf(&quot;  with parameters:&quot;);</span>
+<span class="lineNum">     140 </span><span class="lineCov">        990 :   for(unsigned i=0; i&lt;parameters.size(); i++) log.printf(&quot; %f&quot;,parameters[i]);</span>
+<span class="lineNum">     141 </span><span class="lineCov">        123 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     142 </span><span class="lineCov">        123 :   log.printf(&quot;  and powers:&quot;);</span>
+<span class="lineNum">     143 </span><span class="lineCov">        990 :   for(unsigned i=0; i&lt;powers.size(); i++) log.printf(&quot; %f&quot;,powers[i]);</span>
+<span class="lineNum">     144 </span><span class="lineCov">        123 :   log.printf(&quot;\n&quot;);</span>
+<a name="145"><span class="lineNum">     145 </span><span class="lineCov">        123 : }</span></a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">       5140 : void Combine::calculate() {</span>
+<span class="lineNum">     148 </span><span class="lineCov">       5140 :   double combine=0.0;</span>
+<span class="lineNum">     149 </span><span class="lineCov">      35846 :   for(unsigned i=0; i&lt;coefficients.size(); ++i) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">       8522 :     double cv = (getArgument(i)-parameters[i]);</span>
+<span class="lineNum">     151 </span><span class="lineCov">      17044 :     combine+=coefficients[i]*pow(cv,powers[i]);</span>
+<span class="lineNum">     152 </span><span class="lineCov">      17044 :     setDerivative(i,coefficients[i]*powers[i]*pow(cv,powers[i]-1.0));</span>
+<span class="lineNum">     153 </span>            :   };
+<span class="lineNum">     154 </span><span class="lineCov">       5140 :   setValue(combine);</span>
+<span class="lineNum">     155 </span><span class="lineCov">       5140 : }</span>
+<a name="156"><span class="lineNum">     156 </span>            : </a>
+<span class="lineNum">     157 </span>            : }
+<span class="lineNum">     158 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

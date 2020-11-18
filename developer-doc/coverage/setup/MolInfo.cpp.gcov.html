@@ -1,0 +1,251 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - setup/MolInfo.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">setup</a> - MolInfo.cpp<span style="font-size: 80%;"> (source / <a href="MolInfo.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace PLMD {
+<span class="lineNum">      26 </span>            : namespace setup {
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : //+PLUMEDOC TOPOLOGY MOLINFO
+<span class="lineNum">      29 </span>            : /*
+<span class="lineNum">      30 </span>            : This command is used to provide information on the molecules that are present in your system.
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : The information on the molecules in your system can either be provided in the form of a pdb file
+<span class="lineNum">      33 </span>            : or as a set of lists of atoms that describe the various chains in your system. If a pdb file
+<span class="lineNum">      34 </span>            : is used plumed the MOLINFO command will endeavor to recognize the various chains and residues that
+<span class="lineNum">      35 </span>            : make up the molecules in your system using the chainIDs and resnumbers from the pdb file. You can
+<span class="lineNum">      36 </span>            : then use this information in later commands to specify atom lists in terms residues.  For example
+<span class="lineNum">      37 </span>            : using this command you can find the backbone atoms in your structure automatically.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \warning
+<span class="lineNum">      40 </span>            : Please be aware that the PDB parser in plumed is far from perfect. You should thus check the log file
+<span class="lineNum">      41 </span>            : and examine what plumed is actually doing whenenver you use the MOLINFO action.
+<span class="lineNum">      42 </span>            : Also make sure that the atoms are listed in the pdb with the correct order.
+<span class="lineNum">      43 </span>            : If you are using gromacs, the safest way is to use reference pdb file
+<span class="lineNum">      44 </span>            : generated with `gmx editconf -f topol.tpr -o reference.pdb`.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : More information of the PDB parser implemented in PLUMED can be found \ref pdbreader &quot;at this page&quot;.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : Providing `MOLTYPE=protein`, `MOLTYPE=rna`, or `MOLTYPE=dna` will instruct plumed to look
+<span class="lineNum">      49 </span>            : for known residues from these three types of molecule. In other words, this is available for
+<span class="lineNum">      50 </span>            : historical reasons and to allow future extensions where alternative lists will be provided.
+<span class="lineNum">      51 </span>            : As of now, you can just ignore this keyoword.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : Using MOLINFO with a protein's or nucleic acid's pdb extends the possibility of atoms selection using the @ special
+<span class="lineNum">      54 </span>            : symbol in the form
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \verbatim
+<span class="lineNum">      57 </span>            : @&quot;definition&quot;-chainresiduenum
+<span class="lineNum">      58 </span>            : @&quot;definition&quot;-residuenum
+<span class="lineNum">      59 </span>            : \endverbatim
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : So for example
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : \verbatim
+<span class="lineNum">      64 </span>            : @psi-1 will select the atoms defining the psi torsion of residue 1
+<span class="lineNum">      65 </span>            : @psi-C1 will define the same torsion for residue 1 of chain C.
+<span class="lineNum">      66 </span>            : \endverbatim
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : In the following are listed the current available definitions:
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : For protein residues, the following groups are available:
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : \verbatim
+<span class="lineNum">      73 </span>            : @phi-#
+<span class="lineNum">      74 </span>            : @psi-#
+<span class="lineNum">      75 </span>            : @omega-#
+<span class="lineNum">      76 </span>            : @chi1-#
+<span class="lineNum">      77 </span>            : \endverbatim
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : that select the appropriate atoms that define each dihedral angle for residue #.
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : For DNA or RNA residues, the following groups are available:
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : \verbatim
+<span class="lineNum">      84 </span>            : # quadruplets for backbone dihedral angles
+<span class="lineNum">      85 </span>            : @alpha-#
+<span class="lineNum">      86 </span>            : @beta-#
+<span class="lineNum">      87 </span>            : @gamma-#
+<span class="lineNum">      88 </span>            : @delta-#
+<span class="lineNum">      89 </span>            : @epsilon-#
+<span class="lineNum">      90 </span>            : @zeta-#
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : # quadruplets for sugar dihedral angles
+<span class="lineNum">      93 </span>            : @v0-#
+<span class="lineNum">      94 </span>            : @v1-#
+<span class="lineNum">      95 </span>            : @v2-#
+<span class="lineNum">      96 </span>            : @v3-#
+<span class="lineNum">      97 </span>            : @v4-#
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : # quadruplet corresponding to the chi torsional angle
+<span class="lineNum">     100 </span>            : @chi-#
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : # backbone, sugar, and base heavy atoms
+<span class="lineNum">     103 </span>            : @back-#
+<span class="lineNum">     104 </span>            : @sugar-#
+<span class="lineNum">     105 </span>            : @base-#
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : # ordered triplets of atoms on the 6-membered ring of nucleobases
+<span class="lineNum">     108 </span>            : # namely:
+<span class="lineNum">     109 </span>            : #  C2/C4/C6 for pyrimidines
+<span class="lineNum">     110 </span>            : #  C2/C6/C4 for purines
+<span class="lineNum">     111 </span>            : @lcs-#
+<span class="lineNum">     112 </span>            : \endverbatim
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : Notice that `zeta` and `epsilon` groups should not be used on 3' end residue and `alpha` and `beta`
+<span class="lineNum">     115 </span>            : should not be used on 5' end residue.
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : Furthermore it is also possible to pick single atoms using the syntax
+<span class="lineNum">     118 </span>            : `@atom-chainresiduenum` or `@atom-residuenum`.
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : \warning If a residue-chain is repeated twice in the reference pdb only the first entry will be selected.
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : \bug At the moment the HA1 atoms in a GLY residues are treated as if they are the CB atoms. This may or
+<span class="lineNum">     123 </span>            : may not be true - GLY is problematic for secondary structure residues as it is achiral.
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : \bug If you use WHOLEMOLECULES RESIDUES=1-10 for a 18 amino acid protein
+<span class="lineNum">     126 </span>            : ( 18 amino acids + 2 terminal groups = 20 residues ) the code will fail as it will not be able to
+<span class="lineNum">     127 </span>            : interpret terminal residue 1.
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : \par Examples
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : In the following example the MOLINFO command is used to provide the information on which atoms
+<span class="lineNum">     132 </span>            : are in the backbone of a protein to the ALPHARMSD CV.
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : \plumedfile
+<span class="lineNum">     135 </span>            : MOLINFO STRUCTURE=reference.pdb
+<span class="lineNum">     136 </span>            : ALPHARMSD RESIDUES=all TYPE=DRMSD LESS_THAN={RATIONAL R_0=0.08 NN=8 MM=12} LABEL=a
+<span class="lineNum">     137 </span>            : \endplumedfile
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : The following example prints the distance corresponding to the hydrogen bonds
+<span class="lineNum">     140 </span>            : in a GC Watson-Crick pair.
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : \plumedfile
+<span class="lineNum">     143 </span>            : MOLINFO STRUCTURE=reference.pdb
+<span class="lineNum">     144 </span>            : hb1: DISTANCE ATOMS=@N2-1,@O2-14
+<span class="lineNum">     145 </span>            : hb2: DISTANCE ATOMS=@N1-1,@N3-14
+<span class="lineNum">     146 </span>            : hb3: DISTANCE ATOMS=@O6-1,@N4-14
+<span class="lineNum">     147 </span>            : PRINT ARG=hb1,hb2,hb3
+<span class="lineNum">     148 </span>            : \endplumedfile
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            : This example use MOLINFO to calculate torsions angles
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : \plumedfile
+<span class="lineNum">     153 </span>            : MOLINFO MOLTYPE=protein STRUCTURE=myprotein.pdb
+<span class="lineNum">     154 </span>            : t1: TORSION ATOMS=@phi-3
+<span class="lineNum">     155 </span>            : t2: TORSION ATOMS=@psi-4
+<span class="lineNum">     156 </span>            : PRINT ARG=t1,t2 FILE=colvar STRIDE=10
+<span class="lineNum">     157 </span>            : \endplumedfile
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : */
+<span class="lineNum">     160 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : /*
+<span class="lineNum">     164 </span>            : This action is defined in core/ as it is used by other actions.
+<span class="lineNum">     165 </span>            : Anyway, it is registered here, so that excluding this module from
+<span class="lineNum">     166 </span>            : compilation will exclude it from plumed.
+<span class="lineNum">     167 </span>            : */
+<span class="lineNum">     168 </span>            : 
+<a name="169"><span class="lineNum">     169 </span>            : typedef PLMD::SetupMolInfo MolInfo;</a>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">       6507 : PLUMED_REGISTER_ACTION(MolInfo,&quot;MOLINFO&quot;)</span>
+<a name="172"><span class="lineNum">     172 </span>            : </a>
+<span class="lineNum">     173 </span>            : }
+<span class="lineNum">     174 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

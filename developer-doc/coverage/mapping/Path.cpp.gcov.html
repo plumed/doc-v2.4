@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - mapping/Path.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">mapping</a> - Path.cpp<span style="font-size: 80%;"> (source / <a href="Path.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryHi">94.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;PathBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : //+PLUMEDOC COLVAR PATH
+<span class="lineNum">      26 </span>            : /*
+<span class="lineNum">      27 </span>            : Path collective variables with a more flexible framework for the distance metric being used.
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : The Path Collective Variables developed by Branduardi and co-workers \cite brand07 allow one
+<span class="lineNum">      30 </span>            : to compute the progress along a high-dimensional path and the distance from the high-dimensional
+<span class="lineNum">      31 </span>            : path.  The progress along the path (s) is computed using:
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : \f[
+<span class="lineNum">      34 </span>            : s = \frac{ \sum_{i=1}^N i \exp( -\lambda R[X - X_i] ) }{ \sum_{i=1}^N \exp( -\lambda R[X - X_i] ) }
+<span class="lineNum">      35 </span>            : \f]
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : while the distance from the path (z) is measured using:
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \f[
+<span class="lineNum">      40 </span>            : z = -\frac{1}{\lambda} \ln\left[ \sum_{i=1}^N \exp( -\lambda R[X - X_i] ) \right]
+<span class="lineNum">      41 </span>            : \f]
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : In these expressions \f$N\f$ high-dimensional frames (\f$X_i\f$) are used to describe the path in the high-dimensional
+<span class="lineNum">      44 </span>            : space. The two expressions above are then functions of the distances from each of the high-dimensional frames \f$R[X - X_i]\f$.
+<span class="lineNum">      45 </span>            : Within PLUMED there are multiple ways to define the distance from a high-dimensional configuration.  You could calculate
+<span class="lineNum">      46 </span>            : the RMSD distance or you could calculate the ammount by which a set of collective variables change.  As such this implementation
+<span class="lineNum">      47 </span>            : of the path cv allows one to use all the difference distance metrics that are discussed in \ref dists. This is as opposed to
+<span class="lineNum">      48 </span>            : the alternative implementation of path (\ref PATHMSD) which is a bit faster but which only allows one to use the RMSD distance.
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : The \f$s\f$ and \f$z\f$ variables are calculated using the above formulas by default.  However, there is an alternative method
+<span class="lineNum">      51 </span>            : of calculating these collective variables, which is detailed in \cite bernd-path.  This alternative method uses the tools of
+<span class="lineNum">      52 </span>            : geometry (as opposed to algebra, which is used in the equations above).  In this alternative formula the progress along the path
+<span class="lineNum">      53 </span>            : \f$s\f$ is calculated using:
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : \f[
+<span class="lineNum">      56 </span>            : s = i_2 + \textrm{sign}(i_2-i_1) \frac{ \sqrt{( \mathbf{v}_1\cdot\mathbf{v}_2 )^2 - |\mathbf{v}_3|^2(|\mathbf{v}_1|^2 - |\mathbf{v}_2|^2) } }{2|\mathbf{v}_3|^2} - \frac{\mathbf{v}_1\cdot\mathbf{v}_3 - |\mathbf{v}_3|^2}{2|\mathbf{v}_3|^2}
+<span class="lineNum">      57 </span>            : \f]
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : where \f$\mathbf{v}_1\f$ and \f$\mathbf{v}_3\f$ are the vectors connecting the current position to the closest and second closest node of the path,
+<span class="lineNum">      60 </span>            : respectfully and \f$i_1\f$ and \f$i_2\f$ are the projections of the closest and second closest frames of the path. \f$\mathbf{v}_2\f$, meanwhile, is the
+<span class="lineNum">      61 </span>            : vector connecting the closest frame to the second closest frame.  The distance from the path, \f$z\f$ is calculated using:
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : \f[
+<span class="lineNum">      64 </span>            : z = \sqrt{ \left[ |\mathbf{v}_1|^2 - |\mathbf{v}_2| \left( \frac{ \sqrt{( \mathbf{v}_1\cdot\mathbf{v}_2 )^2 - |\mathbf{v}_3|^2(|\mathbf{v}_1|^2 - |\mathbf{v}_2|^2) } }{2|\mathbf{v}_3|^2} - \frac{\mathbf{v}_1\cdot\mathbf{v}_3 - |\mathbf{v}_3|^2}{2|\mathbf{v}_3|^2} \right) \right]^2 }
+<span class="lineNum">      65 </span>            : \f]
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : The symbols here are as they were for \f$s\f$.  If you would like to use these equations to calculate \f$s\f$ and \f$z\f$ then you should use the GPATH flag.
+<span class="lineNum">      68 </span>            : The values of \f$s\f$ and \f$z\f$ can then be referenced using the gspath and gzpath labels.
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : \par Examples
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : In the example below the path is defined using RMSD distance from frames.
+<span class="lineNum">      73 </span>            : The reference frames in the path are defined in the pdb file.  In this frame
+<span class="lineNum">      74 </span>            : each configuration in the path is separated by a line containing just the word END.
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : \plumedfile
+<span class="lineNum">      77 </span>            : p1: PATH REFERENCE=file.pdb TYPE=OPTIMAL LAMBDA=500.0
+<span class="lineNum">      78 </span>            : PRINT ARG=p1.sss,p1.zzz STRIDE=1 FILE=colvar FMT=%8.4f
+<span class="lineNum">      79 </span>            : \endplumedfile
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : In the example below the path is defined using the values of two torsional angles (t1 and t2).
+<span class="lineNum">      82 </span>            : In addition, the \f$s\f$ and \f$z\f$ are calculated using the geometric expressions described
+<span class="lineNum">      83 </span>            : above rather than the alegebraic expressions that are used by default.
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : \plumedfile
+<span class="lineNum">      86 </span>            : t1: TORSION ATOMS=5,7,9,15
+<span class="lineNum">      87 </span>            : t2: TORSION ATOMS=7,9,15,17
+<span class="lineNum">      88 </span>            : pp: PATH TYPE=EUCLIDEAN REFERENCE=epath.pdb GPATH NOSPATH NOZPATH
+<span class="lineNum">      89 </span>            : PRINT ARG=pp.* FILE=colvar
+<span class="lineNum">      90 </span>            : \endplumedfile
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : Notice that the LAMBDA parameter is not required here as we are not calculating \f$s\f$ and \f$s\f$
+<span class="lineNum">      93 </span>            : using the algebraic formulae defined earlier.  The positions of the frames in the path are defined
+<span class="lineNum">      94 </span>            : in the file epath.pdb.  An extract from this file looks as shown below.
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : \verbatim
+<span class="lineNum">      97 </span>            : REMARK ARG=t1,t2 t1=-4.25053  t2=3.88053
+<span class="lineNum">      98 </span>            : END
+<span class="lineNum">      99 </span>            : REMARK ARG=t1,t2 t1=-4.11     t2=3.75
+<span class="lineNum">     100 </span>            : END
+<span class="lineNum">     101 </span>            : REMARK ARG=t1,t2 t1=-3.96947  t2=3.61947
+<span class="lineNum">     102 </span>            : END
+<span class="lineNum">     103 </span>            : \endverbatim
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : The remarks in this pdb file tell PLUMED the labels that are being used to define the position in the
+<span class="lineNum">     106 </span>            : high dimensional space and the values that these arguments have at each point on the path.
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : The following input instructs PLUMED to calculate the values of the path collective variables.  The frames that make up this
+<span class="lineNum">     109 </span>            : path are defined in the file all.pdb and all distances are measured using the OPTIMAL metric that is discussed in the manual
+<span class="lineNum">     110 </span>            : page on \ref RMSD.
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : \plumedfile
+<span class="lineNum">     113 </span>            : p2: PATH REFERENCE=all.pdb LAMBDA=69087
+<span class="lineNum">     114 </span>            : PRINT ARG=p2.spath,p2.zpath STRIDE=1 FILE=colvar
+<span class="lineNum">     115 </span>            : \endplumedfile
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : If you wish to use collective variable values in the definition of your path you would use an input file with something like this:
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : \plumedfile
+<span class="lineNum">     120 </span>            : d1: DISTANCE ATOMS=1,2
+<span class="lineNum">     121 </span>            : d2: DISTANCE ATOMS=3,4a
+<span class="lineNum">     122 </span>            : p2: PATH REFERENCE=mypath.pdb LAMBDA=2 TYPE=EUCLIDEAN
+<span class="lineNum">     123 </span>            : PRINT ARG=p2.spath,p2.zpath STRIDE=1 FILE=colvar
+<span class="lineNum">     124 </span>            : \endplumedfile
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : The corresponding pdb file containing the  definitions of the frames in the path would then look like this:
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : \verbatim
+<span class="lineNum">     129 </span>            : DESCRIPTION: a defintiion of a PATH
+<span class="lineNum">     130 </span>            : REMARK TYPE=EUCLIDEAN
+<span class="lineNum">     131 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">     132 </span>            : REMARK d1=1.0 d2=1.0
+<span class="lineNum">     133 </span>            : END
+<span class="lineNum">     134 </span>            : REMARK TYPE=EUCLIDEAN
+<span class="lineNum">     135 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">     136 </span>            : REMARK d1=2.0 d2=2.0
+<span class="lineNum">     137 </span>            : END
+<span class="lineNum">     138 </span>            : \endverbatim
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : For each frame in the path you must specify the arguments that should be used to calculate the distance between the instantaneous configuration
+<span class="lineNum">     141 </span>            : of the system and the reference configurations together with the values that these arguments take in each of the reference configurations.
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : */
+<span class="lineNum">     144 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : namespace PLMD {
+<a name="147"><span class="lineNum">     147 </span>            : namespace mapping {</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         12 : class Path : public PathBase {</span>
+<span class="lineNum">     150 </span>            : public:
+<span class="lineNum">     151 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     152 </span>            :   explicit Path(const ActionOptions&amp;);
+<a name="153"><span class="lineNum">     153 </span>            : };</a>
+<span class="lineNum">     154 </span>            : 
+<a name="155"><span class="lineNum">     155 </span><span class="lineCov">       6458 : PLUMED_REGISTER_ACTION(Path,&quot;PATH&quot;)</span></a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">          7 : void Path::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     158 </span><span class="lineCov">         14 :   PathBase::registerKeywords( keys ); keys.remove(&quot;PROPERTY&quot;);</span>
+<span class="lineNum">     159 </span><span class="lineCov">         21 :   keys.addFlag(&quot;NOSPATH&quot;,false,&quot;do not calculate the spath position&quot;);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         21 :   keys.remove(&quot;LOWMEM&quot;); keys.use(&quot;GPATH&quot;);</span>
+<a name="161"><span class="lineNum">     161 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">          6 : Path::Path(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     164 </span>            :   Action(ao),
+<span class="lineNum">     165 </span><span class="lineCov">          6 :   PathBase(ao)</span>
+<span class="lineNum">     166 </span>            : {
+<span class="lineNum">     167 </span>            :   setLowMemOption( true );
+<span class="lineNum">     168 </span><span class="lineCov">         12 :   bool nos; parseFlag(&quot;NOSPATH&quot;,nos);</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   std::string empty;
+<span class="lineNum">     171 </span><span class="lineCov">          6 :   if(!nos) {</span>
+<span class="lineNum">     172 </span><span class="lineCov">         12 :     if( getPropertyIndex(&quot;spath&quot;)!=0 || getNumberOfProperties()&gt;1 ) {</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :       error(&quot;paths only work when there is a single property called sss being calculated&quot;);</span>
+<span class="lineNum">     174 </span>            :     }
+<span class="lineNum">     175 </span><span class="lineCov">          4 :     if( getLambda()==0 ) error(&quot;you must set LAMBDA parameter in order to calculate spath position.  Use LAMBDA/NOSPATH keyword&quot;);</span>
+<span class="lineNum">     176 </span>            :     empty=&quot;LABEL=spath&quot;;
+<span class="lineNum">     177 </span><span class="lineCov">          8 :     addVessel(&quot;SPATH&quot;,empty,0);</span>
+<span class="lineNum">     178 </span>            :   }
+<span class="lineNum">     179 </span><span class="lineCov">          6 :   readVesselKeywords();</span>
+<span class="lineNum">     180 </span><span class="lineCov">          6 :   checkRead();</span>
+<span class="lineNum">     181 </span><span class="lineCov">          6 : }</span>
+<a name="182"><span class="lineNum">     182 </span>            : </a>
+<span class="lineNum">     183 </span>            : }
+<span class="lineNum">     184 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

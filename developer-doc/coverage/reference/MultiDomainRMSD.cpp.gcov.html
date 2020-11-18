@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - reference/MultiDomainRMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">reference</a> - MultiDomainRMSD.cpp<span style="font-size: 80%;"> (source / <a href="MultiDomainRMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">91</td>
+            <td class="headerCovTableEntry">105</td>
+            <td class="headerCovTableEntryMed">86.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryMed">77.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiDomainRMSD.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;SingleDomainRMSD.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;MetricRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      26 </span>            : 
+<a name="27"><span class="lineNum">      27 </span>            : namespace PLMD {</a>
+<span class="lineNum">      28 </span>            : 
+<a name="29"><span class="lineNum">      29 </span><span class="lineCov">       6459 : PLUMED_REGISTER_METRIC(MultiDomainRMSD,&quot;MULTI&quot;)</span></a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">          7 : MultiDomainRMSD::MultiDomainRMSD( const ReferenceConfigurationOptions&amp; ro ):</span>
+<span class="lineNum">      32 </span>            :   ReferenceConfiguration(ro),
+<span class="lineNum">      33 </span>            :   ReferenceAtoms(ro),
+<span class="lineNum">      34 </span><span class="lineCov">          7 :   ftype(ro.getMultiRMSDType())</span>
+<span class="lineNum">      35 </span>            : {
+<a name="36"><span class="lineNum">      36 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">         21 : MultiDomainRMSD::~MultiDomainRMSD() {</span>
+<span class="lineNum">      39 </span><span class="lineCov">         56 :   for(unsigned i=0; i&lt;domains.size(); ++i) delete domains[i];</span>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">         14 : }</span></a>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">          7 : void MultiDomainRMSD::read( const PDB&amp; pdb ) {</span>
+<span class="lineNum">      43 </span><span class="lineCov">          7 :   unsigned nblocks =  pdb.getNumberOfAtomBlocks();</span>
+<span class="lineNum">      44 </span><span class="lineCov">          7 :   if( nblocks&lt;2 ) error(&quot;multidomain RMSD only has one block of atoms&quot;);</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   std::vector&lt;Vector&gt; positions; std::vector&lt;double&gt; align, displace;
+<span class="lineNum">      47 </span><span class="lineCov">         14 :   std::string num; blocks.resize( nblocks+1 ); blocks[0]=0;</span>
+<span class="lineNum">      48 </span><span class="lineCov">         49 :   for(unsigned i=0; i&lt;nblocks; ++i) blocks[i+1]=pdb.getAtomBlockEnds()[i];</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">          7 :   double lower=0.0, upper=std::numeric_limits&lt;double&gt;::max( );</span>
+<span class="lineNum">      51 </span><span class="lineCov">         14 :   parse(&quot;LOWER_CUTOFF&quot;,lower,true);</span>
+<span class="lineNum">      52 </span><span class="lineCov">         14 :   parse(&quot;UPPER_CUTOFF&quot;,upper,true);</span>
+<span class="lineNum">      53 </span><span class="lineCov">         14 :   bool nopbc=false; parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">         35 :   for(unsigned i=1; i&lt;=nblocks; ++i) {</span>
+<span class="lineNum">      56 </span><span class="lineCov">         14 :     Tools::convert(i,num);</span>
+<span class="lineNum">      57 </span><span class="lineCov">         28 :     if( ftype==&quot;RMSD&quot; ) {</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :       parse(&quot;TYPE&quot;+num, ftype );</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :       parse(&quot;LOWER_CUTOFF&quot;+num,lower,true);</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :       parse(&quot;UPPER_CUTOFF&quot;+num,upper,true);</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :       nopbc=false; parseFlag(&quot;NOPBC&quot;+num,nopbc);</span>
+<span class="lineNum">      62 </span>            :     }
+<span class="lineNum">      63 </span><span class="lineCov">         28 :     domains.push_back( metricRegister().create&lt;SingleDomainRMSD&gt;( ftype ) );</span>
+<span class="lineNum">      64 </span><span class="lineCov">         42 :     positions.resize( blocks[i] - blocks[i-1] );</span>
+<span class="lineNum">      65 </span><span class="lineCov">         28 :     align.resize( blocks[i] - blocks[i-1] );</span>
+<span class="lineNum">      66 </span><span class="lineCov">         28 :     displace.resize( blocks[i] - blocks[i-1] );</span>
+<span class="lineNum">      67 </span>            :     unsigned n=0;
+<span class="lineNum">      68 </span><span class="lineCov">        174 :     for(unsigned j=blocks[i-1]; j&lt;blocks[i]; ++j) {</span>
+<span class="lineNum">      69 </span><span class="lineCov">        219 :       positions[n]=pdb.getPositions()[j];</span>
+<span class="lineNum">      70 </span><span class="lineCov">        146 :       align[n]=pdb.getOccupancy()[j];</span>
+<span class="lineNum">      71 </span><span class="lineCov">        146 :       displace[n]=pdb.getBeta()[j];</span>
+<span class="lineNum">      72 </span><span class="lineCov">         73 :       n++;</span>
+<span class="lineNum">      73 </span>            :     }
+<span class="lineNum">      74 </span><span class="lineCov">         14 :     domains[i-1]-&gt;setBoundsOnDistances( !nopbc, lower, upper );</span>
+<span class="lineNum">      75 </span><span class="lineCov">         14 :     domains[i-1]-&gt;setReferenceAtoms( positions, align, displace );</span>
+<span class="lineNum">      76 </span><span class="lineCov">         14 :     domains[i-1]-&gt;setupRMSDObject();</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">         28 :     double ww=0; parse(&quot;WEIGHT&quot;+num, ww, true );</span>
+<span class="lineNum">      79 </span><span class="lineCov">         28 :     if( ww==0 ) weights.push_back( 1.0 );</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     else weights.push_back( ww );</span>
+<span class="lineNum">      81 </span>            :   }
+<span class="lineNum">      82 </span>            :   // And set the atom numbers for this object
+<span class="lineNum">      83 </span><span class="lineCov">          7 :   setAtomNumbers( pdb.getAtomNumbers() );</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 : void MultiDomainRMSD::setReferenceAtoms( const std::vector&lt;Vector&gt;&amp; conf, const std::vector&lt;double&gt;&amp; align_in, const std::vector&lt;double&gt;&amp; displace_in ) {</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :   plumed_error();</span>
+<a name="88"><span class="lineNum">      88 </span>            : }</a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">         37 : double MultiDomainRMSD::calculate( const std::vector&lt;Vector&gt;&amp; pos, const Pbc&amp; pbc, ReferenceValuePack&amp; myder, const bool&amp; squared ) const {</span>
+<span class="lineNum">      91 </span><span class="lineCov">        111 :   double totd=0.; Tensor tvirial; std::vector&lt;Vector&gt; mypos; MultiValue tvals( 1, 3*pos.size()+9 );</span>
+<span class="lineNum">      92 </span><span class="lineCov">         74 :   ReferenceValuePack tder( 0, getNumberOfAtoms(), tvals ); myder.clear();</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">        222 :   for(unsigned i=0; i&lt;domains.size(); ++i) {</span>
+<span class="lineNum">      95 </span>            :     // Must extract appropriate positions here
+<span class="lineNum">      96 </span><span class="lineCov">        222 :     mypos.resize( blocks[i+1] - blocks[i] );</span>
+<span class="lineNum">      97 </span><span class="lineCov">        118 :     if( myder.calcUsingPCAOption() ) domains[i]-&gt;setupPCAStorage( tder );</span>
+<span class="lineNum">      98 </span><span class="lineCov">       1285 :     unsigned n=0; for(unsigned j=blocks[i]; j&lt;blocks[i+1]; ++j) { tder.setAtomIndex(n,j); mypos[n]=pos[j]; n++; }</span>
+<span class="lineNum">      99 </span><span class="lineCov">       1211 :     for(unsigned k=n; k&lt;getNumberOfAtoms(); ++k) tder.setAtomIndex(k,3*pos.size()+10);</span>
+<span class="lineNum">     100 </span>            :     // This actually does the calculation
+<span class="lineNum">     101 </span><span class="lineCov">        148 :     totd += weights[i]*domains[i]-&gt;calculate( mypos, pbc, tder, true );</span>
+<span class="lineNum">     102 </span>            :     // Now merge the derivative
+<span class="lineNum">     103 </span><span class="lineCov">         74 :     myder.copyScaledDerivatives( 0, weights[i], tvals );</span>
+<span class="lineNum">     104 </span>            :     // If PCA copy PCA stuff
+<span class="lineNum">     105 </span><span class="lineCov">         74 :     if( myder.calcUsingPCAOption() ) {</span>
+<span class="lineNum">     106 </span>            :       unsigned n=0;
+<span class="lineNum">     107 </span><span class="lineCov">         66 :       if( tder.centeredpos.size()&gt;0 ) myder.rot[i]=tder.rot[0];</span>
+<span class="lineNum">     108 </span><span class="lineCov">        396 :       for(unsigned j=blocks[i]; j&lt;blocks[i+1]; ++j) {</span>
+<span class="lineNum">     109 </span><span class="lineCov">        462 :         myder.displacement[j]=weights[i]*tder.displacement[n];  // Multiplication by weights here ensures that normalisation is done correctly</span>
+<span class="lineNum">     110 </span><span class="lineCov">        154 :         if( tder.centeredpos.size()&gt;0 ) {</span>
+<span class="lineNum">     111 </span><span class="lineCov">         77 :           myder.centeredpos[j]=tder.centeredpos[n];</span>
+<span class="lineNum">     112 </span><span class="lineCov">       1001 :           for(unsigned p=0; p&lt;3; ++p) for(unsigned q=0; q&lt;3; ++q) myder.DRotDPos(p,q)[j]=tder.DRotDPos(p,q)[n];</span>
+<span class="lineNum">     113 </span>            :         }
+<span class="lineNum">     114 </span><span class="lineCov">        154 :         n++;</span>
+<span class="lineNum">     115 </span>            :       }
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span>            :     // Make sure virial status is set correctly in output derivative pack
+<span class="lineNum">     118 </span>            :     // This is only done here so I do this by using class friendship
+<span class="lineNum">     119 </span><span class="lineCov">         74 :     if( tder.virialWasSet() ) myder.boxWasSet=true;</span>
+<span class="lineNum">     120 </span>            :   }
+<span class="lineNum">     121 </span><span class="lineCov">         37 :   if( !myder.updateComplete() ) myder.updateDynamicLists();</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">         37 :   if( !squared ) {</span>
+<span class="lineNum">     124 </span><span class="lineCov">         15 :     totd=sqrt(totd); double xx=0.5/totd;</span>
+<span class="lineNum">     125 </span><span class="lineCov">         15 :     myder.scaleAllDerivatives( xx );</span>
+<span class="lineNum">     126 </span>            :   }
+<span class="lineNum">     127 </span><span class="lineCov">         37 :   return totd;</span>
+<a name="128"><span class="lineNum">     128 </span>            : }</a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">         22 : double MultiDomainRMSD::calc( const std::vector&lt;Vector&gt;&amp; pos, const Pbc&amp; pbc, const std::vector&lt;Value*&gt;&amp; vals, const std::vector&lt;double&gt;&amp; arg,</span>
+<span class="lineNum">     131 </span>            :                               ReferenceValuePack&amp; myder, const bool&amp; squared ) const {
+<span class="lineNum">     132 </span>            :   plumed_dbg_assert( vals.size()==0 &amp;&amp; pos.size()==getNumberOfAtoms() &amp;&amp; arg.size()==0 );
+<span class="lineNum">     133 </span><span class="lineCov">         22 :   return calculate( pos, pbc, myder, squared );</span>
+<a name="134"><span class="lineNum">     134 </span>            : }</a>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">          2 : bool MultiDomainRMSD::pcaIsEnabledForThisReference() {</span>
+<span class="lineNum">     137 </span>            :   bool enabled=true;
+<span class="lineNum">     138 </span><span class="lineCov">         16 :   for(unsigned i=0; i&lt;domains.size(); ++i) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">          4 :     if( !domains[i]-&gt;pcaIsEnabledForThisReference() ) enabled=false;</span>
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span><span class="lineCov">          2 :   return enabled;</span>
+<a name="142"><span class="lineNum">     142 </span>            : }</a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">          2 : void MultiDomainRMSD::setupPCAStorage( ReferenceValuePack&amp; mypack ) {</span>
+<span class="lineNum">     145 </span>            :   plumed_dbg_assert( pcaIsEnabledForThisReference() );
+<span class="lineNum">     146 </span>            :   mypack.switchOnPCAOption();
+<span class="lineNum">     147 </span><span class="lineCov">          4 :   mypack.displacement.resize( getNumberOfAtoms() );</span>
+<span class="lineNum">     148 </span><span class="lineCov">          4 :   mypack.centeredpos.resize( getNumberOfAtoms() );</span>
+<span class="lineNum">     149 </span><span class="lineCov">          4 :   mypack.DRotDPos.resize(3,3); mypack.rot.resize( domains.size() );</span>
+<span class="lineNum">     150 </span><span class="lineCov">         26 :   for(unsigned i=0; i&lt;3; ++i) for(unsigned j=0; j&lt;3; ++j) mypack.DRotDPos(i,j).resize( getNumberOfAtoms() );</span>
+<span class="lineNum">     151 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : // Vector MultiDomainRMSD::getAtomicDisplacement( const unsigned&amp; iatom ){
+<span class="lineNum">     154 </span>            : //   for(unsigned i=0;i&lt;domains.size();++i){
+<span class="lineNum">     155 </span>            : //       unsigned n=0;
+<span class="lineNum">     156 </span>            : //       for(unsigned j=blocks[i];j&lt;blocks[i+1];++j){
+<span class="lineNum">     157 </span>            : //           if( j==iatom ) return weights[i]*domains[i]-&gt;getAtomicDisplacement(n);
+<span class="lineNum">     158 </span>            : //           n++;
+<span class="lineNum">     159 </span>            : //       }
+<span class="lineNum">     160 </span>            : //   }
+<a name="161"><span class="lineNum">     161 </span>            : // }</a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 : void MultiDomainRMSD::extractAtomicDisplacement( const std::vector&lt;Vector&gt;&amp; pos, std::vector&lt;Vector&gt;&amp; direction ) const {</span>
+<span class="lineNum">     164 </span>            :   std::vector&lt;Vector&gt; mypos, mydir;
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;domains.size(); ++i) {</span>
+<span class="lineNum">     166 </span>            :     // Must extract appropriate positions here
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     mypos.resize( blocks[i+1] - blocks[i] ); mydir.resize( blocks[i+1] - blocks[i] );</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     unsigned n=0; for(unsigned j=blocks[i]; j&lt;blocks[i+1]; ++j) { mypos[n]=pos[j]; n++; }</span>
+<span class="lineNum">     169 </span>            :     // Do the calculation
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     domains[i]-&gt;extractAtomicDisplacement( mypos, mydir );</span>
+<span class="lineNum">     171 </span>            :     // Extract the direction
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :     n=0; for(unsigned j=blocks[i]; j&lt;blocks[i+1]; ++j) { direction[j]=weights[i]*mydir[n];  n++; }</span>
+<span class="lineNum">     173 </span>            :   }
+<a name="174"><span class="lineNum">     174 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">         44 : double MultiDomainRMSD::projectAtomicDisplacementOnVector( const bool&amp; normalized, const std::vector&lt;Vector&gt;&amp; vecs, ReferenceValuePack&amp; mypack ) const {</span>
+<span class="lineNum">     177 </span><span class="lineCov">         44 :   double totd=0.; std::vector&lt;Vector&gt; tvecs; mypack.clear();</span>
+<span class="lineNum">     178 </span><span class="lineCov">        132 :   MultiValue tvals( 1, mypack.getNumberOfDerivatives() ); ReferenceValuePack tder( 0, getNumberOfAtoms(), tvals );</span>
+<span class="lineNum">     179 </span><span class="lineCov">        352 :   for(unsigned i=0; i&lt;domains.size(); ++i) {</span>
+<span class="lineNum">     180 </span>            :     // Must extract appropriate positions here
+<span class="lineNum">     181 </span><span class="lineCov">        352 :     tvecs.resize( blocks[i+1] - blocks[i] ); domains[i]-&gt;setupPCAStorage( tder );</span>
+<span class="lineNum">     182 </span><span class="lineCov">         88 :     if( tder.centeredpos.size()&gt;0 ) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">        572 :       for(unsigned p=0; p&lt;3; ++p) for(unsigned q=0; q&lt;3; ++q) tder.DRotDPos(p,q).resize( tvecs.size() );</span>
+<span class="lineNum">     184 </span>            :     }
+<span class="lineNum">     185 </span>            :     // Extract information from storage pack and put in local pack
+<span class="lineNum">     186 </span><span class="lineCov">        132 :     if( tder.centeredpos.size()&gt;0 ) tder.rot[0]=mypack.rot[i];</span>
+<span class="lineNum">     187 </span>            :     unsigned n=0;
+<span class="lineNum">     188 </span><span class="lineCov">        792 :     for(unsigned j=blocks[i]; j&lt;blocks[i+1]; ++j) {</span>
+<span class="lineNum">     189 </span><span class="lineCov">       1232 :       tder.setAtomIndex(n,j); tvecs[n] = vecs[j]; tder.displacement[n]=mypack.displacement[j] / weights[i];</span>
+<span class="lineNum">     190 </span><span class="lineCov">        308 :       if( tder.centeredpos.size()&gt;0 ) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">        154 :         tder.centeredpos[n]=mypack.centeredpos[j];</span>
+<span class="lineNum">     192 </span><span class="lineCov">       2002 :         for(unsigned p=0; p&lt;3; ++p) for(unsigned q=0; q&lt;3; ++q) tder.DRotDPos(p,q)[n]=mypack.DRotDPos(p,q)[j];</span>
+<span class="lineNum">     193 </span>            :       }
+<span class="lineNum">     194 </span><span class="lineCov">        308 :       n++;</span>
+<span class="lineNum">     195 </span>            :     }
+<span class="lineNum">     196 </span><span class="lineCov">       1012 :     for(unsigned k=n; k&lt;getNumberOfAtoms(); ++k) tder.setAtomIndex(k,3*vecs.size()+10);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :     // Do the calculations
+<span class="lineNum">     199 </span><span class="lineCov">        176 :     totd += weights[i]*domains[i]-&gt;projectAtomicDisplacementOnVector( normalized, tvecs, tder );</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :     // And derivatives
+<span class="lineNum">     202 </span><span class="lineCov">         88 :     mypack.copyScaledDerivatives( 0, weights[i], tvals );</span>
+<span class="lineNum">     203 </span>            :   }
+<span class="lineNum">     204 </span><span class="lineCov">         44 :   if( !mypack.updateComplete() ) mypack.updateDynamicLists();</span>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">         44 :   return totd;</span>
+<a name="207"><span class="lineNum">     207 </span>            : }</a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

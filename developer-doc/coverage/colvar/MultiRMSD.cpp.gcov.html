@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/MultiRMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - MultiRMSD.cpp<span style="font-size: 80%;"> (source / <a href="MultiRMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntryHi">97.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryMed">86.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;reference/MultiDomainRMSD.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;reference/MetricRegister.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : namespace colvar {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : class MultiRMSD : public Colvar {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :   PLMD::MultiDomainRMSD* rmsd;
+<span class="lineNum">      39 </span>            :   bool squared;
+<span class="lineNum">      40 </span>            :   MultiValue myvals;
+<span class="lineNum">      41 </span>            :   ReferenceValuePack mypack;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : public:
+<span class="lineNum">      44 </span>            :   explicit MultiRMSD(const ActionOptions&amp;);
+<span class="lineNum">      45 </span>            :   ~MultiRMSD();
+<span class="lineNum">      46 </span>            :   virtual void calculate();
+<span class="lineNum">      47 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      48 </span>            : };
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : using namespace std;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : //+PLUMEDOC DCOLVAR MULTI-RMSD
+<span class="lineNum">      54 </span>            : /*
+<span class="lineNum">      55 </span>            : Calculate the RMSD distance moved by a number of separated domains from their positions in a reference structure.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : When you have large proteins the calculation of the root mean squared deviation between all the atoms in a reference
+<span class="lineNum">      59 </span>            : structure and the instantaneous configuration becomes prohibitively expensive.  You may thus instead want to calculate
+<span class="lineNum">      60 </span>            : the RMSD between the atoms in a set of domains of your protein and your reference structure.  That is to say:
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : \f[
+<span class="lineNum">      63 </span>            : d(X,X_r) = \sqrt{ \sum_{i} w_i\vert X_i - X_i' \vert^2 }
+<span class="lineNum">      64 </span>            : \f]
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : where here the sum is over the domains of the protein, \f$X_i\f$ represents the positions of the atoms in domain \f$i\f$
+<span class="lineNum">      67 </span>            : in the instantaneous configuration and \f$X_i'\f$ is the positions of the atoms in domain \f$i\f$ in the reference
+<span class="lineNum">      68 </span>            : configuration.  \f$w_i\f$ is an optional weight.
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : The distances for each of the domains in the above sum can be calculated using the \ref DRMSD or \ref RMSD measures or
+<span class="lineNum">      71 </span>            : using a combination of these distance.  The reference configuration is specified in a pdb file like the one below:
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : \verbatim
+<span class="lineNum">      74 </span>            : ATOM      2  O   ALA     2      -0.926  -2.447  -0.497  1.00  1.00      DIA  O
+<span class="lineNum">      75 </span>            : ATOM      4  HNT ALA     2       0.533  -0.396   1.184  1.00  1.00      DIA  H
+<span class="lineNum">      76 </span>            : ATOM      6  HT1 ALA     2      -0.216  -2.590   1.371  1.00  1.00      DIA  H
+<span class="lineNum">      77 </span>            : ATOM      7  HT2 ALA     2      -0.309  -1.255   2.315  1.00  1.00      DIA  H
+<span class="lineNum">      78 </span>            : ATOM      8  HT3 ALA     2      -1.480  -1.560   1.212  1.00  1.00      DIA  H
+<span class="lineNum">      79 </span>            : ATOM      9  CAY ALA     2      -0.096   2.144  -0.669  1.00  1.00      DIA  C
+<span class="lineNum">      80 </span>            : ATOM     10  HY1 ALA     2       0.871   2.385  -0.588  1.00  1.00      DIA  H
+<span class="lineNum">      81 </span>            : TER
+<span class="lineNum">      82 </span>            : ATOM     12  HY3 ALA     2      -0.520   2.679  -1.400  1.00  1.00      DIA  H
+<span class="lineNum">      83 </span>            : ATOM     14  OY  ALA     2      -1.139   0.931  -0.973  1.00  1.00      DIA  O
+<span class="lineNum">      84 </span>            : ATOM     16  HN  ALA     2       1.713   1.021  -0.873  1.00  1.00      DIA  H
+<span class="lineNum">      85 </span>            : ATOM     18  HA  ALA     2       0.099  -0.774  -2.218  1.00  1.00      DIA  H
+<span class="lineNum">      86 </span>            : ATOM     19  CB  ALA     2       2.063  -1.223  -1.276  1.00  1.00      DIA  C
+<span class="lineNum">      87 </span>            : ATOM     20  HB1 ALA     2       2.670  -0.716  -2.057  1.00  1.00      DIA  H
+<span class="lineNum">      88 </span>            : ATOM     21  HB2 ALA     2       2.556  -1.051  -0.295  1.00  1.00      DIA  H
+<span class="lineNum">      89 </span>            : ATOM     22  HB3 ALA     2       2.070  -2.314  -1.490  1.00  1.00      DIA  H
+<span class="lineNum">      90 </span>            : END
+<span class="lineNum">      91 </span>            : \endverbatim
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : with the TER keyword being used to separate the various domains in you protein.
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : \par Examples
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : The following tells plumed to calculate the RMSD distance between
+<span class="lineNum">      99 </span>            : the positions of the atoms in the reference file and their instantaneous
+<span class="lineNum">     100 </span>            : position.  The Kearseley algorithm for each of the domains.
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : \plumedfile
+<span class="lineNum">     103 </span>            : MULTI-RMSD REFERENCE=file.pdb TYPE=MULTI-OPTIMAL
+<span class="lineNum">     104 </span>            : \endplumedfile
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : The following tells plumed to calculate the RMSD distance btween the positions of
+<span class="lineNum">     107 </span>            : the atoms in the domains of reference the reference structure and their instantaneous
+<span class="lineNum">     108 </span>            : positions.  Here distances are calculated using the \ref DRMSD measure.
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : \plumedfile
+<span class="lineNum">     111 </span>            : MULTI-RMSD REFERENCE=file.pdb TYPE=MULTI-DRMSD
+<span class="lineNum">     112 </span>            : \endplumedfile
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : in this case it is possible to use the following DRMSD options in the pdb file using the REMARK syntax:
+<span class="lineNum">     115 </span>            : \verbatim
+<span class="lineNum">     116 </span>            : NOPBC to calculate distances without PBC
+<span class="lineNum">     117 </span>            : LOWER_CUTOFF=# only pairs of atoms further than LOWER_CUTOFF are considered in the calculation
+<span class="lineNum">     118 </span>            : UPPER_CUTOFF=# only pairs of atoms further than UPPER_CUTOFF are considered in the calculation
+<span class="lineNum">     119 </span>            : \endverbatim
+<span class="lineNum">     120 </span>            : as shown in the following example
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : \verbatim
+<span class="lineNum">     123 </span>            : REMARK NOPBC
+<span class="lineNum">     124 </span>            : REMARK LOWER_CUTOFF=0.1
+<span class="lineNum">     125 </span>            : REMARK UPPER_CUTOFF=0.8
+<span class="lineNum">     126 </span>            : ATOM      2  O   ALA     2      -0.926  -2.447  -0.497  1.00  1.00      DIA  O
+<span class="lineNum">     127 </span>            : ATOM      4  HNT ALA     2       0.533  -0.396   1.184  1.00  1.00      DIA  H
+<span class="lineNum">     128 </span>            : ATOM      6  HT1 ALA     2      -0.216  -2.590   1.371  1.00  1.00      DIA  H
+<span class="lineNum">     129 </span>            : ATOM      7  HT2 ALA     2      -0.309  -1.255   2.315  1.00  1.00      DIA  H
+<span class="lineNum">     130 </span>            : ATOM      8  HT3 ALA     2      -1.480  -1.560   1.212  1.00  1.00      DIA  H
+<span class="lineNum">     131 </span>            : ATOM      9  CAY ALA     2      -0.096   2.144  -0.669  1.00  1.00      DIA  C
+<span class="lineNum">     132 </span>            : ATOM     10  HY1 ALA     2       0.871   2.385  -0.588  1.00  1.00      DIA  H
+<span class="lineNum">     133 </span>            : TER
+<span class="lineNum">     134 </span>            : ATOM     12  HY3 ALA     2      -0.520   2.679  -1.400  1.00  1.00      DIA  H
+<span class="lineNum">     135 </span>            : ATOM     14  OY  ALA     2      -1.139   0.931  -0.973  1.00  1.00      DIA  O
+<span class="lineNum">     136 </span>            : ATOM     16  HN  ALA     2       1.713   1.021  -0.873  1.00  1.00      DIA  H
+<span class="lineNum">     137 </span>            : ATOM     18  HA  ALA     2       0.099  -0.774  -2.218  1.00  1.00      DIA  H
+<span class="lineNum">     138 </span>            : ATOM     19  CB  ALA     2       2.063  -1.223  -1.276  1.00  1.00      DIA  C
+<span class="lineNum">     139 </span>            : ATOM     20  HB1 ALA     2       2.670  -0.716  -2.057  1.00  1.00      DIA  H
+<span class="lineNum">     140 </span>            : ATOM     21  HB2 ALA     2       2.556  -1.051  -0.295  1.00  1.00      DIA  H
+<span class="lineNum">     141 </span>            : ATOM     22  HB3 ALA     2       2.070  -2.314  -1.490  1.00  1.00      DIA  H
+<span class="lineNum">     142 </span>            : END
+<span class="lineNum">     143 </span>            : \endverbatim
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : */
+<a name="147"><span class="lineNum">     147 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(MultiRMSD,&quot;MULTI-RMSD&quot;)</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : //+PLUMEDOC DCOLVAR MULTI_RMSD
+<span class="lineNum">     152 </span>            : /*
+<span class="lineNum">     153 </span>            : An alias to the \ref MULTI-RMSD function.
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : \par Examples
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : Just replace \ref MULTI-RMSD with \ref MULTI_RMSD
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : \plumedfile
+<span class="lineNum">     160 </span>            : MULTI_RMSD REFERENCE=file.pdb TYPE=MULTI-DRMSD
+<span class="lineNum">     161 </span>            : \endplumedfile
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : */
+<span class="lineNum">     164 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : class Multi_RMSD :
+<span class="lineNum">     167 </span>            :   public MultiRMSD {
+<a name="168"><span class="lineNum">     168 </span>            : };</a>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(MultiRMSD,&quot;MULTI_RMSD&quot;)</span>
+<a name="171"><span class="lineNum">     171 </span>            : </a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineCov">          5 : void MultiRMSD::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     174 </span><span class="lineCov">          5 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">     175 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;REFERENCE&quot;,&quot;a file in pdb format containing the reference structure and the atoms involved in the CV.&quot;);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;MULTI-SIMPLE&quot;,&quot;the manner in which RMSD alignment is performed.  Should be MULTI-OPTIMAL, MULTI-OPTIMAL-FAST,  MULTI-SIMPLE or MULTI-DRMSD.&quot;);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         15 :   keys.addFlag(&quot;SQUARED&quot;,false,&quot; This should be setted if you want MSD instead of RMSD &quot;);</span>
+<span class="lineNum">     178 </span><span class="lineCov">         10 :   keys.remove(&quot;NOPBC&quot;);</span>
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">          3 : MultiRMSD::MultiRMSD(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     182 </span><span class="lineCov">          3 :   PLUMED_COLVAR_INIT(ao),squared(false),myvals(1,0), mypack(0,0,myvals)</span>
+<span class="lineNum">     183 </span>            : {
+<span class="lineNum">     184 </span>            :   string reference;
+<span class="lineNum">     185 </span><span class="lineCov">          6 :   parse(&quot;REFERENCE&quot;,reference);</span>
+<span class="lineNum">     186 </span>            :   string type;
+<span class="lineNum">     187 </span><span class="lineCov">          3 :   type.assign(&quot;SIMPLE&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineCov">          6 :   parse(&quot;TYPE&quot;,type);</span>
+<span class="lineNum">     189 </span><span class="lineCov">          6 :   parseFlag(&quot;SQUARED&quot;,squared);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">          3 :   checkRead();</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">          3 :   addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">     195 </span><span class="lineCov">          6 :   PDB pdb;</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :   // read everything in ang and transform to nm if we are not in natural units
+<span class="lineNum">     198 </span><span class="lineCov">          6 :   if( !pdb.read(reference,plumed.getAtoms().usingNaturalUnits(),0.1/atoms.getUnits().getLength()) )</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :     error(&quot;missing input file &quot; + reference );</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span><span class="lineCov">          3 :   rmsd = metricRegister().create&lt;MultiDomainRMSD&gt;(type,pdb);</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :   std::vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     204 </span><span class="lineCov">          3 :   rmsd-&gt;getAtomRequests( atoms );</span>
+<span class="lineNum">     205 </span><span class="lineCov">          3 :   requestAtoms( atoms );</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineCov">          6 :   myvals.resize( 1, 3*atoms.size()+9 ); mypack.resize( 0, atoms.size() );</span>
+<span class="lineNum">     208 </span><span class="lineCov">        141 :   for(unsigned i=0; i&lt;atoms.size(); ++i) mypack.setAtomIndex( i, i );</span>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">          6 :   log.printf(&quot;  reference from file %s\n&quot;,reference.c_str());</span>
+<span class="lineNum">     211 </span><span class="lineCov">          6 :   log.printf(&quot;  which contains %d atoms\n&quot;,getNumberOfAtoms());</span>
+<span class="lineNum">     212 </span><span class="lineCov">          6 :   log.printf(&quot;  method for alignment : %s \n&quot;,type.c_str() );</span>
+<span class="lineNum">     213 </span><span class="lineCov">          3 :   if(squared)log.printf(&quot;  chosen to use SQUARED option for MSD instead of RMSD\n&quot;);</span>
+<a name="214"><span class="lineNum">     214 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">          9 : MultiRMSD::~MultiRMSD() {</span>
+<span class="lineNum">     217 </span><span class="lineCov">          3 :   delete rmsd;</span>
+<span class="lineNum">     218 </span><span class="lineCov">          6 : }</span>
+<span class="lineNum">     219 </span>            : 
+<a name="220"><span class="lineNum">     220 </span>            : </a>
+<span class="lineNum">     221 </span>            : // calculator
+<span class="lineNum">     222 </span><span class="lineCov">         15 : void MultiRMSD::calculate() {</span>
+<span class="lineNum">     223 </span><span class="lineCov">         30 :   double r=rmsd-&gt;calculate( getPositions(), getPbc(), mypack, squared );</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">         15 :   setValue(r);</span>
+<span class="lineNum">     226 </span><span class="lineCov">        480 :   for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) setAtomsDerivatives( i, mypack.getAtomDerivative(i) );</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">         15 :   if( !mypack.virialWasSet() ) setBoxDerivativesNoPbc();</span>
+<span class="lineNum">     229 </span><span class="lineCov">         10 :   else setBoxDerivatives( mypack.getBoxDerivatives() );</span>
+<span class="lineNum">     230 </span><span class="lineCov">         15 : }</span>
+<a name="231"><span class="lineNum">     231 </span>            : </a>
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

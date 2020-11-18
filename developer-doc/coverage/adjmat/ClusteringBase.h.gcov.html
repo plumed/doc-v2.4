@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/ClusteringBase.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - ClusteringBase.h<span style="font-size: 80%;"> (source / <a href="ClusteringBase.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_adjmat_ClusteringBase_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_adjmat_ClusteringBase_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;ActionWithInputMatrix.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;multicolvar/AtomValuePack.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<a name="29"><span class="lineNum">      29 </span>            : namespace adjmat {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         34 : class ClusteringBase : public ActionWithInputMatrix {</span>
+<span class="lineNum">      32 </span>            : protected:
+<span class="lineNum">      33 </span>            : /// Vector that stores the sizes of the current set of clusters
+<span class="lineNum">      34 </span>            :   std::vector&lt; std::pair&lt;unsigned,unsigned&gt; &gt; cluster_sizes;
+<span class="lineNum">      35 </span>            : /// Used to identify the cluster we are working on
+<span class="lineNum">      36 </span>            :   int number_of_cluster;
+<span class="lineNum">      37 </span>            : /// Vector that identifies the cluster each atom belongs to
+<span class="lineNum">      38 </span>            :   std::vector&lt;unsigned&gt; which_cluster;
+<span class="lineNum">      39 </span>            : public:
+<span class="lineNum">      40 </span>            : /// Create manual
+<span class="lineNum">      41 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      42 </span>            : /// Constructor
+<span class="lineNum">      43 </span>            :   explicit ClusteringBase(const ActionOptions&amp;);
+<span class="lineNum">      44 </span>            : /// This checks whether derivatives can be computed given the base multicolvar
+<span class="lineNum">      45 </span>            :   void turnOnDerivatives();
+<span class="lineNum">      46 </span>            : /// Are these two atoms connected
+<span class="lineNum">      47 </span>            :   bool areConnected( const unsigned&amp; iatom, const unsigned&amp; jatom ) const ;
+<span class="lineNum">      48 </span>            : /// Do the calculation
+<span class="lineNum">      49 </span>            :   void calculate();
+<span class="lineNum">      50 </span>            : /// Do the clustering
+<span class="lineNum">      51 </span>            :   virtual void performClustering()=0;
+<span class="lineNum">      52 </span>            : /// Get the number of clusters that have been found
+<span class="lineNum">      53 </span>            :   unsigned getNumberOfClusters() const ;
+<span class="lineNum">      54 </span>            : /// Get the atoms in one of the clusters
+<a name="55"><span class="lineNum">      55 </span>            :   virtual void retrieveAtomsInCluster( const unsigned&amp; clust, std::vector&lt;unsigned&gt;&amp; myatoms ) const ;</a>
+<span class="lineNum">      56 </span>            : /// Do nothing for apply here
+<span class="lineNum">      57 </span><span class="lineCov">         26 :   void apply() {}</span>
+<span class="lineNum">      58 </span>            : /// Get the cutoff
+<span class="lineNum">      59 </span>            :   virtual double getCutoffForConnection() const ;
+<span class="lineNum">      60 </span>            : };
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : inline
+<span class="lineNum">      63 </span>            : unsigned ClusteringBase::getNumberOfClusters() const {
+<span class="lineNum">      64 </span><span class="lineCov">          4 :   return number_of_cluster + 1;</span>
+<span class="lineNum">      65 </span>            : }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : }
+<span class="lineNum">      68 </span>            : }
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

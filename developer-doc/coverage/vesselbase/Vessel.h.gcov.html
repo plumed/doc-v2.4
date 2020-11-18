@@ -1,0 +1,326 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/Vessel.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - Vessel.h<span style="font-size: 80%;"> (source / <a href="Vessel.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_vesselbase_Vessel_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_vesselbase_Vessel_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;string&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Keywords.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;ActionWithVessel.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : class Communicator;
+<span class="lineNum">      36 </span>            : class Log;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace vesselbase {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : /**
+<span class="lineNum">      41 </span>            : \ingroup TOOLBOX
+<span class="lineNum">      42 </span>            : Vessels are an important component of class PLMD::ActionWithVessel.  This class
+<span class="lineNum">      43 </span>            : contains a large buffer array of doubles.  The various elements of this array
+<span class="lineNum">      44 </span>            : can be accessed through vessels which are used to structure the elements of the
+<span class="lineNum">      45 </span>            : double array.  As the buffer array is just a vector of doubles it can be easily
+<span class="lineNum">      46 </span>            : mpi gathered or passed to another node.
+<span class="lineNum">      47 </span>            : */
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : //class ActionWithVessel;
+<span class="lineNum">      50 </span>            : class Vessel;
+<a name="51"><span class="lineNum">      51 </span>            : </a>
+<span class="lineNum">      52 </span>            : /// This class is used to pass the input to Vessels
+<span class="lineNum">      53 </span><span class="lineCov">       1864 : class VesselOptions {</span>
+<span class="lineNum">      54 </span>            :   friend class Vessel;
+<span class="lineNum">      55 </span>            : private:
+<span class="lineNum">      56 </span>            : /// The name of the particular vessel
+<span class="lineNum">      57 </span>            :   std::string myname;
+<span class="lineNum">      58 </span>            : /// The label for this particular vessel;
+<span class="lineNum">      59 </span>            :   std::string mylabel;
+<span class="lineNum">      60 </span>            : /// The numerical label for this vessel
+<span class="lineNum">      61 </span>            :   int numlab;
+<span class="lineNum">      62 </span>            : /// Pointer to ActionWithVessel that this if from
+<span class="lineNum">      63 </span>            :   ActionWithVessel* action;
+<span class="lineNum">      64 </span>            : /// The keywords
+<span class="lineNum">      65 </span>            :   const Keywords&amp; keywords;
+<span class="lineNum">      66 </span>            :   static Keywords emptyKeys;
+<span class="lineNum">      67 </span>            : public:
+<span class="lineNum">      68 </span>            : /// The parameters that are read into the function
+<span class="lineNum">      69 </span>            :   std::string parameters;
+<span class="lineNum">      70 </span>            : /// The constructor
+<span class="lineNum">      71 </span>            :   VesselOptions( const std::string&amp; thisname, const std::string&amp; thislab, const unsigned&amp; nlab, const std::string&amp; params, ActionWithVessel* aa );
+<span class="lineNum">      72 </span>            :   VesselOptions(const VesselOptions&amp; da, const Keywords&amp; keys );
+<span class="lineNum">      73 </span>            : };
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : class Vessel {
+<span class="lineNum">      76 </span>            :   friend class ActionWithVessel;
+<span class="lineNum">      77 </span>            : private:
+<span class="lineNum">      78 </span>            : /// The keyword for the vessel in the input file
+<span class="lineNum">      79 </span>            :   std::string myname;
+<span class="lineNum">      80 </span>            : /// The label for the vessel for referencing
+<span class="lineNum">      81 </span>            :   std::string mylabel;
+<span class="lineNum">      82 </span>            : /// The numerical label for this object
+<span class="lineNum">      83 </span>            :   const int numlab;
+<span class="lineNum">      84 </span>            : /// The action that this vessel is created within
+<span class="lineNum">      85 </span>            :   ActionWithVessel* action;
+<span class="lineNum">      86 </span>            : /// The number of elements in this vessel's buffered data
+<span class="lineNum">      87 </span>            :   unsigned bufsize;
+<span class="lineNum">      88 </span>            : /// Directive line.
+<span class="lineNum">      89 </span>            : /// This line is progressively erased during vessel construction
+<span class="lineNum">      90 </span>            : /// so as to check if all the present keywords are correct.
+<span class="lineNum">      91 </span>            :   std::vector&lt;std::string&gt; line;
+<span class="lineNum">      92 </span>            : /// The keywords
+<span class="lineNum">      93 </span>            :   const PLMD::Keywords&amp; keywords;
+<span class="lineNum">      94 </span>            : /// This just checks we have done checkRead
+<span class="lineNum">      95 </span>            :   bool finished_read;
+<span class="lineNum">      96 </span>            : protected:
+<span class="lineNum">      97 </span>            : /// The start of this Vessel's buffer in buffer in the underlying ActionWithVessel
+<span class="lineNum">      98 </span>            :   unsigned bufstart;
+<span class="lineNum">      99 </span>            : /// A copy of the communicator
+<span class="lineNum">     100 </span>            :   Communicator&amp; comm;
+<span class="lineNum">     101 </span>            : /// Return the numerical label
+<span class="lineNum">     102 </span>            :   int getNumericalLabel() const ;
+<span class="lineNum">     103 </span>            : /// Report an error
+<span class="lineNum">     104 </span>            :   void error(const std::string&amp; errmsg);
+<span class="lineNum">     105 </span>            : /// Parse something from the input
+<span class="lineNum">     106 </span>            :   template&lt;class T&gt;
+<span class="lineNum">     107 </span>            :   void parse(const std::string&amp;key, T&amp;t);
+<span class="lineNum">     108 </span>            : /// Parse one keyword as std::vector
+<span class="lineNum">     109 </span>            :   template&lt;class T&gt;
+<span class="lineNum">     110 </span>            :   void parseVector(const std::string&amp;key,std::vector&lt;T&gt;&amp;t);
+<span class="lineNum">     111 </span>            : /// Parse one keyword as boolean flag
+<span class="lineNum">     112 </span>            :   void parseFlag(const std::string&amp;key,bool&amp;t);
+<span class="lineNum">     113 </span>            : /// This returns the whole input line (it is used for less_than/more_than/between)
+<span class="lineNum">     114 </span>            :   std::string getAllInput();
+<span class="lineNum">     115 </span>            : /// Return a pointer to the action we are working in
+<span class="lineNum">     116 </span>            :   ActionWithVessel* getAction() const ;
+<span class="lineNum">     117 </span>            : /// Return the value of the tolerance
+<span class="lineNum">     118 </span>            :   double getTolerance() const ;
+<span class="lineNum">     119 </span>            : /// Return the value of the neighbor list tolerance
+<span class="lineNum">     120 </span>            :   double getNLTolerance() const ;
+<span class="lineNum">     121 </span>            : /// Return the size of the buffer
+<span class="lineNum">     122 </span>            :   unsigned getSizeOfBuffer() const ;
+<span class="lineNum">     123 </span>            : /// Set the size of the data buffer
+<span class="lineNum">     124 </span>            :   void resizeBuffer( const unsigned&amp; n );
+<span class="lineNum">     125 </span>            : public:
+<span class="lineNum">     126 </span>            : /// Reference to the log on which to output details
+<span class="lineNum">     127 </span>            :   Log&amp; log;
+<span class="lineNum">     128 </span>            : /// Reserve any keywords for this particular vessel
+<span class="lineNum">     129 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     130 </span>            : /// Convert the name to the label of the component
+<span class="lineNum">     131 </span>            :   static std::string transformName( const std::string&amp; name );
+<span class="lineNum">     132 </span>            : /// The constructor
+<a name="133"><span class="lineNum">     133 </span>            :   explicit Vessel( const VesselOptions&amp; da );</a>
+<span class="lineNum">     134 </span>            : /// Virtual destructor needed for proper inheritance
+<span class="lineNum">     135 </span><span class="lineCov">       1068 :   virtual ~Vessel() {}</span>
+<span class="lineNum">     136 </span>            : /// Return the name
+<span class="lineNum">     137 </span>            :   std::string getName() const ;
+<span class="lineNum">     138 </span>            : /// Return the label
+<span class="lineNum">     139 </span>            :   std::string getLabel() const ;
+<span class="lineNum">     140 </span>            : /// Check that readin was fine
+<span class="lineNum">     141 </span>            :   void checkRead();
+<span class="lineNum">     142 </span>            : /// Return a description of the vessel contents
+<span class="lineNum">     143 </span>            :   virtual std::string description()=0;
+<span class="lineNum">     144 </span>            : /// Set the start of the buffer
+<a name="145"><span class="lineNum">     145 </span>            :   virtual void setBufferStart( unsigned&amp; start );</a>
+<span class="lineNum">     146 </span>            : /// Do something before the loop
+<span class="lineNum">     147 </span><span class="lineCov">      25848 :   virtual void prepare() {}</span>
+<span class="lineNum">     148 </span>            : /// This is replaced in bridges so we can transform the derivatives
+<span class="lineNum">     149 </span>            :   virtual MultiValue&amp; transformDerivatives( const unsigned&amp; current, MultiValue&amp; myvals, MultiValue&amp; bvals );
+<span class="lineNum">     150 </span>            : /// Calculate the part of the vessel that is done in the loop
+<span class="lineNum">     151 </span>            :   virtual void calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) const = 0;
+<span class="lineNum">     152 </span>            : /// Complete the calculation once the loop is finished
+<span class="lineNum">     153 </span>            :   virtual void finish( const std::vector&lt;double&gt;&amp; )=0;
+<span class="lineNum">     154 </span>            : /// Reset the size of the buffers
+<span class="lineNum">     155 </span>            :   virtual void resize()=0;
+<span class="lineNum">     156 </span>            : /// Retrieve the forces on the quantities in the vessel
+<span class="lineNum">     157 </span>            :   virtual bool applyForce( std::vector&lt;double&gt;&amp; forces )=0;
+<span class="lineNum">     158 </span>            : };
+<a name="159"><span class="lineNum">     159 </span>            : </a>
+<span class="lineNum">     160 </span>            : template&lt;class T&gt;
+<span class="lineNum">     161 </span><span class="lineCov">        759 : void Vessel::parse(const std::string&amp;key, T&amp;t ) {</span>
+<span class="lineNum">     162 </span><span class="lineCov">        759 :   plumed_massert(keywords.exists(key),&quot;keyword &quot; + key + &quot; has not been registered&quot;);</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :   // Now try to read the keyword
+<span class="lineNum">     165 </span><span class="lineCov">        759 :   bool found=Tools::parse(line,key,t); std::string def;</span>
+<span class="lineNum">     166 </span><span class="lineCov">       1518 :   if ( !found &amp;&amp; keywords.style(key,&quot;compulsory&quot;) ) {</span>
+<span class="lineNum">     167 </span><span class="lineCov">       1032 :     if( keywords.getDefaultValue(key,def) ) {</span>
+<span class="lineNum">     168 </span><span class="lineCov">        344 :       plumed_massert( def.length()!=0 &amp;&amp; Tools::convert(def,t), &quot;default value is dubious&quot;);</span>
+<span class="lineNum">     169 </span>            :     } else {
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :       error(&quot;keyword &quot; + key + &quot; is comulsory for this vessel&quot;);</span>
+<span class="lineNum">     171 </span>            :     }
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span><span class="lineCov">        759 : }</span>
+<a name="174"><span class="lineNum">     174 </span>            : </a>
+<span class="lineNum">     175 </span>            : template&lt;class T&gt;
+<span class="lineNum">     176 </span><span class="lineCov">        173 : void Vessel::parseVector(const std::string&amp;key,std::vector&lt;T&gt;&amp;t) {</span>
+<span class="lineNum">     177 </span>            :   // Check keyword has been registered
+<span class="lineNum">     178 </span><span class="lineCov">        173 :   plumed_massert(keywords.exists(key), &quot;keyword &quot; + key + &quot; has not been registered&quot;);</span>
+<span class="lineNum">     179 </span><span class="lineCov">        173 :   unsigned size=t.size(); bool skipcheck=false;</span>
+<span class="lineNum">     180 </span><span class="lineCov">        173 :   if(size==0) skipcheck=true;</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :   // Now try to read the keyword
+<span class="lineNum">     183 </span>            :   bool found; std::string def; T val;
+<span class="lineNum">     184 </span><span class="lineCov">        173 :   found=Tools::parseVector(line,key,t);</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :   // Check vectors size is correct (not if this is atoms or ARG)
+<span class="lineNum">     187 </span><span class="lineCov">        346 :   if( !keywords.style(key,&quot;atoms&quot;) &amp;&amp; found ) {</span>
+<span class="lineNum">     188 </span><span class="lineCov">        249 :     if( !skipcheck &amp;&amp; t.size()!=size ) error(&quot;vector read in for keyword &quot; + key + &quot; has the wrong size&quot;);</span>
+<span class="lineNum">     189 </span>            :   }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :   // If it isn't read and it is compulsory see if a default value was specified
+<span class="lineNum">     192 </span><span class="lineCov">        346 :   if ( !found &amp;&amp; keywords.style(key,&quot;compulsory&quot;) ) {</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     if( keywords.getDefaultValue(key,def) ) {</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :       if( def.length()==0 || !Tools::convert(def,val) ) {</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :         plumed_merror(&quot;weird default value for keyword &quot; + key );</span>
+<span class="lineNum">     196 </span>            :       } else {
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;t.size(); ++i) t[i]=val;</span>
+<span class="lineNum">     198 </span>            :       }
+<span class="lineNum">     199 </span>            :     } else {
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :       error(&quot;keyword &quot; + key + &quot; is compulsory&quot;);</span>
+<span class="lineNum">     201 </span>            :     }
+<span class="lineNum">     202 </span><span class="lineCov">        173 :   } else if ( !found ) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">          1 :     t.resize(0);</span>
+<span class="lineNum">     204 </span>            :   }
+<span class="lineNum">     205 </span><span class="lineCov">        173 : }</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : inline
+<span class="lineNum">     208 </span>            : int Vessel::getNumericalLabel() const {
+<span class="lineNum">     209 </span><span class="lineCov">        310 :   return numlab;</span>
+<span class="lineNum">     210 </span>            : }
+<a name="211"><span class="lineNum">     211 </span>            : </a>
+<span class="lineNum">     212 </span>            : inline
+<span class="lineNum">     213 </span><span class="lineCov">      31984 : void Vessel::setBufferStart( unsigned&amp; start ) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">      31984 :   bufstart=start; start+=bufsize;</span>
+<span class="lineNum">     215 </span><span class="lineCov">      31984 : }</span>
+<a name="216"><span class="lineNum">     216 </span>            : </a>
+<span class="lineNum">     217 </span>            : inline
+<span class="lineNum">     218 </span><span class="lineCov">     505508 : MultiValue&amp; Vessel::transformDerivatives( const unsigned&amp; current, MultiValue&amp; myvals, MultiValue&amp; bvals ) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">     505508 :   return myvals;</span>
+<span class="lineNum">     220 </span>            : }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : inline
+<span class="lineNum">     223 </span>            : void Vessel::resizeBuffer( const unsigned&amp; n ) {
+<span class="lineNum">     224 </span><span class="lineCov">       2920 :   bufsize=n;</span>
+<span class="lineNum">     225 </span>            : }
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            : inline
+<span class="lineNum">     228 </span>            : double Vessel::getTolerance() const {
+<span class="lineNum">     229 </span><span class="lineCov">     133035 :   return action-&gt;tolerance;</span>
+<span class="lineNum">     230 </span>            : }
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            : inline
+<span class="lineNum">     233 </span>            : double Vessel::getNLTolerance() const {
+<span class="lineNum">     234 </span>            :   return action-&gt;nl_tolerance;
+<span class="lineNum">     235 </span>            : }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : inline
+<span class="lineNum">     238 </span>            : ActionWithVessel* Vessel::getAction() const {
+<span class="lineNum">     239 </span><span class="lineCov">    4311447 :   return action;</span>
+<span class="lineNum">     240 </span>            : }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : inline
+<span class="lineNum">     243 </span>            : unsigned Vessel::getSizeOfBuffer() const {
+<span class="lineNum">     244 </span>            :   return bufsize;
+<span class="lineNum">     245 </span>            : }
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : }
+<span class="lineNum">     248 </span>            : }
+<span class="lineNum">     249 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

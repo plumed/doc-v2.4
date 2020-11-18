@@ -1,0 +1,491 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/VesBias.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - VesBias.h<span style="font-size: 80%;"> (source / <a href="VesBias.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">69</td>
+            <td class="headerCovTableEntry">92</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryLo">36.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_ves_VesBias_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_ves_VesBias_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;CoeffsVector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;CoeffsMatrix.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;core/ActionWithArguments.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;bias/Bias.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      34 </span>            : #include &lt;string&gt;
+<span class="lineNum">      35 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #define PLUMED_VES_VESBIAS_INIT(ao) Action(ao),VesBias(ao)
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace PLMD {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : class Value;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace ves {
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : class CoeffsVector;
+<span class="lineNum">      47 </span>            : class CoeffsMatrix;
+<span class="lineNum">      48 </span>            : class BasisFunctions;
+<span class="lineNum">      49 </span>            : class Optimizer;
+<span class="lineNum">      50 </span>            : class TargetDistribution;
+<span class="lineNum">      51 </span>            : class FermiSwitchingFunction;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : /**
+<span class="lineNum">      54 </span>            : \ingroup INHERIT
+<span class="lineNum">      55 </span>            : Abstract base class for implementing biases the extents the normal Bias.h class
+<span class="lineNum">      56 </span>            : to include functions related to the variational approach.
+<span class="lineNum">      57 </span>            : */
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : class VesBias:
+<span class="lineNum">      60 </span>            :   public bias::Bias
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span>            : private:
+<span class="lineNum">      63 </span>            :   unsigned int ncoeffssets_;
+<span class="lineNum">      64 </span>            :   std::vector&lt;CoeffsVector*&gt; coeffs_pntrs_;
+<span class="lineNum">      65 </span>            :   std::vector&lt;CoeffsVector*&gt; targetdist_averages_pntrs_;
+<span class="lineNum">      66 </span>            :   std::vector&lt;CoeffsVector*&gt; gradient_pntrs_;
+<span class="lineNum">      67 </span>            :   std::vector&lt;CoeffsMatrix*&gt; hessian_pntrs_;
+<span class="lineNum">      68 </span>            :   std::vector&lt;std::vector&lt;double&gt; &gt; sampled_averages;
+<span class="lineNum">      69 </span>            :   std::vector&lt;std::vector&lt;double&gt; &gt; sampled_cross_averages;
+<span class="lineNum">      70 </span>            :   bool use_multiple_coeffssets_;
+<span class="lineNum">      71 </span>            :   //
+<span class="lineNum">      72 </span>            :   std::vector&lt;std::string&gt; coeffs_fnames;
+<span class="lineNum">      73 </span>            :   //
+<span class="lineNum">      74 </span>            :   size_t ncoeffs_total_;
+<span class="lineNum">      75 </span>            :   //
+<span class="lineNum">      76 </span>            :   Optimizer* optimizer_pntr_;
+<span class="lineNum">      77 </span>            :   bool optimize_coeffs_;
+<span class="lineNum">      78 </span>            :   //
+<span class="lineNum">      79 </span>            :   bool compute_hessian_;
+<span class="lineNum">      80 </span>            :   bool diagonal_hessian_;
+<span class="lineNum">      81 </span>            :   //
+<span class="lineNum">      82 </span>            :   std::vector&lt;unsigned int&gt; aver_counters;
+<span class="lineNum">      83 </span>            :   //
+<span class="lineNum">      84 </span>            :   double kbt_;
+<span class="lineNum">      85 </span>            :   //
+<span class="lineNum">      86 </span>            :   std::vector&lt;TargetDistribution*&gt; targetdist_pntrs_;
+<span class="lineNum">      87 </span>            :   bool dynamic_targetdist_;
+<span class="lineNum">      88 </span>            :   //
+<span class="lineNum">      89 </span>            :   std::vector&lt;unsigned int&gt; grid_bins_;
+<span class="lineNum">      90 </span>            :   std::vector&lt;double&gt; grid_min_;
+<span class="lineNum">      91 </span>            :   std::vector&lt;double&gt; grid_max_;
+<span class="lineNum">      92 </span>            :   //
+<span class="lineNum">      93 </span>            :   std::string bias_filename_;
+<span class="lineNum">      94 </span>            :   std::string fes_filename_;
+<span class="lineNum">      95 </span>            :   std::string targetdist_filename_;
+<span class="lineNum">      96 </span>            :   std::string targetdist_averages_filename_;
+<span class="lineNum">      97 </span>            :   std::string coeffs_id_prefix_;
+<span class="lineNum">      98 </span>            :   //
+<span class="lineNum">      99 </span>            :   std::string bias_file_fmt_;
+<span class="lineNum">     100 </span>            :   std::string fes_file_fmt_;
+<span class="lineNum">     101 </span>            :   std::string targetdist_file_fmt_;
+<span class="lineNum">     102 </span>            :   std::string targetdist_restart_file_fmt_;
+<span class="lineNum">     103 </span>            :   //
+<span class="lineNum">     104 </span>            :   bool filenames_have_iteration_number_;
+<span class="lineNum">     105 </span>            :   //
+<span class="lineNum">     106 </span>            :   bool bias_fileoutput_active_;
+<span class="lineNum">     107 </span>            :   bool fes_fileoutput_active_;
+<span class="lineNum">     108 </span>            :   bool fesproj_fileoutput_active_;
+<span class="lineNum">     109 </span>            :   bool dynamic_targetdist_fileoutput_active_;
+<span class="lineNum">     110 </span>            :   bool static_targetdist_fileoutput_active_;
+<span class="lineNum">     111 </span>            :   //
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :   bool bias_cutoff_active_;
+<span class="lineNum">     114 </span>            :   double bias_cutoff_value_;
+<span class="lineNum">     115 </span>            :   double bias_current_max_value;
+<span class="lineNum">     116 </span>            :   FermiSwitchingFunction* bias_cutoff_swfunc_pntr_;
+<span class="lineNum">     117 </span>            :   //
+<span class="lineNum">     118 </span>            :   std::vector&lt; std::vector&lt;std::string&gt; &gt; projection_args_;
+<span class="lineNum">     119 </span>            :   //
+<span class="lineNum">     120 </span>            :   bool calc_reweightfactor_;
+<span class="lineNum">     121 </span>            : private:
+<span class="lineNum">     122 </span>            :   void initializeCoeffs(CoeffsVector*);
+<span class="lineNum">     123 </span>            :   std::vector&lt;double&gt; computeCovarianceFromAverages(const unsigned int) const;
+<span class="lineNum">     124 </span>            :   void multiSimSumAverages(const unsigned int, const double walker_weight=1.0);
+<span class="lineNum">     125 </span>            : protected:
+<span class="lineNum">     126 </span>            :   //
+<span class="lineNum">     127 </span>            :   void checkThatTemperatureIsGiven();
+<span class="lineNum">     128 </span>            :   //
+<span class="lineNum">     129 </span>            :   void addCoeffsSet(const std::vector&lt;std::string&gt;&amp;,const std::vector&lt;unsigned int&gt;&amp;);
+<span class="lineNum">     130 </span>            :   void addCoeffsSet(std::vector&lt;Value*&gt;&amp;,std::vector&lt;BasisFunctions*&gt;&amp;);
+<span class="lineNum">     131 </span>            :   void addCoeffsSet(CoeffsVector*);
+<span class="lineNum">     132 </span>            :   //
+<span class="lineNum">     133 </span>            :   std::string getCoeffsSetLabelString(const std::string&amp;, const unsigned int coeffs_id = 0) const;
+<span class="lineNum">     134 </span>            :   void clearCoeffsPntrsVector() {coeffs_pntrs_.clear();}
+<span class="lineNum">     135 </span>            :   void addToSampledAverages(const std::vector&lt;double&gt;&amp;, const unsigned int c_id = 0);
+<span class="lineNum">     136 </span>            :   void setTargetDistAverages(const std::vector&lt;double&gt;&amp;, const unsigned int coeffs_id = 0);
+<span class="lineNum">     137 </span>            :   void setTargetDistAverages(const CoeffsVector&amp;, const unsigned int coeffs_id= 0);
+<span class="lineNum">     138 </span>            :   void setTargetDistAveragesToZero(const unsigned int coeffs_id= 0);
+<span class="lineNum">     139 </span>            :   //
+<span class="lineNum">     140 </span>            :   bool readCoeffsFromFiles();
+<span class="lineNum">     141 </span>            :   //
+<span class="lineNum">     142 </span>            :   template&lt;class T&gt;
+<span class="lineNum">     143 </span>            :   bool parseMultipleValues(const std::string&amp;, std::vector&lt;T&gt;&amp;, unsigned int);
+<span class="lineNum">     144 </span>            :   template&lt;class T&gt;
+<span class="lineNum">     145 </span>            :   bool parseMultipleValues(const std::string&amp;, std::vector&lt;T&gt;&amp;, unsigned int, const T&amp;);
+<span class="lineNum">     146 </span>            :   //
+<span class="lineNum">     147 </span>            : public:
+<span class="lineNum">     148 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     149 </span>            :   explicit VesBias(const ActionOptions&amp;ao);
+<span class="lineNum">     150 </span>            :   ~VesBias();
+<span class="lineNum">     151 </span>            :   //
+<span class="lineNum">     152 </span>            :   void apply();
+<span class="lineNum">     153 </span>            :   //
+<span class="lineNum">     154 </span>            :   static void useInitialCoeffsKeywords(Keywords&amp;);
+<span class="lineNum">     155 </span>            :   static void useTargetDistributionKeywords(Keywords&amp;);
+<span class="lineNum">     156 </span>            :   static void useMultipleTargetDistributionKeywords(Keywords&amp;);
+<span class="lineNum">     157 </span>            :   static void useGridBinKeywords(Keywords&amp;);
+<span class="lineNum">     158 </span>            :   static void useGridLimitsKeywords(Keywords&amp;);
+<span class="lineNum">     159 </span>            :   static void useBiasCutoffKeywords(Keywords&amp;);
+<span class="lineNum">     160 </span>            :   static void useProjectionArgKeywords(Keywords&amp;);
+<span class="lineNum">     161 </span>            :   static void useReweightFactorKeywords(Keywords&amp;);
+<span class="lineNum">     162 </span>            :   //
+<span class="lineNum">     163 </span><span class="lineCov">        251 :   std::vector&lt;CoeffsVector*&gt; getCoeffsPntrs() const {return coeffs_pntrs_;}</span>
+<span class="lineNum">     164 </span><span class="lineCov">         77 :   std::vector&lt;CoeffsVector*&gt; getTargetDistAveragesPntrs() const {return targetdist_averages_pntrs_;}</span>
+<span class="lineNum">     165 </span><span class="lineCov">         77 :   std::vector&lt;CoeffsVector*&gt; getGradientPntrs()const {return gradient_pntrs_;}</span>
+<span class="lineNum">     166 </span><span class="lineCov">         77 :   std::vector&lt;CoeffsMatrix*&gt; getHessianPntrs() const {return hessian_pntrs_;}</span>
+<span class="lineNum">     167 </span><span class="lineCov">        123 :   std::vector&lt;TargetDistribution*&gt; getTargetDistributionPntrs() const {return targetdist_pntrs_;}</span>
+<span class="lineNum">     168 </span>            :   //
+<span class="lineNum">     169 </span><span class="lineCov">         82 :   CoeffsVector* getCoeffsPntr(const unsigned int coeffs_id = 0) const {return coeffs_pntrs_[coeffs_id];}</span>
+<span class="lineNum">     170 </span>            :   CoeffsVector* getTargetDistAveragesPntr(const unsigned int coeffs_id = 0) const {return targetdist_averages_pntrs_[coeffs_id];}
+<span class="lineNum">     171 </span>            :   CoeffsVector* getGradientPntr(const unsigned int coeffs_id = 0)const {return gradient_pntrs_[coeffs_id];}
+<span class="lineNum">     172 </span>            :   CoeffsMatrix* getHessianPntr(const unsigned int coeffs_id = 0) const {return hessian_pntrs_[coeffs_id];}
+<span class="lineNum">     173 </span>            :   //
+<span class="lineNum">     174 </span><span class="lineCov">         82 :   unsigned int getNumberOfTargetDistributionPntrs() const {return targetdist_pntrs_.size();}</span>
+<span class="lineNum">     175 </span>            :   //
+<span class="lineNum">     176 </span><span class="lineCov">       3095 :   size_t numberOfCoeffs(const unsigned int coeffs_id = 0) const {return coeffs_pntrs_[coeffs_id]-&gt;numberOfCoeffs();}</span>
+<span class="lineNum">     177 </span>            :   size_t totalNumberOfCoeffs() const {return ncoeffs_total_;}
+<span class="lineNum">     178 </span><span class="lineCov">          3 :   unsigned int numberOfCoeffsSets() const {return ncoeffssets_;}</span>
+<span class="lineNum">     179 </span><span class="lineCov">         77 :   double getKbT() const {return kbt_;}</span>
+<span class="lineNum">     180 </span>            :   double getBeta() const;
+<span class="lineNum">     181 </span>            :   //
+<span class="lineNum">     182 </span>            :   CoeffsVector&amp; Coeffs(const unsigned int coeffs_id = 0) const {return *coeffs_pntrs_[coeffs_id];}
+<span class="lineNum">     183 </span><span class="lineCov">       2033 :   CoeffsVector&amp; TargetDistAverages(const unsigned int coeffs_id = 0) const {return *targetdist_averages_pntrs_[coeffs_id];}</span>
+<span class="lineNum">     184 </span><span class="lineCov">       1720 :   CoeffsVector&amp; Gradient(const unsigned int coeffs_id = 0) const {return *gradient_pntrs_[coeffs_id];}</span>
+<span class="lineNum">     185 </span><span class="lineCov">       2490 :   CoeffsMatrix&amp; Hessian(const unsigned int coeffs_id = 0) const {return *hessian_pntrs_[coeffs_id];}</span>
+<span class="lineNum">     186 </span>            :   //
+<span class="lineNum">     187 </span>            :   size_t getCoeffsIndex(const std::vector&lt;unsigned int&gt;&amp; indices, const unsigned int coeffs_id = 0) const;
+<span class="lineNum">     188 </span>            :   std::vector&lt;unsigned int&gt; getCoeffsIndices(const size_t index, const unsigned int coeffs_id = 0) const;
+<span class="lineNum">     189 </span>            :   size_t getHessianIndex(const size_t index1, const size_t index2, const unsigned int coeffs_id = 0) const;
+<span class="lineNum">     190 </span>            :   //
+<span class="lineNum">     191 </span>            :   bool computeHessian() const {return compute_hessian_;}
+<span class="lineNum">     192 </span>            :   bool diagonalHessian() const {return diagonal_hessian_;}
+<span class="lineNum">     193 </span>            :   //
+<span class="lineNum">     194 </span><span class="lineCov">       1468 :   bool optimizeCoeffs() const {return optimize_coeffs_;}</span>
+<span class="lineNum">     195 </span><span class="lineCov">       1330 :   Optimizer* getOptimizerPntr() const {return optimizer_pntr_;}</span>
+<span class="lineNum">     196 </span>            :   bool useMultipleWalkers() const;
+<span class="lineNum">     197 </span>            :   //
+<span class="lineNum">     198 </span>            :   unsigned int getIterationCounter() const;
+<span class="lineNum">     199 </span>            :   //
+<span class="lineNum">     200 </span>            :   void updateGradientAndHessian(const bool);
+<a name="201"><span class="lineNum">     201 </span>            :   void clearGradientAndHessian() {};</a>
+<a name="202"><span class="lineNum">     202 </span>            :   //</a>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :   virtual void updateTargetDistributions() {};</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :   virtual void restartTargetDistributions() {};</span>
+<span class="lineNum">     205 </span>            :   //
+<span class="lineNum">     206 </span>            :   void linkOptimizer(Optimizer*);
+<span class="lineNum">     207 </span>            :   void enableHessian(const bool diagonal_hessian=true);
+<span class="lineNum">     208 </span>            :   void disableHessian();
+<span class="lineNum">     209 </span>            :   //
+<span class="lineNum">     210 </span>            :   void enableMultipleCoeffsSets() {use_multiple_coeffssets_=true;}
+<span class="lineNum">     211 </span>            :   //
+<span class="lineNum">     212 </span><span class="lineCov">         37 :   void enableDynamicTargetDistribution() {dynamic_targetdist_=true;}</span>
+<span class="lineNum">     213 </span>            :   void disableDynamicTargetDistribution() {dynamic_targetdist_=false;}
+<span class="lineNum">     214 </span><span class="lineCov">        245 :   bool dynamicTargetDistribution() const {return dynamic_targetdist_;}</span>
+<span class="lineNum">     215 </span>            :   //
+<span class="lineNum">     216 </span><span class="lineCov">         82 :   std::vector&lt;unsigned int&gt; getGridBins() const {return grid_bins_;}</span>
+<span class="lineNum">     217 </span>            :   void setGridBins(const std::vector&lt;unsigned int&gt;&amp;);
+<span class="lineNum">     218 </span>            :   void setGridBins(const unsigned int);
+<span class="lineNum">     219 </span>            :   std::vector&lt;double&gt; getGridMax() const {return grid_max_;}
+<span class="lineNum">     220 </span>            :   void setGridMax(const std::vector&lt;double&gt;&amp;);
+<span class="lineNum">     221 </span>            :   std::vector&lt;double&gt; getGridMin() const {return grid_min_;}
+<span class="lineNum">     222 </span>            :   void setGridMin(const std::vector&lt;double&gt;&amp;);
+<span class="lineNum">     223 </span>            :   //
+<span class="lineNum">     224 </span><span class="lineCov">        539 :   bool filenamesIncludeIterationNumber() const {return filenames_have_iteration_number_;}</span>
+<span class="lineNum">     225 </span><span class="lineCov">          3 :   void enableIterationNumberInFilenames() {filenames_have_iteration_number_=true;}</span>
+<span class="lineNum">     226 </span>            :   //
+<span class="lineNum">     227 </span>            :   std::string getIterationFilenameSuffix() const;
+<span class="lineNum">     228 </span>            :   std::string getCoeffsSetFilenameSuffix(const unsigned int coeffs_id) const;
+<span class="lineNum">     229 </span>            :   std::string getCurrentOutputFilename(const std::string&amp;, const std::string&amp; suffix=&quot;&quot;) const;
+<span class="lineNum">     230 </span>            :   std::string getBiasOutputFilename() const {return bias_filename_;}
+<span class="lineNum">     231 </span>            :   std::string getCurrentBiasOutputFilename(const std::string&amp; suffix=&quot;&quot;) const;
+<span class="lineNum">     232 </span>            :   std::string getFesOutputFilename() const {return fes_filename_;}
+<span class="lineNum">     233 </span>            :   std::string getCurrentFesOutputFilename(const std::string&amp; suffix=&quot;&quot;) const;
+<span class="lineNum">     234 </span>            :   std::string getTargetDistOutputFilename() const {return targetdist_filename_;}
+<span class="lineNum">     235 </span>            :   std::string getCurrentTargetDistOutputFilename(const std::string&amp; suffix=&quot;&quot;) const;
+<span class="lineNum">     236 </span>            :   //
+<span class="lineNum">     237 </span><span class="lineCov">         79 :   void enableBiasFileOutput() {bias_fileoutput_active_=true;}</span>
+<span class="lineNum">     238 </span>            :   void disableBiasFileOutput() {bias_fileoutput_active_=false;}
+<span class="lineNum">     239 </span>            :   bool isBiasFileOutputActive() const {return bias_fileoutput_active_;}
+<span class="lineNum">     240 </span>            :   std::string getBiasFileFmt() const {return bias_file_fmt_;}
+<span class="lineNum">     241 </span>            :   //
+<span class="lineNum">     242 </span><span class="lineCov">         79 :   void enableFesFileOutput() {fes_fileoutput_active_=true;}</span>
+<span class="lineNum">     243 </span>            :   void disableFesFileOutput() {fes_fileoutput_active_=false;}
+<span class="lineNum">     244 </span>            :   bool isFesFileOutputActive() const {return fes_fileoutput_active_;}
+<span class="lineNum">     245 </span>            :   std::string getFesFileFmt() const {return fes_file_fmt_;}
+<span class="lineNum">     246 </span>            :   //
+<span class="lineNum">     247 </span><span class="lineCov">         17 :   void enableFesProjFileOutput() {fesproj_fileoutput_active_=true;}</span>
+<span class="lineNum">     248 </span>            :   void disableFesFileProjOutput() {fesproj_fileoutput_active_=false;}
+<span class="lineNum">     249 </span>            :   bool isFesProjFileOutputActive() const {return fesproj_fileoutput_active_;}
+<span class="lineNum">     250 </span>            :   //
+<span class="lineNum">     251 </span><span class="lineCov">         36 :   void enableDynamicTargetDistFileOutput() {dynamic_targetdist_fileoutput_active_=true;}</span>
+<span class="lineNum">     252 </span>            :   void disableDynamicTargetDistFileOutput() {dynamic_targetdist_fileoutput_active_=false;}
+<span class="lineNum">     253 </span>            :   bool isDynamicTargetDistFileOutputActive() const {return dynamic_targetdist_fileoutput_active_;}
+<span class="lineNum">     254 </span>            :   std::string getTargetDistFileFmt() const {return targetdist_file_fmt_;}
+<span class="lineNum">     255 </span>            :   std::string getTargetDistRestartFileFmt() const {return targetdist_restart_file_fmt_;}
+<span class="lineNum">     256 </span>            :   //
+<span class="lineNum">     257 </span>            :   void enableStaticTargetDistFileOutput() {static_targetdist_fileoutput_active_=true;}
+<span class="lineNum">     258 </span><span class="lineCov">         42 :   void disableStaticTargetDistFileOutput() {static_targetdist_fileoutput_active_=false;}</span>
+<span class="lineNum">     259 </span><span class="lineCov">         47 :   bool isStaticTargetDistFileOutputActive() const {return static_targetdist_fileoutput_active_;}</span>
+<span class="lineNum">     260 </span>            :   //
+<span class="lineNum">     261 </span>            :   std::vector&lt; std::vector&lt;std::string&gt; &gt; getProjectionArguments() const {return projection_args_;}
+<span class="lineNum">     262 </span><span class="lineCov">        112 :   std::vector&lt;std::string&gt; getProjectionArgument(unsigned int i) const {return projection_args_[i];}</span>
+<span class="lineNum">     263 </span><span class="lineCov">        122 :   unsigned int getNumberOfProjectionArguments() const {return projection_args_.size();}</span>
+<span class="lineNum">     264 </span>            :   //
+<span class="lineNum">     265 </span>            :   void setupBiasCutoff(const double, const double);
+<span class="lineNum">     266 </span><span class="lineCov">    1456547 :   bool biasCutoffActive() const {return bias_cutoff_active_;}</span>
+<span class="lineNum">     267 </span><span class="lineCov">         45 :   double getBiasCutoffValue() const {return bias_cutoff_value_;}</span>
+<span class="lineNum">     268 </span><span class="lineCov">        467 :   void setCurrentBiasMaxValue(const double max_value) {bias_current_max_value=max_value;}</span>
+<span class="lineNum">     269 </span>            :   double getCurrentBiasMaxValue() const {return bias_current_max_value;}
+<span class="lineNum">     270 </span>            :   double getBiasCutoffSwitchingFunction(const double, double&amp;) const;
+<span class="lineNum">     271 </span>            :   double getBiasCutoffSwitchingFunction(const double) const;
+<span class="lineNum">     272 </span>            :   void applyBiasCutoff(double&amp;, std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     273 </span>            :   void applyBiasCutoff(double&amp;, std::vector&lt;double&gt;&amp;, std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     274 </span>            :   //
+<a name="275"><span class="lineNum">     275 </span>            :   OFile* getOFile(const std::string&amp; filename, const bool multi_sim_single_file=false, const bool enforce_backup=true);</a>
+<a name="276"><span class="lineNum">     276 </span>            :   //</a>
+<a name="277"><span class="lineNum">     277 </span><span class="lineNoCov">          0 :   virtual void setupBiasFileOutput() {};</span></a>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :   virtual void writeBiasToFile() {};</span>
+<a name="279"><span class="lineNum">     279 </span><span class="lineNoCov">          0 :   virtual void resetBiasFileOutput() {};</span></a>
+<a name="280"><span class="lineNum">     280 </span>            :   //</a>
+<a name="281"><span class="lineNum">     281 </span><span class="lineNoCov">          0 :   virtual void setupFesFileOutput() {};</span></a>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :   virtual void writeFesToFile() {};</span>
+<a name="283"><span class="lineNum">     283 </span><span class="lineNoCov">          0 :   virtual void resetFesFileOutput() {};</span></a>
+<a name="284"><span class="lineNum">     284 </span>            :   //</a>
+<a name="285"><span class="lineNum">     285 </span><span class="lineNoCov">          0 :   virtual void setupFesProjFileOutput() {};</span></a>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :   virtual void writeFesProjToFile() {};</span>
+<a name="287"><span class="lineNum">     287 </span><span class="lineNoCov">          0 :   virtual void resetFesProjFileOutput() {};</span></a>
+<a name="288"><span class="lineNum">     288 </span>            :   //</a>
+<a name="289"><span class="lineNum">     289 </span><span class="lineCov">         39 :   virtual void setupTargetDistFileOutput() {};</span></a>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :   virtual void writeTargetDistToFile() {};</span>
+<a name="291"><span class="lineNum">     291 </span><span class="lineNoCov">          0 :   virtual void resetTargetDistFileOutput() {};</span></a>
+<a name="292"><span class="lineNum">     292 </span>            :   //</a>
+<a name="293"><span class="lineNum">     293 </span><span class="lineCov">          9 :   virtual void setupTargetDistProjFileOutput() {};</span></a>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :   virtual void writeTargetDistProjToFile() {};</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :   virtual void resetTargetDistProjFileOutput() {};</span>
+<span class="lineNum">     296 </span>            :   //
+<span class="lineNum">     297 </span>            :   void updateReweightFactor();
+<span class="lineNum">     298 </span>            :   virtual double calculateReweightFactor() const;
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :   bool isReweightFactorCalculated() const {return calc_reweightfactor_;}</span>
+<span class="lineNum">     300 </span>            : };
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : inline
+<span class="lineNum">     304 </span>            : size_t VesBias::getCoeffsIndex(const std::vector&lt;unsigned int&gt;&amp; indices, const unsigned int coeffs_id) const {return coeffs_pntrs_[coeffs_id]-&gt;getIndex(indices);}
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : inline
+<span class="lineNum">     307 </span>            : std::vector&lt;unsigned int&gt; VesBias::getCoeffsIndices(const size_t index, const unsigned int coeffs_id) const {return coeffs_pntrs_[coeffs_id]-&gt;getIndices(index);}
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            : inline
+<span class="lineNum">     310 </span><span class="lineCov">      64954 : size_t VesBias::getHessianIndex(const size_t index1, const size_t index2, const unsigned int coeffs_id) const {return hessian_pntrs_[coeffs_id]-&gt;getMatrixIndex(index1,index2);}</span>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : inline
+<span class="lineNum">     314 </span><span class="lineCov">       1204 : double VesBias::getBeta() const {</span>
+<span class="lineNum">     315 </span><span class="lineCov">       1204 :   plumed_massert(kbt_!=0.0,&quot;you are requesting beta=1/(kB*T) when kB*T has not been defined. You need to give the temperature using the TEMP keyword as the MD engine does not pass it to PLUMED.&quot;);</span>
+<span class="lineNum">     316 </span><span class="lineCov">       1204 :   return 1.0/kbt_;</span>
+<span class="lineNum">     317 </span>            : }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            : inline
+<span class="lineNum">     321 </span>            : std::string VesBias::getCurrentBiasOutputFilename(const std::string&amp; suffix) const {
+<span class="lineNum">     322 </span><span class="lineCov">        170 :   return getCurrentOutputFilename(bias_filename_,suffix);</span>
+<span class="lineNum">     323 </span>            : }
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            : inline
+<span class="lineNum">     327 </span>            : std::string VesBias::getCurrentFesOutputFilename(const std::string&amp; suffix) const {
+<span class="lineNum">     328 </span><span class="lineCov">        197 :   return getCurrentOutputFilename(fes_filename_,suffix);</span>
+<span class="lineNum">     329 </span>            : }
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            : inline
+<span class="lineNum">     333 </span>            : double VesBias::getBiasCutoffSwitchingFunction(const double bias) const {
+<span class="lineNum">     334 </span>            :   double dummy=0.0;
+<span class="lineNum">     335 </span>            :   return getBiasCutoffSwitchingFunction(bias,dummy);
+<span class="lineNum">     336 </span>            : }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            : inline
+<span class="lineNum">     340 </span><span class="lineCov">        600 : void VesBias::applyBiasCutoff(double&amp; bias, std::vector&lt;double&gt;&amp; forces) const {</span>
+<span class="lineNum">     341 </span><span class="lineCov">        600 :   std::vector&lt;double&gt; dummy(0);</span>
+<span class="lineNum">     342 </span><span class="lineCov">        600 :   applyBiasCutoff(bias,forces,dummy);</span>
+<span class="lineNum">     343 </span><span class="lineCov">        600 : }</span>
+<span class="lineNum">     344 </span>            : 
+<a name="345"><span class="lineNum">     345 </span>            : </a>
+<span class="lineNum">     346 </span>            : inline
+<span class="lineNum">     347 </span><span class="lineCov">        663 : void VesBias::applyBiasCutoff(double&amp; bias, std::vector&lt;double&gt;&amp; forces, std::vector&lt;double&gt;&amp; coeffsderivs_values) const {</span>
+<span class="lineNum">     348 </span><span class="lineCov">        663 :   double deriv_factor_sf=0.0;</span>
+<span class="lineNum">     349 </span><span class="lineCov">        663 :   double value_sf = getBiasCutoffSwitchingFunction(bias,deriv_factor_sf);</span>
+<span class="lineNum">     350 </span><span class="lineCov">        663 :   bias *= value_sf;</span>
+<span class="lineNum">     351 </span><span class="lineCov">       3315 :   for(unsigned int i=0; i&lt;forces.size(); i++) {</span>
+<span class="lineNum">     352 </span><span class="lineCov">        663 :     forces[i] *= deriv_factor_sf;</span>
+<span class="lineNum">     353 </span>            :   }
+<span class="lineNum">     354 </span>            :   //
+<span class="lineNum">     355 </span><span class="lineCov">       3531 :   for(unsigned int i=0; i&lt;coeffsderivs_values.size(); i++) {</span>
+<span class="lineNum">     356 </span><span class="lineCov">        735 :     coeffsderivs_values[i] *= deriv_factor_sf;</span>
+<span class="lineNum">     357 </span>            :   }
+<span class="lineNum">     358 </span><span class="lineCov">        663 : }</span>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span>            : inline
+<span class="lineNum">     362 </span><span class="lineCov">        770 : std::vector&lt;double&gt; VesBias::computeCovarianceFromAverages(const unsigned int c_id) const {</span>
+<span class="lineNum">     363 </span>            :   size_t ncoeffs = numberOfCoeffs(c_id);
+<span class="lineNum">     364 </span><span class="lineCov">       1540 :   std::vector&lt;double&gt; covariance(sampled_cross_averages[c_id].size(),0.0);</span>
+<span class="lineNum">     365 </span>            :   // diagonal part
+<span class="lineNum">     366 </span><span class="lineCov">      61430 :   for(size_t i=0; i&lt;ncoeffs; i++) {</span>
+<span class="lineNum">     367 </span>            :     size_t midx = getHessianIndex(i,i,c_id);
+<span class="lineNum">     368 </span><span class="lineCov">      90990 :     covariance[midx] = sampled_cross_averages[c_id][midx] - sampled_averages[c_id][i]*sampled_averages[c_id][i];</span>
+<span class="lineNum">     369 </span>            :   }
+<span class="lineNum">     370 </span><span class="lineCov">        770 :   if(!diagonal_hessian_) {</span>
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :     for(size_t i=0; i&lt;ncoeffs; i++) {</span>
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :       for(size_t j=(i+1); j&lt;ncoeffs; j++) {</span>
+<span class="lineNum">     373 </span>            :         size_t midx = getHessianIndex(i,j,c_id);
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :         covariance[midx] = sampled_cross_averages[c_id][midx] - sampled_averages[c_id][i]*sampled_averages[c_id][j];</span>
+<span class="lineNum">     375 </span>            :       }
+<span class="lineNum">     376 </span>            :     }
+<span class="lineNum">     377 </span>            :   }
+<span class="lineNum">     378 </span><span class="lineCov">        770 :   return covariance;</span>
+<span class="lineNum">     379 </span>            : }
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            : template&lt;class T&gt;
+<span class="lineNum">     383 </span><span class="lineCov">        164 : bool VesBias::parseMultipleValues(const std::string&amp; keyword, std::vector&lt;T&gt;&amp; values, unsigned int nvalues) {</span>
+<span class="lineNum">     384 </span><span class="lineCov">        164 :   plumed_assert(nvalues&gt;0);</span>
+<span class="lineNum">     385 </span><span class="lineCov">        164 :   plumed_assert(values.size()==0);</span>
+<span class="lineNum">     386 </span>            :   bool identical_values=false;
+<span class="lineNum">     387 </span>            :   //
+<span class="lineNum">     388 </span><span class="lineCov">        164 :   parseVector(keyword,values);</span>
+<span class="lineNum">     389 </span><span class="lineCov">        164 :   if(values.size()==1 &amp;&amp; nvalues&gt;1) {</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :     values.resize(nvalues,values[0]);</span>
+<span class="lineNum">     391 </span>            :     identical_values=true;
+<span class="lineNum">     392 </span>            :   }
+<span class="lineNum">     393 </span><span class="lineCov">        164 :   if(values.size()&gt;0 &amp;&amp; values.size()!=nvalues) {</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :     std::string s1; Tools::convert(nvalues,s1);</span>
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;Error in &quot; + keyword + &quot; keyword: either give 1 common parameter value or &quot; + s1 + &quot; separate parameter values&quot;);</span>
+<span class="lineNum">     396 </span>            :   }
+<span class="lineNum">     397 </span><span class="lineCov">        164 :   return identical_values;</span>
+<span class="lineNum">     398 </span>            : }
+<a name="399"><span class="lineNum">     399 </span>            : </a>
+<span class="lineNum">     400 </span>            : template&lt;class T&gt;
+<span class="lineNum">     401 </span><span class="lineCov">         82 : bool VesBias::parseMultipleValues(const std::string&amp; keyword, std::vector&lt;T&gt;&amp; values, unsigned int nvalues, const T&amp; default_value) {</span>
+<span class="lineNum">     402 </span><span class="lineCov">         82 :   bool identical_values = parseMultipleValues(keyword,values,nvalues);</span>
+<span class="lineNum">     403 </span><span class="lineCov">         82 :   if(values.size()==0) {</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :     values.resize(nvalues,default_value);</span>
+<span class="lineNum">     405 </span>            :     identical_values=true;
+<span class="lineNum">     406 </span>            :   }
+<span class="lineNum">     407 </span><span class="lineCov">         82 :   return identical_values;</span>
+<span class="lineNum">     408 </span>            : }
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : }
+<span class="lineNum">     412 </span>            : }
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

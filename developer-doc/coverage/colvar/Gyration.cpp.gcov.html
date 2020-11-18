@@ -1,0 +1,462 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/Gyration.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - Gyration.cpp<span style="font-size: 80%;"> (source / <a href="Gyration.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">147</td>
+            <td class="headerCovTableEntry">186</td>
+            <td class="headerCovTableEntryMed">79.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace colvar {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC COLVAR GYRATION
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Calculate the radius of gyration, or other properties related to it.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : The different properties can be calculated and selected by the TYPE keyword:
+<span class="lineNum">      40 </span>            : the Radius of Gyration (RADIUS); the Trace of the Gyration Tensor (TRACE);
+<span class="lineNum">      41 </span>            : the Largest Principal Moment of the Gyration Tensor (GTPC_1); the middle Principal Moment of the Gyration Tensor (GTPC_2);
+<span class="lineNum">      42 </span>            : the Smallest Principal Moment of the Gyration Tensor (GTPC_3); the Asphericiry (ASPHERICITY); the Acylindricity (ACYLINDRICITY);
+<span class="lineNum">      43 </span>            : the Relative Shape Anisotropy (KAPPA2); the Smallest Principal Radius Of Gyration (GYRATION_3);
+<span class="lineNum">      44 </span>            : the Middle Principal Radius of Gyration (GYRATION_2); the Largest Principal Radius of Gyration (GYRATION_1).
+<span class="lineNum">      45 </span>            : A derivation of all these different variants can be found in \cite Vymetal:2011gv
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : The radius of gyration is calculated using:
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \f[
+<span class="lineNum">      50 </span>            : s_{\rm Gyr}=\Big ( \frac{\sum_i^{n}
+<span class="lineNum">      51 </span>            :  m_i \vert {r}_i -{r}_{\rm COM} \vert ^2 }{\sum_i^{n} m_i} \Big)^{1/2}
+<span class="lineNum">      52 </span>            : \f]
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : with the position of the center of mass \f${r}_{\rm COM}\f$ given by:
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \f[
+<span class="lineNum">      57 </span>            : {r}_{\rm COM}=\frac{\sum_i^{n} {r}_i\ m_i }{\sum_i^{n} m_i}
+<span class="lineNum">      58 </span>            : \f]
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : The radius of gyration usually makes sense when atoms used for the calculation
+<span class="lineNum">      61 </span>            : are all part of the same molecule.
+<span class="lineNum">      62 </span>            : When running with periodic boundary conditions, the atoms should be
+<span class="lineNum">      63 </span>            : in the proper periodic image. This is done automatically since PLUMED 2.2,
+<span class="lineNum">      64 </span>            : by considering the ordered list of atoms and rebuilding PBCs with a procedure
+<span class="lineNum">      65 </span>            : that is equivalent to that done in \ref WHOLEMOLECULES . Notice that
+<span class="lineNum">      66 </span>            : rebuilding is local to this action. This is different from \ref WHOLEMOLECULES
+<span class="lineNum">      67 </span>            : which actually modifies the coordinates stored in PLUMED.
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : In case you want to recover the old behavior you should use the NOPBC flag.
+<span class="lineNum">      70 </span>            : In that case you need to take care that atoms are in the correct
+<span class="lineNum">      71 </span>            : periodic image.
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : \par Examples
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : The following input tells plumed to print the radius of gyration of the
+<span class="lineNum">      77 </span>            : chain containing atoms 10 to 20.
+<span class="lineNum">      78 </span>            : \plumedfile
+<span class="lineNum">      79 </span>            : GYRATION TYPE=RADIUS ATOMS=10-20 LABEL=rg
+<span class="lineNum">      80 </span>            : PRINT ARG=rg STRIDE=1 FILE=colvar
+<span class="lineNum">      81 </span>            : \endplumedfile
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : */
+<a name="84"><span class="lineNum">      84 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         48 : class Gyration : public Colvar {</span>
+<span class="lineNum">      87 </span>            : private:
+<span class="lineNum">      88 </span>            :   enum CV_TYPE {RADIUS, TRACE, GTPC_1, GTPC_2, GTPC_3, ASPHERICITY, ACYLINDRICITY, KAPPA2, GYRATION_3, GYRATION_2, GYRATION_1, TOT};
+<span class="lineNum">      89 </span>            :   int rg_type;
+<span class="lineNum">      90 </span>            :   bool use_masses;
+<span class="lineNum">      91 </span>            :   bool nopbc;
+<span class="lineNum">      92 </span>            : public:
+<span class="lineNum">      93 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      94 </span>            :   explicit Gyration(const ActionOptions&amp;);
+<span class="lineNum">      95 </span>            :   virtual void calculate();
+<a name="96"><span class="lineNum">      96 </span>            : };</a>
+<span class="lineNum">      97 </span>            : 
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">       6478 : PLUMED_REGISTER_ACTION(Gyration,&quot;GYRATION&quot;)</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">         27 : void Gyration::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">         27 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">     102 </span><span class="lineCov">        108 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;the group of atoms that you are calculating the Gyration Tensor for&quot;);</span>
+<span class="lineNum">     103 </span><span class="lineCov">        135 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;RADIUS&quot;,&quot;The type of calculation relative to the Gyration Tensor you want to perform&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">         81 :   keys.addFlag(&quot;MASS_WEIGHTED&quot;,false,&quot;set the masses of all the atoms equal to one&quot;);</span>
+<a name="105"><span class="lineNum">     105 </span><span class="lineCov">         27 : }</span></a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">         26 : Gyration::Gyration(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     108 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">     109 </span>            :   use_masses(false),
+<span class="lineNum">     110 </span><span class="lineCov">         28 :   nopbc(false)</span>
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span>            :   std::vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     113 </span><span class="lineCov">         52 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     114 </span><span class="lineCov">         25 :   if(atoms.size()==0) error(&quot;no atoms specified&quot;);</span>
+<span class="lineNum">     115 </span><span class="lineCov">         50 :   parseFlag(&quot;MASS_WEIGHTED&quot;,use_masses);</span>
+<span class="lineNum">     116 </span>            :   std::string Type;
+<span class="lineNum">     117 </span><span class="lineCov">         50 :   parse(&quot;TYPE&quot;,Type);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         50 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         25 :   checkRead();</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">         25 :   if(Type==&quot;RADIUS&quot;) rg_type=RADIUS;</span>
+<span class="lineNum">     122 </span><span class="lineCov">         21 :   else if(Type==&quot;TRACE&quot;) rg_type=TRACE;</span>
+<span class="lineNum">     123 </span><span class="lineCov">         19 :   else if(Type==&quot;GTPC_1&quot;) rg_type=GTPC_1;</span>
+<span class="lineNum">     124 </span><span class="lineCov">         17 :   else if(Type==&quot;GTPC_2&quot;) rg_type=GTPC_2;</span>
+<span class="lineNum">     125 </span><span class="lineCov">         15 :   else if(Type==&quot;GTPC_3&quot;) rg_type=GTPC_3;</span>
+<span class="lineNum">     126 </span><span class="lineCov">         13 :   else if(Type==&quot;ASPHERICITY&quot;) rg_type=ASPHERICITY;</span>
+<span class="lineNum">     127 </span><span class="lineCov">         11 :   else if(Type==&quot;ACYLINDRICITY&quot;) rg_type=ACYLINDRICITY;</span>
+<span class="lineNum">     128 </span><span class="lineCov">          9 :   else if(Type==&quot;KAPPA2&quot;) rg_type=KAPPA2;</span>
+<span class="lineNum">     129 </span><span class="lineCov">          7 :   else if(Type==&quot;RGYR_3&quot;) rg_type=GYRATION_3;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          5 :   else if(Type==&quot;RGYR_2&quot;) rg_type=GYRATION_2;</span>
+<span class="lineNum">     131 </span><span class="lineCov">          3 :   else if(Type==&quot;RGYR_1&quot;) rg_type=GYRATION_1;</span>
+<span class="lineNum">     132 </span><span class="lineCov">          2 :   else error(&quot;Unknown GYRATION type&quot;);</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">         24 :   switch(rg_type)</span>
+<span class="lineNum">     135 </span>            :   {
+<span class="lineNum">     136 </span><span class="lineCov">          4 :   case RADIUS:   log.printf(&quot;  GYRATION RADIUS (Rg);&quot;); break;</span>
+<span class="lineNum">     137 </span><span class="lineCov">          2 :   case TRACE:  log.printf(&quot;  TRACE OF THE GYRATION TENSOR;&quot;); break;</span>
+<span class="lineNum">     138 </span><span class="lineCov">          2 :   case GTPC_1: log.printf(&quot;  THE LARGEST PRINCIPAL MOMENT OF THE GYRATION TENSOR (S'_1);&quot;); break;</span>
+<span class="lineNum">     139 </span><span class="lineCov">          2 :   case GTPC_2: log.printf(&quot;  THE MIDDLE PRINCIPAL MOMENT OF THE GYRATION TENSOR (S'_2);&quot;);  break;</span>
+<span class="lineNum">     140 </span><span class="lineCov">          2 :   case GTPC_3: log.printf(&quot;  THE SMALLEST PRINCIPAL MOMENT OF THE GYRATION TENSOR (S'_3);&quot;); break;</span>
+<span class="lineNum">     141 </span><span class="lineCov">          2 :   case ASPHERICITY: log.printf(&quot;  THE ASPHERICITY (b');&quot;); break;</span>
+<span class="lineNum">     142 </span><span class="lineCov">          2 :   case ACYLINDRICITY: log.printf(&quot;  THE ACYLINDRICITY (c');&quot;); break;</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :   case KAPPA2: log.printf(&quot;  THE RELATIVE SHAPE ANISOTROPY (kappa^2);&quot;); break;</span>
+<span class="lineNum">     144 </span><span class="lineCov">          2 :   case GYRATION_3: log.printf(&quot;  THE SMALLEST PRINCIPAL RADIUS OF GYRATION (r_g3);&quot;); break;</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :   case GYRATION_2: log.printf(&quot;  THE MIDDLE PRINCIPAL RADIUS OF GYRATION (r_g2);&quot;); break;</span>
+<span class="lineNum">     146 </span><span class="lineCov">          2 :   case GYRATION_1: log.printf(&quot;  THE LARGEST PRINCIPAL RADIUS OF GYRATION (r_g1);&quot;); break;</span>
+<span class="lineNum">     147 </span>            :   }
+<span class="lineNum">     148 </span><span class="lineCov">         60 :   if(rg_type&gt;TRACE) log&lt;&lt;&quot;  Bibliography &quot;&lt;&lt;plumed.cite(&quot;Jirí Vymetal and Jirí Vondrasek, J. Phys. Chem. A 115, 11455 (2011)&quot;);</span>
+<span class="lineNum">     149 </span><span class="lineCov">         24 :   log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">         24 :   log.printf(&quot;  atoms involved : &quot;);</span>
+<span class="lineNum">     152 </span><span class="lineCov">        444 :   for(unsigned i=0; i&lt;atoms.size(); ++i) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">        132 :     if(i%25==0) log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     154 </span><span class="lineCov">        264 :     log.printf(&quot;%d &quot;,atoms[i].serial());</span>
+<span class="lineNum">     155 </span>            :   }
+<span class="lineNum">     156 </span><span class="lineCov">         24 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">         24 :   if(nopbc) {</span>
+<span class="lineNum">     159 </span><span class="lineCov">          4 :     log&lt;&lt;&quot;  PBC will be ignored\n&quot;;</span>
+<span class="lineNum">     160 </span>            :   } else {
+<span class="lineNum">     161 </span><span class="lineCov">         20 :     log&lt;&lt;&quot;  broken molecules will be rebuilt assuming atoms are in the proper order\n&quot;;</span>
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">         24 :   addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">     165 </span><span class="lineCov">         24 :   requestAtoms(atoms);</span>
+<a name="166"><span class="lineNum">     166 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">       1188 : void Gyration::calculate() {</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">       1188 :   if(!nopbc) makeWhole();</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">       1188 :   Vector com;</span>
+<span class="lineNum">     173 </span>            :   double totmass = 0.;
+<span class="lineNum">     174 </span><span class="lineCov">       1188 :   if( use_masses ) {</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :       totmass+=getMass(i);</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :       com+=getMass(i)*getPosition(i);</span>
+<span class="lineNum">     178 </span>            :     }
+<span class="lineNum">     179 </span>            :   } else {
+<span class="lineNum">     180 </span><span class="lineCov">       1188 :     totmass = static_cast&lt;double&gt;(getNumberOfAtoms());</span>
+<span class="lineNum">     181 </span><span class="lineCov">      19404 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">      18216 :       com+=getPosition(i);</span>
+<span class="lineNum">     183 </span>            :     }
+<span class="lineNum">     184 </span>            :   }
+<span class="lineNum">     185 </span><span class="lineCov">       1188 :   com /= totmass;</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">       1188 :   double rgyr=0.;</span>
+<span class="lineNum">     188 </span><span class="lineCov">       1188 :   vector&lt;Vector&gt; derivatives( getNumberOfAtoms() );</span>
+<span class="lineNum">     189 </span><span class="lineCov">       1188 :   Tensor virial;</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">       1188 :   if(rg_type==RADIUS||rg_type==TRACE) {</span>
+<span class="lineNum">     192 </span><span class="lineCov">        788 :     if( use_masses ) {</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :         const Vector diff = delta( com, getPosition(i) );</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :         rgyr          += getMass(i)*diff.modulo2();</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :         derivatives[i] = diff*getMass(i);</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :         virial        -= Tensor(getPosition(i),derivatives[i]);</span>
+<span class="lineNum">     198 </span>            :       }
+<span class="lineNum">     199 </span>            :     } else {
+<span class="lineNum">     200 </span><span class="lineCov">      15004 :       for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">      14216 :         const Vector diff = delta( com, getPosition(i) );</span>
+<span class="lineNum">     202 </span><span class="lineCov">       7108 :         rgyr          += diff.modulo2();</span>
+<span class="lineNum">     203 </span><span class="lineCov">      14216 :         derivatives[i] = diff;</span>
+<span class="lineNum">     204 </span><span class="lineCov">       7108 :         virial        -= Tensor(getPosition(i),derivatives[i]);</span>
+<span class="lineNum">     205 </span>            :       }
+<span class="lineNum">     206 </span>            :     }
+<span class="lineNum">     207 </span>            :     double fact;
+<span class="lineNum">     208 </span><span class="lineCov">        788 :     if(rg_type==RADIUS) {</span>
+<span class="lineNum">     209 </span><span class="lineCov">        658 :       rgyr = sqrt(rgyr/totmass);</span>
+<span class="lineNum">     210 </span><span class="lineCov">        658 :       fact = 1./(rgyr*totmass);</span>
+<span class="lineNum">     211 </span>            :     } else {
+<span class="lineNum">     212 </span><span class="lineCov">        130 :       rgyr = 2.*rgyr;</span>
+<span class="lineNum">     213 </span>            :       fact = 4;
+<span class="lineNum">     214 </span>            :     }
+<span class="lineNum">     215 </span><span class="lineCov">        788 :     setValue(rgyr);</span>
+<span class="lineNum">     216 </span><span class="lineCov">      22112 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) setAtomsDerivatives(i,fact*derivatives[i]);</span>
+<span class="lineNum">     217 </span><span class="lineCov">       1576 :     setBoxDerivatives(fact*virial);</span>
+<span class="lineNum">     218 </span>            :     return;
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :   Matrix&lt;double&gt; gyr_tens(3,3);
+<span class="lineNum">     223 </span><span class="lineCov">       5200 :   for(unsigned i=0; i&lt;3; i++)  for(unsigned j=0; j&lt;3; j++) gyr_tens(i,j)=0.;</span>
+<span class="lineNum">     224 </span>            :   //calculate gyration tensor
+<span class="lineNum">     225 </span><span class="lineCov">        400 :   if( use_masses ) {</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :       const Vector diff=delta( com, getPosition(i) );</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :       gyr_tens[0][0]+=getMass(i)*diff[0]*diff[0];</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :       gyr_tens[1][1]+=getMass(i)*diff[1]*diff[1];</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :       gyr_tens[2][2]+=getMass(i)*diff[2]*diff[2];</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :       gyr_tens[0][1]+=getMass(i)*diff[0]*diff[1];</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :       gyr_tens[0][2]+=getMass(i)*diff[0]*diff[2];</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :       gyr_tens[1][2]+=getMass(i)*diff[1]*diff[2];</span>
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span>            :   } else {
+<span class="lineNum">     236 </span><span class="lineCov">       4400 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">       4000 :       const Vector diff=delta( com, getPosition(i) );</span>
+<span class="lineNum">     238 </span><span class="lineCov">       2000 :       gyr_tens[0][0]+=diff[0]*diff[0];</span>
+<span class="lineNum">     239 </span><span class="lineCov">       2000 :       gyr_tens[1][1]+=diff[1]*diff[1];</span>
+<span class="lineNum">     240 </span><span class="lineCov">       2000 :       gyr_tens[2][2]+=diff[2]*diff[2];</span>
+<span class="lineNum">     241 </span><span class="lineCov">       2000 :       gyr_tens[0][1]+=diff[0]*diff[1];</span>
+<span class="lineNum">     242 </span><span class="lineCov">       2000 :       gyr_tens[0][2]+=diff[0]*diff[2];</span>
+<span class="lineNum">     243 </span><span class="lineCov">       2000 :       gyr_tens[1][2]+=diff[1]*diff[2];</span>
+<span class="lineNum">     244 </span>            :     }
+<span class="lineNum">     245 </span>            :   }
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :   // first make the matrix symmetric
+<span class="lineNum">     248 </span><span class="lineCov">        400 :   gyr_tens[1][0] = gyr_tens[0][1];</span>
+<span class="lineNum">     249 </span><span class="lineCov">        400 :   gyr_tens[2][0] = gyr_tens[0][2];</span>
+<span class="lineNum">     250 </span><span class="lineCov">        400 :   gyr_tens[2][1] = gyr_tens[1][2];</span>
+<span class="lineNum">     251 </span>            :   Matrix&lt;double&gt; ttransf(3,3), transf(3,3);
+<span class="lineNum">     252 </span><span class="lineCov">        400 :   vector&lt;double&gt; princ_comp(3), prefactor(3);</span>
+<span class="lineNum">     253 </span><span class="lineCov">        400 :   prefactor[0]=prefactor[1]=prefactor[2]=0.;</span>
+<span class="lineNum">     254 </span>            :   //diagonalize gyration tensor
+<span class="lineNum">     255 </span><span class="lineCov">        400 :   diagMat(gyr_tens, princ_comp, ttransf);</span>
+<span class="lineNum">     256 </span><span class="lineCov">        400 :   transpose(ttransf, transf);</span>
+<span class="lineNum">     257 </span>            :   //sort eigenvalues and eigenvectors
+<span class="lineNum">     258 </span><span class="lineCov">        400 :   if (princ_comp[0]&lt;princ_comp[1]) {</span>
+<span class="lineNum">     259 </span><span class="lineCov">        800 :     double tmp=princ_comp[0]; princ_comp[0]=princ_comp[1]; princ_comp[1]=tmp;</span>
+<span class="lineNum">     260 </span><span class="lineCov">       1600 :     for (unsigned i=0; i&lt;3; i++) {tmp=transf[i][0]; transf[i][0]=transf[i][1]; transf[i][1]=tmp;}</span>
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span><span class="lineCov">        400 :   if (princ_comp[1]&lt;princ_comp[2]) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">        400 :     double tmp=princ_comp[1]; princ_comp[1]=princ_comp[2]; princ_comp[2]=tmp;</span>
+<span class="lineNum">     264 </span><span class="lineCov">       1600 :     for (unsigned i=0; i&lt;3; i++) {tmp=transf[i][1]; transf[i][1]=transf[i][2]; transf[i][2]=tmp;}</span>
+<span class="lineNum">     265 </span>            :   }
+<span class="lineNum">     266 </span><span class="lineCov">        400 :   if (princ_comp[0]&lt;princ_comp[1]) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">        800 :     double tmp=princ_comp[0]; princ_comp[0]=princ_comp[1]; princ_comp[1]=tmp;</span>
+<span class="lineNum">     268 </span><span class="lineCov">       1600 :     for (unsigned i=0; i&lt;3; i++) {tmp=transf[i][0]; transf[i][0]=transf[i][1]; transf[i][1]=tmp;}</span>
+<span class="lineNum">     269 </span>            :   }
+<span class="lineNum">     270 </span>            :   //calculate determinant of transformation matrix
+<span class="lineNum">     271 </span><span class="lineCov">       1200 :   double det = transf[0][0]*transf[1][1]*transf[2][2]+transf[0][1]*transf[1][2]*transf[2][0]+</span>
+<span class="lineNum">     272 </span><span class="lineCov">       1600 :                transf[0][2]*transf[1][0]*transf[2][1]-transf[0][2]*transf[1][1]*transf[2][0]-</span>
+<span class="lineNum">     273 </span><span class="lineCov">        800 :                transf[0][1]*transf[1][0]*transf[2][2]-transf[0][0]*transf[1][2]*transf[2][1];</span>
+<span class="lineNum">     274 </span>            :   // trasformation matrix for rotation must have positive determinant, otherwise multiply one column by (-1)
+<span class="lineNum">     275 </span><span class="lineCov">        400 :   if(det&lt;0) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">       1600 :     for(unsigned j=0; j&lt;3; j++) transf[j][2]=-transf[j][2];</span>
+<span class="lineNum">     277 </span><span class="lineCov">        400 :     det = -det;</span>
+<span class="lineNum">     278 </span>            :   }
+<span class="lineNum">     279 </span><span class="lineCov">        400 :   if(fabs(det-1.)&gt;0.0001) error(&quot;Plumed Error: Cannot diagonalize gyration tensor\n&quot;);</span>
+<span class="lineNum">     280 </span><span class="lineCov">        400 :   switch(rg_type) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">        135 :   case GTPC_1:</span>
+<span class="lineNum">     282 </span>            :   case GTPC_2:
+<span class="lineNum">     283 </span>            :   case GTPC_3:
+<span class="lineNum">     284 </span>            :   {
+<span class="lineNum">     285 </span><span class="lineCov">        135 :     int pc_index = rg_type-2; //index of principal component</span>
+<span class="lineNum">     286 </span><span class="lineCov">        270 :     rgyr=sqrt(princ_comp[pc_index]/totmass);</span>
+<span class="lineNum">     287 </span><span class="lineCov">        135 :     double rm = rgyr*totmass;</span>
+<span class="lineNum">     288 </span><span class="lineCov">        270 :     if(rm&gt;1e-6) prefactor[pc_index]=1.0/rm; //some parts of derivate</span>
+<span class="lineNum">     289 </span>            :     break;
+<span class="lineNum">     290 </span>            :   }
+<span class="lineNum">     291 </span>            :   case GYRATION_3:        //the smallest principal radius of gyration
+<span class="lineNum">     292 </span>            :   {
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :     rgyr=sqrt((princ_comp[1]+princ_comp[2])/totmass);</span>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :     double rm = rgyr*totmass;</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     if (rm&gt;1e-6) {</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :       prefactor[1]=1.0/rm;</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :       prefactor[2]=1.0/rm;</span>
+<span class="lineNum">     298 </span>            :     }
+<span class="lineNum">     299 </span>            :     break;
+<span class="lineNum">     300 </span>            :   }
+<span class="lineNum">     301 </span>            :   case GYRATION_2:       //the midle principal radius of gyration
+<span class="lineNum">     302 </span>            :   {
+<span class="lineNum">     303 </span><span class="lineCov">        130 :     rgyr=sqrt((princ_comp[0]+princ_comp[2])/totmass);</span>
+<span class="lineNum">     304 </span><span class="lineCov">        130 :     double rm = rgyr*totmass;</span>
+<span class="lineNum">     305 </span><span class="lineCov">        130 :     if (rm&gt;1e-6) {</span>
+<span class="lineNum">     306 </span><span class="lineCov">        130 :       prefactor[0]=1.0/rm;</span>
+<span class="lineNum">     307 </span><span class="lineCov">        130 :       prefactor[2]=1.0/rm;</span>
+<span class="lineNum">     308 </span>            :     }
+<span class="lineNum">     309 </span>            :     break;
+<span class="lineNum">     310 </span>            :   }
+<span class="lineNum">     311 </span>            :   case GYRATION_1:      //the largest principal radius of gyration
+<span class="lineNum">     312 </span>            :   {
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :     rgyr=sqrt((princ_comp[0]+princ_comp[1])/totmass);</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :     double rm = rgyr*totmass;</span>
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :     if (rm&gt;1e-6) {</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :       prefactor[0]=1.0/rm;</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :       prefactor[1]=1.0/rm;</span>
+<span class="lineNum">     318 </span>            :     }
+<span class="lineNum">     319 </span>            :     break;
+<span class="lineNum">     320 </span>            :   }
+<span class="lineNum">     321 </span>            :   case ASPHERICITY:
+<span class="lineNum">     322 </span>            :   {
+<span class="lineNum">     323 </span><span class="lineCov">          5 :     rgyr=sqrt((princ_comp[0]-0.5*(princ_comp[1]+princ_comp[2]))/totmass);</span>
+<span class="lineNum">     324 </span><span class="lineCov">          5 :     double rm = rgyr*totmass;</span>
+<span class="lineNum">     325 </span><span class="lineCov">          5 :     if (rm&gt;1e-6) {</span>
+<span class="lineNum">     326 </span><span class="lineCov">          5 :       prefactor[0]= 1.0/rm;</span>
+<span class="lineNum">     327 </span><span class="lineCov">          5 :       prefactor[1]=-0.5/rm;</span>
+<span class="lineNum">     328 </span><span class="lineCov">          5 :       prefactor[2]=-0.5/rm;</span>
+<span class="lineNum">     329 </span>            :     }
+<span class="lineNum">     330 </span>            :     break;
+<span class="lineNum">     331 </span>            :   }
+<span class="lineNum">     332 </span>            :   case ACYLINDRICITY:
+<span class="lineNum">     333 </span>            :   {
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :     rgyr=sqrt((princ_comp[1]-princ_comp[2])/totmass);</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :     double rm = rgyr*totmass;</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :     if (rm&gt;1e-6) {  //avoid division by zero</span>
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :       prefactor[1]= 1.0/rm;</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :       prefactor[2]=-1.0/rm;</span>
+<span class="lineNum">     339 </span>            :     }
+<span class="lineNum">     340 </span>            :     break;
+<span class="lineNum">     341 </span>            :   }
+<span class="lineNum">     342 </span>            :   case KAPPA2: // relative shape anisotropy
+<span class="lineNum">     343 </span>            :   {
+<span class="lineNum">     344 </span><span class="lineCov">        130 :     double trace = princ_comp[0]+princ_comp[1]+princ_comp[2];</span>
+<span class="lineNum">     345 </span><span class="lineCov">        130 :     double tmp=princ_comp[0]*princ_comp[1]+ princ_comp[1]*princ_comp[2]+ princ_comp[0]*princ_comp[2];</span>
+<span class="lineNum">     346 </span><span class="lineCov">        130 :     rgyr=1.0-3*(tmp/(trace*trace));</span>
+<span class="lineNum">     347 </span><span class="lineCov">        130 :     if (rgyr&gt;1e-6) {</span>
+<span class="lineNum">     348 </span><span class="lineCov">        260 :       prefactor[0]= -3*((princ_comp[1]+princ_comp[2])-2*tmp/trace)/(trace*trace) *2;</span>
+<span class="lineNum">     349 </span><span class="lineCov">        260 :       prefactor[1]= -3*((princ_comp[0]+princ_comp[2])-2*tmp/trace)/(trace*trace) *2;</span>
+<span class="lineNum">     350 </span><span class="lineCov">        130 :       prefactor[2]= -3*((princ_comp[0]+princ_comp[1])-2*tmp/trace)/(trace*trace) *2;</span>
+<span class="lineNum">     351 </span>            :     }
+<span class="lineNum">     352 </span>            :     break;
+<span class="lineNum">     353 </span>            :   }
+<span class="lineNum">     354 </span>            :   }
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span><span class="lineCov">        400 :   if(use_masses) {</span>
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :       Vector tX;</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :       const Vector diff=delta( com,getPosition(i) );</span>
+<span class="lineNum">     360 </span>            :       //project atomic postional vectors to diagonalized frame
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :       for(unsigned j=0; j&lt;3; j++) tX[j]=transf[0][j]*diff[0]+transf[1][j]*diff[1]+transf[2][j]*diff[2];</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :       for(unsigned j=0; j&lt;3; j++) derivatives[i][j]=getMass(i)*(prefactor[0]*transf[j][0]*tX[0]+</span>
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :             prefactor[1]*transf[j][1]*tX[1]+</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :             prefactor[2]*transf[j][2]*tX[2]);</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :       setAtomsDerivatives(i,derivatives[i]);</span>
+<span class="lineNum">     366 </span>            :     }
+<span class="lineNum">     367 </span>            :   } else {
+<span class="lineNum">     368 </span><span class="lineCov">       4400 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); i++) {</span>
+<span class="lineNum">     369 </span><span class="lineCov">       2000 :       Vector tX;</span>
+<span class="lineNum">     370 </span><span class="lineCov">       4000 :       const Vector diff=delta( com,getPosition(i) );</span>
+<span class="lineNum">     371 </span>            :       //project atomic postional vectors to diagonalized frame
+<span class="lineNum">     372 </span><span class="lineCov">       8000 :       for(unsigned j=0; j&lt;3; j++) tX[j]=transf[0][j]*diff[0]+transf[1][j]*diff[1]+transf[2][j]*diff[2];</span>
+<span class="lineNum">     373 </span><span class="lineCov">      44000 :       for(unsigned j=0; j&lt;3; j++) derivatives[i][j]=prefactor[0]*transf[j][0]*tX[0]+</span>
+<span class="lineNum">     374 </span><span class="lineCov">      18000 :             prefactor[1]*transf[j][1]*tX[1]+</span>
+<span class="lineNum">     375 </span><span class="lineCov">      12000 :             prefactor[2]*transf[j][2]*tX[2];</span>
+<span class="lineNum">     376 </span><span class="lineCov">       2000 :       setAtomsDerivatives(i,derivatives[i]);</span>
+<span class="lineNum">     377 </span>            :     }
+<span class="lineNum">     378 </span>            :   }
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span><span class="lineCov">        400 :   setValue(rgyr);</span>
+<span class="lineNum">     381 </span><span class="lineCov">        400 :   setBoxDerivativesNoPbc();</span>
+<span class="lineNum">     382 </span>            : }
+<a name="383"><span class="lineNum">     383 </span>            : </a>
+<span class="lineNum">     384 </span>            : }
+<span class="lineNum">     385 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

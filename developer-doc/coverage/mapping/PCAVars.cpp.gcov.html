@@ -1,0 +1,513 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - mapping/PCAVars.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">mapping</a> - PCAVars.cpp<span style="font-size: 80%;"> (source / <a href="PCAVars.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">119</td>
+            <td class="headerCovTableEntry">136</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">82.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionWithArguments.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;reference/MultiReferenceBase.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;reference/MetricRegister.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;reference/Direction.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC COLVAR PCAVARS
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Projection on principal component eigenvectors or other high dimensional linear subspace
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : The collective variables described in \ref dists allow one to calculate the distance between the
+<span class="lineNum">      37 </span>            : instaneous structure adopted by the system and some high-dimensional, reference configuration.  The
+<span class="lineNum">      38 </span>            : problem with doing this is that, as one gets further and further from the reference configuration, the
+<span class="lineNum">      39 </span>            : distance from it becomes a progressively poorer and poorer collective variable.  This happens because
+<span class="lineNum">      40 </span>            : the ``number&quot; of structures at a distance \f$d\f$ from a reference configuration is proportional to \f$d^N\f$ in
+<span class="lineNum">      41 </span>            : an \f$N\f$ dimensional space.  Consequently, when \f$d\f$ is small the distance from the reference configuration
+<span class="lineNum">      42 </span>            : may well be a good collective variable.  However, when \f$d\f$ is large it is unlikely that the distance from the reference
+<span class="lineNum">      43 </span>            : structure is a good CV.  When the distance is large there will almost certainly be markedly different
+<span class="lineNum">      44 </span>            : configuration that have the same CV value and hence barriers in transverse degrees of
+<span class="lineNum">      45 </span>            : freedom.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : For these reasons dimensionality reduction is often employed so a projection \f$\mathbf{s}\f$ of a high-dimensional configuration
+<span class="lineNum">      48 </span>            : \f$\mathbf{X}\f$ in a lower dimensionality space using a function:
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : \f[
+<span class="lineNum">      51 </span>            : \mathbf{s} = F(\mathbf{X}-\mathbf{X}^{ref})
+<span class="lineNum">      52 </span>            : \f]
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : where here we have introduced some high-dimensional reference configuration \f$\mathbf{X}^{ref}\f$.  By far the simplest way to
+<span class="lineNum">      55 </span>            : do this is to use some linear operator for \f$F\f$.  That is to say we find a low-dimensional projection
+<span class="lineNum">      56 </span>            : by rotating the basis vectors using some linear algebra:
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : \f[
+<span class="lineNum">      59 </span>            : \mathbf{s}_i = \sum_k A_{ik} ( X_{k} - X_{k}^{ref} )
+<span class="lineNum">      60 </span>            : \f]
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : Here \f$A\f$ is a \f$d\f$ by \f$D\f$ matrix where \f$D\f$ is the dimensionality of the high dimensional space and \f$d\f$ is
+<span class="lineNum">      63 </span>            : the dimensionality of the lower dimensional subspace.  In plumed when this kind of projection you can use the majority
+<span class="lineNum">      64 </span>            : of the metrics detailed on \ref dists to calculate the displacement, \f$\mathbf{X}-\mathbf{X}^{ref}\f$, from the reference configuration.
+<span class="lineNum">      65 </span>            : The matrix \f$A\f$ can be found by various means including principal component analysis and normal mode analysis.  In both these methods the
+<span class="lineNum">      66 </span>            : rows of \f$A\f$ would be the principle eigenvectors of a square matrix.  For PCA the covariance while for normal modes the Hessian.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : \bug It is not possible to use the \ref DRMSD metric with this variable.  You can get around this by listing the set of distances you wish to calculate for your DRMSD in the plumed file explicitally and using the EUCLIDEAN metric.  MAHALONOBIS and NORM-EUCLIDEAN also do not work with this variable but using these options makes little sense when projecting on a linear subspace.
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : \par Examples
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : The following input calculates a projection on a linear subspace where the displacements
+<span class="lineNum">      73 </span>            : from the reference configuration are calculated using the OPTIMAL metric.  Consequently,
+<span class="lineNum">      74 </span>            : both translation of the center of mass of the atoms and rotation of the reference
+<span class="lineNum">      75 </span>            : frame are removed from these displacements.  The matrix \f$A\f$ and the reference
+<span class="lineNum">      76 </span>            : configuration \f$R^{ref}\f$ are specified in the pdb input file reference.pdb and the
+<span class="lineNum">      77 </span>            : value of all projections (and the residual) are output to a file called colvar2.
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : \plumedfile
+<span class="lineNum">      80 </span>            : PCAVARS REFERENCE=reference.pdb TYPE=OPTIMAL LABEL=pca2
+<span class="lineNum">      81 </span>            : PRINT ARG=pca2.* FILE=colvar2
+<span class="lineNum">      82 </span>            : \endplumedfile
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : The reference configurations can be specified using a pdb file.  The first configuration that you provide is the reference configuration,
+<span class="lineNum">      85 </span>            : which is refered to in the above as \f$X^{ref}\f$ subsequent configurations give the directions of row vectors that are contained in
+<span class="lineNum">      86 </span>            : the matrix \f$A\f$ above.  These directions can be specified by specifying a second configuration - in this case a vector will
+<span class="lineNum">      87 </span>            : be constructed by calculating the displacement of this second configuration from the reference configuration.  A pdb input prepared
+<span class="lineNum">      88 </span>            : in this way would look as follows:
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : \verbatim
+<span class="lineNum">      91 </span>            : ATOM      2  CH3 ACE     1      12.932 -14.718  -6.016  1.00  1.00
+<span class="lineNum">      92 </span>            : ATOM      5  C   ACE     1      21.312  -9.928  -5.946  1.00  1.00
+<span class="lineNum">      93 </span>            : ATOM      9  CA  ALA     2      19.462 -11.088  -8.986  1.00  1.00
+<span class="lineNum">      94 </span>            : ATOM     13  HB2 ALA     2      21.112 -10.688 -12.476  1.00  1.00
+<span class="lineNum">      95 </span>            : ATOM     15  C   ALA     2      19.422   7.978 -14.536  1.00  1.00
+<span class="lineNum">      96 </span>            : ATOM     20 HH31 NME     3      20.122  -9.928 -17.746  1.00  1.00
+<span class="lineNum">      97 </span>            : ATOM     21 HH32 NME     3      18.572 -13.148 -16.346  1.00  1.00
+<span class="lineNum">      98 </span>            : END
+<span class="lineNum">      99 </span>            : ATOM      2  CH3 ACE     1      13.932 -14.718  -6.016  1.00  1.00
+<span class="lineNum">     100 </span>            : ATOM      5  C   ACE     1      20.312  -9.928  -5.946  1.00  1.00
+<span class="lineNum">     101 </span>            : ATOM      9  CA  ALA     2      18.462 -11.088  -8.986  1.00  1.00
+<span class="lineNum">     102 </span>            : ATOM     13  HB2 ALA     2      20.112 -11.688 -12.476  1.00  1.00
+<span class="lineNum">     103 </span>            : ATOM     15  C   ALA     2      19.422   7.978 -12.536  1.00  1.00
+<span class="lineNum">     104 </span>            : ATOM     20 HH31 NME     3      20.122  -9.928 -17.746  1.00  1.00
+<span class="lineNum">     105 </span>            : ATOM     21 HH32 NME     3      18.572 -13.148 -16.346  1.00  1.00
+<span class="lineNum">     106 </span>            : END
+<span class="lineNum">     107 </span>            : \endverbatim
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : Alternatively, the second configuration can specify the components of \f$A\f$ explicitally.  In this case you need to include the
+<span class="lineNum">     110 </span>            : keyword TYPE=DIRECTION in the remarks to the pdb as shown below.
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : \verbatim
+<span class="lineNum">     113 </span>            : ATOM      2  CH3 ACE     1      12.932 -14.718  -6.016  1.00  1.00
+<span class="lineNum">     114 </span>            : ATOM      5  C   ACE     1      21.312  -9.928  -5.946  1.00  1.00
+<span class="lineNum">     115 </span>            : ATOM      9  CA  ALA     2      19.462 -11.088  -8.986  1.00  1.00
+<span class="lineNum">     116 </span>            : ATOM     13  HB2 ALA     2      21.112 -10.688 -12.476  1.00  1.00
+<span class="lineNum">     117 </span>            : ATOM     15  C   ALA     2      19.422   7.978 -14.536  1.00  1.00
+<span class="lineNum">     118 </span>            : ATOM     20 HH31 NME     3      20.122  -9.928 -17.746  1.00  1.00
+<span class="lineNum">     119 </span>            : ATOM     21 HH32 NME     3      18.572 -13.148 -16.346  1.00  1.00
+<span class="lineNum">     120 </span>            : END
+<span class="lineNum">     121 </span>            : REMARK TYPE=DIRECTION
+<span class="lineNum">     122 </span>            : ATOM      2  CH3 ACE     1      0.1414  0.3334 -0.0302  1.00  0.00
+<span class="lineNum">     123 </span>            : ATOM      5  C   ACE     1      0.0893 -0.1095 -0.1434  1.00  0.00
+<span class="lineNum">     124 </span>            : ATOM      9  CA  ALA     2      0.0207 -0.321   0.0321  1.00  0.00
+<span class="lineNum">     125 </span>            : ATOM     13  HB2 ALA     2      0.0317 -0.6085  0.0783  1.00  0.00
+<span class="lineNum">     126 </span>            : ATOM     15  C   ALA     2      0.1282 -0.4792  0.0797  1.00  0.00
+<span class="lineNum">     127 </span>            : ATOM     20 HH31 NME     3      0.0053 -0.465   0.0309  1.00  0.00
+<span class="lineNum">     128 </span>            : ATOM     21 HH32 NME     3     -0.1019 -0.4261 -0.0082  1.00  0.00
+<span class="lineNum">     129 </span>            : END
+<span class="lineNum">     130 </span>            : \endverbatim
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : If your metric involves arguments the labels of these arguments in your plumed input file should be specified in the REMARKS
+<span class="lineNum">     133 </span>            : for each of the frames of your path.  An input file in this case might look like this:
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : \verbatim
+<span class="lineNum">     136 </span>            : DESCRIPTION: a pca eigenvector specified using the start point and direction in the HD space.
+<span class="lineNum">     137 </span>            : REMARK WEIGHT=1.0
+<span class="lineNum">     138 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">     139 </span>            : REMARK d1=1.0 d2=1.0
+<span class="lineNum">     140 </span>            : END
+<span class="lineNum">     141 </span>            : REMARK TYPE=DIRECTION
+<span class="lineNum">     142 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">     143 </span>            : REMARK d1=0.1 d2=0.25
+<span class="lineNum">     144 </span>            : END
+<span class="lineNum">     145 </span>            : \endverbatim
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : Here we are working with the EUCLIDEAN metric and notice that we have specified the components of \f$A\f$ using DIRECTION.
+<span class="lineNum">     148 </span>            : Consequently, the values of d1 and d2 in the second frame above do not specify a particular coordinate in the high-dimensional
+<span class="lineNum">     149 </span>            : space as in they do in the first frame.  Instead these values are the coefficients that can be used to construct a linear combination of d1 and d2.
+<span class="lineNum">     150 </span>            : If we wanted to specify the direction in this metric using the start and end point of the vector we would write:
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : \verbatim
+<span class="lineNum">     153 </span>            : DESCRIPTION: a pca eigenvector specified using the start and end point of a vector in the HD space.
+<span class="lineNum">     154 </span>            : REMARK WEIGHT=1.0
+<span class="lineNum">     155 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">     156 </span>            : REMARK d1=1.0 d2=1.0
+<span class="lineNum">     157 </span>            : END
+<span class="lineNum">     158 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">     159 </span>            : REMARK d1=1.1 d2=1.25
+<span class="lineNum">     160 </span>            : END
+<span class="lineNum">     161 </span>            : \endverbatim
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : */
+<span class="lineNum">     164 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : namespace PLMD {
+<span class="lineNum">     167 </span>            : namespace mapping {
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : class PCAVars :
+<span class="lineNum">     170 </span>            :   public ActionWithValue,
+<span class="lineNum">     171 </span>            :   public ActionAtomistic,
+<span class="lineNum">     172 </span>            :   public ActionWithArguments
+<span class="lineNum">     173 </span>            : {
+<span class="lineNum">     174 </span>            : private:
+<span class="lineNum">     175 </span>            : /// The holders for the derivatives
+<span class="lineNum">     176 </span>            :   MultiValue myvals;
+<span class="lineNum">     177 </span>            :   ReferenceValuePack mypack;
+<span class="lineNum">     178 </span>            : /// The position of the reference configuration (the one we align to)
+<span class="lineNum">     179 </span>            :   ReferenceConfiguration* myref;
+<span class="lineNum">     180 </span>            : /// The eigenvectors we are interested in
+<span class="lineNum">     181 </span>            :   std::vector&lt;Direction&gt; directions;
+<span class="lineNum">     182 </span>            : /// Stuff for applying forces
+<span class="lineNum">     183 </span>            :   std::vector&lt;double&gt; forces, forcesToApply;
+<span class="lineNum">     184 </span>            : public:
+<span class="lineNum">     185 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     186 </span>            :   explicit PCAVars(const ActionOptions&amp;);
+<span class="lineNum">     187 </span>            :   ~PCAVars();
+<span class="lineNum">     188 </span>            :   unsigned getNumberOfDerivatives();
+<span class="lineNum">     189 </span>            :   void lockRequests();
+<span class="lineNum">     190 </span>            :   void unlockRequests();
+<span class="lineNum">     191 </span>            :   void calculateNumericalDerivatives( ActionWithValue* a );
+<span class="lineNum">     192 </span>            :   void calculate();
+<span class="lineNum">     193 </span>            :   void apply();
+<a name="194"><span class="lineNum">     194 </span>            : };</a>
+<span class="lineNum">     195 </span>            : 
+<a name="196"><span class="lineNum">     196 </span><span class="lineCov">       6456 : PLUMED_REGISTER_ACTION(PCAVars,&quot;PCAVARS&quot;)</span></a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">          5 : void PCAVars::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">          5 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">     200 </span><span class="lineCov">          5 :   ActionWithValue::registerKeywords( keys );</span>
+<span class="lineNum">     201 </span><span class="lineCov">          5 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">     202 </span><span class="lineCov">          5 :   ActionWithArguments::registerKeywords( keys );</span>
+<span class="lineNum">     203 </span><span class="lineCov">          5 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     204 </span><span class="lineCov">         20 :   keys.addOutputComponent(&quot;eig&quot;,&quot;default&quot;,&quot;the projections on each eigenvalue are stored on values labeled eig-1, eig-2, ...&quot;);</span>
+<span class="lineNum">     205 </span><span class="lineCov">         20 :   keys.addOutputComponent(&quot;residual&quot;,&quot;default&quot;,&quot;the distance of the configuration from the linear subspace defined &quot;</span>
+<span class="lineNum">     206 </span>            :                           &quot;by the vectors, \\f$e_i\\f$, that are contained in the rows of \\f$A\\f$.  In other words this is &quot;
+<span class="lineNum">     207 </span>            :                           &quot;\\f$\\sqrt( r^2 - \\sum_i [\\mathbf{r}.\\mathbf{e_i}]^2)\\f$ where &quot;
+<span class="lineNum">     208 </span>            :                           &quot;\\f$r\\f$ is the distance between the instantaneous position and the &quot;
+<span class="lineNum">     209 </span>            :                           &quot;reference point.&quot;);
+<span class="lineNum">     210 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;REFERENCE&quot;,&quot;a pdb file containing the reference configuration and configurations that define the directions for each eigenvector&quot;);</span>
+<span class="lineNum">     211 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;OPTIMAL&quot;,&quot;The method we are using for alignment to the reference structure&quot;);</span>
+<a name="212"><span class="lineNum">     212 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">          4 : PCAVars::PCAVars(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     215 </span>            :   Action(ao),
+<span class="lineNum">     216 </span>            :   ActionWithValue(ao),
+<span class="lineNum">     217 </span>            :   ActionAtomistic(ao),
+<span class="lineNum">     218 </span>            :   ActionWithArguments(ao),
+<span class="lineNum">     219 </span>            :   myvals(1,0),
+<span class="lineNum">     220 </span><span class="lineCov">         12 :   mypack(0,0,myvals)</span>
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :   // What type of distance are we calculating
+<span class="lineNum">     224 </span><span class="lineCov">          8 :   std::string mtype; parse(&quot;TYPE&quot;,mtype);</span>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :   // Open reference file
+<span class="lineNum">     227 </span><span class="lineCov">          8 :   std::string reference; parse(&quot;REFERENCE&quot;,reference);</span>
+<span class="lineNum">     228 </span><span class="lineCov">          4 :   FILE* fp=fopen(reference.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     229 </span><span class="lineCov">          4 :   if(!fp) error(&quot;could not open reference file &quot; + reference );</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :   // Read all reference configurations
+<span class="lineNum">     232 </span><span class="lineCov">         12 :   MultiReferenceBase myframes( &quot;&quot;, false );</span>
+<span class="lineNum">     233 </span>            :   bool do_read=true; unsigned nfram=0;
+<span class="lineNum">     234 </span><span class="lineCov">         16 :   while (do_read) {</span>
+<span class="lineNum">     235 </span><span class="lineCov">         28 :     PDB mypdb;</span>
+<span class="lineNum">     236 </span>            :     // Read the pdb file
+<span class="lineNum">     237 </span><span class="lineCov">         32 :     do_read=mypdb.readFromFilepointer(fp,plumed.getAtoms().usingNaturalUnits(),0.1/atoms.getUnits().getLength());</span>
+<span class="lineNum">     238 </span>            :     // Fix argument names
+<span class="lineNum">     239 </span><span class="lineCov">         16 :     expandArgKeywordInPDB( mypdb );</span>
+<span class="lineNum">     240 </span><span class="lineCov">         16 :     if(do_read) {</span>
+<span class="lineNum">     241 </span><span class="lineCov">         12 :       if( nfram==0 ) {</span>
+<span class="lineNum">     242 </span><span class="lineCov">          4 :         myref = metricRegister().create&lt;ReferenceConfiguration&gt;( mtype, mypdb );</span>
+<span class="lineNum">     243 </span><span class="lineCov">          4 :         Direction* tdir = dynamic_cast&lt;Direction*&gt;( myref );</span>
+<span class="lineNum">     244 </span><span class="lineCov">          4 :         if( tdir ) error(&quot;first frame should be reference configuration - not direction of vector&quot;);</span>
+<span class="lineNum">     245 </span><span class="lineCov">          4 :         if( !myref-&gt;pcaIsEnabledForThisReference() ) error(&quot;can't do PCA with reference type &quot; + mtype );</span>
+<span class="lineNum">     246 </span><span class="lineCov">          8 :         std::vector&lt;std::string&gt; remarks( mypdb.getRemark() ); std::string rtype;</span>
+<span class="lineNum">     247 </span><span class="lineCov">          8 :         bool found=Tools::parse( remarks, &quot;TYPE&quot;, rtype );</span>
+<span class="lineNum">     248 </span><span class="lineCov">         12 :         if(!found) { std::vector&lt;std::string&gt; newrem(1); newrem[0]=&quot;TYPE=&quot;+mtype; mypdb.addRemark(newrem); }</span>
+<span class="lineNum">     249 </span><span class="lineCov">          4 :         myframes.readFrame( mypdb );</span>
+<span class="lineNum">     250 </span><span class="lineCov">          8 :       } else myframes.readFrame( mypdb );</span>
+<span class="lineNum">     251 </span><span class="lineCov">         12 :       nfram++;</span>
+<span class="lineNum">     252 </span>            :     } else {
+<span class="lineNum">     253 </span>            :       break;
+<span class="lineNum">     254 </span>            :     }
+<span class="lineNum">     255 </span>            :   }
+<span class="lineNum">     256 </span><span class="lineCov">          4 :   fclose(fp);</span>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">          4 :   if( nfram&lt;=1 ) error(&quot;no eigenvectors were specified&quot;);</span>
+<span class="lineNum">     259 </span><span class="lineCov">          8 :   log.printf(&quot;  found %u eigenvectors in file %s \n&quot;,nfram-1,reference.c_str() );</span>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :   // Finish the setup of the mapping object
+<span class="lineNum">     262 </span>            :   // Get the arguments and atoms that are required
+<span class="lineNum">     263 </span><span class="lineCov">          4 :   std::vector&lt;AtomNumber&gt; atoms; std::vector&lt;std::string&gt; args;</span>
+<span class="lineNum">     264 </span><span class="lineCov">          4 :   myframes.getAtomAndArgumentRequirements( atoms, args );</span>
+<span class="lineNum">     265 </span><span class="lineCov">          4 :   requestAtoms( atoms ); std::vector&lt;Value*&gt; req_args;</span>
+<span class="lineNum">     266 </span><span class="lineCov">          4 :   interpretArgumentList( args, req_args ); requestArguments( req_args );</span>
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :   // Setup the derivative pack
+<span class="lineNum">     269 </span><span class="lineCov">          8 :   if( atoms.size()&gt;0 ) myvals.resize( 1, args.size() + 3*atoms.size() + 9 );</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :   else myvals.resize( 1, args.size() );</span>
+<span class="lineNum">     271 </span><span class="lineCov">          8 :   mypack.resize( args.size(), atoms.size() );</span>
+<span class="lineNum">     272 </span><span class="lineCov">         92 :   for(unsigned i=0; i&lt;atoms.size(); ++i) mypack.setAtomIndex( i, i );</span>
+<span class="lineNum">     273 </span>            :   /// This sets up all the storage data required by PCA in the pack
+<span class="lineNum">     274 </span><span class="lineCov">          4 :   myframes.getFrame(0)-&gt;setupPCAStorage( mypack );</span>
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            :   // Retrieve the position of the first frame, as we use this for alignment
+<span class="lineNum">     277 </span><span class="lineCov">          4 :   myref-&gt;setNamesAndAtomNumbers( atoms, args );</span>
+<span class="lineNum">     278 </span>            :   // Check there are no periodic arguments
+<span class="lineNum">     279 </span><span class="lineCov">          4 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :     if( getPntrToArgument(i)-&gt;isPeriodic() ) error(&quot;cannot use periodic variables in pca projections&quot;);</span>
+<span class="lineNum">     281 </span>            :   }
+<span class="lineNum">     282 </span>            :   // Work out if the user wants to normalise the input vector
+<span class="lineNum">     283 </span><span class="lineCov">          4 :   checkRead();</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :   // Resize the matrices that will hold our eivenvectors
+<span class="lineNum">     286 </span><span class="lineCov">         20 :   for(unsigned i=1; i&lt;nfram; ++i) {</span>
+<span class="lineNum">     287 </span><span class="lineCov">         32 :     directions.push_back( Direction(ReferenceConfigurationOptions(&quot;DIRECTION&quot;)));</span>
+<span class="lineNum">     288 </span><span class="lineCov">         16 :     directions[i-1].setNamesAndAtomNumbers( atoms, args );</span>
+<span class="lineNum">     289 </span>            :   }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :   // Create fake periodic boundary condition (these would only be used for DRMSD which is not allowed)
+<span class="lineNum">     292 </span>            :   // Now calculate the eigenvectors
+<span class="lineNum">     293 </span><span class="lineCov">         20 :   for(unsigned i=1; i&lt;nfram; ++i) {</span>
+<span class="lineNum">     294 </span><span class="lineCov">         24 :     myframes.getFrame(i)-&gt;extractDisplacementVector( myref-&gt;getReferencePositions(), getArguments(), myref-&gt;getReferenceArguments(), true, directions[i-1] );</span>
+<span class="lineNum">     295 </span>            :     // Create a component to store the output
+<span class="lineNum">     296 </span><span class="lineCov">          8 :     std::string num; Tools::convert( i, num );</span>
+<span class="lineNum">     297 </span><span class="lineCov">         24 :     addComponentWithDerivatives(&quot;eig-&quot;+num); componentIsNotPeriodic(&quot;eig-&quot;+num);</span>
+<span class="lineNum">     298 </span>            :   }
+<span class="lineNum">     299 </span><span class="lineCov">         12 :   addComponentWithDerivatives(&quot;residual&quot;); componentIsNotPeriodic(&quot;residual&quot;);</span>
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :   // Get appropriate number of derivatives
+<span class="lineNum">     302 </span>            :   unsigned nder;
+<span class="lineNum">     303 </span><span class="lineCov">          4 :   if( getNumberOfAtoms()&gt;0 ) {</span>
+<span class="lineNum">     304 </span><span class="lineCov">          8 :     nder = 3*getNumberOfAtoms() + 9 + getNumberOfArguments();</span>
+<span class="lineNum">     305 </span>            :   } else {
+<span class="lineNum">     306 </span>            :     nder = getNumberOfArguments();
+<span class="lineNum">     307 </span>            :   }
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :   // Resize all derivative arrays
+<span class="lineNum">     310 </span><span class="lineCov">          4 :   forces.resize( nder ); forcesToApply.resize( nder );</span>
+<span class="lineNum">     311 </span><span class="lineCov">         28 :   for(unsigned i=0; i&lt;getNumberOfComponents(); ++i) getPntrToComponent(i)-&gt;resizeDerivatives(nder);</span>
+<a name="312"><span class="lineNum">     312 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span><span class="lineCov">         16 : PCAVars::~PCAVars() {</span>
+<span class="lineNum">     315 </span><span class="lineCov">          4 :   delete myref;</span>
+<a name="316"><span class="lineNum">     316 </span><span class="lineCov">          8 : }</span></a>
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineCov">         36 : unsigned PCAVars::getNumberOfDerivatives() {</span>
+<span class="lineNum">     319 </span><span class="lineCov">         36 :   if( getNumberOfAtoms()&gt;0 ) {</span>
+<span class="lineNum">     320 </span><span class="lineCov">         36 :     return 3*getNumberOfAtoms() + 9 + getNumberOfArguments();</span>
+<span class="lineNum">     321 </span>            :   }
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :   return getNumberOfArguments();</span>
+<a name="323"><span class="lineNum">     323 </span>            : }</a>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span><span class="lineCov">         44 : void PCAVars::lockRequests() {</span>
+<span class="lineNum">     326 </span>            :   ActionWithArguments::lockRequests();
+<span class="lineNum">     327 </span>            :   ActionAtomistic::lockRequests();
+<a name="328"><span class="lineNum">     328 </span><span class="lineCov">         44 : }</span></a>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span><span class="lineCov">         44 : void PCAVars::unlockRequests() {</span>
+<span class="lineNum">     331 </span>            :   ActionWithArguments::unlockRequests();
+<span class="lineNum">     332 </span>            :   ActionAtomistic::unlockRequests();
+<a name="333"><span class="lineNum">     333 </span><span class="lineCov">         44 : }</span></a>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineCov">         44 : void PCAVars::calculate() {</span>
+<span class="lineNum">     336 </span>            :   // Clear the reference value pack
+<span class="lineNum">     337 </span><span class="lineCov">         44 :   mypack.clear();</span>
+<span class="lineNum">     338 </span>            :   // Calculate distance between instaneous configuration and reference
+<span class="lineNum">     339 </span><span class="lineCov">         88 :   double dist = myref-&gt;calculate( getPositions(), getPbc(), getArguments(), mypack, true );</span>
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            :   // Start accumulating residual by adding derivatives of distance
+<span class="lineNum">     342 </span><span class="lineCov">         88 :   Value* resid=getPntrToComponent( getNumberOfComponents()-1 ); unsigned nargs=getNumberOfArguments();</span>
+<span class="lineNum">     343 </span><span class="lineCov">         44 :   for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) resid-&gt;addDerivative( j, mypack.getArgumentDerivative(j) );</span>
+<span class="lineNum">     344 </span><span class="lineCov">        704 :   for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     345 </span><span class="lineCov">        308 :     Vector ader=mypack.getAtomDerivative( j );</span>
+<span class="lineNum">     346 </span><span class="lineCov">       2156 :     for(unsigned k=0; k&lt;3; ++k) resid-&gt;addDerivative( nargs +3*j+k, ader[k] );</span>
+<span class="lineNum">     347 </span>            :   }
+<span class="lineNum">     348 </span>            :   // Retrieve the values of all arguments
+<span class="lineNum">     349 </span><span class="lineCov">         44 :   std::vector&lt;double&gt; args( getNumberOfArguments() ); for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) args[i]=getArgument(i);</span>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            :   // Now calculate projections on pca vectors
+<span class="lineNum">     352 </span><span class="lineCov">         44 :   Vector adif, ader; Tensor fvir, tvir;</span>
+<span class="lineNum">     353 </span><span class="lineCov">        220 :   for(unsigned i=0; i&lt;getNumberOfComponents()-1; ++i) { // One less component as we also have residual</span>
+<span class="lineNum">     354 </span><span class="lineCov">        176 :     double proj=myref-&gt;projectDisplacementOnVector( directions[i], getArguments(), args, mypack );</span>
+<span class="lineNum">     355 </span>            :     // And now accumulate derivatives
+<span class="lineNum">     356 </span><span class="lineCov">         88 :     Value* eid=getPntrToComponent(i);</span>
+<span class="lineNum">     357 </span><span class="lineCov">         88 :     for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) eid-&gt;addDerivative( j, mypack.getArgumentDerivative(j) );</span>
+<span class="lineNum">     358 </span><span class="lineCov">         88 :     if( getNumberOfAtoms()&gt;0 ) {</span>
+<span class="lineNum">     359 </span><span class="lineCov">         88 :       tvir.zero();</span>
+<span class="lineNum">     360 </span><span class="lineCov">       1408 :       for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     361 </span><span class="lineCov">        616 :         Vector myader=mypack.getAtomDerivative(j);</span>
+<span class="lineNum">     362 </span><span class="lineCov">       4312 :         for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     363 </span><span class="lineCov">       1848 :           eid-&gt;addDerivative( nargs + 3*j+k, myader[k] );</span>
+<span class="lineNum">     364 </span><span class="lineCov">       1848 :           resid-&gt;addDerivative( nargs + 3*j+k, -2*proj*myader[k] );</span>
+<span class="lineNum">     365 </span>            :         }
+<span class="lineNum">     366 </span><span class="lineCov">       1232 :         tvir += -1.0*Tensor( getPosition(j), myader );</span>
+<span class="lineNum">     367 </span>            :       }
+<span class="lineNum">     368 </span><span class="lineCov">        616 :       for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     369 </span><span class="lineCov">       2640 :         for(unsigned k=0; k&lt;3; ++k) eid-&gt;addDerivative( nargs + 3*getNumberOfAtoms() + 3*j + k, tvir(j,k) );</span>
+<span class="lineNum">     370 </span>            :       }
+<span class="lineNum">     371 </span>            :     }
+<span class="lineNum">     372 </span><span class="lineCov">         88 :     dist -= proj*proj; // Subtract square from total squared distance to get residual squared</span>
+<span class="lineNum">     373 </span>            :     // Derivatives of residual
+<span class="lineNum">     374 </span><span class="lineCov">         88 :     for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) resid-&gt;addDerivative( j, -2*proj*eid-&gt;getDerivative(j) );</span>
+<span class="lineNum">     375 </span>            :     // for(unsigned j=0;j&lt;getNumberOfArguments();++j) resid-&gt;addDerivative( j, -2*proj*arg_eigv(i,j) );
+<span class="lineNum">     376 </span>            :     // And set final value
+<span class="lineNum">     377 </span><span class="lineCov">         88 :     getPntrToComponent(i)-&gt;set( proj );</span>
+<span class="lineNum">     378 </span>            :   }
+<span class="lineNum">     379 </span><span class="lineCov">         44 :   dist=sqrt(dist);</span>
+<span class="lineNum">     380 </span>            :   resid-&gt;set( dist );
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            :   // Take square root of residual derivatives
+<span class="lineNum">     383 </span><span class="lineCov">         44 :   double prefactor = 0.5 / dist;</span>
+<span class="lineNum">     384 </span><span class="lineCov">         44 :   for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) resid-&gt;setDerivative( j, prefactor*resid-&gt;getDerivative(j) );</span>
+<span class="lineNum">     385 </span><span class="lineCov">        660 :   for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">       3080 :     for(unsigned k=0; k&lt;3; ++k) resid-&gt;setDerivative( nargs + 3*j+k, prefactor*resid-&gt;getDerivative( nargs+3*j+k ) );</span>
+<span class="lineNum">     387 </span>            :   }
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :   // And finally virial for residual
+<span class="lineNum">     390 </span><span class="lineCov">         44 :   if( getNumberOfAtoms()&gt;0 ) {</span>
+<span class="lineNum">     391 </span><span class="lineCov">         44 :     tvir.zero();</span>
+<span class="lineNum">     392 </span><span class="lineCov">        660 :     for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     393 </span><span class="lineCov">       1232 :       Vector ader; for(unsigned k=0; k&lt;3; ++k) ader[k]=resid-&gt;getDerivative( nargs + 3*j+k );</span>
+<span class="lineNum">     394 </span><span class="lineCov">        616 :       tvir += -1.0*Tensor( getPosition(j), ader );</span>
+<span class="lineNum">     395 </span>            :     }
+<span class="lineNum">     396 </span><span class="lineCov">        308 :     for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     397 </span><span class="lineCov">       1320 :       for(unsigned k=0; k&lt;3; ++k) resid-&gt;addDerivative( nargs + 3*getNumberOfAtoms() + 3*j + k, tvir(j,k) );</span>
+<span class="lineNum">     398 </span>            :     }
+<span class="lineNum">     399 </span>            :   }
+<span class="lineNum">     400 </span>            : 
+<a name="401"><span class="lineNum">     401 </span><span class="lineCov">         44 : }</span></a>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 : void PCAVars::calculateNumericalDerivatives( ActionWithValue* a ) {</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :   if( getNumberOfArguments()&gt;0 ) {</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :     ActionWithArguments::calculateNumericalDerivatives( a );</span>
+<span class="lineNum">     406 </span>            :   }
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :   if( getNumberOfAtoms()&gt;0 ) {</span>
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :     Matrix&lt;double&gt; save_derivatives( getNumberOfComponents(), getNumberOfArguments() );</span>
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;getNumberOfComponents(); ++j) {</span>
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) save_derivatives(j,i)=getPntrToComponent(j)-&gt;getDerivative(i);</span>
+<span class="lineNum">     411 </span>            :     }
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :     calculateAtomicNumericalDerivatives( a, getNumberOfArguments() );</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;getNumberOfComponents(); ++j) {</span>
+<span class="lineNum">     414 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) getPntrToComponent(j)-&gt;addDerivative( i, save_derivatives(j,i) );</span>
+<span class="lineNum">     415 </span>            :     }
+<span class="lineNum">     416 </span>            :   }
+<a name="417"><span class="lineNum">     417 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineCov">         44 : void PCAVars::apply() {</span>
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span><span class="lineCov">         88 :   bool wasforced=false; forcesToApply.assign(forcesToApply.size(),0.0);</span>
+<span class="lineNum">     422 </span><span class="lineCov">        308 :   for(unsigned i=0; i&lt;getNumberOfComponents(); ++i) {</span>
+<span class="lineNum">     423 </span><span class="lineCov">        132 :     if( getPntrToComponent(i)-&gt;applyForce( forces ) ) {</span>
+<span class="lineNum">     424 </span>            :       wasforced=true;
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;forces.size(); ++i) forcesToApply[i]+=forces[i];</span>
+<span class="lineNum">     426 </span>            :     }
+<span class="lineNum">     427 </span>            :   }
+<span class="lineNum">     428 </span><span class="lineCov">         44 :   if( wasforced ) {</span>
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :     addForcesOnArguments( forcesToApply );</span>
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :     if( getNumberOfAtoms()&gt;0 ) setForcesOnAtoms( forcesToApply, getNumberOfArguments() );</span>
+<span class="lineNum">     431 </span>            :   }
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineCov">         44 : }</span>
+<a name="434"><span class="lineNum">     434 </span>            : </a>
+<span class="lineNum">     435 </span>            : }
+<span class="lineNum">     436 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

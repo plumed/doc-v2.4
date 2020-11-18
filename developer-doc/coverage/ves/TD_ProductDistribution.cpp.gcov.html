@@ -1,0 +1,303 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TD_ProductDistribution.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TD_ProductDistribution.cpp<span style="font-size: 80%;"> (source / <a href="TD_ProductDistribution.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntryLo">63.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">64.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;VesTools.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<span class="lineNum">      32 </span>            : namespace ves {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //+PLUMEDOC VES_TARGETDIST TD_PRODUCT_DISTRIBUTION
+<span class="lineNum">      35 </span>            : /*
+<span class="lineNum">      36 </span>            : Target distribution given by a separable product
+<span class="lineNum">      37 </span>            : of one-dimensional distributions (static or dynamic).
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : Employ a target distribution that is a separable product
+<span class="lineNum">      40 </span>            : of one-dimensional distributions, defined as
+<span class="lineNum">      41 </span>            : \f[
+<span class="lineNum">      42 </span>            : p(\mathbf{s}) =
+<span class="lineNum">      43 </span>            : \prod_{k}^{d} p_{k}(s_{k})
+<span class="lineNum">      44 </span>            : \f]
+<span class="lineNum">      45 </span>            : where \f$d\f$ is the number of arguments used and \f$p_{k}(s_{k})\f$ is the
+<span class="lineNum">      46 </span>            : one-dimensional distribution corresponding to the \f$k\f$-th argument.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : Note the difference between this target distribution and the one defined in
+<span class="lineNum">      49 </span>            : \ref TD_PRODUCT_COMBINATION. Here we have a separable distribution given as a
+<span class="lineNum">      50 </span>            : product of one-dimensional distribution \f$p_{k}(s_{k})\f$.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The labels of the one-dimensional distributions \f$p_{k}(s_{k})\f$ to be
+<span class="lineNum">      53 </span>            : used in the product distribution are given in the DISTRIBUTIONS keyword.
+<span class="lineNum">      54 </span>            : Note that the order of the labels is very important.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : It is assumed that all the distributions to be used in the product distribution
+<span class="lineNum">      57 </span>            : are normalized. If that is not the case you need to
+<span class="lineNum">      58 </span>            : normalize the distributions by using the NORMALIZE keyword.
+<span class="lineNum">      59 </span>            : Here it does not matter if you normalize each distribution separately
+<span class="lineNum">      60 </span>            : or the overall product, it will give the same results.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : The product distribution will be a dynamic target distribution if one or more
+<span class="lineNum">      63 </span>            : of the distributions used is a dynamic distribution. Otherwise it will be a
+<span class="lineNum">      64 </span>            : static distribution.
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : \par Examples
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : In the following example we employ a uniform distribution for
+<span class="lineNum">      69 </span>            : argument 1 and a Gaussian distribution for argument 2.
+<span class="lineNum">      70 </span>            : \plumedfile
+<span class="lineNum">      71 </span>            : td_uni: TD_UNIFORM
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : td_gauss: TD_GAUSSIAN CENTER=-2.0 SIGMA=0.5
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : td_pd: TD_PRODUCT_DISTRIBUTION DISTRIBUTIONS=td_uni,td_gauss
+<span class="lineNum">      76 </span>            : \endplumedfile
+<span class="lineNum">      77 </span>            : Note that order of the labels is important, using DISTRIBUTIONS=td_gauss,td_uni
+<span class="lineNum">      78 </span>            : would mean that we would employ a Gaussian distribution for argument 1 and a uniform
+<span class="lineNum">      79 </span>            : distribution for argument 2, which would lead to completely different results.
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : */
+<a name="82"><span class="lineNum">      82 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">         45 : class TD_ProductDistribution: public TargetDistribution {</span>
+<span class="lineNum">      85 </span>            : private:
+<span class="lineNum">      86 </span>            :   std::vector&lt;TargetDistribution*&gt; distribution_pntrs_;
+<span class="lineNum">      87 </span>            :   std::vector&lt;Grid*&gt; grid_pntrs_;
+<span class="lineNum">      88 </span>            :   unsigned int ndist_;
+<span class="lineNum">      89 </span>            :   void setupAdditionalGrids(const std::vector&lt;Value*&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;std::string&gt;&amp;, const std::vector&lt;unsigned int&gt;&amp;);
+<span class="lineNum">      90 </span>            : public:
+<span class="lineNum">      91 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">      92 </span>            :   explicit TD_ProductDistribution(const ActionOptions&amp; ao);
+<span class="lineNum">      93 </span>            :   void updateGrid();
+<span class="lineNum">      94 </span>            :   double getValue(const std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">      95 </span>            :   //
+<span class="lineNum">      96 </span>            :   void linkVesBias(VesBias*);
+<span class="lineNum">      97 </span>            :   void linkAction(Action*);
+<span class="lineNum">      98 </span>            :   void linkBiasGrid(Grid*);
+<span class="lineNum">      99 </span>            :   void linkBiasWithoutCutoffGrid(Grid*);
+<span class="lineNum">     100 </span>            :   void linkFesGrid(Grid*);
+<span class="lineNum">     101 </span>            : };
+<a name="102"><span class="lineNum">     102 </span>            : </a>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">       6467 : PLUMED_REGISTER_ACTION(TD_ProductDistribution,&quot;TD_PRODUCT_DISTRIBUTION&quot;)</span>
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">         16 : void TD_ProductDistribution::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     108 </span><span class="lineCov">         16 :   TargetDistribution::registerKeywords(keys);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         64 :   keys.add(&quot;compulsory&quot;,&quot;DISTRIBUTIONS&quot;,&quot;Labels of the one-dimensional target distribution actions for each argument to be used in the product distribution. Note that order of the labels is important.&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         32 :   keys.use(&quot;WELLTEMPERED_FACTOR&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">         32 :   keys.use(&quot;SHIFT_TO_ZERO&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">         32 :   keys.use(&quot;NORMALIZE&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">         16 : }</span>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         15 : TD_ProductDistribution::TD_ProductDistribution(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     117 </span>            :   PLUMED_VES_TARGETDISTRIBUTION_INIT(ao),
+<span class="lineNum">     118 </span>            :   distribution_pntrs_(0),
+<span class="lineNum">     119 </span>            :   grid_pntrs_(0),
+<span class="lineNum">     120 </span><span class="lineCov">         15 :   ndist_(0)</span>
+<span class="lineNum">     121 </span>            : {
+<span class="lineNum">     122 </span><span class="lineCov">         15 :   std::vector&lt;std::string&gt; targetdist_labels;</span>
+<span class="lineNum">     123 </span><span class="lineCov">         30 :   parseVector(&quot;DISTRIBUTIONS&quot;,targetdist_labels);</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">         15 :   std::string error_msg = &quot;&quot;;</span>
+<span class="lineNum">     126 </span><span class="lineCov">         45 :   distribution_pntrs_ = VesTools::getPointersFromLabels&lt;TargetDistribution*&gt;(targetdist_labels,plumed.getActionSet(),error_msg);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         15 :   if(error_msg.size()&gt;0) {plumed_merror(&quot;Error in keyword DISTRIBUTIONS of &quot;+getName()+&quot;: &quot;+error_msg);}</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">        120 :   for(unsigned int i=0; i&lt;distribution_pntrs_.size(); i++) {</span>
+<span class="lineNum">     130 </span><span class="lineCov">         60 :     if(distribution_pntrs_[i]-&gt;isDynamic()) {setDynamic();}</span>
+<span class="lineNum">     131 </span><span class="lineCov">         60 :     if(distribution_pntrs_[i]-&gt;fesGridNeeded()) {setFesGridNeeded();}</span>
+<span class="lineNum">     132 </span><span class="lineCov">         60 :     if(distribution_pntrs_[i]-&gt;biasGridNeeded()) {setBiasGridNeeded();}</span>
+<span class="lineNum">     133 </span>            :   }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">         15 :   ndist_ = distribution_pntrs_.size();</span>
+<span class="lineNum">     136 </span><span class="lineCov">         30 :   grid_pntrs_.assign(ndist_,NULL);</span>
+<span class="lineNum">     137 </span><span class="lineCov">         15 :   setDimension(ndist_);</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">         15 :   checkRead();</span>
+<span class="lineNum">     140 </span><span class="lineCov">         15 : }</span>
+<a name="141"><span class="lineNum">     141 </span>            : </a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : double TD_ProductDistribution::getValue(const std::vector&lt;double&gt;&amp; argument) const {</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;getValue not implemented for TD_ProductDistribution&quot;);</span>
+<span class="lineNum">     145 </span>            :   return 0.0;
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         15 : void TD_ProductDistribution::setupAdditionalGrids(const std::vector&lt;Value*&gt;&amp; arguments, const std::vector&lt;std::string&gt;&amp; min, const std::vector&lt;std::string&gt;&amp; max, const std::vector&lt;unsigned int&gt;&amp; nbins) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">         75 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">         30 :     std::vector&lt;Value*&gt; arg1d(1);</span>
+<span class="lineNum">     152 </span><span class="lineCov">         60 :     std::vector&lt;std::string&gt; min1d(1);</span>
+<span class="lineNum">     153 </span><span class="lineCov">         60 :     std::vector&lt;std::string&gt; max1d(1);</span>
+<span class="lineNum">     154 </span><span class="lineCov">         30 :     std::vector&lt;unsigned int&gt; nbins1d(1);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         60 :     arg1d[0]=arguments[i];</span>
+<span class="lineNum">     156 </span>            :     min1d[0]=min[i];
+<span class="lineNum">     157 </span>            :     max1d[0]=max[i];
+<span class="lineNum">     158 </span><span class="lineCov">         30 :     nbins1d[0]=nbins[i];</span>
+<span class="lineNum">     159 </span><span class="lineCov">         30 :     distribution_pntrs_[i]-&gt;setupGrids(arg1d,min1d,max1d,nbins1d);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         60 :     grid_pntrs_[i]=distribution_pntrs_[i]-&gt;getTargetDistGridPntr();</span>
+<span class="lineNum">     161 </span><span class="lineCov">         90 :     if(distribution_pntrs_[i]-&gt;getDimension()!=1 || grid_pntrs_[i]-&gt;getDimension()!=1) {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :       plumed_merror(getName() + &quot;: all target distributions must be one dimensional&quot;);</span>
+<span class="lineNum">     163 </span>            :     }
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span><span class="lineCov">         15 : }</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">         15 : void TD_ProductDistribution::updateGrid() {</span>
+<span class="lineNum">     169 </span><span class="lineCov">         75 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">         60 :     distribution_pntrs_[i]-&gt;updateTargetDist();</span>
+<span class="lineNum">     171 </span>            :   }
+<span class="lineNum">     172 </span><span class="lineCov">     306045 :   for(Grid::index_t l=0; l&lt;targetDistGrid().getSize(); l++) {</span>
+<span class="lineNum">     173 </span><span class="lineCov">     153015 :     std::vector&lt;unsigned int&gt; indices = targetDistGrid().getIndices(l);</span>
+<span class="lineNum">     174 </span>            :     double value = 1.0;
+<span class="lineNum">     175 </span><span class="lineCov">     765075 :     for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">     918090 :       value *= grid_pntrs_[i]-&gt;getValue(indices[i]);</span>
+<span class="lineNum">     177 </span>            :     }
+<span class="lineNum">     178 </span><span class="lineCov">     153015 :     targetDistGrid().setValue(l,value);</span>
+<span class="lineNum">     179 </span><span class="lineCov">     153015 :     logTargetDistGrid().setValue(l,-std::log(value));</span>
+<span class="lineNum">     180 </span>            :   }
+<span class="lineNum">     181 </span><span class="lineCov">         15 :   logTargetDistGrid().setMinToZero();</span>
+<span class="lineNum">     182 </span><span class="lineCov">         15 : }</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 : void TD_ProductDistribution::linkVesBias(VesBias* vesbias_pntr_in) {</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :   TargetDistribution::linkVesBias(vesbias_pntr_in);</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :     distribution_pntrs_[i]-&gt;linkVesBias(vesbias_pntr_in);</span>
+<span class="lineNum">     189 </span>            :   }
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 : void TD_ProductDistribution::linkAction(Action* action_pntr_in) {</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :   TargetDistribution::linkAction(action_pntr_in);</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :     distribution_pntrs_[i]-&gt;linkAction(action_pntr_in);</span>
+<span class="lineNum">     197 </span>            :   }
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 : void TD_ProductDistribution::linkBiasGrid(Grid* bias_grid_pntr_in) {</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :   TargetDistribution::linkBiasGrid(bias_grid_pntr_in);</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :     distribution_pntrs_[i]-&gt;linkBiasGrid(bias_grid_pntr_in);</span>
+<span class="lineNum">     205 </span>            :   }
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 : void TD_ProductDistribution::linkBiasWithoutCutoffGrid(Grid* bias_withoutcutoff_grid_pntr_in) {</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :   TargetDistribution::linkBiasWithoutCutoffGrid(bias_withoutcutoff_grid_pntr_in);</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     distribution_pntrs_[i]-&gt;linkBiasWithoutCutoffGrid(bias_withoutcutoff_grid_pntr_in);</span>
+<span class="lineNum">     213 </span>            :   }
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 : void TD_ProductDistribution::linkFesGrid(Grid* fes_grid_pntr_in) {</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :   TargetDistribution::linkFesGrid(fes_grid_pntr_in);</span>
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;ndist_; i++) {</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :     distribution_pntrs_[i]-&gt;linkFesGrid(fes_grid_pntr_in);</span>
+<span class="lineNum">     221 </span>            :   }
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     223 </span>            : 
+<a name="224"><span class="lineNum">     224 </span>            : </a>
+<span class="lineNum">     225 </span>            : }
+<span class="lineNum">     226 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

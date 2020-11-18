@@ -1,0 +1,373 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/ActionWithArguments.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - ActionWithArguments.cpp<span style="font-size: 80%;"> (source / <a href="ActionWithArguments.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">150</td>
+            <td class="headerCovTableEntry">164</td>
+            <td class="headerCovTableEntryHi">91.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ActionWithArguments.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionWithValue.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;ActionSet.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      28 </span>            : #ifdef __PLUMED_HAS_CREGEX
+<span class="lineNum">      29 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      30 </span>            : #include &lt;regex.h&gt;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : using namespace std;
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">       2011 : void ActionWithArguments::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">       8044 :   keys.reserve(&quot;numbered&quot;,&quot;ARG&quot;,&quot;the input for this action is the scalar output from one or more other actions. The particular scalars that you will use &quot;</span>
+<span class="lineNum">      38 </span>            :                &quot;are referenced using the label of the action. If the label appears on its own then it is assumed that the Action calculates &quot;
+<span class="lineNum">      39 </span>            :                &quot;a single scalar value.  The value of this scalar is thus used as the input to this new action.  If * or *.* appears the &quot;
+<span class="lineNum">      40 </span>            :                &quot;scalars calculated by all the proceding actions in the input file are taken.  Some actions have multi-component outputs and &quot;
+<span class="lineNum">      41 </span>            :                &quot;each component of the output has a specific label.  For example a \\ref DISTANCE action labelled dist may have three componets &quot;
+<span class="lineNum">      42 </span>            :                &quot;x, y and z.  To take just the x component you should use dist.x, if you wish to take all three components then use dist.*.&quot;
+<span class="lineNum">      43 </span>            :                &quot;More information on the referencing of Actions can be found in the section of the manual on the PLUMED \\ref Syntax.  &quot;
+<span class="lineNum">      44 </span>            :                &quot;Scalar values can also be &quot;
+<span class="lineNum">      45 </span>            :                &quot;referenced using POSIX regular expressions as detailed in the section on \\ref Regex. To use this feature you you must compile &quot;
+<span class="lineNum">      46 </span>            :                &quot;PLUMED with the appropriate flag.&quot;);
+<span class="lineNum">      47 </span><span class="lineCov">       2011 : }</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">       1957 : void ActionWithArguments::parseArgumentList(const std::string&amp;key,std::vector&lt;Value*&gt;&amp;arg) {</span>
+<span class="lineNum">      50 </span><span class="lineCov">       3914 :   vector&lt;string&gt; c; arg.clear(); parseVector(key,c);</span>
+<span class="lineNum">      51 </span><span class="lineCov">       5873 :   if( c.size()==0 &amp;&amp; (keywords.style(key,&quot;compulsory&quot;) || keywords.style(key,&quot;hidden&quot;)) ) {</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :     std::string def; if( keywords.getDefaultValue(key,def) ) c.push_back( def );</span>
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span><span class="lineCov">       1957 :   interpretArgumentList(c,arg);</span>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">       1955 : }</span></a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">          6 : bool ActionWithArguments::parseArgumentList(const std::string&amp;key,int i,std::vector&lt;Value*&gt;&amp;arg) {</span>
+<span class="lineNum">      58 </span><span class="lineCov">          6 :   vector&lt;string&gt; c;</span>
+<span class="lineNum">      59 </span>            :   arg.clear();
+<span class="lineNum">      60 </span><span class="lineCov">          6 :   if(parseNumberedVector(key,i,c)) {</span>
+<span class="lineNum">      61 </span><span class="lineCov">          6 :     interpretArgumentList(c,arg);</span>
+<span class="lineNum">      62 </span>            :     return true;
+<span class="lineNum">      63 </span>            :   } else return false;
+<span class="lineNum">      64 </span>            : }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">       2057 : void ActionWithArguments::interpretArgumentList(const std::vector&lt;std::string&gt;&amp; c, std::vector&lt;Value*&gt;&amp;arg) {</span>
+<span class="lineNum">      67 </span><span class="lineCov">      16783 :   for(unsigned i=0; i&lt;c.size(); i++) {</span>
+<span class="lineNum">      68 </span>            :     // is a regex? then just interpret it. The signal is ()
+<span class="lineNum">      69 </span><span class="lineCov">       4225 :     if(!c[i].compare(0,1,&quot;(&quot;)) {</span>
+<span class="lineNum">      70 </span><span class="lineCov">        189 :       unsigned l=c[i].length();</span>
+<span class="lineNum">      71 </span><span class="lineCov">        189 :       if(!c[i].compare(l-1,1,&quot;)&quot;)) {</span>
+<span class="lineNum">      72 </span>            :         // start regex parsing
+<span class="lineNum">      73 </span>            : #ifdef __PLUMED_HAS_CREGEX
+<span class="lineNum">      74 </span>            :         // take the string enclosed in quotes and put in round brackets
+<span class="lineNum">      75 </span>            :         std::string myregex=c[i];
+<span class="lineNum">      76 </span><span class="lineCov">        376 :         log.printf(&quot;  Evaluating regexp for this action: %s \n&quot;,myregex.c_str());</span>
+<span class="lineNum">      77 </span>            :         int errcode;
+<span class="lineNum">      78 </span><span class="lineCov">        188 :         regex_t *preg = (regex_t*)malloc(sizeof(regex_t)); // pointer to the regular expression</span>
+<span class="lineNum">      79 </span>            :         regmatch_t *pmatch;
+<span class="lineNum">      80 </span><span class="lineCov">        188 :         if ((errcode=regcomp(preg, myregex.c_str(),REG_EXTENDED|REG_NEWLINE))) {  // compile the regular expression</span>
+<span class="lineNum">      81 </span>            :           char* errbuf;
+<span class="lineNum">      82 </span>            :           size_t errbuf_size;
+<span class="lineNum">      83 </span>            :           // one can check the errors asking to regerror
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :           errbuf_size = regerror(errcode, preg, NULL, 0);</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :           if (!(errbuf=(char*)malloc(errbuf_size))) {</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :             plumed_merror(&quot;cannot allocate the buffer for error detection in regexp!&quot;);</span>
+<span class="lineNum">      87 </span>            :           };
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :           regerror(errcode, preg, errbuf, errbuf_size);</span>
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :           error(errbuf);</span>
+<span class="lineNum">      90 </span>            :         }
+<span class="lineNum">      91 </span><span class="lineCov">        188 :         plumed_massert(preg-&gt;re_nsub==1,&quot;I can parse with only one subexpression&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">        188 :         pmatch = (regmatch_t*)malloc(sizeof(regmatch_t)*preg-&gt;re_nsub);</span>
+<span class="lineNum">      93 </span>            :         // select all the actions that have a value
+<span class="lineNum">      94 </span><span class="lineCov">        376 :         std::vector&lt;ActionWithValue*&gt; all=plumed.getActionSet().select&lt;ActionWithValue*&gt;();</span>
+<span class="lineNum">      95 </span><span class="lineCov">        188 :         if( all.empty() ) error(&quot;your input file is not telling plumed to calculate anything&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">       2743 :         for(unsigned j=0; j&lt;all.size(); j++) {</span>
+<span class="lineNum">      97 </span><span class="lineCov">       1578 :           std::vector&lt;std::string&gt; ss=all[j]-&gt;getComponentsVector();</span>
+<span class="lineNum">      98 </span><span class="lineCov">     635463 :           for(unsigned  k=0; k&lt;ss.size(); ++k) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">     211295 :             unsigned ll=strlen(ss[k].c_str())+1;</span>
+<span class="lineNum">     100 </span><span class="lineCov">     211295 :             std::vector&lt;char&gt; str(ll);</span>
+<span class="lineNum">     101 </span>            :             strcpy(&amp;str[0],ss[k].c_str());
+<span class="lineNum">     102 </span>            :             const char *ppstr=&amp;str[0];
+<span class="lineNum">     103 </span><span class="lineCov">     211295 :             if(!regexec(preg, ppstr, preg-&gt;re_nsub, pmatch, 0)) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">      53926 :               log.printf(&quot;  Something matched with \&quot;%s\&quot; : &quot;,ss[k].c_str());</span>
+<span class="lineNum">     105 </span>            :               do {
+<span class="lineNum">     106 </span><span class="lineCov">      26963 :                 if (pmatch[0].rm_so != -1) {    /* The regex is matching part of a string */</span>
+<span class="lineNum">     107 </span>            :                   char *submatch;
+<span class="lineNum">     108 </span><span class="lineCov">      26963 :                   size_t matchlen = pmatch[0].rm_eo - pmatch[0].rm_so;</span>
+<span class="lineNum">     109 </span><span class="lineCov">      26963 :                   submatch = (char*)malloc(matchlen+1);</span>
+<span class="lineNum">     110 </span><span class="lineCov">      26963 :                   strncpy(submatch, ppstr+pmatch[0].rm_so, matchlen+1);</span>
+<span class="lineNum">     111 </span><span class="lineCov">      26963 :                   submatch[matchlen]='\0';</span>
+<span class="lineNum">     112 </span><span class="lineCov">      26963 :                   log.printf(&quot;  subpattern %s\n&quot;, submatch);</span>
+<span class="lineNum">     113 </span>            :                   // this is the match: try to see if it is a valid action
+<span class="lineNum">     114 </span><span class="lineCov">      26963 :                   std::string putativeVal(submatch);</span>
+<span class="lineNum">     115 </span><span class="lineCov">      26963 :                   if( all[j]-&gt;exists(putativeVal) ) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">      40952 :                     arg.push_back(all[j]-&gt;copyOutput(putativeVal));</span>
+<span class="lineNum">     117 </span><span class="lineCov">      40952 :                     log.printf(&quot;  Action %s added! \n&quot;,putativeVal.c_str());</span>
+<span class="lineNum">     118 </span>            :                   }
+<span class="lineNum">     119 </span><span class="lineCov">      26963 :                   free(submatch);</span>
+<span class="lineNum">     120 </span>            :                 };
+<span class="lineNum">     121 </span><span class="lineCov">      26963 :                 ppstr += pmatch[0].rm_eo;       /* Restart from last match */</span>
+<span class="lineNum">     122 </span><span class="lineCov">      26963 :               } while(!regexec(preg,ppstr,preg-&gt;re_nsub,pmatch,0));</span>
+<span class="lineNum">     123 </span>            :             }
+<span class="lineNum">     124 </span>            :           }
+<span class="lineNum">     125 </span>            :         };
+<span class="lineNum">     126 </span><span class="lineCov">        188 :         regfree(preg);</span>
+<span class="lineNum">     127 </span><span class="lineCov">        188 :         free(preg);</span>
+<span class="lineNum">     128 </span><span class="lineCov">        188 :         free(pmatch);</span>
+<span class="lineNum">     129 </span>            : #else
+<span class="lineNum">     130 </span>            :         plumed_merror(&quot;Regexp support not compiled!&quot;);
+<span class="lineNum">     131 </span>            : #endif
+<span class="lineNum">     132 </span>            :       } else {
+<span class="lineNum">     133 </span><span class="lineCov">          4 :         plumed_merror(&quot;did you want to use regexp to input arguments? enclose it between two round braces (...) with no spaces!&quot;);</span>
+<span class="lineNum">     134 </span>            :       }
+<span class="lineNum">     135 </span>            :     } else {
+<span class="lineNum">     136 </span>            :       std::size_t dot=c[i].find_first_of('.');
+<span class="lineNum">     137 </span><span class="lineCov">       4036 :       string a=c[i].substr(0,dot);</span>
+<span class="lineNum">     138 </span><span class="lineCov">       4036 :       string name=c[i].substr(dot+1);</span>
+<span class="lineNum">     139 </span><span class="lineCov">       4036 :       if(c[i].find(&quot;.&quot;)!=string::npos) {   // if it contains a dot:</span>
+<span class="lineNum">     140 </span><span class="lineCov">       1435 :         if(a==&quot;*&quot; &amp;&amp; name==&quot;*&quot;) {</span>
+<span class="lineNum">     141 </span>            :           // Take all values from all actions
+<span class="lineNum">     142 </span><span class="lineCov">          2 :           std::vector&lt;ActionWithValue*&gt; all=plumed.getActionSet().select&lt;ActionWithValue*&gt;();</span>
+<span class="lineNum">     143 </span><span class="lineCov">          1 :           if( all.empty() ) error(&quot;your input file is not telling plumed to calculate anything&quot;);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         26 :           for(unsigned j=0; j&lt;all.size(); j++) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">         46 :             for(int k=0; k&lt;all[j]-&gt;getNumberOfComponents(); ++k) arg.push_back(all[j]-&gt;copyOutput(k));</span>
+<span class="lineNum">     146 </span>            :           }
+<span class="lineNum">     147 </span><span class="lineCov">       1426 :         } else if ( name==&quot;*&quot;) {</span>
+<span class="lineNum">     148 </span>            :           // Take all the values from an action with a specific name
+<span class="lineNum">     149 </span><span class="lineCov">        876 :           ActionWithValue* action=plumed.getActionSet().selectWithLabel&lt;ActionWithValue*&gt;(a);</span>
+<span class="lineNum">     150 </span><span class="lineCov">        438 :           if(!action) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">          1 :             std::string str=&quot; (hint! the actions with value in this ActionSet are: &quot;;</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :             str+=plumed.getActionSet().getLabelList&lt;ActionWithValue*&gt;()+&quot;)&quot;;</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :             error(&quot;cannot find action named &quot; + a + str);</span>
+<span class="lineNum">     154 </span>            :           }
+<span class="lineNum">     155 </span><span class="lineCov">        439 :           if( action-&gt;getNumberOfComponents()==0 ) error(&quot;found &quot; + a +&quot;.* indicating use all components calculated by action with label &quot; + a + &quot; but this action has no components&quot;);</span>
+<span class="lineNum">     156 </span><span class="lineCov">       9677 :           for(int k=0; k&lt;action-&gt;getNumberOfComponents(); ++k) arg.push_back(action-&gt;copyOutput(k));</span>
+<span class="lineNum">     157 </span><span class="lineCov">        988 :         } else if ( a==&quot;*&quot; ) {</span>
+<span class="lineNum">     158 </span>            :           // Take components from all actions with a specific name
+<span class="lineNum">     159 </span><span class="lineCov">         14 :           std::vector&lt;ActionWithValue*&gt; all=plumed.getActionSet().select&lt;ActionWithValue*&gt;();</span>
+<span class="lineNum">     160 </span><span class="lineCov">          7 :           if( all.empty() ) error(&quot;your input file is not telling plumed to calculate anything&quot;);</span>
+<span class="lineNum">     161 </span>            :           unsigned nval=0;
+<span class="lineNum">     162 </span><span class="lineCov">         86 :           for(unsigned j=0; j&lt;all.size(); j++) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">         96 :             std::string flab; flab=all[j]-&gt;getLabel() + &quot;.&quot; + name;</span>
+<span class="lineNum">     164 </span><span class="lineCov">         42 :             if( all[j]-&gt;exists(flab) ) { arg.push_back(all[j]-&gt;copyOutput(flab)); nval++; }</span>
+<span class="lineNum">     165 </span>            :           }
+<span class="lineNum">     166 </span><span class="lineCov">          7 :           if(nval==0) error(&quot;found no actions with a component called &quot; + name );</span>
+<span class="lineNum">     167 </span>            :         } else {
+<span class="lineNum">     168 </span>            :           // Take values with a specific name
+<span class="lineNum">     169 </span><span class="lineCov">       1962 :           ActionWithValue* action=plumed.getActionSet().selectWithLabel&lt;ActionWithValue*&gt;(a);</span>
+<span class="lineNum">     170 </span><span class="lineCov">        981 :           if(!action) {</span>
+<span class="lineNum">     171 </span><span class="lineCov">          1 :             std::string str=&quot; (hint! the actions with value in this ActionSet are: &quot;;</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :             str+=plumed.getActionSet().getLabelList&lt;ActionWithValue*&gt;()+&quot;)&quot;;</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :             error(&quot;cannot find action named &quot; + a +str);</span>
+<span class="lineNum">     174 </span>            :           }
+<span class="lineNum">     175 </span><span class="lineCov">        981 :           if( !(action-&gt;exists(c[i])) ) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">          1 :             std::string str=&quot; (hint! the components in this actions are: &quot;;</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :             str+=action-&gt;getComponentsList()+&quot;)&quot;;</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :             error(&quot;action &quot; + a + &quot; has no component named &quot; + name + str);</span>
+<span class="lineNum">     179 </span>            :           } ;
+<span class="lineNum">     180 </span><span class="lineCov">       1963 :           arg.push_back(action-&gt;copyOutput(c[i]));</span>
+<span class="lineNum">     181 </span>            :         }
+<span class="lineNum">     182 </span>            :       } else {    // if it doesn't contain a dot
+<span class="lineNum">     183 </span><span class="lineCov">       2609 :         if(c[i]==&quot;*&quot;) {</span>
+<span class="lineNum">     184 </span>            :           // Take all values from all actions
+<span class="lineNum">     185 </span><span class="lineCov">        120 :           std::vector&lt;ActionWithValue*&gt; all=plumed.getActionSet().select&lt;ActionWithValue*&gt;();</span>
+<span class="lineNum">     186 </span><span class="lineCov">         60 :           if( all.empty() ) error(&quot;your input file is not telling plumed to calculate anything&quot;);</span>
+<span class="lineNum">     187 </span><span class="lineCov">       1218 :           for(unsigned j=0; j&lt;all.size(); j++) {</span>
+<span class="lineNum">     188 </span><span class="lineCov">       2118 :             for(int k=0; k&lt;all[j]-&gt;getNumberOfComponents(); ++k) arg.push_back(all[j]-&gt;copyOutput(k));</span>
+<span class="lineNum">     189 </span>            :           }
+<span class="lineNum">     190 </span>            :         } else {
+<span class="lineNum">     191 </span><span class="lineCov">       5098 :           ActionWithValue* action=plumed.getActionSet().selectWithLabel&lt;ActionWithValue*&gt;(c[i]);</span>
+<span class="lineNum">     192 </span><span class="lineCov">       2549 :           if(!action) {</span>
+<span class="lineNum">     193 </span><span class="lineCov">          2 :             std::string str=&quot; (hint! the actions with value in this ActionSet are: &quot;;</span>
+<span class="lineNum">     194 </span><span class="lineCov">          5 :             str+=plumed.getActionSet().getLabelList&lt;ActionWithValue*&gt;()+&quot;)&quot;;</span>
+<span class="lineNum">     195 </span><span class="lineCov">          4 :             error(&quot;cannot find action named &quot; + c[i] + str );</span>
+<span class="lineNum">     196 </span>            :           }
+<span class="lineNum">     197 </span><span class="lineCov">       2548 :           if( !(action-&gt;exists(c[i])) ) {</span>
+<span class="lineNum">     198 </span><span class="lineCov">          1 :             std::string str=&quot; (hint! the components in this actions are: &quot;;</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :             str+=action-&gt;getComponentsList()+&quot;)&quot;;</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :             error(&quot;action &quot; + c[i] + &quot; has no component named &quot; + c[i] +str);</span>
+<span class="lineNum">     201 </span>            :           };
+<span class="lineNum">     202 </span><span class="lineCov">       5097 :           arg.push_back(action-&gt;copyOutput(c[i]));</span>
+<span class="lineNum">     203 </span>            :         }
+<span class="lineNum">     204 </span>            :       }
+<span class="lineNum">     205 </span>            :     }
+<span class="lineNum">     206 </span>            :   }
+<span class="lineNum">     207 </span><span class="lineCov">       2055 : }</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">        442 : void ActionWithArguments::expandArgKeywordInPDB( PDB&amp; pdb ) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">        884 :   std::vector&lt;std::string&gt; pdb_remark=pdb.getRemark();</span>
+<span class="lineNum">     211 </span><span class="lineCov">        442 :   std::vector&lt;std::string&gt; arg_names;</span>
+<span class="lineNum">     212 </span><span class="lineCov">        884 :   bool found=Tools::parseVector(pdb_remark,&quot;ARG&quot;,arg_names);</span>
+<span class="lineNum">     213 </span><span class="lineCov">        442 :   if( found ) {</span>
+<span class="lineNum">     214 </span>            :     std::vector&lt;Value*&gt; arg_vals;
+<span class="lineNum">     215 </span><span class="lineCov">         80 :     interpretArgumentList( arg_names, arg_vals );</span>
+<span class="lineNum">     216 </span><span class="lineCov">        160 :     std::string new_args=&quot;ARG=&quot; + arg_vals[0]-&gt;getName();</span>
+<span class="lineNum">     217 </span><span class="lineCov">        640 :     for(unsigned i=1; i&lt;arg_vals.size(); ++i) new_args = new_args + &quot;,&quot; + arg_vals[i]-&gt;getName();</span>
+<span class="lineNum">     218 </span><span class="lineCov">         80 :     pdb.setArgKeyword( new_args );</span>
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span><span class="lineCov">        442 : }</span>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineCov">       3052 : void ActionWithArguments::requestArguments(const vector&lt;Value*&gt; &amp;arg) {</span>
+<span class="lineNum">     223 </span><span class="lineCov">       3052 :   plumed_massert(!lockRequestArguments,&quot;requested argument list can only be changed in the prepare() method&quot;);</span>
+<span class="lineNum">     224 </span><span class="lineCov">       3052 :   arguments=arg;</span>
+<span class="lineNum">     225 </span><span class="lineCov">       3052 :   clearDependencies();</span>
+<span class="lineNum">     226 </span>            :   std::string fullname,name;
+<span class="lineNum">     227 </span><span class="lineCov">      76835 :   for(unsigned i=0; i&lt;arguments.size(); i++) {</span>
+<span class="lineNum">     228 </span><span class="lineCov">      23577 :     fullname=arguments[i]-&gt;getName();</span>
+<span class="lineNum">     229 </span><span class="lineCov">      23577 :     if(fullname.find(&quot;.&quot;)!=string::npos) {</span>
+<span class="lineNum">     230 </span>            :       std::size_t dot=fullname.find_first_of('.');
+<span class="lineNum">     231 </span><span class="lineCov">      35684 :       name=fullname.substr(0,dot);</span>
+<span class="lineNum">     232 </span>            :     } else {
+<span class="lineNum">     233 </span>            :       name=fullname;
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span><span class="lineCov">      47154 :     ActionWithValue* action=plumed.getActionSet().selectWithLabel&lt;ActionWithValue*&gt;(name);</span>
+<span class="lineNum">     236 </span><span class="lineCov">      23577 :     plumed_massert(action,&quot;cannot find action named (in requestArguments - this is weird)&quot; + name);</span>
+<span class="lineNum">     237 </span><span class="lineCov">      23577 :     addDependency(action);</span>
+<span class="lineNum">     238 </span>            :   }
+<span class="lineNum">     239 </span><span class="lineCov">       3052 : }</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span><span class="lineCov">       1950 : ActionWithArguments::ActionWithArguments(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     242 </span>            :   Action(ao),
+<span class="lineNum">     243 </span><span class="lineCov">       3900 :   lockRequestArguments(false)</span>
+<span class="lineNum">     244 </span>            : {
+<span class="lineNum">     245 </span><span class="lineCov">       5852 :   if( keywords.exists(&quot;ARG&quot;) &amp;&amp; !keywords.exists(&quot;DATA&quot;) ) {</span>
+<span class="lineNum">     246 </span>            :     vector&lt;Value*&gt; arg;
+<span class="lineNum">     247 </span><span class="lineCov">       3766 :     parseArgumentList(&quot;ARG&quot;,arg);</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span><span class="lineCov">       1881 :     if(!arg.empty()) {</span>
+<span class="lineNum">     250 </span><span class="lineCov">       1824 :       log.printf(&quot;  with arguments&quot;);</span>
+<span class="lineNum">     251 </span><span class="lineCov">      86236 :       for(unsigned i=0; i&lt;arg.size(); i++) log.printf(&quot; %s&quot;,arg[i]-&gt;getName().c_str());</span>
+<span class="lineNum">     252 </span><span class="lineCov">       1824 :       log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     253 </span>            :     }
+<span class="lineNum">     254 </span><span class="lineCov">       1881 :     requestArguments(arg);</span>
+<span class="lineNum">     255 </span>            :   }
+<span class="lineNum">     256 </span><span class="lineCov">       1948 : }</span>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">         58 : void ActionWithArguments::calculateNumericalDerivatives( ActionWithValue* a ) {</span>
+<span class="lineNum">     259 </span><span class="lineCov">         58 :   if(!a) {</span>
+<span class="lineNum">     260 </span><span class="lineCov">         58 :     a=dynamic_cast&lt;ActionWithValue*&gt;(this);</span>
+<span class="lineNum">     261 </span><span class="lineCov">         58 :     plumed_massert(a,&quot;cannot compute numerical derivatives for an action without values&quot;);</span>
+<span class="lineNum">     262 </span>            :   }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :   const int nval=a-&gt;getNumberOfComponents();
+<span class="lineNum">     265 </span><span class="lineCov">         58 :   const int npar=arguments.size();</span>
+<span class="lineNum">     266 </span><span class="lineCov">         58 :   std::vector&lt;double&gt; value (nval*npar);</span>
+<span class="lineNum">     267 </span><span class="lineCov">        264 :   for(int i=0; i&lt;npar; i++) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">        206 :     double arg0=arguments[i]-&gt;get();</span>
+<span class="lineNum">     269 </span><span class="lineCov">        103 :     arguments[i]-&gt;set(arg0+sqrt(epsilon));</span>
+<span class="lineNum">     270 </span><span class="lineCov">        103 :     a-&gt;calculate();</span>
+<span class="lineNum">     271 </span><span class="lineCov">        103 :     arguments[i]-&gt;set(arg0);</span>
+<span class="lineNum">     272 </span><span class="lineCov">       2535 :     for(int j=0; j&lt;nval; j++) {</span>
+<span class="lineNum">     273 </span><span class="lineCov">       2432 :       value[i*nval+j]=a-&gt;getOutputQuantity(j);</span>
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span>            :   }
+<span class="lineNum">     276 </span><span class="lineCov">         58 :   a-&gt;calculate();</span>
+<span class="lineNum">     277 </span><span class="lineCov">         58 :   a-&gt;clearDerivatives();</span>
+<span class="lineNum">     278 </span><span class="lineCov">       2230 :   for(int j=0; j&lt;nval; j++) {</span>
+<span class="lineNum">     279 </span><span class="lineCov">       1086 :     Value* v=a-&gt;copyOutput(j);</span>
+<span class="lineNum">     280 </span><span class="lineCov">       1886 :     if( v-&gt;hasDerivatives() ) for(int i=0; i&lt;npar; i++) v-&gt;addDerivative(i,(value[i*nval+j]-a-&gt;getOutputQuantity(j))/sqrt(epsilon));</span>
+<span class="lineNum">     281 </span>            :   }
+<span class="lineNum">     282 </span><span class="lineCov">         58 : }</span>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">        261 : double ActionWithArguments::getProjection(unsigned i,unsigned j)const {</span>
+<span class="lineNum">     285 </span><span class="lineCov">        522 :   plumed_massert(i&lt;arguments.size(),&quot; making projections with an index which  is too large&quot;);</span>
+<span class="lineNum">     286 </span><span class="lineCov">        261 :   plumed_massert(j&lt;arguments.size(),&quot; making projections with an index which  is too large&quot;);</span>
+<span class="lineNum">     287 </span><span class="lineCov">        261 :   const Value* v1=arguments[i];</span>
+<span class="lineNum">     288 </span><span class="lineCov">        261 :   const Value* v2=arguments[j];</span>
+<span class="lineNum">     289 </span><span class="lineCov">        261 :   return Value::projection(*v1,*v2);</span>
+<a name="290"><span class="lineNum">     290 </span>            : }</a>
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span><span class="lineCov">        326 : void ActionWithArguments::addForcesOnArguments( const std::vector&lt;double&gt;&amp; forces ) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">       1152 :   for(unsigned i=0; i&lt;arguments.size(); ++i) arguments[i]-&gt;addForce( forces[i] );</span>
+<a name="294"><span class="lineNum">     294 </span><span class="lineCov">        326 : }</span></a>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

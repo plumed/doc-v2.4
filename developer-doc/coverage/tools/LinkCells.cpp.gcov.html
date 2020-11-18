@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/LinkCells.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - LinkCells.cpp<span style="font-size: 80%;"> (source / <a href="LinkCells.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">80</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntryHi">98.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;LinkCells.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Communicator.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      25 </span>            : 
+<a name="26"><span class="lineNum">      26 </span>            : namespace PLMD {</a>
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">        658 : LinkCells::LinkCells( Communicator&amp; cc ) :</span>
+<span class="lineNum">      29 </span>            :   comm(cc),
+<span class="lineNum">      30 </span>            :   cutoffwasset(false),
+<span class="lineNum">      31 </span>            :   link_cutoff(0.0),
+<span class="lineNum">      32 </span>            :   ncells(3),
+<span class="lineNum">      33 </span><span class="lineCov">        658 :   nstride(3)</span>
+<span class="lineNum">      34 </span>            : {
+<a name="35"><span class="lineNum">      35 </span><span class="lineCov">        658 : }</span></a>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineCov">        352 : void LinkCells::setCutoff( const double&amp; lcut ) {</span>
+<span class="lineNum">      38 </span><span class="lineCov">        352 :   cutoffwasset=true; link_cutoff=lcut;</span>
+<a name="39"><span class="lineNum">      39 </span><span class="lineCov">        352 : }</span></a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">          8 : double LinkCells::getCutoff() const {</span>
+<span class="lineNum">      42 </span><span class="lineCov">          8 :   plumed_assert( cutoffwasset ); return link_cutoff;</span>
+<a name="43"><span class="lineNum">      43 </span>            : }</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">       1693 : void LinkCells::buildCellLists( const std::vector&lt;Vector&gt;&amp; pos, const std::vector&lt;unsigned&gt;&amp; indices, const Pbc&amp; pbc ) {</span>
+<span class="lineNum">      46 </span><span class="lineCov">       3386 :   plumed_assert( cutoffwasset &amp;&amp; pos.size()==indices.size() );</span>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            :   // Must be able to check that pbcs are not nonsensical in some way?? -- GAT
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :   // Setup the pbc object by copying it from action
+<span class="lineNum">      51 </span><span class="lineCov">       1693 :   mypbc.setBox( pbc.getBox() );</span>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :   // Setup the lists
+<span class="lineNum">      54 </span><span class="lineCov">       1693 :   if( pos.size()!=allcells.size() ) {</span>
+<span class="lineNum">      55 </span><span class="lineCov">        840 :     allcells.resize( pos.size() ); lcell_lists.resize( pos.size() );</span>
+<span class="lineNum">      56 </span>            :   }
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   {
+<span class="lineNum">      59 </span>            : // This is the reciprocal lattice
+<span class="lineNum">      60 </span>            : // notice that reciprocal.getRow(0) is a vector that is orthogonal to b and c
+<span class="lineNum">      61 </span>            : // This allows to use linked cells in non orthorhomic boxes
+<span class="lineNum">      62 </span><span class="lineCov">       1693 :     Tensor reciprocal(transpose(mypbc.getInvBox()));</span>
+<span class="lineNum">      63 </span><span class="lineCov">       3386 :     ncells[0] = std::floor( 1.0/ reciprocal.getRow(0).modulo() / link_cutoff );</span>
+<span class="lineNum">      64 </span><span class="lineCov">       1693 :     if( ncells[0]==0 ) ncells[0]=1;</span>
+<span class="lineNum">      65 </span><span class="lineCov">       3386 :     ncells[1] = std::floor( 1.0/ reciprocal.getRow(1).modulo() / link_cutoff );</span>
+<span class="lineNum">      66 </span><span class="lineCov">       1693 :     if( ncells[1]==0 ) ncells[1]=1;</span>
+<span class="lineNum">      67 </span><span class="lineCov">       3386 :     ncells[2] = std::floor( 1.0/ reciprocal.getRow(2).modulo() / link_cutoff );</span>
+<span class="lineNum">      68 </span><span class="lineCov">       1693 :     if( ncells[2]==0 ) ncells[2]=1;</span>
+<span class="lineNum">      69 </span>            :   }
+<span class="lineNum">      70 </span>            :   // Setup the strides
+<span class="lineNum">      71 </span><span class="lineCov">       6772 :   nstride[0]=1; nstride[1]=ncells[0]; nstride[2]=ncells[0]*ncells[1];</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   // Setup the storage for link cells
+<span class="lineNum">      74 </span><span class="lineCov">       1693 :   unsigned ncellstot=ncells[0]*ncells[1]*ncells[2];</span>
+<span class="lineNum">      75 </span><span class="lineCov">       1693 :   if( lcell_tots.size()!=ncellstot ) {</span>
+<span class="lineNum">      76 </span><span class="lineCov">        409 :     lcell_tots.resize( ncellstot ); lcell_starts.resize( ncellstot );</span>
+<span class="lineNum">      77 </span>            :   }
+<span class="lineNum">      78 </span>            :   // Clear nlcells
+<span class="lineNum">      79 </span><span class="lineCov">     601493 :   for(unsigned i=0; i&lt;ncellstot; ++i) lcell_tots[i]=0;</span>
+<span class="lineNum">      80 </span>            :   // Clear allcells
+<span class="lineNum">      81 </span><span class="lineCov">       3386 :   allcells.assign( allcells.size(), 0 );</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   // Find out what cell everyone is in
+<span class="lineNum">      84 </span><span class="lineCov">       1693 :   unsigned rank=comm.Get_rank(), size=comm.Get_size();</span>
+<span class="lineNum">      85 </span><span class="lineCov">    1239509 :   for(unsigned i=rank; i&lt;pos.size(); i+=size) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">     412041 :     allcells[i]=findCell( pos[i] );</span>
+<span class="lineNum">      87 </span><span class="lineCov">     824082 :     lcell_tots[allcells[i]]++;</span>
+<span class="lineNum">      88 </span>            :   }
+<span class="lineNum">      89 </span>            :   // And gather all this information on every node
+<span class="lineNum">      90 </span><span class="lineCov">       1693 :   comm.Sum( allcells ); comm.Sum( lcell_tots );</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   // Now prepare the link cell lists
+<span class="lineNum">      93 </span>            :   unsigned tot=0;
+<span class="lineNum">      94 </span><span class="lineCov">    1202986 :   for(unsigned i=0; i&lt;lcell_tots.size(); ++i) { lcell_starts[i]=tot; tot+=lcell_tots[i]; lcell_tots[i]=0; }</span>
+<span class="lineNum">      95 </span><span class="lineCov">       3386 :   plumed_assert( tot==pos.size() );</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :   // And setup the link cells properly
+<span class="lineNum">      98 </span><span class="lineCov">    1375346 :   for(unsigned j=0; j&lt;pos.size(); ++j) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">    1371960 :     unsigned myind = lcell_starts[ allcells[j] ] + lcell_tots[ allcells[j] ];</span>
+<span class="lineNum">     100 </span><span class="lineCov">     914640 :     lcell_lists[ myind ] = indices[j];</span>
+<span class="lineNum">     101 </span><span class="lineCov">     914640 :     lcell_tots[allcells[j]]++;</span>
+<span class="lineNum">     102 </span>            :   }
+<span class="lineNum">     103 </span><span class="lineCov">       1693 : }</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : #define LINKC_MIN(n) ((n&lt;2)? 0 : -1)
+<span class="lineNum">     106 </span>            : #define LINKC_MAX(n) ((n&lt;3)? 1 : 2)
+<a name="107"><span class="lineNum">     107 </span>            : #define LINKC_PBC(n,num) ((n&lt;0)? num-1 : n%num )</a>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">     249696 : void LinkCells::addRequiredCells( const std::vector&lt;unsigned&gt;&amp; celn, unsigned&amp; ncells_required,</span>
+<span class="lineNum">     110 </span>            :                                   std::vector&lt;unsigned&gt;&amp; cells_required ) const {
+<span class="lineNum">     111 </span>            :   unsigned nnew_cells=0;
+<span class="lineNum">     112 </span><span class="lineCov">    1301554 :   for(int nx=LINKC_MIN(ncells[0]); nx&lt;LINKC_MAX(ncells[0]); ++nx) {</span>
+<span class="lineNum">     113 </span><span class="lineCov">     401081 :     int xval = celn[0] + nx;</span>
+<span class="lineNum">     114 </span><span class="lineCov">     802162 :     xval=LINKC_PBC(xval,ncells[0])*nstride[0];</span>
+<span class="lineNum">     115 </span><span class="lineCov">    2504948 :     for(int ny=LINKC_MIN(ncells[1]); ny&lt;LINKC_MAX(ncells[1]); ++ny) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">     851393 :       int yval = celn[1] + ny;</span>
+<span class="lineNum">     117 </span><span class="lineCov">    1702786 :       yval=LINKC_PBC(yval,ncells[1])*nstride[1];</span>
+<span class="lineNum">     118 </span><span class="lineCov">    6074728 :       for(int nz=LINKC_MIN(ncells[2]); nz&lt;LINKC_MAX(ncells[2]); ++nz) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">    2185971 :         int zval = celn[2] + nz;</span>
+<span class="lineNum">     120 </span><span class="lineCov">    4371942 :         zval=LINKC_PBC(zval,ncells[2])*nstride[2];</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">    2185971 :         unsigned mybox=xval+yval+zval; bool added=false;</span>
+<span class="lineNum">     123 </span><span class="lineCov">    2185971 :         for(unsigned k=0; k&lt;ncells_required; ++k) {</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :           if( mybox==cells_required[k] ) { added=true; break; }</span>
+<span class="lineNum">     125 </span>            :         }
+<span class="lineNum">     126 </span><span class="lineCov">    4371942 :         if( !added ) { cells_required[ncells_required+nnew_cells]=mybox; nnew_cells++; }</span>
+<span class="lineNum">     127 </span>            :       }
+<span class="lineNum">     128 </span>            :     }
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span><span class="lineCov">     249696 :   ncells_required += nnew_cells;</span>
+<a name="131"><span class="lineNum">     131 </span><span class="lineCov">     249696 : }</span></a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">      14884 : void LinkCells::retrieveNeighboringAtoms( const Vector&amp; pos, std::vector&lt;unsigned&gt;&amp; cell_list,</span>
+<span class="lineNum">     134 </span>            :     unsigned&amp; natomsper, std::vector&lt;unsigned&gt;&amp; atoms ) const {
+<span class="lineNum">     135 </span><span class="lineCov">      14884 :   if( cell_list.size()!=getNumberOfCells() ) cell_list.resize( getNumberOfCells() );</span>
+<span class="lineNum">     136 </span><span class="lineCov">      29768 :   unsigned ncellt=0; addRequiredCells( findMyCell( pos ), ncellt, cell_list );</span>
+<span class="lineNum">     137 </span><span class="lineCov">      14884 :   retrieveAtomsInCells( ncellt, cell_list, natomsper, atoms );</span>
+<a name="138"><span class="lineNum">     138 </span><span class="lineCov">      14884 : }</span></a>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">     249696 : void LinkCells::retrieveAtomsInCells( const unsigned&amp; ncells_required,</span>
+<span class="lineNum">     141 </span>            :                                       const std::vector&lt;unsigned&gt;&amp; cells_required,
+<span class="lineNum">     142 </span>            :                                       unsigned&amp; natomsper, std::vector&lt;unsigned&gt;&amp; atoms ) const {
+<span class="lineNum">     143 </span><span class="lineCov">     249696 :   plumed_assert( natomsper==1 || natomsper==2 );  // This is really a bug. If you are trying to reuse this ask GAT for help</span>
+<span class="lineNum">     144 </span><span class="lineCov">    4621638 :   for(unsigned i=0; i&lt;ncells_required; ++i) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">    4371942 :     unsigned mybox=cells_required[i];</span>
+<span class="lineNum">     146 </span><span class="lineCov"> 1209196941 :     for(unsigned k=0; k&lt;lcell_tots[mybox]; ++k) {</span>
+<span class="lineNum">     147 </span><span class="lineCov">  803216666 :       unsigned myatom = lcell_lists[lcell_starts[mybox]+k];</span>
+<span class="lineNum">     148 </span><span class="lineCov">  401608333 :       if( myatom!=atoms[0] ) { // Ideally would provide an option to not do this</span>
+<span class="lineNum">     149 </span><span class="lineCov">  802906958 :         atoms[natomsper]=myatom;</span>
+<span class="lineNum">     150 </span><span class="lineCov">  401453479 :         natomsper++;</span>
+<span class="lineNum">     151 </span>            :       }
+<span class="lineNum">     152 </span>            :     }
+<span class="lineNum">     153 </span>            :   }
+<a name="154"><span class="lineNum">     154 </span><span class="lineCov">     249696 : }</span></a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">     661737 : std::vector&lt;unsigned&gt; LinkCells::findMyCell( const Vector&amp; pos ) const {</span>
+<span class="lineNum">     157 </span><span class="lineCov">     661737 :   Vector fpos=mypbc.realToScaled( pos ); std::vector&lt;unsigned&gt; celn(3);</span>
+<span class="lineNum">     158 </span><span class="lineCov">    4632159 :   for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     159 </span><span class="lineCov">    7940844 :     celn[j] = std::floor( ( Tools::pbc(fpos[j]) + 0.5 ) * ncells[j] );</span>
+<span class="lineNum">     160 </span><span class="lineCov">    3970422 :     plumed_assert( celn[j]&gt;=0 &amp;&amp; celn[j]&lt;ncells[j] ); // Check that atom is in box</span>
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span><span class="lineCov">     661737 :   return celn;</span>
+<a name="163"><span class="lineNum">     163 </span>            : }</a>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">     412041 : unsigned LinkCells::convertIndicesToIndex( const unsigned&amp; nx, const unsigned&amp; ny, const unsigned&amp; nz ) const {</span>
+<span class="lineNum">     166 </span><span class="lineCov">     824082 :   return nx*nstride[0] + ny*nstride[1] + nz*nstride[2];</span>
+<a name="167"><span class="lineNum">     167 </span>            : }</a>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">     412041 : unsigned LinkCells::findCell( const Vector&amp; pos ) const {</span>
+<span class="lineNum">     170 </span><span class="lineCov">     412041 :   std::vector&lt;unsigned&gt; celn( findMyCell(pos ) );</span>
+<span class="lineNum">     171 </span><span class="lineCov">     824082 :   return convertIndicesToIndex( celn[0], celn[1], celn[2] );</span>
+<span class="lineNum">     172 </span>            : }
+<a name="173"><span class="lineNum">     173 </span>            : </a>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

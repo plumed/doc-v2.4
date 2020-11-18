@@ -1,0 +1,744 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - function/FuncSumHills.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">function</a> - FuncSumHills.cpp<span style="font-size: 80%;"> (source / <a href="FuncSumHills.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">278</td>
+            <td class="headerCovTableEntry">318</td>
+            <td class="headerCovTableEntryMed">87.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Function.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/BiasRepresentation.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Stopwatch.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : namespace function {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : //+PLUMEDOC FUNCTION FUNCSUMHILLS
+<span class="lineNum">      39 </span>            : /*
+<span class="lineNum">      40 </span>            : This function is intended to be called by the command line tool sum_hills
+<span class="lineNum">      41 </span>            : and it is meant to integrate a HILLS file or an HILLS file interpreted as
+<span class="lineNum">      42 </span>            : a histogram i a variety of ways. Therefore it is not expected that you use this
+<span class="lineNum">      43 </span>            : during your dynamics (it will crash!)
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : In the future one could implement periodic integration during the metadynamics
+<span class="lineNum">      46 </span>            : or straightforward MD as a tool to check convergence
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \par Examples
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : There are currently no examples for this keyword.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : */
+<span class="lineNum">      53 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : class FilesHandler {
+<span class="lineNum">      56 </span>            :   vector &lt;string&gt; filenames;
+<span class="lineNum">      57 </span>            :   vector &lt;IFile*&gt;  ifiles;
+<span class="lineNum">      58 </span>            :   Action *action;
+<span class="lineNum">      59 </span>            :   Log *log;
+<span class="lineNum">      60 </span>            :   bool parallelread;
+<span class="lineNum">      61 </span>            :   unsigned beingread;
+<span class="lineNum">      62 </span>            :   bool isopen;
+<span class="lineNum">      63 </span>            : public:
+<span class="lineNum">      64 </span>            :   FilesHandler(const vector&lt;string&gt; &amp;filenames, const bool &amp;parallelread,  Action &amp;myaction, Log &amp;mylog);
+<span class="lineNum">      65 </span>            :   bool readBunch(BiasRepresentation *br, int stride);
+<span class="lineNum">      66 </span>            :   bool scanOneHill(BiasRepresentation *br, IFile *ifile );
+<span class="lineNum">      67 </span>            :   void getMinMaxBin(vector&lt;Value*&gt; vals, Communicator &amp;cc, vector&lt;double&gt; &amp;vmin, vector&lt;double&gt; &amp;vmax, vector&lt;unsigned&gt; &amp;vbin);
+<span class="lineNum">      68 </span>            :   void getMinMaxBin(vector&lt;Value*&gt; vals, Communicator &amp;cc, vector&lt;double&gt; &amp;vmin, vector&lt;double&gt; &amp;vmax, vector&lt;unsigned&gt; &amp;vbin, vector&lt;double&gt; &amp;histosigma);
+<span class="lineNum">      69 </span>            :   ~FilesHandler();
+<span class="lineNum">      70 </span>            : };
+<span class="lineNum">      71 </span><span class="lineCov">         22 : FilesHandler::FilesHandler(const vector&lt;string&gt; &amp;filenames, const bool &amp;parallelread, Action &amp;action, Log &amp;mylog ):filenames(filenames),log(&amp;mylog),parallelread(parallelread),beingread(0),isopen(false) {</span>
+<span class="lineNum">      72 </span><span class="lineCov">         11 :   this-&gt;action=&amp;action;</span>
+<span class="lineNum">      73 </span><span class="lineCov">         58 :   for(unsigned i=0; i&lt;filenames.size(); i++) {</span>
+<span class="lineNum">      74 </span><span class="lineCov">         12 :     IFile *ifile = new IFile();</span>
+<span class="lineNum">      75 </span><span class="lineCov">         12 :     ifile-&gt;link(action);</span>
+<span class="lineNum">      76 </span><span class="lineCov">         12 :     ifiles.push_back(ifile);</span>
+<span class="lineNum">      77 </span><span class="lineCov">         24 :     plumed_massert((ifile-&gt;FileExist(filenames[i])), &quot;the file &quot;+filenames[i]+&quot; does not exist &quot; );</span>
+<span class="lineNum">      78 </span>            :   }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">         22 : FilesHandler::~FilesHandler() {</span>
+<span class="lineNum">      83 </span><span class="lineCov">         58 :   for(unsigned i=0; i&lt;ifiles.size(); i++) delete ifiles[i];</span>
+<span class="lineNum">      84 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : // note that the FileHandler is completely transparent respect to the biasrepresentation
+<span class="lineNum">      87 </span>            : // no check are made at this level
+<span class="lineNum">      88 </span><span class="lineCov">         12 : bool FilesHandler::readBunch(BiasRepresentation *br, int stride = -1) {</span>
+<span class="lineNum">      89 </span>            :   bool morefiles; morefiles=true;
+<span class="lineNum">      90 </span><span class="lineCov">         12 :   if(parallelread) {</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     (*log)&lt;&lt;&quot;  doing parallelread \n&quot;;</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;parallelread is not yet implemented !!!&quot;);</span>
+<span class="lineNum">      93 </span>            :   } else {
+<span class="lineNum">      94 </span><span class="lineCov">         12 :     (*log)&lt;&lt;&quot;  doing serialread \n&quot;;</span>
+<span class="lineNum">      95 </span>            :     // read one by one hills
+<span class="lineNum">      96 </span>            :     // is the type defined? if not, assume it is a gaussian
+<span class="lineNum">      97 </span>            :     IFile *ff;
+<span class="lineNum">      98 </span><span class="lineCov">         24 :     ff=ifiles[beingread];</span>
+<span class="lineNum">      99 </span><span class="lineCov">         12 :     if(!isopen) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">         22 :       (*log)&lt;&lt;&quot;  opening file &quot;&lt;&lt;filenames[beingread]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     101 </span><span class="lineCov">         22 :       ff-&gt;open(filenames[beingread]); isopen=true;</span>
+<span class="lineNum">     102 </span>            :     }
+<span class="lineNum">     103 </span>            :     int n;
+<span class="lineNum">     104 </span>            :     while(true) {
+<span class="lineNum">     105 </span>            :       bool fileisover=true;
+<span class="lineNum">     106 </span><span class="lineCov">       5566 :       while(scanOneHill(br,ff)) {</span>
+<span class="lineNum">     107 </span>            :         // here do the dump if needed
+<span class="lineNum">     108 </span><span class="lineCov">       5554 :         n=br-&gt;getNumberOfKernels();</span>
+<span class="lineNum">     109 </span><span class="lineCov">       5554 :         if(stride&gt;0 &amp;&amp; n%stride==0 &amp;&amp; n!=0  ) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">          1 :           (*log)&lt;&lt;&quot;  done with this chunk: now with &quot;&lt;&lt;n&lt;&lt;&quot; kernels  \n&quot;;</span>
+<span class="lineNum">     111 </span>            :           fileisover=false;
+<span class="lineNum">     112 </span>            :           break;
+<span class="lineNum">     113 </span>            :         }
+<span class="lineNum">     114 </span>            :       }
+<span class="lineNum">     115 </span>            :       if(fileisover) {
+<span class="lineNum">     116 </span><span class="lineCov">         24 :         (*log)&lt;&lt;&quot;  closing file &quot;&lt;&lt;filenames[beingread]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     117 </span><span class="lineCov">         12 :         ff-&gt;close();</span>
+<span class="lineNum">     118 </span><span class="lineCov">         12 :         isopen=false;</span>
+<span class="lineNum">     119 </span><span class="lineCov">         12 :         (*log)&lt;&lt;&quot;  now total &quot;&lt;&lt;br-&gt;getNumberOfKernels()&lt;&lt;&quot; kernels \n&quot;;</span>
+<span class="lineNum">     120 </span><span class="lineCov">         12 :         beingread++;</span>
+<span class="lineNum">     121 </span><span class="lineCov">         24 :         if(beingread&lt;ifiles.size()) {</span>
+<span class="lineNum">     122 </span><span class="lineCov">          2 :           ff=ifiles[beingread]; ff-&gt;open(filenames[beingread]);</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 :           (*log)&lt;&lt;&quot;  opening file &quot;&lt;&lt;filenames[beingread]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     124 </span><span class="lineCov">          1 :           isopen=true;</span>
+<span class="lineNum">     125 </span>            :         } else {
+<span class="lineNum">     126 </span>            :           morefiles=false;
+<span class="lineNum">     127 </span><span class="lineCov">         11 :           (*log)&lt;&lt;&quot;  final chunk: now with &quot;&lt;&lt;n&lt;&lt;&quot; kernels  \n&quot;;</span>
+<span class="lineNum">     128 </span>            :           break;
+<span class="lineNum">     129 </span>            :         }
+<span class="lineNum">     130 </span>            :       }
+<span class="lineNum">     131 </span>            :       // if there are no more files to read and this file is over then quit
+<span class="lineNum">     132 </span>            :       if(fileisover &amp;&amp; !morefiles) {break;}
+<span class="lineNum">     133 </span>            :       // if you are in the middle of a file and you are here
+<span class="lineNum">     134 </span>            :       // then means that you read what you need to read
+<span class="lineNum">     135 </span><span class="lineCov">          2 :       if(!fileisover ) {break;}</span>
+<span class="lineNum">     136 </span>            :     }
+<span class="lineNum">     137 </span>            :   }
+<a name="138"><span class="lineNum">     138 </span><span class="lineCov">         12 :   return morefiles;</span></a>
+<span class="lineNum">     139 </span>            : }
+<span class="lineNum">     140 </span><span class="lineCov">          3 : void FilesHandler::getMinMaxBin(vector&lt;Value*&gt; vals, Communicator &amp;cc, vector&lt;double&gt; &amp;vmin, vector&lt;double&gt; &amp;vmax, vector&lt;unsigned&gt; &amp;vbin) {</span>
+<span class="lineNum">     141 </span>            :   // create the representation (no grid)
+<span class="lineNum">     142 </span><span class="lineCov">          6 :   BiasRepresentation br(vals,cc);</span>
+<span class="lineNum">     143 </span>            :   // read all the kernels
+<span class="lineNum">     144 </span><span class="lineCov">          3 :   readBunch(&amp;br);</span>
+<span class="lineNum">     145 </span>            :   // loop over the kernels and get the support
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">          3 :   br.getMinMaxBin(vmin,vmax,vbin);</span></a>
+<span class="lineNum">     147 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     148 </span><span class="lineCov">          1 : void FilesHandler::getMinMaxBin(vector&lt;Value*&gt; vals, Communicator &amp;cc, vector&lt;double&gt; &amp;vmin, vector&lt;double&gt; &amp;vmax, vector&lt;unsigned&gt; &amp;vbin, vector&lt;double&gt; &amp;histosigma) {</span>
+<span class="lineNum">     149 </span><span class="lineCov">          2 :   BiasRepresentation br(vals,cc,histosigma);</span>
+<span class="lineNum">     150 </span>            :   // read all the kernels
+<span class="lineNum">     151 </span><span class="lineCov">          1 :   readBunch(&amp;br);</span>
+<span class="lineNum">     152 </span>            :   // loop over the kernels and get the support
+<span class="lineNum">     153 </span><span class="lineCov">          1 :   br.getMinMaxBin(vmin,vmax,vbin);</span>
+<span class="lineNum">     154 </span>            :   //for(unsigned i=0;i&lt;vals.size();i++){cerr&lt;&lt;&quot;XXX &quot;&lt;&lt;vmin[i]&lt;&lt;&quot; &quot;&lt;&lt;vmax[i]&lt;&lt;&quot; &quot;&lt;&lt;vbin[i]&lt;&lt;&quot;\n&quot;;}
+<span class="lineNum">     155 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     156 </span><span class="lineCov">       5566 : bool FilesHandler::scanOneHill(BiasRepresentation *br, IFile *ifile ) {</span>
+<span class="lineNum">     157 </span>            :   double dummy;
+<span class="lineNum">     158 </span><span class="lineCov">      11132 :   if(ifile-&gt;scanField(&quot;time&quot;,dummy)) {</span>
+<span class="lineNum">     159 </span>            :     //(*log)&lt;&lt;&quot;   scanning one hill: &quot;&lt;&lt;dummy&lt;&lt;&quot; \n&quot;;
+<span class="lineNum">     160 </span><span class="lineCov">      16662 :     if(ifile-&gt;FieldExist(&quot;biasf&quot;)) ifile-&gt;scanField(&quot;biasf&quot;,dummy);</span>
+<span class="lineNum">     161 </span><span class="lineCov">      11108 :     if(ifile-&gt;FieldExist(&quot;clock&quot;)) ifile-&gt;scanField(&quot;clock&quot;,dummy);</span>
+<span class="lineNum">     162 </span>            :     // keep this intermediate function in case you need to parse more data in the future
+<span class="lineNum">     163 </span><span class="lineCov">       5554 :     br-&gt;pushKernel(ifile);</span>
+<span class="lineNum">     164 </span>            :     //(*log)&lt;&lt;&quot;  read hill\n&quot;;
+<span class="lineNum">     165 </span><span class="lineCov">       5554 :     if(br-&gt;hasSigmaInInput())ifile-&gt;allowIgnoredFields();</span>
+<span class="lineNum">     166 </span><span class="lineCov">       5554 :     ifile-&gt;scanField();</span>
+<span class="lineNum">     167 </span>            :     return true;
+<span class="lineNum">     168 </span>            :   } else {
+<span class="lineNum">     169 </span>            :     return false;
+<span class="lineNum">     170 </span>            :   }
+<span class="lineNum">     171 </span>            : }
+<a name="172"><span class="lineNum">     172 </span>            : </a>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">        900 : double  mylog( double v1 ) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">        900 :   return log(v1);</span>
+<a name="176"><span class="lineNum">     176 </span>            : }</a>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">       1800 : double  mylogder( double v1 ) {</span>
+<span class="lineNum">     179 </span><span class="lineCov">       1800 :   return 1./v1;</span>
+<span class="lineNum">     180 </span>            : }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : class FuncSumHills :
+<span class="lineNum">     185 </span>            :   public Function
+<span class="lineNum">     186 </span>            : {
+<span class="lineNum">     187 </span>            :   vector&lt;string&gt; hillsFiles,histoFiles;
+<span class="lineNum">     188 </span>            :   vector&lt;string&gt; proj;
+<span class="lineNum">     189 </span>            :   int initstride;
+<span class="lineNum">     190 </span>            :   bool iscltool,integratehills,integratehisto,parallelread;
+<span class="lineNum">     191 </span>            :   bool negativebias;
+<span class="lineNum">     192 </span>            :   bool nohistory;
+<span class="lineNum">     193 </span>            :   bool minTOzero;
+<span class="lineNum">     194 </span>            :   bool doInt;
+<span class="lineNum">     195 </span>            :   double lowI_;
+<span class="lineNum">     196 </span>            :   double uppI_;
+<span class="lineNum">     197 </span>            :   double beta;
+<span class="lineNum">     198 </span>            :   string outhills,outhisto,fmt;
+<span class="lineNum">     199 </span>            :   BiasRepresentation *biasrep;
+<span class="lineNum">     200 </span>            :   BiasRepresentation *historep;
+<span class="lineNum">     201 </span>            : public:
+<span class="lineNum">     202 </span>            :   explicit FuncSumHills(const ActionOptions&amp;);
+<span class="lineNum">     203 </span>            :   ~FuncSumHills();
+<span class="lineNum">     204 </span>            :   void calculate(); // this probably is not needed
+<span class="lineNum">     205 </span>            :   bool checkFilesAreExisting(const vector&lt;string&gt; &amp; hills );
+<span class="lineNum">     206 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="207"><span class="lineNum">     207 </span>            : };</a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">       6459 : PLUMED_REGISTER_ACTION(FuncSumHills,&quot;FUNCSUMHILLS&quot;)</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineCov">          8 : void FuncSumHills::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     212 </span><span class="lineCov">          8 :   Function::registerKeywords(keys);</span>
+<span class="lineNum">     213 </span><span class="lineCov">         16 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     214 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;HILLSFILES&quot;,&quot; source file for hills creation(may be the same as HILLS)&quot;); // this can be a vector!</span>
+<span class="lineNum">     215 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;HISTOFILES&quot;,&quot; source file for histogram creation(may be the same as HILLS)&quot;); // also this can be a vector!</span>
+<span class="lineNum">     216 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;HISTOSIGMA&quot;,&quot; sigmas for binning when the histogram correction is needed    &quot;);</span>
+<span class="lineNum">     217 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;PROJ&quot;,&quot; only with sumhills: the projection on the cvs&quot;);</span>
+<span class="lineNum">     218 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;KT&quot;,&quot; only with sumhills: the kt factor when projection on cvs&quot;);</span>
+<span class="lineNum">     219 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;GRID_MIN&quot;,&quot;the lower bounds for the grid&quot;);</span>
+<span class="lineNum">     220 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;GRID_MAX&quot;,&quot;the upper bounds for the grid&quot;);</span>
+<span class="lineNum">     221 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;GRID_BIN&quot;,&quot;the number of bins for the grid&quot;);</span>
+<span class="lineNum">     222 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;GRID_SPACING&quot;,&quot;the approximate grid spacing (to be used as an alternative or together with GRID_BIN)&quot;);</span>
+<span class="lineNum">     223 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;INTERVAL&quot;,&quot;set monodimensional INTERVAL&quot;);</span>
+<span class="lineNum">     224 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;OUTHILLS&quot;,&quot; output file for hills &quot;);</span>
+<span class="lineNum">     225 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;OUTHISTO&quot;,&quot; output file for histogram &quot;);</span>
+<span class="lineNum">     226 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;INITSTRIDE&quot;,&quot; stride if you want an initial dump &quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;STRIDE&quot;,&quot; stride when you do it on the fly &quot;);</span>
+<span class="lineNum">     228 </span><span class="lineCov">         24 :   keys.addFlag(&quot;ISCLTOOL&quot;,true,&quot;use via plumed commandline: calculate at read phase and then go&quot;);</span>
+<span class="lineNum">     229 </span><span class="lineCov">         24 :   keys.addFlag(&quot;PARALLELREAD&quot;,false,&quot;read parallel HILLS file&quot;);</span>
+<span class="lineNum">     230 </span><span class="lineCov">         24 :   keys.addFlag(&quot;NEGBIAS&quot;,false,&quot;dump  negative bias ( -bias )   instead of the free energy: needed in welltempered with flexible hills &quot;);</span>
+<span class="lineNum">     231 </span><span class="lineCov">         24 :   keys.addFlag(&quot;NOHISTORY&quot;,false,&quot;to be used with INITSTRIDE:  it splits the bias/histogram in pieces without previous history  &quot;);</span>
+<span class="lineNum">     232 </span><span class="lineCov">         24 :   keys.addFlag(&quot;MINTOZERO&quot;,false,&quot;translate the resulting bias/histogram to have the minimum to zero  &quot;);</span>
+<span class="lineNum">     233 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;FMT&quot;,&quot;the format that should be used to output real numbers&quot;);</span>
+<span class="lineNum">     234 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">          7 : FuncSumHills::FuncSumHills(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     237 </span>            :   Action(ao),
+<span class="lineNum">     238 </span>            :   Function(ao),
+<span class="lineNum">     239 </span>            :   initstride(-1),
+<span class="lineNum">     240 </span>            :   iscltool(false),
+<span class="lineNum">     241 </span>            :   integratehills(false),
+<span class="lineNum">     242 </span>            :   integratehisto(false),
+<span class="lineNum">     243 </span>            :   parallelread(false),
+<span class="lineNum">     244 </span>            :   negativebias(false),
+<span class="lineNum">     245 </span>            :   nohistory(false),
+<span class="lineNum">     246 </span>            :   minTOzero(false),
+<span class="lineNum">     247 </span>            :   doInt(false),
+<span class="lineNum">     248 </span>            :   lowI_(-1.),
+<span class="lineNum">     249 </span>            :   uppI_(-1.),
+<span class="lineNum">     250 </span>            :   beta(-1.),
+<span class="lineNum">     251 </span>            :   fmt(&quot;%14.9f&quot;),
+<span class="lineNum">     252 </span>            :   biasrep(NULL),
+<span class="lineNum">     253 </span><span class="lineCov">         42 :   historep(NULL)</span>
+<span class="lineNum">     254 </span>            : {
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :   // format
+<span class="lineNum">     257 </span><span class="lineCov">         14 :   parse(&quot;FMT&quot;,fmt);</span>
+<span class="lineNum">     258 </span><span class="lineCov">          7 :   log&lt;&lt;&quot;  Output format is &quot;&lt;&lt;fmt&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     259 </span>            :   // here read
+<span class="lineNum">     260 </span>            :   // Grid Stuff
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :   vector&lt;std::string&gt; gmin;</span>
+<span class="lineNum">     262 </span><span class="lineCov">         14 :   parseVector(&quot;GRID_MIN&quot;,gmin);</span>
+<span class="lineNum">     263 </span><span class="lineCov">          7 :   if(gmin.size()!=getNumberOfArguments() &amp;&amp; gmin.size()!=0) error(&quot;not enough values for GRID_MIN&quot;);</span>
+<span class="lineNum">     264 </span><span class="lineCov">          7 :   plumed_massert(gmin.size()==getNumberOfArguments() || gmin.size()==0,&quot;need GRID_MIN argument for this&quot;) ;</span>
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :   vector&lt;std::string&gt; gmax;</span>
+<span class="lineNum">     266 </span><span class="lineCov">         21 :   parseVector(&quot;GRID_MAX&quot;,gmax);</span>
+<span class="lineNum">     267 </span><span class="lineCov">          7 :   if(gmax.size()!=getNumberOfArguments() &amp;&amp; gmax.size()!=0) error(&quot;not enough values for GRID_MAX&quot;);</span>
+<span class="lineNum">     268 </span><span class="lineCov">          7 :   plumed_massert(gmax.size()==getNumberOfArguments() || gmax.size()==0,&quot;need GRID_MAX argument for this&quot;) ;</span>
+<span class="lineNum">     269 </span>            :   vector&lt;unsigned&gt; gbin;
+<span class="lineNum">     270 </span>            :   vector&lt;double&gt;   gspacing;
+<span class="lineNum">     271 </span><span class="lineCov">         21 :   parseVector(&quot;GRID_BIN&quot;,gbin);</span>
+<span class="lineNum">     272 </span><span class="lineCov">          7 :   plumed_massert(gbin.size()==getNumberOfArguments() || gbin.size()==0,&quot;need GRID_BIN argument for this&quot;) ;</span>
+<span class="lineNum">     273 </span><span class="lineCov">          9 :   if(gbin.size()!=getNumberOfArguments() &amp;&amp; gbin.size()!=0) error(&quot;not enough values for GRID_BIN&quot;);</span>
+<span class="lineNum">     274 </span><span class="lineCov">         14 :   parseVector(&quot;GRID_SPACING&quot;,gspacing);</span>
+<span class="lineNum">     275 </span><span class="lineCov">          7 :   plumed_massert(gspacing.size()==getNumberOfArguments() || gspacing.size()==0,&quot;need GRID_SPACING argument for this&quot;) ;</span>
+<span class="lineNum">     276 </span><span class="lineCov">         14 :   if(gspacing.size()!=getNumberOfArguments() &amp;&amp; gspacing.size()!=0) error(&quot;not enough values for GRID_SPACING&quot;);</span>
+<span class="lineNum">     277 </span><span class="lineCov">          7 :   if(gspacing.size()!=0 &amp;&amp; gbin.size()==0) {</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :     log&lt;&lt;&quot;  The number of bins will be estimated from GRID_SPACING\n&quot;;</span>
+<span class="lineNum">     279 </span><span class="lineCov">          7 :   } else if(gspacing.size()!=0 &amp;&amp; gbin.size()!=0) {</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :     log&lt;&lt;&quot;  You specified both GRID_BIN and GRID_SPACING\n&quot;;</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :     log&lt;&lt;&quot;  The more conservative (highest) number of bins will be used for each variable\n&quot;;</span>
+<span class="lineNum">     282 </span>            :   }
+<span class="lineNum">     283 </span><span class="lineCov">          7 :   if(gspacing.size()!=0) for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :       if(gbin.size()==0) gbin.assign(getNumberOfArguments(),1);</span>
+<span class="lineNum">     285 </span>            :       double a,b;
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :       Tools::convert(gmin[i],a);</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :       Tools::convert(gmax[i],b);</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :       unsigned n=((b-a)/gspacing[i])+1;</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :       if(gbin[i]&lt;n) gbin[i]=n;</span>
+<span class="lineNum">     290 </span>            :     }
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :   // Inteval keyword
+<span class="lineNum">     293 </span><span class="lineCov">          7 :   vector&lt;double&gt; tmpI(2);</span>
+<span class="lineNum">     294 </span><span class="lineCov">         14 :   parseVector(&quot;INTERVAL&quot;,tmpI);</span>
+<span class="lineNum">     295 </span><span class="lineCov">          7 :   if(tmpI.size()!=2&amp;&amp;tmpI.size()!=0) error(&quot;both a lower and an upper limits must be provided with INTERVAL&quot;);</span>
+<span class="lineNum">     296 </span><span class="lineCov">          7 :   else if(tmpI.size()==2) {</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :     lowI_=tmpI.at(0);</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :     uppI_=tmpI.at(1);</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :     if(getNumberOfArguments()!=1) error(&quot;INTERVAL limits correction works only for monodimensional metadynamics!&quot;);</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :     if(uppI_&lt;lowI_) error(&quot;The Upper limit must be greater than the Lower limit!&quot;);</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :     doInt=true;</span>
+<span class="lineNum">     302 </span>            :   }
+<span class="lineNum">     303 </span><span class="lineCov">          7 :   if(doInt) {</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :     log &lt;&lt; &quot;  Upper and Lower limits boundaries for the bias are activated at &quot; &lt;&lt; lowI_ &lt;&lt; &quot; - &quot; &lt;&lt; uppI_&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :     log &lt;&lt; &quot;  Using the same values as boundaries for the grid if not other value was defined (default: 200 bins)\n&quot;;</span>
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :     std::ostringstream strsmin, strsmax;</span>
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :     strsmin &lt;&lt; lowI_;</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :     strsmax &lt;&lt; uppI_;</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :     if(gmin.size()==0) gmin.push_back(strsmin.str());</span>
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :     if(gmax.size()==0) gmax.push_back(strsmax.str());</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :     if(gbin.size()==0) gbin.push_back(200);</span>
+<span class="lineNum">     312 </span>            :   }
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :   // hills file:
+<span class="lineNum">     316 </span><span class="lineCov">         14 :   parseVector(&quot;HILLSFILES&quot;,hillsFiles);</span>
+<span class="lineNum">     317 </span><span class="lineCov">          7 :   if(hillsFiles.size()==0) {</span>
+<span class="lineNum">     318 </span><span class="lineCov">          1 :     integratehills=false; // default behaviour</span>
+<span class="lineNum">     319 </span>            :   } else {
+<span class="lineNum">     320 </span><span class="lineCov">          6 :     integratehills=true;</span>
+<span class="lineNum">     321 </span><span class="lineCov">         33 :     for(unsigned i=0; i&lt;hillsFiles.size(); i++) log&lt;&lt;&quot;  hillsfile  : &quot;&lt;&lt;hillsFiles[i]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     322 </span>            :   }
+<span class="lineNum">     323 </span>            :   // histo file:
+<span class="lineNum">     324 </span><span class="lineCov">         14 :   parseVector(&quot;HISTOFILES&quot;,histoFiles);</span>
+<span class="lineNum">     325 </span><span class="lineCov">          7 :   if(histoFiles.size()==0) {</span>
+<span class="lineNum">     326 </span><span class="lineCov">          6 :     integratehisto=false;</span>
+<span class="lineNum">     327 </span>            :   } else {
+<span class="lineNum">     328 </span><span class="lineCov">          1 :     integratehisto=true;</span>
+<span class="lineNum">     329 </span><span class="lineCov">          5 :     for(unsigned i=0; i&lt;histoFiles.size(); i++) log&lt;&lt;&quot;  histofile  : &quot;&lt;&lt;histoFiles[i]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     330 </span>            :   }
+<span class="lineNum">     331 </span>            :   vector&lt;double&gt; histoSigma;
+<span class="lineNum">     332 </span><span class="lineCov">          7 :   if(integratehisto) {</span>
+<span class="lineNum">     333 </span><span class="lineCov">          2 :     parseVector(&quot;HISTOSIGMA&quot;,histoSigma);</span>
+<span class="lineNum">     334 </span><span class="lineCov">          8 :     for(unsigned i=0; i&lt;histoSigma.size(); i++) log&lt;&lt;&quot;  histosigma  : &quot;&lt;&lt;histoSigma[i]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     335 </span>            :   }
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :   // needs a projection?
+<span class="lineNum">     338 </span><span class="lineCov">          7 :   proj.clear();</span>
+<span class="lineNum">     339 </span><span class="lineCov">         14 :   parseVector(&quot;PROJ&quot;,proj);</span>
+<span class="lineNum">     340 </span><span class="lineCov">          7 :   if(integratehills) {</span>
+<span class="lineNum">     341 </span><span class="lineCov">          6 :     plumed_massert(proj.size()&lt;getNumberOfArguments(),&quot; The number of projection must be less than the full list of arguments &quot;);</span>
+<span class="lineNum">     342 </span>            :   }
+<span class="lineNum">     343 </span><span class="lineCov">          7 :   if(integratehisto) {</span>
+<span class="lineNum">     344 </span><span class="lineCov">          1 :     plumed_massert(proj.size()&lt;=getNumberOfArguments(),&quot; The number of projection must be less or equal to the full list of arguments &quot;);</span>
+<span class="lineNum">     345 </span>            :   }
+<span class="lineNum">     346 </span><span class="lineCov">          8 :   if(integratehisto&amp;&amp;proj.size()==0) {</span>
+<span class="lineNum">     347 </span><span class="lineCov">          5 :     for(unsigned i=0; i&lt;getNumberOfArguments(); i++) proj.push_back(getPntrToArgument(i)-&gt;getName());</span>
+<span class="lineNum">     348 </span>            :   }
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :   // add some automatic hills width: not in case stride is defined
+<span class="lineNum">     351 </span>            :   // since when you start from zero the automatic size will be zero!
+<span class="lineNum">     352 </span><span class="lineCov">         10 :   if(gmin.size()==0 || gmax.size()==0) {</span>
+<span class="lineNum">     353 </span><span class="lineCov">          4 :     log&lt;&lt;&quot;   \n&quot;;</span>
+<span class="lineNum">     354 </span><span class="lineCov">          4 :     log&lt;&lt;&quot;  No boundaries defined: need to do a prescreening of hills \n&quot;;</span>
+<span class="lineNum">     355 </span>            :     std::vector&lt;Value*&gt; tmphillsvalues, tmphistovalues;
+<span class="lineNum">     356 </span><span class="lineCov">          4 :     if(integratehills) {</span>
+<span class="lineNum">     357 </span><span class="lineCov">         21 :       for(unsigned i=0; i&lt;getNumberOfArguments(); i++)tmphillsvalues.push_back( getPntrToArgument(i) );</span>
+<span class="lineNum">     358 </span>            :     }
+<span class="lineNum">     359 </span><span class="lineCov">          4 :     if(integratehisto) {</span>
+<span class="lineNum">     360 </span><span class="lineCov">          5 :       for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     361 </span>            :         std::string ss = getPntrToArgument(i)-&gt;getName();
+<span class="lineNum">     362 </span><span class="lineCov">         16 :         for(unsigned j=0; j&lt;proj.size(); j++) {</span>
+<span class="lineNum">     363 </span><span class="lineCov">          8 :           if(proj[j]==ss) tmphistovalues.push_back( getPntrToArgument(i) );</span>
+<span class="lineNum">     364 </span>            :         }
+<span class="lineNum">     365 </span>            :       }
+<span class="lineNum">     366 </span>            :     }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span><span class="lineCov">          4 :     if(integratehills) {</span>
+<span class="lineNum">     369 </span><span class="lineCov">          6 :       FilesHandler hillsHandler(hillsFiles,parallelread,*this, log);</span>
+<span class="lineNum">     370 </span>            :       vector&lt;double&gt; vmin,vmax;
+<span class="lineNum">     371 </span>            :       vector&lt;unsigned&gt; vbin;
+<span class="lineNum">     372 </span><span class="lineCov">          6 :       hillsHandler.getMinMaxBin(tmphillsvalues,comm,vmin,vmax,vbin);</span>
+<span class="lineNum">     373 </span><span class="lineCov">          3 :       log&lt;&lt;&quot;  found boundaries from hillsfile: \n&quot;;</span>
+<span class="lineNum">     374 </span><span class="lineCov">          3 :       gmin.resize(vmin.size());</span>
+<span class="lineNum">     375 </span><span class="lineCov">          3 :       gmax.resize(vmax.size());</span>
+<span class="lineNum">     376 </span><span class="lineCov">          3 :       if(gbin.size()==0) {</span>
+<span class="lineNum">     377 </span><span class="lineCov">          2 :         gbin=vbin;</span>
+<span class="lineNum">     378 </span>            :       } else {
+<span class="lineNum">     379 </span><span class="lineCov">          1 :         log&lt;&lt;&quot;  found nbins in input, this overrides the automatic choice \n&quot;;</span>
+<span class="lineNum">     380 </span>            :       }
+<span class="lineNum">     381 </span><span class="lineCov">         15 :       for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     382 </span><span class="lineCov">         12 :         Tools::convert(vmin[i],gmin[i]);</span>
+<span class="lineNum">     383 </span><span class="lineCov">          6 :         Tools::convert(vmax[i],gmax[i]);</span>
+<span class="lineNum">     384 </span><span class="lineCov">         30 :         log&lt;&lt;&quot;  variable &quot;&lt;&lt; getPntrToArgument(i)-&gt;getName()&lt;&lt;&quot; min: &quot;&lt;&lt;gmin[i]&lt;&lt;&quot; max: &quot;&lt;&lt;gmax[i]&lt;&lt;&quot; nbin: &quot;&lt;&lt;gbin[i]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     385 </span>            :       }
+<span class="lineNum">     386 </span>            :     }
+<span class="lineNum">     387 </span>            :     // if at this stage bins are not there then do it with histo
+<span class="lineNum">     388 </span><span class="lineCov">          4 :     if(gmin.size()==0) {</span>
+<span class="lineNum">     389 </span><span class="lineCov">          2 :       FilesHandler histoHandler(histoFiles,parallelread,*this, log);</span>
+<span class="lineNum">     390 </span>            :       vector&lt;double&gt; vmin,vmax;
+<span class="lineNum">     391 </span>            :       vector&lt;unsigned&gt; vbin;
+<span class="lineNum">     392 </span><span class="lineCov">          2 :       histoHandler.getMinMaxBin(tmphistovalues,comm,vmin,vmax,vbin,histoSigma);</span>
+<span class="lineNum">     393 </span><span class="lineCov">          1 :       log&lt;&lt;&quot;  found boundaries from histofile: \n&quot;;</span>
+<span class="lineNum">     394 </span><span class="lineCov">          1 :       gmin.resize(vmin.size());</span>
+<span class="lineNum">     395 </span><span class="lineCov">          1 :       gmax.resize(vmax.size());</span>
+<span class="lineNum">     396 </span><span class="lineCov">          1 :       if(gbin.size()==0) {</span>
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :         gbin=vbin;</span>
+<span class="lineNum">     398 </span>            :       } else {
+<span class="lineNum">     399 </span><span class="lineCov">          1 :         log&lt;&lt;&quot;  found nbins in input, this overrides the automatic choice \n&quot;;</span>
+<span class="lineNum">     400 </span>            :       }
+<span class="lineNum">     401 </span><span class="lineCov">          8 :       for(unsigned i=0; i&lt;proj.size(); i++) {</span>
+<span class="lineNum">     402 </span><span class="lineCov">          2 :         Tools::convert(vmin[i],gmin[i]);</span>
+<span class="lineNum">     403 </span><span class="lineCov">          2 :         Tools::convert(vmax[i],gmax[i]);</span>
+<span class="lineNum">     404 </span><span class="lineCov">         10 :         log&lt;&lt;&quot;  variable &quot;&lt;&lt; proj[i] &lt;&lt;&quot; min: &quot;&lt;&lt;gmin[i]&lt;&lt;&quot; max: &quot;&lt;&lt;gmax[i]&lt;&lt;&quot; nbin: &quot;&lt;&lt;gbin[i]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     405 </span>            :       }
+<span class="lineNum">     406 </span>            :     }
+<span class="lineNum">     407 </span><span class="lineCov">          4 :     log&lt;&lt;&quot;  done!\n&quot;;</span>
+<span class="lineNum">     408 </span><span class="lineCov">          4 :     log&lt;&lt;&quot;   \n&quot;;</span>
+<span class="lineNum">     409 </span>            :   }
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span><span class="lineCov">          7 :   if( proj.size() != 0 || integratehisto==true  ) {</span>
+<span class="lineNum">     413 </span><span class="lineCov">          4 :     parse(&quot;KT&quot;,beta);</span>
+<span class="lineNum">     414 </span><span class="lineCov">         10 :     for(unsigned i=0; i&lt;proj.size(); i++) log&lt;&lt;&quot;  projection &quot;&lt;&lt;i&lt;&lt;&quot; : &quot;&lt;&lt;proj[i]&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     415 </span>            :     // this should be only for projection or free energy from histograms
+<span class="lineNum">     416 </span><span class="lineCov">          2 :     plumed_massert(beta&gt;0.,&quot;if you make a projection or a histogram correction then you need KT flag!&quot;);</span>
+<span class="lineNum">     417 </span><span class="lineCov">          2 :     beta=1./beta;</span>
+<span class="lineNum">     418 </span><span class="lineCov">          2 :     log&lt;&lt;&quot;  beta is &quot;&lt;&lt;beta&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     419 </span>            :   }
+<span class="lineNum">     420 </span>            :   // is a cltool: then you start and then die
+<span class="lineNum">     421 </span><span class="lineCov">         14 :   parseFlag(&quot;ISCLTOOL&quot;,iscltool);</span>
+<span class="lineNum">     422 </span>            :   //
+<span class="lineNum">     423 </span><span class="lineCov">         14 :   parseFlag(&quot;NEGBIAS&quot;,negativebias);</span>
+<span class="lineNum">     424 </span>            :   //
+<span class="lineNum">     425 </span><span class="lineCov">         14 :   parseFlag(&quot;PARALLELREAD&quot;,parallelread);</span>
+<span class="lineNum">     426 </span>            :   // stride
+<span class="lineNum">     427 </span><span class="lineCov">         14 :   parse(&quot;INITSTRIDE&quot;,initstride);</span>
+<span class="lineNum">     428 </span>            :   // output suffix or names
+<span class="lineNum">     429 </span><span class="lineCov">          7 :   if(initstride&lt;0) {</span>
+<span class="lineNum">     430 </span><span class="lineCov">          6 :     log&lt;&lt;&quot;  Doing only one integration: no stride \n&quot;;</span>
+<span class="lineNum">     431 </span>            :     outhills=&quot;fes.dat&quot;; outhisto=&quot;histo.dat&quot;;
+<span class="lineNum">     432 </span>            :   }
+<span class="lineNum">     433 </span>            :   else {
+<span class="lineNum">     434 </span>            :     outhills=&quot;fes_&quot;; outhisto=&quot;histo_&quot;;
+<span class="lineNum">     435 </span><span class="lineCov">          1 :     log&lt;&lt;&quot;  Doing integration slices every &quot;&lt;&lt;initstride&lt;&lt;&quot; kernels\n&quot;;</span>
+<span class="lineNum">     436 </span><span class="lineCov">          2 :     parseFlag(&quot;NOHISTORY&quot;,nohistory);</span>
+<span class="lineNum">     437 </span><span class="lineCov">          1 :     if(nohistory)log&lt;&lt;&quot;  nohistory: each stride block has no memory of the previous block\n&quot;;</span>
+<span class="lineNum">     438 </span>            :   }
+<span class="lineNum">     439 </span><span class="lineCov">         14 :   parseFlag(&quot;MINTOZERO&quot;,minTOzero);</span>
+<span class="lineNum">     440 </span><span class="lineCov">          7 :   if(minTOzero)log&lt;&lt;&quot;  mintozero: bias/histogram will be translated to have the minimum value equal to zero\n&quot;;</span>
+<span class="lineNum">     441 </span>            :   //what might it be this?
+<span class="lineNum">     442 </span>            :   // here start
+<span class="lineNum">     443 </span>            :   // want something right now?? do it and return
+<span class="lineNum">     444 </span>            :   // your argument is a set of cvs
+<span class="lineNum">     445 </span>            :   // then you need: a hills / a colvar-like file (to do a histogram)
+<span class="lineNum">     446 </span>            :   // create a bias representation for this
+<span class="lineNum">     447 </span><span class="lineCov">          7 :   if(iscltool) {</span>
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span>            :     std::vector&lt;Value*&gt; tmphillsvalues, tmphistovalues;
+<span class="lineNum">     450 </span><span class="lineCov">          7 :     if(integratehills) {</span>
+<span class="lineNum">     451 </span><span class="lineCov">         30 :       for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     452 </span>            :         // allocate a new value from the old one: no deriv here
+<span class="lineNum">     453 </span>            :         // if we are summing hills then all the arguments are needed
+<span class="lineNum">     454 </span><span class="lineCov">         24 :         tmphillsvalues.push_back( getPntrToArgument(i) );</span>
+<span class="lineNum">     455 </span>            :       }
+<span class="lineNum">     456 </span>            :     }
+<span class="lineNum">     457 </span><span class="lineCov">          7 :     if(integratehisto) {</span>
+<span class="lineNum">     458 </span><span class="lineCov">          5 :       for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     459 </span>            :         std::string ss = getPntrToArgument(i)-&gt;getName();
+<span class="lineNum">     460 </span><span class="lineCov">         16 :         for(unsigned j=0; j&lt;proj.size(); j++) {</span>
+<span class="lineNum">     461 </span><span class="lineCov">          8 :           if(proj[j]==ss) tmphistovalues.push_back( getPntrToArgument(i) );</span>
+<span class="lineNum">     462 </span>            :         }
+<span class="lineNum">     463 </span>            :       }
+<span class="lineNum">     464 </span>            :     }
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span>            :     // check if the files exists
+<span class="lineNum">     467 </span><span class="lineCov">          7 :     if(integratehills) {</span>
+<span class="lineNum">     468 </span><span class="lineCov">          6 :       checkFilesAreExisting(hillsFiles);</span>
+<span class="lineNum">     469 </span><span class="lineCov">          6 :       biasrep=new BiasRepresentation(tmphillsvalues,comm, gmin, gmax, gbin, doInt, lowI_, uppI_);</span>
+<span class="lineNum">     470 </span><span class="lineCov">          6 :       if(negativebias) {</span>
+<span class="lineNum">     471 </span><span class="lineCov">          1 :         biasrep-&gt;setRescaledToBias(true);</span>
+<span class="lineNum">     472 </span><span class="lineCov">          1 :         log&lt;&lt;&quot;  required the -bias instead of the free energy \n&quot;;</span>
+<span class="lineNum">     473 </span><span class="lineCov">          1 :         if(initstride&lt;0) {outhills=&quot;negativebias.dat&quot;;}</span>
+<span class="lineNum">     474 </span>            :         else {outhills=&quot;negativebias_&quot;;}
+<span class="lineNum">     475 </span>            :       }
+<span class="lineNum">     476 </span>            :     }
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span><span class="lineCov">         14 :     parse(&quot;OUTHILLS&quot;,outhills);</span>
+<span class="lineNum">     479 </span><span class="lineCov">         14 :     parse(&quot;OUTHISTO&quot;,outhisto);</span>
+<span class="lineNum">     480 </span><span class="lineCov">          7 :     if(integratehills)log&lt;&lt;&quot;  output file for fes/bias  is :  &quot;&lt;&lt;outhills&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     481 </span><span class="lineCov">          7 :     if(integratehisto)log&lt;&lt;&quot;  output file for histogram is :  &quot;&lt;&lt;outhisto&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     482 </span><span class="lineCov">          7 :     checkRead();</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineCov">          7 :     log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     485 </span><span class="lineCov">          7 :     log&lt;&lt;&quot;  Now calculating...\n&quot;;</span>
+<span class="lineNum">     486 </span><span class="lineCov">          7 :     log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            :     // here it defines the column to be histogrammed, tmpvalues should be only
+<span class="lineNum">     489 </span>            :     // the list of the collective variable one want to consider
+<span class="lineNum">     490 </span><span class="lineCov">          7 :     if(integratehisto) {</span>
+<span class="lineNum">     491 </span><span class="lineCov">          1 :       checkFilesAreExisting(histoFiles);</span>
+<span class="lineNum">     492 </span><span class="lineCov">          1 :       historep=new BiasRepresentation(tmphistovalues,comm,gmin,gmax,gbin,histoSigma);</span>
+<span class="lineNum">     493 </span>            :     }
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span>            :     // decide how to source hills ( serial/parallel )
+<span class="lineNum">     496 </span>            :     // here below the input control
+<span class="lineNum">     497 </span>            :     // say how many hills and it will read them from the
+<span class="lineNum">     498 </span>            :     // bunch of files provided, will update the representation
+<span class="lineNum">     499 </span>            :     // of hills (i.e. a list of hills and the associated grid)
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            :     // decide how to source colvars ( serial parallel )
+<span class="lineNum">     502 </span>            :     FilesHandler *hillsHandler;
+<span class="lineNum">     503 </span>            :     FilesHandler *histoHandler;
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span>            :     hillsHandler=NULL;
+<span class="lineNum">     506 </span>            :     histoHandler=NULL;
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span><span class="lineCov">          7 :     if(integratehills)  hillsHandler=new FilesHandler(hillsFiles,parallelread,*this, log);</span>
+<span class="lineNum">     509 </span><span class="lineCov">          7 :     if(integratehisto)  histoHandler=new FilesHandler(histoFiles,parallelread,*this, log);</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span>            :     Stopwatch sw;
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span><span class="lineCov">         14 :     sw.start(&quot;0 Summing hills&quot;);</span>
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span>            :     // read a number of hills and put in the bias representation
+<span class="lineNum">     516 </span>            :     int nfiles=0;
+<span class="lineNum">     517 </span><span class="lineCov">          7 :     bool ibias=integratehills; bool ihisto=integratehisto;</span>
+<span class="lineNum">     518 </span>            :     while(true) {
+<span class="lineNum">     519 </span><span class="lineCov">          8 :       if(  integratehills  &amp;&amp; ibias  ) {</span>
+<span class="lineNum">     520 </span><span class="lineCov">          7 :         if(nohistory) {biasrep-&gt;clear(); log&lt;&lt;&quot;  clearing history before reading a new block\n&quot;;};</span>
+<span class="lineNum">     521 </span><span class="lineCov">          7 :         log&lt;&lt;&quot;  reading hills: \n&quot;;</span>
+<span class="lineNum">     522 </span><span class="lineCov">          7 :         ibias=hillsHandler-&gt;readBunch(biasrep,initstride) ; log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     523 </span>            :       }
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span><span class="lineCov">          8 :       if(  integratehisto  &amp;&amp; ihisto ) {</span>
+<span class="lineNum">     526 </span><span class="lineCov">          1 :         if(nohistory) {historep-&gt;clear(); log&lt;&lt;&quot;  clearing history before reading a new block\n&quot;;};</span>
+<span class="lineNum">     527 </span><span class="lineCov">          1 :         log&lt;&lt;&quot;  reading histogram: \n&quot;;</span>
+<span class="lineNum">     528 </span><span class="lineCov">          1 :         ihisto=histoHandler-&gt;readBunch(historep,initstride) ;  log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     529 </span>            :       }
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span>            :       // dump: need to project?
+<span class="lineNum">     532 </span><span class="lineCov">          8 :       if(proj.size()!=0) {</span>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span><span class="lineCov">          3 :         if(integratehills) {</span>
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span><span class="lineCov">          2 :           log&lt;&lt;&quot;  Bias: Projecting on subgrid... \n&quot;;</span>
+<span class="lineNum">     537 </span><span class="lineCov">          2 :           BiasWeight Bw(beta);</span>
+<span class="lineNum">     538 </span><span class="lineCov">          4 :           Grid biasGrid=*(biasrep-&gt;getGridPtr());</span>
+<span class="lineNum">     539 </span><span class="lineCov">          4 :           Grid smallGrid=biasGrid.project(proj,&amp;Bw);</span>
+<span class="lineNum">     540 </span><span class="lineCov">          4 :           OFile gridfile; gridfile.link(*this);</span>
+<span class="lineNum">     541 </span><span class="lineCov">          4 :           std::ostringstream ostr; ostr&lt;&lt;nfiles;</span>
+<span class="lineNum">     542 </span>            :           string myout;
+<span class="lineNum">     543 </span><span class="lineCov">         10 :           if(initstride&gt;0) { myout=outhills+ostr.str()+&quot;.dat&quot; ;} else {myout=outhills;}</span>
+<span class="lineNum">     544 </span><span class="lineCov">          2 :           log&lt;&lt;&quot;  Bias: Writing subgrid on file &quot;&lt;&lt;myout&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">     545 </span><span class="lineCov">          2 :           gridfile.open(myout);</span>
+<span class="lineNum">     546 </span><span class="lineCov">          2 :           if(minTOzero) smallGrid.setMinToZero();</span>
+<span class="lineNum">     547 </span>            :           smallGrid.setOutputFmt(fmt);
+<span class="lineNum">     548 </span><span class="lineCov">          2 :           smallGrid.writeToFile(gridfile);</span>
+<span class="lineNum">     549 </span><span class="lineCov">          2 :           gridfile.close();</span>
+<span class="lineNum">     550 </span><span class="lineCov">          2 :           if(!ibias)integratehills=false;// once you get to the final bunch just give up</span>
+<span class="lineNum">     551 </span>            :         }
+<span class="lineNum">     552 </span>            :         // this should be removed
+<span class="lineNum">     553 </span><span class="lineCov">          3 :         if(integratehisto) {</span>
+<span class="lineNum">     554 </span>            : 
+<span class="lineNum">     555 </span><span class="lineCov">          1 :           log&lt;&lt;&quot;  Histo: Projecting on subgrid... \n&quot;;</span>
+<span class="lineNum">     556 </span><span class="lineCov">          2 :           Grid histoGrid=*(historep-&gt;getGridPtr());</span>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineCov">          2 :           OFile gridfile; gridfile.link(*this);</span>
+<span class="lineNum">     559 </span><span class="lineCov">          2 :           std::ostringstream ostr; ostr&lt;&lt;nfiles;</span>
+<span class="lineNum">     560 </span>            :           string myout;
+<span class="lineNum">     561 </span><span class="lineCov">          1 :           if(initstride&gt;0) { myout=outhisto+ostr.str()+&quot;.dat&quot; ;} else {myout=outhisto;}</span>
+<span class="lineNum">     562 </span><span class="lineCov">          1 :           log&lt;&lt;&quot;  Histo: Writing subgrid on file &quot;&lt;&lt;myout&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">     563 </span><span class="lineCov">          1 :           gridfile.open(myout);</span>
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span><span class="lineCov">          1 :           histoGrid.applyFunctionAllValuesAndDerivatives(&amp;mylog,&amp;mylogder);</span>
+<span class="lineNum">     566 </span><span class="lineCov">          1 :           histoGrid.scaleAllValuesAndDerivatives(-1./beta);</span>
+<span class="lineNum">     567 </span><span class="lineCov">          1 :           if(minTOzero) histoGrid.setMinToZero();</span>
+<span class="lineNum">     568 </span>            :           histoGrid.setOutputFmt(fmt);
+<span class="lineNum">     569 </span><span class="lineCov">          1 :           histoGrid.writeToFile(gridfile);</span>
+<span class="lineNum">     570 </span><span class="lineCov">          1 :           gridfile.close();</span>
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span><span class="lineCov">          1 :           if(!ihisto)integratehisto=false;// once you get to the final bunch just give up</span>
+<span class="lineNum">     573 </span>            :         }
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span>            :       } else {
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span><span class="lineCov">          5 :         if(integratehills) {</span>
+<span class="lineNum">     578 </span>            : 
+<span class="lineNum">     579 </span><span class="lineCov">         10 :           Grid biasGrid=*(biasrep-&gt;getGridPtr());</span>
+<span class="lineNum">     580 </span><span class="lineCov">          5 :           biasGrid.scaleAllValuesAndDerivatives(-1.);</span>
+<span class="lineNum">     581 </span>            : 
+<span class="lineNum">     582 </span><span class="lineCov">         10 :           OFile gridfile; gridfile.link(*this);</span>
+<span class="lineNum">     583 </span><span class="lineCov">         10 :           std::ostringstream ostr; ostr&lt;&lt;nfiles;</span>
+<span class="lineNum">     584 </span>            :           string myout;
+<span class="lineNum">     585 </span><span class="lineCov">          5 :           if(initstride&gt;0) { myout=outhills+ostr.str()+&quot;.dat&quot; ;} else {myout=outhills;}</span>
+<span class="lineNum">     586 </span><span class="lineCov">          5 :           log&lt;&lt;&quot;  Writing full grid on file &quot;&lt;&lt;myout&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">     587 </span><span class="lineCov">          5 :           gridfile.open(myout);</span>
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span><span class="lineCov">          5 :           if(minTOzero) biasGrid.setMinToZero();</span>
+<span class="lineNum">     590 </span>            :           biasGrid.setOutputFmt(fmt);
+<span class="lineNum">     591 </span><span class="lineCov">          5 :           biasGrid.writeToFile(gridfile);</span>
+<span class="lineNum">     592 </span><span class="lineCov">          5 :           gridfile.close();</span>
+<span class="lineNum">     593 </span>            :           // rescale back prior to accumulate
+<span class="lineNum">     594 </span><span class="lineCov">          5 :           if(!ibias)integratehills=false;// once you get to the final bunch just give up</span>
+<span class="lineNum">     595 </span>            :         }
+<span class="lineNum">     596 </span><span class="lineCov">          5 :         if(integratehisto) {</span>
+<span class="lineNum">     597 </span>            : 
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :           Grid histoGrid=*(historep-&gt;getGridPtr());</span>
+<span class="lineNum">     599 </span>            :           // do this if you want a free energy from a grid, otherwise do not
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :           histoGrid.applyFunctionAllValuesAndDerivatives(&amp;mylog,&amp;mylogder);</span>
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :           histoGrid.scaleAllValuesAndDerivatives(-1./beta);</span>
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :           OFile gridfile; gridfile.link(*this);</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :           std::ostringstream ostr; ostr&lt;&lt;nfiles;</span>
+<span class="lineNum">     605 </span>            :           string myout;
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :           if(initstride&gt;0) { myout=outhisto+ostr.str()+&quot;.dat&quot; ;} else {myout=outhisto;}</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :           log&lt;&lt;&quot;  Writing full grid on file &quot;&lt;&lt;myout&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">     608 </span><span class="lineNoCov">          0 :           gridfile.open(myout);</span>
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span>            :           // also this is usefull only for free energy
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :           if(minTOzero) histoGrid.setMinToZero();</span>
+<span class="lineNum">     612 </span>            :           histoGrid.setOutputFmt(fmt);
+<span class="lineNum">     613 </span><span class="lineNoCov">          0 :           histoGrid.writeToFile(gridfile);</span>
+<span class="lineNum">     614 </span><span class="lineNoCov">          0 :           gridfile.close();</span>
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span><span class="lineNoCov">          0 :           if(!ihisto)integratehisto=false; // once you get to the final bunch just give up</span>
+<span class="lineNum">     617 </span>            :         }
+<span class="lineNum">     618 </span>            :       }
+<span class="lineNum">     619 </span><span class="lineCov">          8 :       if ( !ibias &amp;&amp; !ihisto) break; //when both are over then just quit</span>
+<span class="lineNum">     620 </span>            : 
+<span class="lineNum">     621 </span><span class="lineCov">          1 :       nfiles++;</span>
+<span class="lineNum">     622 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     623 </span>            : 
+<span class="lineNum">     624 </span><span class="lineCov">          7 :     if( hillsHandler ) delete hillsHandler;</span>
+<span class="lineNum">     625 </span><span class="lineCov">          7 :     if( histoHandler ) delete histoHandler;</span>
+<span class="lineNum">     626 </span>            : 
+<span class="lineNum">     627 </span><span class="lineCov">         14 :     sw.stop(&quot;0 Summing hills&quot;);</span>
+<span class="lineNum">     628 </span>            : 
+<span class="lineNum">     629 </span><span class="lineCov">          7 :     log&lt;&lt;sw;</span>
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span>            :     return;
+<span class="lineNum">     632 </span>            :   }
+<span class="lineNum">     633 </span>            :   // just an initialization but you need to do something on the fly?: need to connect with a metad run and its grid representation
+<span class="lineNum">     634 </span>            :   // your argument is a metad run
+<span class="lineNum">     635 </span>            :   // if the grid does not exist crash and say that you need some data
+<span class="lineNum">     636 </span>            :   // otherwise just link with it
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span>            : }
+<span class="lineNum">     639 </span>            : 
+<span class="lineNum">     640 </span><span class="lineNoCov">          0 : void FuncSumHills::calculate() {</span>
+<span class="lineNum">     641 </span>            :   // this should be connected only with a grid representation to metadynamics
+<span class="lineNum">     642 </span>            :   // at regular time just dump it
+<span class="lineNum">     643 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;You should have never got here: this stuff is not yet implemented!&quot;);</span>
+<a name="644"><span class="lineNum">     644 </span>            : }</a>
+<span class="lineNum">     645 </span>            : 
+<span class="lineNum">     646 </span><span class="lineCov">         21 : FuncSumHills::~FuncSumHills() {</span>
+<span class="lineNum">     647 </span><span class="lineCov">          7 :   if(historep) delete historep;</span>
+<span class="lineNum">     648 </span><span class="lineCov">          7 :   if(biasrep) delete biasrep;</span>
+<span class="lineNum">     649 </span><span class="lineCov">         14 : }</span>
+<span class="lineNum">     650 </span>            : 
+<span class="lineNum">     651 </span><span class="lineCov">          7 : bool FuncSumHills::checkFilesAreExisting(const vector&lt;string&gt; &amp; hills ) {</span>
+<span class="lineNum">     652 </span><span class="lineCov">          7 :   plumed_massert(hills.size()!=0,&quot;the number of  files provided should be at least one&quot; );</span>
+<span class="lineNum">     653 </span><span class="lineCov">          7 :   IFile *ifile = new IFile();</span>
+<span class="lineNum">     654 </span><span class="lineCov">          7 :   ifile-&gt;link(*this);</span>
+<span class="lineNum">     655 </span><span class="lineCov">         38 :   for(unsigned i=0; i&lt; hills.size(); i++) {</span>
+<span class="lineNum">     656 </span><span class="lineCov">         16 :     plumed_massert(ifile-&gt;FileExist(hills[i]),&quot;missing file &quot;+hills[i]);</span>
+<span class="lineNum">     657 </span>            :   }
+<span class="lineNum">     658 </span><span class="lineCov">          7 :   delete ifile;</span>
+<span class="lineNum">     659 </span><span class="lineCov">          7 :   return true;</span>
+<span class="lineNum">     660 </span>            : 
+<span class="lineNum">     661 </span>            : }
+<span class="lineNum">     662 </span>            : 
+<a name="663"><span class="lineNum">     663 </span>            : }</a>
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     666 </span>            : 
+<span class="lineNum">     667 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

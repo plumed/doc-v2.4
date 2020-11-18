@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/Tetrahedral.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - Tetrahedral.cpp<span style="font-size: 80%;"> (source / <a href="Tetrahedral.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CubicHarmonicBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;string&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : using namespace std;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace crystallization {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC MCOLVAR TETRAHEDRAL
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Calculate the degree to which the environment about ions has a tetrahedral order.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : We can measure the degree to which the first coordination shell around any atom, \f$i\f$ is
+<span class="lineNum">      38 </span>            : tetrahedrally ordered using the following function.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \f[
+<span class="lineNum">      41 </span>            :  s(i) = \frac{1}{\sum_j \sigma( r_{ij} )} \sum_j \sigma( r_{ij} )\left[ \frac{(x_{ij} + y_{ij} + z_{ij})^3}{r_{ij}^3} +
+<span class="lineNum">      42 </span>            :                                                                         \frac{(x_{ij} - y_{ij} - z_{ij})^3}{r_{ij}^3} +
+<span class="lineNum">      43 </span>            :                                                                         \frac{(-x_{ij} + y_{ij} - z_{ij})^3}{r_{ij}^3} +
+<span class="lineNum">      44 </span>            :                                                                         \frac{(-x_{ij} - y_{ij} + z_{ij})^3}{r_{ij}^3} \right]
+<span class="lineNum">      45 </span>            : \f]
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : Here \f$r_{ij}\f$ is the magnitude fo the vector connecting atom \f$i\f$ to atom \f$j\f$ and \f$x_{ij}\f$, \f$y_{ij}\f$ and \f$z_{ij}\f$
+<span class="lineNum">      48 </span>            : are its three components.  The function  \f$\sigma( r_{ij} )\f$ is a \ref switchingfunction that acts on the distance between
+<span class="lineNum">      49 </span>            : atoms \f$i\f$ and \f$j\f$.  The parameters of this function should be set so that the function is equal to one
+<span class="lineNum">      50 </span>            : when atom \f$j\f$ is in the first coordination sphere of atom \f$i\f$ and is zero otherwise.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : \par Examples
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : The following command calculates the average value of the tetrahedrality parameter for a set of 64 atoms all of the same type
+<span class="lineNum">      55 </span>            : and outputs this quantity to a file called colvar.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \plumedfile
+<span class="lineNum">      58 </span>            : tt: TETRAHEDRAL SPECIES=1-64 SWITCH={RATIONAL D_0=1.3 R_0=0.2} MEAN
+<span class="lineNum">      59 </span>            : PRINT ARG=tt.mean FILE=colvar
+<span class="lineNum">      60 </span>            : \endplumedfile
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : The following command calculates the number of tetrahedrality parameters that are greater than 0.8 in a set of 10 atoms.
+<span class="lineNum">      63 </span>            : In this calculation it is assumed that there are two atom types A and B and that the first coordination sphere of the
+<span class="lineNum">      64 </span>            : 10 atoms of type A contains atoms of type B.  The formula above is thus calculated for ten different A atoms and within
+<span class="lineNum">      65 </span>            : it the sum over \f$j\f$ runs over 40 atoms of type B that could be in the first coordination sphere.
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : \plumedfile
+<span class="lineNum">      68 </span>            : tt: TETRAHEDRAL SPECIESA=1-10 SPECIESB=11-40 SWITCH={RATIONAL D_0=1.3 R_0=0.2} MORE_THAN={RATIONAL R_0=0.8}
+<span class="lineNum">      69 </span>            : PRINT ARG=tt.* FILE=colvar
+<span class="lineNum">      70 </span>            : \endplumedfile
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : */
+<span class="lineNum">      73 </span>            : //+ENDPLUMEDOC
+<a name="74"><span class="lineNum">      74 </span>            : </a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">          2 : class Tetrahedral : public CubicHarmonicBase {</span>
+<span class="lineNum">      77 </span>            : public:
+<span class="lineNum">      78 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      79 </span>            :   explicit Tetrahedral(const ActionOptions&amp;);
+<span class="lineNum">      80 </span>            :   double calculateCubicHarmonic( const Vector&amp; distance, const double&amp; d2, Vector&amp; myder ) const ;
+<a name="81"><span class="lineNum">      81 </span>            : };</a>
+<span class="lineNum">      82 </span>            : 
+<a name="83"><span class="lineNum">      83 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(Tetrahedral,&quot;TETRAHEDRAL&quot;)</span></a>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">          2 : void Tetrahedral::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">          2 :   CubicHarmonicBase::registerKeywords( keys );</span>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">          1 : Tetrahedral::Tetrahedral(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      90 </span>            :   Action(ao),
+<span class="lineNum">      91 </span><span class="lineCov">          1 :   CubicHarmonicBase(ao)</span>
+<span class="lineNum">      92 </span>            : {
+<span class="lineNum">      93 </span><span class="lineCov">          1 :   checkRead();</span>
+<a name="94"><span class="lineNum">      94 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">       4032 : double Tetrahedral::calculateCubicHarmonic( const Vector&amp; distance, const double&amp; d2, Vector&amp; myder ) const {</span>
+<span class="lineNum">      97 </span><span class="lineCov">       4032 :   double sp1 = +distance[0]+distance[1]+distance[2];</span>
+<span class="lineNum">      98 </span><span class="lineCov">       4032 :   double sp2 = +distance[0]-distance[1]-distance[2];</span>
+<span class="lineNum">      99 </span><span class="lineCov">       4032 :   double sp3 = -distance[0]+distance[1]-distance[2];</span>
+<span class="lineNum">     100 </span><span class="lineCov">       4032 :   double sp4 = -distance[0]-distance[1]+distance[2];</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   double sp1c = pow( sp1, 3 );
+<span class="lineNum">     103 </span>            :   double sp2c = pow( sp2, 3 );
+<span class="lineNum">     104 </span>            :   double sp3c = pow( sp3, 3 );
+<span class="lineNum">     105 </span>            :   double sp4c = pow( sp4, 3 );
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">       4032 :   double d1 = distance.modulo();</span>
+<span class="lineNum">     108 </span>            :   double r3 = pow( d1, 3 );
+<span class="lineNum">     109 </span>            :   double r5 = pow( d1, 5 );
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">       4032 :   double tmp = sp1c/r3 + sp2c/r3 + sp3c/r3 + sp4c/r3;</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">       4032 :   double t1=(3*sp1c)/r5; double tt1=((3*sp1*sp1)/r3);</span>
+<span class="lineNum">     114 </span><span class="lineCov">       4032 :   double t2=(3*sp2c)/r5; double tt2=((3*sp2*sp2)/r3);</span>
+<span class="lineNum">     115 </span><span class="lineCov">       4032 :   double t3=(3*sp3c)/r5; double tt3=((3*sp3*sp3)/r3);</span>
+<span class="lineNum">     116 </span><span class="lineCov">       4032 :   double t4=(3*sp4c)/r5; double tt4=((3*sp4*sp4)/r3);</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">       4032 :   myder[0] = (tt1-(distance[0]*t1))  + (tt2-(distance[0]*t2))  + (-tt3-(distance[0]*t3))  + (-tt4-(distance[0]*t4));</span>
+<span class="lineNum">     119 </span><span class="lineCov">       4032 :   myder[1] = (tt1-(distance[1]*t1))  + (-tt2-(distance[1]*t2))  + (tt3-(distance[1]*t3))  + (-tt4-(distance[1]*t4));</span>
+<span class="lineNum">     120 </span><span class="lineCov">       4032 :   myder[2] = (tt1-(distance[2]*t1))  + (-tt2-(distance[2]*t2))  + (-tt3-(distance[2]*t3))  + (tt4-(distance[2]*t4));</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">       4032 :   return tmp;</span>
+<span class="lineNum">     123 </span>            : }
+<a name="124"><span class="lineNum">     124 </span>            : </a>
+<span class="lineNum">     125 </span>            : }
+<span class="lineNum">     126 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     127 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

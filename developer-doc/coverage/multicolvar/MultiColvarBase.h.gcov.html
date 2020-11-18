@@ -1,0 +1,350 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/MultiColvarBase.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - MultiColvarBase.h<span style="font-size: 80%;"> (source / <a href="MultiColvarBase.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryMed">85.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_multicolvar_MultiColvarBase_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_multicolvar_MultiColvarBase_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/DynamicList.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/LinkCells.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;vesselbase/StoreDataVessel.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;vesselbase/ActionWithVessel.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;CatomPack.h&quot;
+<span class="lineNum">      32 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : namespace multicolvar {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : class AtomValuePack;
+<span class="lineNum">      38 </span>            : class BridgedMultiColvarFunction;
+<span class="lineNum">      39 </span>            : class ActionVolume;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : class MultiColvarBase :
+<span class="lineNum">      42 </span>            :   public ActionAtomistic,
+<span class="lineNum">      43 </span>            :   public ActionWithValue,
+<span class="lineNum">      44 </span>            :   public vesselbase::ActionWithVessel
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :   friend class BridgedMultiColvarFunction;
+<span class="lineNum">      47 </span>            :   friend class VolumeGradientBase;
+<span class="lineNum">      48 </span>            :   friend class MultiColvarFilter;
+<span class="lineNum">      49 </span>            :   friend class AtomValuePack;
+<span class="lineNum">      50 </span>            : private:
+<span class="lineNum">      51 </span>            : /// Use periodic boundary conditions
+<span class="lineNum">      52 </span>            :   bool usepbc;
+<span class="lineNum">      53 </span>            : /// The forces we are going to apply to things
+<span class="lineNum">      54 </span>            :   std::vector&lt;double&gt; forcesToApply;
+<span class="lineNum">      55 </span>            : /// We use this to say that all the atoms in the third block should are in the tasks
+<span class="lineNum">      56 </span>            :   bool allthirdblockintasks;
+<span class="lineNum">      57 </span>            : /// In certain cases we can make three atom link cells faster
+<span class="lineNum">      58 </span>            :   bool uselinkforthree;
+<span class="lineNum">      59 </span>            : /// Number of atoms that are active on this step
+<span class="lineNum">      60 </span>            :   unsigned nactive_atoms;
+<span class="lineNum">      61 </span>            : /// Stuff for link cells - this is used to make coordination number like variables faster
+<span class="lineNum">      62 </span>            :   LinkCells linkcells;
+<span class="lineNum">      63 </span>            : /// Link cells for third block of atoms
+<span class="lineNum">      64 </span>            :   LinkCells threecells;
+<span class="lineNum">      65 </span>            : /// Number of atoms that are being used for central atom position
+<span class="lineNum">      66 </span>            :   unsigned ncentral;
+<span class="lineNum">      67 </span>            : /// Bool vector telling us which atoms are required to calculate central atom position
+<span class="lineNum">      68 </span>            :   std::vector&lt;bool&gt; use_for_central_atom;
+<span class="lineNum">      69 </span>            : /// Vector of tempory holders for central atom values
+<span class="lineNum">      70 </span>            :   std::vector&lt;CatomPack&gt; my_tmp_capacks;
+<span class="lineNum">      71 </span>            : /// 1/number of atoms involved in central atoms
+<span class="lineNum">      72 </span>            :   double numberForCentralAtom;
+<span class="lineNum">      73 </span>            : /// Ensures that setup is only performed once per loop
+<span class="lineNum">      74 </span>            :   bool setup_completed;
+<span class="lineNum">      75 </span>            : /// Ensures that retrieving of atoms is only done once per calculation loop
+<span class="lineNum">      76 </span>            :   bool atomsWereRetrieved;
+<span class="lineNum">      77 </span>            : /// Add derivatives of center of mass position
+<span class="lineNum">      78 </span>            :   void addComDerivatives( const int&amp; ival, const unsigned&amp; iatom, const Vector&amp; der, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      79 </span>            : protected:
+<span class="lineNum">      80 </span>            : /// This is used to keep track of what is calculated where
+<span class="lineNum">      81 </span>            :   std::vector&lt; std::pair&lt;unsigned,unsigned&gt; &gt; atom_lab;
+<span class="lineNum">      82 </span>            : /// The vessels in these multicolvars in which the data is stored
+<span class="lineNum">      83 </span>            :   std::vector&lt;vesselbase::StoreDataVessel*&gt; mybasedata;
+<span class="lineNum">      84 </span>            : /// The multicolvars from which we construct these quantities
+<span class="lineNum">      85 </span>            :   std::vector&lt;MultiColvarBase*&gt; mybasemulticolvars;
+<span class="lineNum">      86 </span>            : /// This remembers where the boundaries are for the tasks. It makes link cells work fast
+<span class="lineNum">      87 </span>            :   Matrix&lt;std::pair&lt;unsigned,unsigned&gt; &gt; bookeeping;
+<span class="lineNum">      88 </span>            : /// Function that recursively checks if filters have been used in the input to a multicolvar
+<span class="lineNum">      89 </span>            : /// we need this to ensure that setupLinkCells is run in calculate with some actions
+<span class="lineNum">      90 </span>            :   bool filtersUsedAsInput();
+<span class="lineNum">      91 </span>            : /// This resizes the arrays that are used for link cell update
+<span class="lineNum">      92 </span>            :   void resizeBookeepingArray( const unsigned&amp; num1, const unsigned&amp; num2 );
+<span class="lineNum">      93 </span>            : /// Are we doing sums of matrix rows
+<span class="lineNum">      94 </span>            :   bool matsums;
+<span class="lineNum">      95 </span>            : /// Using the species keyword to read in atoms
+<span class="lineNum">      96 </span>            :   bool usespecies;
+<span class="lineNum">      97 </span>            : /// Number of atoms in each block
+<span class="lineNum">      98 </span>            :   unsigned nblock;
+<span class="lineNum">      99 </span>            : /// This is used when turning cvcodes into atom numbers
+<span class="lineNum">     100 </span>            :   std::vector&lt;unsigned&gt; decoder;
+<span class="lineNum">     101 </span>            : /// Blocks of atom numbers
+<span class="lineNum">     102 </span>            :   std::vector&lt; std::vector&lt;unsigned&gt; &gt; ablocks;
+<span class="lineNum">     103 </span>            : /// Add a task to the list of tasks
+<span class="lineNum">     104 </span>            :   void addTaskToList( const unsigned&amp; taskCode );
+<span class="lineNum">     105 </span>            : /// Finish setting up the multicolvar base
+<span class="lineNum">     106 </span>            :   void setupMultiColvarBase( const std::vector&lt;AtomNumber&gt;&amp; atoms );
+<span class="lineNum">     107 </span>            : /// Add some derivatives to a particular component of a particular atom
+<span class="lineNum">     108 </span>            :   void addAtomDerivatives( const int&amp;, const unsigned&amp;, const Vector&amp;, multicolvar::AtomValuePack&amp; ) const ;
+<span class="lineNum">     109 </span>            : /// Add derivative of the input value
+<span class="lineNum">     110 </span>            :   void mergeInputDerivatives( const unsigned&amp; ival, const unsigned&amp; start, const unsigned&amp; end, const unsigned&amp; jatom,
+<span class="lineNum">     111 </span>            :                               const std::vector&lt;double&gt;&amp; der, MultiValue&amp; myder, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     112 </span>            : /// This routine take the ith set of input derivatives and adds it to each of the (end-start) output derivatives
+<span class="lineNum">     113 </span>            : /// In other words one set of derivatives comes in and end-start sets of derivatives come out
+<span class="lineNum">     114 </span>            :   void splitInputDerivatives( const unsigned&amp; ival, const unsigned&amp; start, const unsigned&amp; end,
+<span class="lineNum">     115 </span>            :                               const unsigned&amp; jatom, const std::vector&lt;double&gt;&amp; der,
+<span class="lineNum">     116 </span>            :                               MultiValue&amp; myder, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     117 </span>            : /// This is used to accumulate functions of the coordination sphere.  Ensures weights are taken into account
+<span class="lineNum">     118 </span>            :   void accumulateSymmetryFunction( const int&amp; ival, const unsigned&amp; iatom, const double&amp; val, const Vector&amp; der, const Tensor&amp; vir, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     119 </span>            : /// Set which atoms are to be used to calculate the central atom position
+<span class="lineNum">     120 </span>            :   void setAtomsForCentralAtom( const std::vector&lt;bool&gt;&amp; catom_ind );
+<span class="lineNum">     121 </span>            : /// Set the value of the cutoff for the link cells
+<span class="lineNum">     122 </span>            :   void setLinkCellCutoff( const double&amp; lcut, double tcut=-1.0 );
+<span class="lineNum">     123 </span>            : /// Setup the link cells and neighbour list stuff
+<span class="lineNum">     124 </span>            :   void setupActiveTaskSet( std::vector&lt;unsigned&gt;&amp; active_tasks, const std::string&amp; input_label );
+<span class="lineNum">     125 </span>            : /// Setup link cells in order to make this calculation faster
+<span class="lineNum">     126 </span>            :   void setupLinkCells();
+<span class="lineNum">     127 </span>            : /// Get the cutoff for the link cells
+<span class="lineNum">     128 </span>            :   double getLinkCellCutoff()  const ;
+<span class="lineNum">     129 </span>            : /// This does setup of link cell stuff that is specific to the non-use of the usespecies keyword
+<span class="lineNum">     130 </span>            :   void setupNonUseSpeciesLinkCells( const unsigned&amp; );
+<span class="lineNum">     131 </span>            : /// Get the separation between a pair of vectors
+<span class="lineNum">     132 </span>            :   Vector getSeparation( const Vector&amp; vec1, const Vector&amp; vec2 ) const ;
+<span class="lineNum">     133 </span>            : /// This sets up the list of atoms that are involved in this colvar
+<span class="lineNum">     134 </span>            :   bool setupCurrentAtomList( const unsigned&amp; taskCode, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     135 </span>            : /// Decode indices if there are 2 or 3 atoms involved
+<span class="lineNum">     136 </span>            :   void decodeIndexToAtoms( const unsigned&amp; taskCode, std::vector&lt;unsigned&gt;&amp; atoms ) const ;
+<span class="lineNum">     137 </span>            : /// Read in some atoms
+<span class="lineNum">     138 </span>            :   bool parseMultiColvarAtomList(const std::string&amp; key, const int&amp; num, std::vector&lt;AtomNumber&gt;&amp; t);
+<span class="lineNum">     139 </span>            : /// Read in ATOMS keyword
+<span class="lineNum">     140 </span>            :   void readAtomsLikeKeyword( const std::string &amp; key, const int&amp; natoms, std::vector&lt;AtomNumber&gt;&amp; all_atoms );
+<span class="lineNum">     141 </span>            : /// Read in two groups of atoms and setup multicolvars to calculate
+<span class="lineNum">     142 </span>            :   void readTwoGroups( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, std::vector&lt;AtomNumber&gt;&amp; all_atoms );
+<span class="lineNum">     143 </span>            : /// Read in three groups of atoms
+<span class="lineNum">     144 </span>            :   void readGroupKeywords( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, const std::string&amp; key3,
+<span class="lineNum">     145 </span>            :                           const bool&amp; no_third_dim_accum, const bool&amp; symmetric, std::vector&lt;AtomNumber&gt;&amp; all_atoms );
+<span class="lineNum">     146 </span>            : /// Read in three groups of atoms and construct CVs involving at least one
+<span class="lineNum">     147 </span>            :   void readThreeGroups( const std::string&amp; key1, const std::string&amp; key2, const std::string&amp; key3,
+<span class="lineNum">     148 </span>            :                         const bool&amp; allow2, const bool&amp; no_third_dim_accum, std::vector&lt;AtomNumber&gt;&amp; all_atoms );
+<span class="lineNum">     149 </span>            : /// Build sets by taking one multicolvar from each base
+<span class="lineNum">     150 </span>            :   void buildSets();
+<a name="151"><span class="lineNum">     151 </span>            : public:</a>
+<span class="lineNum">     152 </span>            :   explicit MultiColvarBase(const ActionOptions&amp;);
+<span class="lineNum">     153 </span><span class="lineCov">       1312 :   ~MultiColvarBase() {}</span>
+<span class="lineNum">     154 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     155 </span>            : /// Turn on the derivatives
+<span class="lineNum">     156 </span>            :   virtual void turnOnDerivatives();
+<span class="lineNum">     157 </span>            : /// Do we use pbc to calculate this quantity
+<span class="lineNum">     158 </span>            :   bool usesPbc() const ;
+<span class="lineNum">     159 </span>            : /// Apply PBCs over a set of distance vectors
+<a name="160"><span class="lineNum">     160 </span>            :   void applyPbc(std::vector&lt;Vector&gt;&amp; dlist, unsigned max_index=0) const;</a>
+<span class="lineNum">     161 </span>            : /// Is it safe to use multithreading
+<span class="lineNum">     162 </span><span class="lineCov">       8874 :   bool threadSafe() const { return !(mybasemulticolvars.size()&gt;0); }</span>
+<span class="lineNum">     163 </span>            : /// Do some setup before the calculation
+<span class="lineNum">     164 </span>            :   void prepare();
+<span class="lineNum">     165 </span>            : /// This is overwritten here in order to make sure that we do not retrieve atoms multiple times
+<span class="lineNum">     166 </span>            :   void retrieveAtoms();
+<span class="lineNum">     167 </span>            : /// Do the calculation
+<span class="lineNum">     168 </span>            :   virtual void calculate();
+<span class="lineNum">     169 </span>            : /// Calculate numerical derivatives
+<span class="lineNum">     170 </span>            :   virtual void calculateNumericalDerivatives( ActionWithValue* a=NULL );
+<span class="lineNum">     171 </span>            : /// Perform one of the tasks
+<span class="lineNum">     172 </span>            :   virtual void performTask( const unsigned&amp;, const unsigned&amp;, MultiValue&amp; ) const ;
+<span class="lineNum">     173 </span>            : /// Update the active atoms
+<span class="lineNum">     174 </span>            :   virtual void updateActiveAtoms( AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     175 </span>            : /// This gets the position of an atom for the link cell setup
+<span class="lineNum">     176 </span>            :   virtual Vector getPositionOfAtomForLinkCells( const unsigned&amp; iatom ) const ;
+<span class="lineNum">     177 </span>            : /// Get the absolute index of the central atom
+<span class="lineNum">     178 </span>            :   virtual AtomNumber getAbsoluteIndexOfCentralAtom( const unsigned&amp; i ) const ;
+<span class="lineNum">     179 </span>            : /// This is replaced once we have a function to calculate the cv
+<span class="lineNum">     180 </span>            :   virtual double compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const=0;
+<span class="lineNum">     181 </span>            : /// Apply the forces from this action
+<span class="lineNum">     182 </span>            :   virtual void apply();
+<span class="lineNum">     183 </span>            : /// Get the number of derivatives for this action
+<span class="lineNum">     184 </span>            :   virtual unsigned getNumberOfDerivatives();  // N.B. This is replacing the virtual function in ActionWithValue
+<span class="lineNum">     185 </span>            : /// Checks if an task is being performed at the present time
+<span class="lineNum">     186 </span>            :   virtual bool isCurrentlyActive( const unsigned&amp; code );
+<span class="lineNum">     187 </span>            : ///
+<span class="lineNum">     188 </span>            :   virtual void getCentralAtomPack( const unsigned&amp; basn, const unsigned&amp; curr, CatomPack&amp; mypack);
+<span class="lineNum">     189 </span>            : /// Get the index where the central atom is stored
+<span class="lineNum">     190 </span>            :   virtual Vector getCentralAtomPos( const unsigned&amp; curr );
+<span class="lineNum">     191 </span>            : /// You can use this to screen contributions that are very small so we can avoid expensive (and pointless) calculations
+<a name="192"><span class="lineNum">     192 </span>            :   virtual double calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, AtomValuePack&amp; myatoms ) const ;</a>
+<span class="lineNum">     193 </span>            : /// Is this a density?
+<span class="lineNum">     194 </span><span class="lineCov">    1828438 :   virtual bool isDensity() const { return false; }</span>
+<span class="lineNum">     195 </span>            : /// Is the iatom'th stored value currently active
+<a name="196"><span class="lineNum">     196 </span>            :   bool storedValueIsActive( const unsigned&amp; iatom );</a>
+<span class="lineNum">     197 </span>            : /// This is true if multicolvar is calculating a vector or if the multicolvar is the density
+<a name="198"><span class="lineNum">     198 </span><span class="lineNoCov">          0 :   virtual bool hasDifferentiableOrientation() const { return false; }</span></a>
+<span class="lineNum">     199 </span>            : /// This makes sure we are not calculating the director when we do LocalAverage
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :   virtual void doNotCalculateDirector() {}</span>
+<span class="lineNum">     201 </span>            : /// Ensure that derivatives are only calculated when needed
+<span class="lineNum">     202 </span>            :   bool doNotCalculateDerivatives() const ;
+<span class="lineNum">     203 </span>            : /// Get the icolv th base multicolvar
+<span class="lineNum">     204 </span>            :   MultiColvarBase* getBaseMultiColvar( const unsigned&amp; icolv ) const ;
+<span class="lineNum">     205 </span>            : /// Get the number of base multicolvars
+<span class="lineNum">     206 </span>            :   unsigned getNumberOfBaseMultiColvars() const ;
+<span class="lineNum">     207 </span>            : /// Get an input data
+<span class="lineNum">     208 </span>            :   virtual void getInputData( const unsigned&amp; ind, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms, std::vector&lt;double&gt;&amp; orient ) const ;
+<span class="lineNum">     209 </span>            : /// Retrieve the input derivatives
+<span class="lineNum">     210 </span>            :   virtual MultiValue&amp; getInputDerivatives( const unsigned&amp; iatom, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     211 </span>            : };
+<a name="212"><span class="lineNum">     212 </span>            : </a>
+<span class="lineNum">     213 </span>            : inline
+<span class="lineNum">     214 </span><span class="lineCov">     914028 : bool MultiColvarBase::isCurrentlyActive( const unsigned&amp; code ) {</span>
+<span class="lineNum">     215 </span><span class="lineCov">    1085337 :   if( setup_completed &amp;&amp; atom_lab[code].first&gt;0 ) {</span>
+<span class="lineNum">     216 </span><span class="lineCov">      17638 :     unsigned mmc=atom_lab[code].first - 1;</span>
+<span class="lineNum">     217 </span><span class="lineCov">      35276 :     return mybasedata[mmc]-&gt;storedValueIsActive( atom_lab[code].second );</span>
+<span class="lineNum">     218 </span>            :   }
+<span class="lineNum">     219 </span>            :   return true;
+<span class="lineNum">     220 </span>            : }
+<a name="221"><span class="lineNum">     221 </span>            : </a>
+<span class="lineNum">     222 </span>            : inline
+<span class="lineNum">     223 </span><span class="lineCov">        156 : AtomNumber MultiColvarBase::getAbsoluteIndexOfCentralAtom( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">     224 </span>            :   plumed_dbg_assert( iatom&lt;atom_lab.size() );
+<span class="lineNum">     225 </span><span class="lineCov">        312 :   if( atom_lab[iatom].first&gt;0  ) {</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :     unsigned mmc=atom_lab[iatom].first - 1;</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :     return mybasemulticolvars[mmc]-&gt;getAbsoluteIndexOfCentralAtom( atom_lab[iatom].second );</span>
+<span class="lineNum">     228 </span>            :   }
+<span class="lineNum">     229 </span>            :   plumed_dbg_assert( usespecies );
+<span class="lineNum">     230 </span><span class="lineCov">        312 :   return ActionAtomistic::getAbsoluteIndex( atom_lab[getTaskCode(iatom)].second );</span>
+<span class="lineNum">     231 </span>            : }
+<a name="232"><span class="lineNum">     232 </span>            : </a>
+<span class="lineNum">     233 </span>            : inline
+<span class="lineNum">     234 </span><span class="lineCov">  405207244 : Vector MultiColvarBase::getPositionOfAtomForLinkCells( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">     235 </span>            :   plumed_dbg_assert( iatom&lt;atom_lab.size() );
+<span class="lineNum">     236 </span><span class="lineCov">  810414488 :   if( atom_lab[iatom].first&gt;0  ) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">    2487901 :     unsigned mmc=atom_lab[iatom].first - 1;</span>
+<span class="lineNum">     238 </span><span class="lineCov">    4975802 :     return mybasemulticolvars[mmc]-&gt;getCentralAtomPos( atom_lab[iatom].second );</span>
+<span class="lineNum">     239 </span>            :   }
+<span class="lineNum">     240 </span><span class="lineCov">  805438686 :   return ActionAtomistic::getPosition( atom_lab[iatom].second );</span>
+<span class="lineNum">     241 </span>            : }
+<a name="242"><span class="lineNum">     242 </span>            : </a>
+<span class="lineNum">     243 </span>            : inline
+<span class="lineNum">     244 </span><span class="lineCov">    8908998 : unsigned MultiColvarBase::getNumberOfDerivatives() {</span>
+<span class="lineNum">     245 </span><span class="lineCov">    8908998 :   return 3*getNumberOfAtoms()+9;</span>
+<span class="lineNum">     246 </span>            : }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            : inline
+<span class="lineNum">     249 </span>            : bool MultiColvarBase::usesPbc() const {
+<span class="lineNum">     250 </span><span class="lineCov">     234812 :   return usepbc;</span>
+<span class="lineNum">     251 </span>            : }
+<a name="252"><span class="lineNum">     252 </span>            : </a>
+<span class="lineNum">     253 </span>            : inline
+<span class="lineNum">     254 </span><span class="lineCov">   65674493 : bool MultiColvarBase::doNotCalculateDerivatives() const {</span>
+<span class="lineNum">     255 </span><span class="lineCov">   65674493 :   if( !dertime ) return true;</span>
+<span class="lineNum">     256 </span><span class="lineCov">   64987873 :   return ActionWithValue::doNotCalculateDerivatives();</span>
+<span class="lineNum">     257 </span>            : }
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            : inline
+<span class="lineNum">     260 </span>            : unsigned MultiColvarBase::getNumberOfBaseMultiColvars() const {
+<span class="lineNum">     261 </span><span class="lineCov">        140 :   return mybasemulticolvars.size();</span>
+<span class="lineNum">     262 </span>            : }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : inline
+<span class="lineNum">     265 </span>            : MultiColvarBase* MultiColvarBase::getBaseMultiColvar( const unsigned&amp; icolv ) const {
+<span class="lineNum">     266 </span>            :   plumed_dbg_assert( icolv&lt;mybasemulticolvars.size() );
+<span class="lineNum">     267 </span><span class="lineCov">      25007 :   return mybasemulticolvars[icolv];</span>
+<span class="lineNum">     268 </span>            : }
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            : }
+<span class="lineNum">     271 </span>            : }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

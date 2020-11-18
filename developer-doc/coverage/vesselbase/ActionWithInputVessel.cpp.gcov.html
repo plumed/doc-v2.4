@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/ActionWithInputVessel.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - ActionWithInputVessel.cpp<span style="font-size: 80%;"> (source / <a href="ActionWithInputVessel.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntryMed">86.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ActionWithInputVessel.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;StoreDataVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;BridgeVessel.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<a name="29"><span class="lineNum">      29 </span>            : namespace vesselbase {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         22 : void ActionWithInputVessel::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      32 </span><span class="lineCov">         88 :   keys.add(&quot;compulsory&quot;,&quot;DATA&quot;,&quot;certain actions in plumed work by calculating a list of variables and summing over them. &quot;</span>
+<span class="lineNum">      33 </span>            :            &quot;This particular action can be used to calculate functions of these base variables or prints &quot;
+<span class="lineNum">      34 </span>            :            &quot;them to a file. This keyword thus takes the label of one of those such variables as input.&quot;);
+<span class="lineNum">      35 </span><span class="lineCov">         88 :   keys.reserve(&quot;compulsory&quot;,&quot;GRID&quot;,&quot;the action that creates the input grid you would like to use&quot;);</span>
+<a name="36"><span class="lineNum">      36 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">         19 : ActionWithInputVessel::ActionWithInputVessel(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      39 </span>            :   Action(ao),
+<span class="lineNum">      40 </span>            :   arguments(NULL),
+<span class="lineNum">      41 </span><span class="lineCov">         19 :   myBridgeVessel(NULL)</span>
+<span class="lineNum">      42 </span>            : {
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">         19 : }</span></a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">         19 : void ActionWithInputVessel::readArgument( const std::string&amp; type ) {</span>
+<span class="lineNum">      46 </span>            :   std::string mlab;
+<span class="lineNum">      47 </span><span class="lineCov">         76 :   if( keywords.exists(&quot;DATA&quot;) &amp;&amp; type!=&quot;grid&quot; ) parse(&quot;DATA&quot;,mlab);</span>
+<span class="lineNum">      48 </span><span class="lineCov">         38 :   ActionWithVessel* mves= plumed.getActionSet().selectWithLabel&lt;ActionWithVessel*&gt;(mlab);</span>
+<span class="lineNum">      49 </span><span class="lineCov">         19 :   if(!mves) error(&quot;action labelled &quot; +  mlab + &quot; does not exist or does not have vessels&quot;);</span>
+<span class="lineNum">      50 </span><span class="lineCov">         19 :   addDependency(mves);</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">         19 :   ActionWithValue* aval=dynamic_cast&lt;ActionWithValue*&gt;( this );</span>
+<span class="lineNum">      53 </span><span class="lineCov">         19 :   if(aval) {</span>
+<span class="lineNum">      54 </span><span class="lineCov">          2 :     if( aval-&gt;checkNumericalDerivatives() ) {</span>
+<span class="lineNum">      55 </span><span class="lineCov">          1 :       ActionWithValue* aval2=dynamic_cast&lt;ActionWithValue*&gt;( mves );</span>
+<span class="lineNum">      56 </span><span class="lineCov">          1 :       plumed_assert( aval2 ); aval2-&gt;useNumericalDerivatives();</span>
+<span class="lineNum">      57 </span>            :     }
+<span class="lineNum">      58 </span>            :   }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">         19 :   if( type==&quot;bridge&quot; ) {</span>
+<span class="lineNum">      61 </span><span class="lineCov">          2 :     ActionWithVessel* aves=dynamic_cast&lt;ActionWithVessel*&gt;( this );</span>
+<span class="lineNum">      62 </span><span class="lineCov">          2 :     plumed_assert(aves); myBridgeVessel = mves-&gt;addBridgingVessel( aves );</span>
+<span class="lineNum">      63 </span><span class="lineCov">          2 :     arguments = dynamic_cast&lt;Vessel*&gt;( myBridgeVessel );</span>
+<span class="lineNum">      64 </span><span class="lineCov">         17 :   } else  if( type==&quot;store&quot; ) {</span>
+<span class="lineNum">      65 </span><span class="lineCov">         17 :     arguments = dynamic_cast&lt;Vessel*&gt;( mves-&gt;buildDataStashes( NULL ) );</span>
+<span class="lineNum">      66 </span>            :   } else {
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :     plumed_error();</span>
+<span class="lineNum">      68 </span>            :   }
+<a name="69"><span class="lineNum">      69 </span><span class="lineCov">         19 : }</span></a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">          5 : void ActionWithInputVessel::calculateNumericalDerivatives( ActionWithValue* a ) {</span>
+<span class="lineNum">      72 </span><span class="lineCov">          5 :   if(!a) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">          5 :     a=dynamic_cast&lt;ActionWithValue*&gt;(this);</span>
+<span class="lineNum">      74 </span><span class="lineCov">          5 :     plumed_massert(a,&quot;cannot compute numerical derivatives for an action without values&quot;);</span>
+<span class="lineNum">      75 </span>            :   }
+<span class="lineNum">      76 </span><span class="lineCov">          5 :   if( myBridgeVessel ) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">          5 :     myBridgeVessel-&gt;completeNumericalDerivatives();</span>
+<span class="lineNum">      78 </span>            :   } else {
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :     error(&quot;numerical derivatives are not implemented&quot;);</span>
+<span class="lineNum">      80 </span>            :   }
+<a name="81"><span class="lineNum">      81 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 : void ActionWithInputVessel::applyBridgeForces( const std::vector&lt;double&gt;&amp; bb ) {</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :   plumed_dbg_assert( myBridgeVessel ); addBridgeForces( bb );</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 : }</span>
+<a name="86"><span class="lineNum">      86 </span>            : </a>
+<span class="lineNum">      87 </span>            : }
+<span class="lineNum">      88 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/FunctionVessel.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - FunctionVessel.cpp<span style="font-size: 80%;"> (source / <a href="FunctionVessel.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntryHi">95.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryMed">88.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;FunctionVessel.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace PLMD {
+<a name="26"><span class="lineNum">      26 </span>            : namespace vesselbase {</a>
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">        303 : void FunctionVessel::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      29 </span><span class="lineCov">        303 :   ValueVessel::registerKeywords( keys );</span>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">        303 : }</span></a>
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">        303 : FunctionVessel::FunctionVessel( const VesselOptions&amp; da ):</span>
+<span class="lineNum">      33 </span>            :   ValueVessel(da),
+<span class="lineNum">      34 </span>            :   norm(false),
+<span class="lineNum">      35 </span><span class="lineCov">        303 :   usetol(false)</span>
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span><span class="lineCov">        303 :   diffweight=getAction()-&gt;weightHasDerivatives;</span>
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">        303 : }</span></a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">        848 : void FunctionVessel::resize() {</span>
+<span class="lineNum">      41 </span><span class="lineCov">        848 :   if( getAction()-&gt;derivativesAreRequired() ) {</span>
+<span class="lineNum">      42 </span><span class="lineCov">        509 :     unsigned nderivatives=getAction()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">      43 </span><span class="lineCov">        509 :     getFinalValue()-&gt;resizeDerivatives( nderivatives );</span>
+<span class="lineNum">      44 </span><span class="lineCov">        509 :     resizeBuffer( (1+nderivatives)*2 );</span>
+<span class="lineNum">      45 </span><span class="lineCov">        509 :     diffweight=getAction()-&gt;weightHasDerivatives;</span>
+<span class="lineNum">      46 </span>            :   } else {
+<span class="lineNum">      47 </span>            :     resizeBuffer(2);
+<span class="lineNum">      48 </span><span class="lineCov">        339 :     diffweight=false;  // Don't need to worry about differentiable weights if no derivatives</span>
+<span class="lineNum">      49 </span>            :   }
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">        848 : }</span></a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">     259247 : void FunctionVessel::calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) const {</span>
+<span class="lineNum">      53 </span><span class="lineCov">     259247 :   unsigned nderivatives=getFinalValue()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">      54 </span>            :   double weight=myvals.get(0);
+<span class="lineNum">      55 </span>            :   plumed_dbg_assert( weight&gt;=getTolerance() );
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :   // This deals with the value
+<span class="lineNum">      58 </span><span class="lineCov">     518494 :   double dval, f=calcTransform( myvals.get(mycomp), dval );</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">     259247 :   if( norm ) {</span>
+<span class="lineNum">      61 </span><span class="lineCov">      55307 :     if( usetol &amp;&amp; weight&lt;getTolerance() ) return;</span>
+<span class="lineNum">      62 </span><span class="lineCov">     105196 :     buffer[bufstart+1+nderivatives] += weight;</span>
+<span class="lineNum">      63 </span><span class="lineCov">      52598 :     if( diffweight ) myvals.chainRule( 0, 1, 1, 0, 1.0, bufstart, buffer );</span>
+<span class="lineNum">      64 </span>            :   }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">     259247 :   double contr=weight*f;</span>
+<span class="lineNum">      67 </span><span class="lineCov">     362182 :   if( usetol &amp;&amp; contr&lt;getTolerance() ) return;</span>
+<span class="lineNum">      68 </span><span class="lineCov">     508734 :   buffer[bufstart] += contr;</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">     254367 :   if( diffweight ) myvals.chainRule( 0, 0, 1, 0, f, bufstart, buffer );</span>
+<span class="lineNum">      71 </span><span class="lineCov">     254367 :   if( getAction()-&gt;derivativesAreRequired() &amp;&amp; fabs(dval)&gt;0.0 ) myvals.chainRule( mycomp, 0, 1, 0, weight*dval, bufstart, buffer );</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   return;
+<a name="74"><span class="lineNum">      74 </span>            : }</a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 : double FunctionVessel::calcTransform( const double&amp;, double&amp; ) const {</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :   plumed_error(); return 1.0;</span>
+<a name="78"><span class="lineNum">      78 </span>            : }</a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">      26768 : void FunctionVessel::finish( const std::vector&lt;double&gt;&amp; buffer ) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">      26768 :   unsigned nderivatives=getFinalValue()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">      82 </span><span class="lineCov">      26768 :   if( norm &amp;&amp; diffweight ) {</span>
+<span class="lineNum">      83 </span><span class="lineCov">      15342 :     double dv, val=finalTransform( buffer[bufstart], dv), weight=buffer[bufstart+1+nderivatives];</span>
+<span class="lineNum">      84 </span><span class="lineCov">       5114 :     getFinalValue()-&gt;set( val / weight );</span>
+<span class="lineNum">      85 </span><span class="lineCov">     830708 :     for(unsigned i=0; i&lt;nderivatives; ++i) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">    1238391 :       getFinalValue()-&gt;addDerivative( i, buffer[bufstart+1+i]/weight - val*buffer[bufstart+1+nderivatives+1+i]/(weight*weight) );</span>
+<span class="lineNum">      87 </span><span class="lineCov">       5114 :     }</span>
+<span class="lineNum">      88 </span><span class="lineCov">      21654 :   } else if( norm ) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">       2706 :     double dv, val=finalTransform( buffer[bufstart], dv), weight=buffer[bufstart+1+nderivatives];</span>
+<span class="lineNum">      90 </span><span class="lineCov">        902 :     getFinalValue()-&gt;set( val / weight );</span>
+<span class="lineNum">      91 </span><span class="lineCov">     118334 :     for(unsigned i=0; i&lt;nderivatives; ++i) getFinalValue()-&gt;addDerivative( i, buffer[bufstart+1+i]/weight );</span>
+<span class="lineNum">      92 </span>            :   } else {
+<span class="lineNum">      93 </span><span class="lineCov">      41504 :     double dv, val=finalTransform( buffer[bufstart], dv); getFinalValue()-&gt;set( val );</span>
+<span class="lineNum">      94 </span><span class="lineCov">    6253728 :     for(unsigned i=0; i&lt;nderivatives; ++i) getFinalValue()-&gt;addDerivative( i, dv*buffer[bufstart+1+i] );</span>
+<span class="lineNum">      95 </span>            :   }
+<a name="96"><span class="lineNum">      96 </span><span class="lineCov">      26768 : }</span></a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">      22930 : double FunctionVessel::finalTransform( const double&amp; val, double&amp; dv ) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">      22930 :   dv=1.0; return val;</span>
+<span class="lineNum">     100 </span>            : }
+<a name="101"><span class="lineNum">     101 </span>            : </a>
+<span class="lineNum">     102 </span>            : }
+<span class="lineNum">     103 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     104 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

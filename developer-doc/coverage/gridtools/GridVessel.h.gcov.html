@@ -1,0 +1,363 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - gridtools/GridVessel.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">gridtools</a> - GridVessel.h<span style="font-size: 80%;"> (source / <a href="GridVessel.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryMed">88.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_gridtools_GridVessel_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_gridtools_GridVessel_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;string&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &quot;vesselbase/AveragingVessel.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<a name="31"><span class="lineNum">      31 </span>            : namespace gridtools {</a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">        199 : class GridVessel : public vesselbase::AveragingVessel {</span>
+<span class="lineNum">      34 </span>            :   friend class ActionWithInputGrid;
+<span class="lineNum">      35 </span>            :   friend class DumpGrid;
+<span class="lineNum">      36 </span>            : private:
+<span class="lineNum">      37 </span>            : /// The way that grid points are constructed
+<span class="lineNum">      38 </span>            :   enum {flat,fibonacci} gtype;
+<span class="lineNum">      39 </span>            : /// Have the minimum and maximum for the grid been set
+<span class="lineNum">      40 </span>            :   bool bounds_set;
+<span class="lineNum">      41 </span>            : /// The number of points in the grid
+<span class="lineNum">      42 </span>            :   unsigned npoints;
+<span class="lineNum">      43 </span>            : /// Stuff for fibonacci grids
+<span class="lineNum">      44 </span>            :   double root5, golden, igolden, log_golden2;
+<span class="lineNum">      45 </span>            : /// Fib increment here is equal to 2*pi*(INVERSE GOLDEN RATIO)
+<span class="lineNum">      46 </span>            :   double fib_offset, fib_increment, fib_shift;
+<span class="lineNum">      47 </span>            :   std::vector&lt;std::vector&lt;unsigned&gt; &gt; fib_nlist;
+<span class="lineNum">      48 </span>            : /// Units for Gaussian Cube file
+<span class="lineNum">      49 </span>            :   double cube_units;
+<span class="lineNum">      50 </span>            : /// This flag is used to check if the user has created a valid input
+<span class="lineNum">      51 </span>            :   bool foundprint;
+<span class="lineNum">      52 </span>            : /// The minimum and maximum of the grid stored as doubles
+<span class="lineNum">      53 </span>            :   std::vector&lt;double&gt; min, max;
+<span class="lineNum">      54 </span>            : /// The numerical distance between adjacent grid points
+<span class="lineNum">      55 </span>            :   std::vector&lt;unsigned&gt; stride;
+<span class="lineNum">      56 </span>            : /// The number of bins in each grid direction
+<span class="lineNum">      57 </span>            :   std::vector&lt;unsigned&gt; nbin;
+<span class="lineNum">      58 </span>            : /// The grid point that was requested last by getGridPointCoordinates
+<span class="lineNum">      59 </span>            :   unsigned currentGridPoint;
+<span class="lineNum">      60 </span>            : /// The forces that will be output at the end of the calculation
+<span class="lineNum">      61 </span>            :   std::vector&lt;double&gt; finalForces;
+<span class="lineNum">      62 </span>            : protected:
+<span class="lineNum">      63 </span>            : /// Is forced
+<span class="lineNum">      64 </span>            :   bool wasforced;
+<span class="lineNum">      65 </span>            : /// Forces acting on grid elements
+<span class="lineNum">      66 </span>            :   std::vector&lt;double&gt; forces;
+<span class="lineNum">      67 </span>            : /// Do we have derivatives
+<span class="lineNum">      68 </span>            :   bool noderiv;
+<span class="lineNum">      69 </span>            : /// The names of the various columns in the grid file
+<span class="lineNum">      70 </span>            :   std::vector&lt;std::string&gt; arg_names;
+<span class="lineNum">      71 </span>            : /// The number of pieces of information we are storing for each
+<span class="lineNum">      72 </span>            : /// point in the grid
+<span class="lineNum">      73 </span>            :   unsigned nper;
+<span class="lineNum">      74 </span>            : /// Is this direction periodic
+<span class="lineNum">      75 </span>            :   std::vector&lt;bool&gt; pbc;
+<span class="lineNum">      76 </span>            : /// The minimum and maximum in the grid stored as strings
+<span class="lineNum">      77 </span>            :   std::vector&lt;std::string&gt; str_min, str_max;
+<span class="lineNum">      78 </span>            : /// The spacing between grid points
+<span class="lineNum">      79 </span>            :   std::vector&lt;double&gt; dx;
+<span class="lineNum">      80 </span>            : /// The dimensionality of the grid
+<span class="lineNum">      81 </span>            :   unsigned dimension;
+<span class="lineNum">      82 </span>            : /// Which grid points are we actively accumulating
+<span class="lineNum">      83 </span>            :   std::vector&lt;bool&gt; active;
+<span class="lineNum">      84 </span>            : /// Convert a point in space the the correspoinding grid point
+<span class="lineNum">      85 </span>            :   unsigned getIndex( const std::vector&lt;double&gt;&amp; p ) const ;
+<span class="lineNum">      86 </span>            : /// Get the index of the closest point on the fibonacci sphere
+<span class="lineNum">      87 </span>            :   unsigned getFibonacciIndex( const std::vector&lt;double&gt;&amp; p ) const ;
+<span class="lineNum">      88 </span>            : /// Get the flat grid coordinates
+<span class="lineNum">      89 </span>            :   void getFlatGridCoordinates( const unsigned&amp; ipoint, std::vector&lt;unsigned&gt;&amp; tindices, std::vector&lt;double&gt;&amp; x ) const ;
+<span class="lineNum">      90 </span>            : /// Get the coordinates on the Fibonacci grid
+<span class="lineNum">      91 </span>            :   void getFibonacciCoordinates( const unsigned&amp; ipoint, std::vector&lt;double&gt;&amp; x ) const ;
+<span class="lineNum">      92 </span>            : public:
+<span class="lineNum">      93 </span>            : /// keywords
+<span class="lineNum">      94 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      95 </span>            : /// Constructor
+<span class="lineNum">      96 </span>            :   explicit GridVessel( const vesselbase::VesselOptions&amp; );
+<span class="lineNum">      97 </span>            : /// Remove the derivatives
+<span class="lineNum">      98 </span>            :   void setNoDerivatives();
+<span class="lineNum">      99 </span>            : /// Get the type of grid we are using
+<span class="lineNum">     100 </span>            :   std::string getType() const ;
+<span class="lineNum">     101 </span>            : /// Set the minimum and maximum of the grid
+<span class="lineNum">     102 </span>            :   virtual void setBounds( const std::vector&lt;std::string&gt;&amp; smin, const std::vector&lt;std::string&gt;&amp; smax, const std::vector&lt;unsigned&gt;&amp; nbins, const std::vector&lt;double&gt;&amp; spacing );
+<span class="lineNum">     103 </span>            : /// Get the cutoff to use for the Fibonacci spheres
+<span class="lineNum">     104 </span>            :   virtual double getFibonacciCutoff() const ;
+<span class="lineNum">     105 </span>            : /// Setup the grid if it is a fibonacci grid on the surface of a sphere
+<span class="lineNum">     106 </span>            :   void setupFibonacciGrid( const unsigned&amp; np );
+<span class="lineNum">     107 </span>            : /// Get a description of the grid to output to the log
+<span class="lineNum">     108 </span>            :   std::string description();
+<span class="lineNum">     109 </span>            : /// Convert an index into indices
+<span class="lineNum">     110 </span>            :   void convertIndexToIndices( const unsigned&amp; index, const std::vector&lt;unsigned&gt;&amp; nnbin, std::vector&lt;unsigned&gt;&amp; indices ) const ;
+<span class="lineNum">     111 </span>            : ///  Flatten the grid and get the grid index for a point
+<span class="lineNum">     112 </span>            :   unsigned getIndex( const std::vector&lt;unsigned&gt;&amp; indices ) const ;
+<span class="lineNum">     113 </span>            : /// Get the indices fof a point
+<span class="lineNum">     114 </span>            :   void getIndices( const unsigned&amp; index, std::vector&lt;unsigned&gt;&amp; indices ) const ;
+<span class="lineNum">     115 </span>            : /// Get the indices of a particular point
+<span class="lineNum">     116 </span>            :   void getIndices( const std::vector&lt;double&gt;&amp; point, std::vector&lt;unsigned&gt;&amp; indices ) const ;
+<span class="lineNum">     117 </span>            : /// Operations on one of the elements of grid point i
+<span class="lineNum">     118 </span>            :   void setGridElement( const unsigned&amp;, const unsigned&amp;, const double&amp; );
+<span class="lineNum">     119 </span>            : /// Add data to an element of the grid
+<span class="lineNum">     120 </span>            :   void addToGridElement( const unsigned&amp; ipoint, const unsigned&amp; jelement, const double&amp; value );
+<span class="lineNum">     121 </span>            : /// Operations on one of the elements of grid point specified by vector
+<span class="lineNum">     122 </span>            :   double getGridElement( const std::vector&lt;unsigned&gt;&amp;, const unsigned&amp; ) const ;
+<span class="lineNum">     123 </span>            :   void setGridElement( const std::vector&lt;unsigned&gt;&amp;, const unsigned&amp;, const double&amp; );
+<span class="lineNum">     124 </span>            : /// Set the size of the buffer equal to nper*npoints
+<span class="lineNum">     125 </span>            :   virtual void resize();
+<span class="lineNum">     126 </span>            : /// Get the number of points in the grid
+<span class="lineNum">     127 </span>            :   unsigned getNumberOfPoints() const;
+<span class="lineNum">     128 </span>            : /// Get the coordinates for a point in the grid
+<span class="lineNum">     129 </span>            :   void getGridPointCoordinates( const unsigned&amp;, std::vector&lt;double&gt;&amp; ) const ;
+<span class="lineNum">     130 </span>            :   void getGridPointCoordinates( const unsigned&amp;, std::vector&lt;unsigned&gt;&amp;, std::vector&lt;double&gt;&amp; ) const ;
+<span class="lineNum">     131 </span>            : /// Get the dimensionality of the function
+<span class="lineNum">     132 </span>            :   unsigned getDimension() const ;
+<span class="lineNum">     133 </span>            : /// Get the number of components in the vector stored on each grid point
+<span class="lineNum">     134 </span>            :   virtual unsigned getNumberOfComponents() const ;
+<span class="lineNum">     135 </span>            : /// Is the grid periodic in the ith direction
+<span class="lineNum">     136 </span>            :   bool isPeriodic( const unsigned&amp; i ) const ;
+<span class="lineNum">     137 </span>            : /// Get the number of quantities we have stored at each grid point
+<span class="lineNum">     138 </span>            :   unsigned getNumberOfQuantities() const ;
+<span class="lineNum">     139 </span>            : /// Get the number of grid points for each dimension
+<span class="lineNum">     140 </span>            :   std::vector&lt;unsigned&gt; getNbin() const ;
+<span class="lineNum">     141 </span>            : /// Get the name of the ith component
+<span class="lineNum">     142 </span>            :   std::string getComponentName( const unsigned&amp; i ) const ;
+<span class="lineNum">     143 </span>            : /// Get the vector containing the minimum value of the grid in each dimension
+<span class="lineNum">     144 </span>            :   std::vector&lt;std::string&gt; getMin() const ;
+<span class="lineNum">     145 </span>            : /// Get the vector containing the maximum value of the grid in each dimension
+<span class="lineNum">     146 </span>            :   std::vector&lt;std::string&gt; getMax() const ;
+<span class="lineNum">     147 </span>            : /// Get the number of points needed in the buffer
+<span class="lineNum">     148 </span>            :   virtual unsigned getNumberOfBufferPoints() const ;
+<span class="lineNum">     149 </span>            : /// Get the stride (the distance between the grid points of an index)
+<span class="lineNum">     150 </span>            :   const std::vector&lt;unsigned&gt;&amp; getStride() const ;
+<span class="lineNum">     151 </span>            : /// Return the volume of one of the grid cells
+<span class="lineNum">     152 </span>            :   double getCellVolume() const ;
+<span class="lineNum">     153 </span>            : /// Get the value of the ith grid element
+<span class="lineNum">     154 </span>            :   virtual double getGridElement( const unsigned&amp;, const unsigned&amp; ) const ;
+<span class="lineNum">     155 </span>            : /// Get the set of points neighouring a particular location in space
+<span class="lineNum">     156 </span>            :   void getNeighbors( const std::vector&lt;double&gt;&amp; pp, const std::vector&lt;unsigned&gt;&amp; nneigh,
+<span class="lineNum">     157 </span>            :                      unsigned&amp; num_neighbours, std::vector&lt;unsigned&gt;&amp; neighbors ) const ;
+<span class="lineNum">     158 </span>            : /// Get the neighbors for a set of indices of a point
+<span class="lineNum">     159 </span>            :   void getNeighbors( const std::vector&lt;unsigned&gt;&amp; indices, const std::vector&lt;unsigned&gt;&amp; nneigh,
+<span class="lineNum">     160 </span>            :                      unsigned&amp; num_neighbors, std::vector&lt;unsigned&gt;&amp; neighbors ) const ;
+<span class="lineNum">     161 </span>            : /// Get the points neighboring a particular spline point
+<span class="lineNum">     162 </span>            :   void getSplineNeighbors( const unsigned&amp; mybox, std::vector&lt;unsigned&gt;&amp; mysneigh ) const ;
+<span class="lineNum">     163 </span>            : /// Get the spacing between grid points
+<span class="lineNum">     164 </span>            :   const std::vector&lt;double&gt;&amp; getGridSpacing() const ;
+<span class="lineNum">     165 </span>            : /// Get the extent of the grid in one of the axis
+<span class="lineNum">     166 </span>            :   double getGridExtent( const unsigned&amp; i ) const ;
+<span class="lineNum">     167 </span>            : /// Copy data from the action into the grid
+<span class="lineNum">     168 </span>            :   virtual void calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) const ;
+<span class="lineNum">     169 </span>            : /// Finish the calculation
+<span class="lineNum">     170 </span>            :   virtual void finish( const std::vector&lt;double&gt;&amp; buffer );
+<span class="lineNum">     171 </span>            : /// This ensures that Gaussian cube fies are in correct units
+<span class="lineNum">     172 </span>            :   void setCubeUnits( const double&amp; units );
+<span class="lineNum">     173 </span>            : /// This ensures that Gaussian cube files are in correct units
+<span class="lineNum">     174 </span>            :   double getCubeUnits() const ;
+<span class="lineNum">     175 </span>            : /// Return a string containing the input to the grid so we can clone it
+<span class="lineNum">     176 </span>            :   std::string getInputString() const ;
+<span class="lineNum">     177 </span>            : /// Does this have derivatives
+<span class="lineNum">     178 </span>            :   bool noDerivatives() const ;
+<span class="lineNum">     179 </span>            : /// Get the value and derivatives at a particular location using spline interpolation
+<span class="lineNum">     180 </span>            :   double getValueAndDerivatives( const std::vector&lt;double&gt;&amp; x, const unsigned&amp; ind, std::vector&lt;double&gt;&amp; der ) const ;
+<span class="lineNum">     181 </span>            : /// Deactivate all the grid points
+<span class="lineNum">     182 </span>            :   void activateThesePoints( const std::vector&lt;bool&gt;&amp; to_activate );
+<span class="lineNum">     183 </span>            : /// Is this point active
+<a name="184"><span class="lineNum">     184 </span>            :   bool inactive( const unsigned&amp; ip ) const ;</a>
+<span class="lineNum">     185 </span>            : /// This retrieves the final force
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :   virtual void getFinalForces( const std::vector&lt;double&gt;&amp; buffer, std::vector&lt;double&gt;&amp; finalForces ) { plumed_error(); }</span>
+<span class="lineNum">     187 </span>            : /// Apply the forces
+<span class="lineNum">     188 </span>            :   void setForce( const std::vector&lt;double&gt;&amp; inforces );
+<span class="lineNum">     189 </span>            : /// Was a force added to the grid
+<span class="lineNum">     190 </span>            :   bool wasForced() const ;
+<span class="lineNum">     191 </span>            : /// And retrieve the forces
+<span class="lineNum">     192 </span>            :   bool applyForce( std::vector&lt;double&gt;&amp; fforces );
+<span class="lineNum">     193 </span>            : };
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : inline
+<span class="lineNum">     196 </span>            : unsigned GridVessel::getNumberOfQuantities() const {
+<span class="lineNum">     197 </span><span class="lineCov">     357499 :   return nper;</span>
+<span class="lineNum">     198 </span>            : }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : inline
+<span class="lineNum">     201 </span>            : unsigned GridVessel::getNumberOfPoints() const {
+<span class="lineNum">     202 </span><span class="lineCov">     195540 :   return npoints;</span>
+<span class="lineNum">     203 </span>            : }
+<a name="204"><span class="lineNum">     204 </span>            : </a>
+<span class="lineNum">     205 </span>            : inline
+<span class="lineNum">     206 </span><span class="lineCov">        599 : const std::vector&lt;double&gt;&amp; GridVessel::getGridSpacing() const {</span>
+<span class="lineNum">     207 </span><span class="lineCov">        599 :   if( gtype==flat ) return dx;</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;dont understand what spacing means for spherical grids&quot;);</span>
+<span class="lineNum">     209 </span>            :   return dx;
+<span class="lineNum">     210 </span>            : }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : inline
+<span class="lineNum">     213 </span>            : double GridVessel::getCellVolume() const {
+<span class="lineNum">     214 </span><span class="lineCov">          4 :   if( gtype==flat ) {</span>
+<span class="lineNum">     215 </span><span class="lineCov">         13 :     double myvol=1.0; for(unsigned i=0; i&lt;dimension; ++i) myvol *= dx[i];</span>
+<span class="lineNum">     216 </span>            :     return myvol;
+<span class="lineNum">     217 </span>            :   } else {
+<span class="lineNum">     218 </span><span class="lineCov">          1 :     return 4*pi / static_cast&lt;double&gt;( getNumberOfPoints() );</span>
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span>            : }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : inline
+<span class="lineNum">     223 </span>            : unsigned GridVessel::getDimension() const {
+<span class="lineNum">     224 </span><span class="lineCov">     819175 :   return dimension;</span>
+<span class="lineNum">     225 </span>            : }
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            : inline
+<span class="lineNum">     228 </span>            : bool GridVessel::isPeriodic( const unsigned&amp; i ) const {
+<span class="lineNum">     229 </span>            :   plumed_dbg_assert( gtype==flat );
+<span class="lineNum">     230 </span><span class="lineCov">      40787 :   return pbc[i];</span>
+<span class="lineNum">     231 </span>            : }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : inline
+<span class="lineNum">     234 </span>            : std::string GridVessel::getComponentName( const unsigned&amp; i ) const {
+<span class="lineNum">     235 </span><span class="lineCov">         64 :   return arg_names[i];</span>
+<span class="lineNum">     236 </span>            : }
+<a name="237"><span class="lineNum">     237 </span>            : </a>
+<span class="lineNum">     238 </span>            : inline
+<span class="lineNum">     239 </span><span class="lineCov">         30 : unsigned GridVessel::getNumberOfComponents() const {</span>
+<span class="lineNum">     240 </span><span class="lineCov">         30 :   if( noderiv ) return nper;</span>
+<span class="lineNum">     241 </span><span class="lineCov">         27 :   return nper / ( dimension + 1 );</span>
+<span class="lineNum">     242 </span>            : }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : inline
+<span class="lineNum">     245 </span>            : double GridVessel::getGridExtent( const unsigned&amp; i ) const {
+<span class="lineNum">     246 </span>            :   plumed_dbg_assert( gtype==flat );
+<span class="lineNum">     247 </span><span class="lineCov">         92 :   return max[i] - min[i];</span>
+<span class="lineNum">     248 </span>            : }
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : inline
+<span class="lineNum">     251 </span>            : bool GridVessel::noDerivatives() const {
+<span class="lineNum">     252 </span><span class="lineCov">      11365 :   return noderiv;</span>
+<span class="lineNum">     253 </span>            : }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : inline
+<span class="lineNum">     256 </span>            : bool GridVessel::inactive( const unsigned&amp; ip ) const {
+<span class="lineNum">     257 </span>            :   plumed_dbg_assert( ip&lt;npoints );
+<span class="lineNum">     258 </span><span class="lineCov">   21106479 :   return !active[ip];</span>
+<span class="lineNum">     259 </span>            : }
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            : inline
+<span class="lineNum">     262 </span>            : const std::vector&lt;unsigned&gt;&amp; GridVessel::getStride() const {
+<span class="lineNum">     263 </span>            :   plumed_dbg_assert( gtype==flat );
+<span class="lineNum">     264 </span>            :   return stride;
+<span class="lineNum">     265 </span>            : }
+<a name="266"><span class="lineNum">     266 </span>            : </a>
+<span class="lineNum">     267 </span>            : inline
+<span class="lineNum">     268 </span><span class="lineCov">         44 : unsigned GridVessel::getNumberOfBufferPoints() const {</span>
+<span class="lineNum">     269 </span><span class="lineCov">        277 :   return npoints;</span>
+<span class="lineNum">     270 </span>            : }
+<a name="271"><span class="lineNum">     271 </span>            : </a>
+<span class="lineNum">     272 </span>            : inline
+<span class="lineNum">     273 </span><span class="lineCov">      21958 : std::string GridVessel::getType() const {</span>
+<span class="lineNum">     274 </span><span class="lineCov">      21958 :   if( gtype==flat ) return &quot;flat&quot;;</span>
+<span class="lineNum">     275 </span><span class="lineCov">        422 :   else if( gtype==fibonacci ) return &quot;fibonacci&quot;;</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :   plumed_error();</span>
+<span class="lineNum">     277 </span>            : }
+<a name="278"><span class="lineNum">     278 </span>            : </a>
+<span class="lineNum">     279 </span>            : inline
+<span class="lineNum">     280 </span><span class="lineCov">          2 : double GridVessel::getFibonacciCutoff() const {</span>
+<span class="lineNum">     281 </span><span class="lineCov">          2 :   return 0.0;</span>
+<span class="lineNum">     282 </span>            : }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : }
+<span class="lineNum">     285 </span>            : }
+<span class="lineNum">     286 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

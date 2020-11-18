@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/AtomValuePack.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - AtomValuePack.cpp<span style="font-size: 80%;"> (source / <a href="AtomValuePack.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;CatomPack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/LinkCells.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : namespace PLMD {
+<a name="27"><span class="lineNum">      27 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span><span class="lineCov">     462029 : AtomValuePack::AtomValuePack( MultiValue&amp; vals, MultiColvarBase const * mcolv ):</span>
+<span class="lineNum">      30 </span>            :   myvals(vals),
+<span class="lineNum">      31 </span>            :   mycolv(mcolv),
+<span class="lineNum">      32 </span>            :   natoms(0),
+<span class="lineNum">      33 </span>            :   indices( vals.getIndices() ),
+<span class="lineNum">      34 </span>            :   sort_vector( vals.getSortIndices() ),
+<span class="lineNum">      35 </span><span class="lineCov">    1848116 :   myatoms( vals.getAtomVector() )</span>
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span><span class="lineCov">     462029 :   if( indices.size()!=mcolv-&gt;getNumberOfAtoms() ) {</span>
+<span class="lineNum">      38 </span><span class="lineCov">      23765 :     indices.resize( mcolv-&gt;getNumberOfAtoms() );</span>
+<span class="lineNum">      39 </span><span class="lineCov">      47530 :     sort_vector.resize( mcolv-&gt;getNumberOfAtoms() );</span>
+<span class="lineNum">      40 </span><span class="lineCov">      47530 :     myatoms.resize( mcolv-&gt;getNumberOfAtoms() );</span>
+<span class="lineNum">      41 </span>            :   }
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">     462029 : }</span></a>
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">     234812 : unsigned AtomValuePack::setupAtomsFromLinkCells( const std::vector&lt;unsigned&gt;&amp; cind, const Vector&amp; cpos, const LinkCells&amp; linkcells ) {</span>
+<span class="lineNum">      45 </span><span class="lineCov">     234812 :   if( cells_required.size()!=linkcells.getNumberOfCells() ) cells_required.resize( linkcells.getNumberOfCells() );</span>
+<span class="lineNum">      46 </span>            :   // Build the list of cells that we need
+<span class="lineNum">      47 </span><span class="lineCov">     469624 :   unsigned ncells_required=0; linkcells.addRequiredCells( linkcells.findMyCell( cpos ), ncells_required, cells_required );</span>
+<span class="lineNum">      48 </span>            :   // Now build the list of atoms we need
+<span class="lineNum">      49 </span><span class="lineCov">     875992 :   natoms=cind.size(); for(unsigned i=0; i&lt;natoms; ++i) indices[i]=cind[i];</span>
+<span class="lineNum">      50 </span><span class="lineCov">     234812 :   linkcells.retrieveAtomsInCells( ncells_required, cells_required, natoms, indices );</span>
+<span class="lineNum">      51 </span>            : //  linkcells.retrieveNeighboringAtoms( cpos, natoms, indices );
+<span class="lineNum">      52 </span><span class="lineCov"> 1203793676 :   for(unsigned i=0; i&lt;natoms; ++i) myatoms[i]=mycolv-&gt;getPositionOfAtomForLinkCells( indices[i] ) - cpos;</span>
+<span class="lineNum">      53 </span><span class="lineCov">     469624 :   if( mycolv-&gt;usesPbc() ) mycolv-&gt;applyPbc( myatoms, natoms );</span>
+<span class="lineNum">      54 </span><span class="lineCov">     234812 :   return natoms;</span>
+<a name="55"><span class="lineNum">      55 </span>            : }</a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">     530448 : void AtomValuePack::updateUsingIndices() {</span>
+<span class="lineNum">      58 </span><span class="lineCov">    1262462 :   if( myvals.updateComplete() ) return;</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   unsigned jactive=0;
+<span class="lineNum">      61 </span><span class="lineCov">  799436580 :   for(unsigned i=0; i&lt;natoms; ++i) {</span>
+<span class="lineNum">      62 </span><span class="lineCov">  799107698 :     unsigned base=3*indices[i];</span>
+<span class="lineNum">      63 </span><span class="lineCov">  803529679 :     if( myvals.isActive( base ) ) { sort_vector[jactive]=indices[i]; jactive++; }</span>
+<span class="lineNum">      64 </span>            :   }
+<span class="lineNum">      65 </span><span class="lineCov">     328882 :   std::sort( sort_vector.begin(), sort_vector.begin()+jactive );</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">     328882 :   myvals.emptyActiveMembers();</span>
+<span class="lineNum">      68 </span><span class="lineCov">    9172844 :   for(unsigned i=0; i&lt;jactive; ++i) {</span>
+<span class="lineNum">      69 </span><span class="lineCov">    8843962 :     unsigned base=3*sort_vector[i]; // indices[i];</span>
+<span class="lineNum">      70 </span><span class="lineCov">    4421981 :     myvals.putIndexInActiveArray( base );</span>
+<span class="lineNum">      71 </span><span class="lineCov">    8843962 :     myvals.putIndexInActiveArray( base + 1 );</span>
+<span class="lineNum">      72 </span><span class="lineCov">    8843962 :     myvals.putIndexInActiveArray( base + 2 );</span>
+<span class="lineNum">      73 </span>            :   }
+<span class="lineNum">      74 </span><span class="lineCov">     657764 :   unsigned nvir=3*mycolv-&gt;getNumberOfAtoms();</span>
+<span class="lineNum">      75 </span><span class="lineCov">     657764 :   if( myvals.isActive( nvir ) ) {</span>
+<span class="lineNum">      76 </span><span class="lineCov">    4313627 :     for(unsigned i=0; i&lt;9; ++i) myvals.putIndexInActiveArray( nvir + i );</span>
+<span class="lineNum">      77 </span>            :   }
+<span class="lineNum">      78 </span><span class="lineCov">     328882 :   myvals.completeUpdate();</span>
+<a name="79"><span class="lineNum">      79 </span>            : }</a>
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span><span class="lineCov">     905722 : void AtomValuePack::addComDerivatives( const int&amp; ind, const Vector&amp; der, CatomPack&amp; catom_der ) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">     905722 :   if( ind&lt;0 ) {</span>
+<span class="lineNum">      83 </span><span class="lineCov">     208784 :     for(unsigned ider=0; ider&lt;catom_der.getNumberOfAtomsWithDerivatives(); ++ider) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">      54660 :       unsigned jder=3*catom_der.getIndex(ider);</span>
+<span class="lineNum">      85 </span><span class="lineCov">     109320 :       myvals.addTemporyDerivative( jder+0, catom_der.getDerivative(ider,0,der) );</span>
+<span class="lineNum">      86 </span><span class="lineCov">     109320 :       myvals.addTemporyDerivative( jder+1, catom_der.getDerivative(ider,1,der) );</span>
+<span class="lineNum">      87 </span><span class="lineCov">     109320 :       myvals.addTemporyDerivative( jder+2, catom_der.getDerivative(ider,2,der) );</span>
+<span class="lineNum">      88 </span>            :     }
+<span class="lineNum">      89 </span>            :   } else {
+<span class="lineNum">      90 </span><span class="lineCov">    3433816 :     for(unsigned ider=0; ider&lt;catom_der.getNumberOfAtomsWithDerivatives(); ++ider) {</span>
+<span class="lineNum">      91 </span><span class="lineCov">     860918 :       unsigned jder=3*catom_der.getIndex(ider);</span>
+<span class="lineNum">      92 </span><span class="lineCov">     860918 :       myvals.addDerivative( ind, jder+0, catom_der.getDerivative(ider,0,der) );</span>
+<span class="lineNum">      93 </span><span class="lineCov">     860918 :       myvals.addDerivative( ind, jder+1, catom_der.getDerivative(ider,1,der) );</span>
+<span class="lineNum">      94 </span><span class="lineCov">     860918 :       myvals.addDerivative( ind, jder+2, catom_der.getDerivative(ider,2,der) );</span>
+<span class="lineNum">      95 </span>            :     }
+<span class="lineNum">      96 </span>            :   }
+<span class="lineNum">      97 </span><span class="lineCov">     905722 : }</span>
+<a name="98"><span class="lineNum">      98 </span>            : </a>
+<span class="lineNum">      99 </span>            : }
+<span class="lineNum">     100 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

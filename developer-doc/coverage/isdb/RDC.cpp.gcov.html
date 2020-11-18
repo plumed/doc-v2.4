@@ -1,0 +1,576 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - isdb/RDC.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">isdb</a> - RDC.cpp<span style="font-size: 80%;"> (source / <a href="RDC.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">195</td>
+            <td class="headerCovTableEntry">207</td>
+            <td class="headerCovTableEntryHi">94.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">88.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MetainferenceBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #ifdef __PLUMED_HAS_GSL
+<span class="lineNum">      27 </span>            : #include &lt;gsl/gsl_vector.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;gsl/gsl_matrix.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;gsl/gsl_linalg.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;gsl/gsl_blas.h&gt;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : using namespace std;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace PLMD {
+<span class="lineNum">      36 </span>            : namespace isdb {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : //+PLUMEDOC ISDB_COLVAR RDC
+<span class="lineNum">      39 </span>            : /*
+<span class="lineNum">      40 </span>            : Calculates the (Residual) Dipolar Coupling between two atoms.
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : The Dipolar Coupling between two nuclei depends on the \f$\theta\f$ angle between
+<span class="lineNum">      43 </span>            : the inter-nuclear vector and the external magnetic field.
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \f[
+<span class="lineNum">      46 </span>            : D=D_{max}0.5(3\cos^2(\theta)-1)
+<span class="lineNum">      47 </span>            : \f]
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : where
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \f[
+<span class="lineNum">      52 </span>            : D_{max}=-\mu_0\gamma_1\gamma_2h/(8\pi^3r^3)
+<span class="lineNum">      53 </span>            : \f]
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : that is the maximal value of the dipolar coupling for the two nuclear spins with gyromagnetic ratio \f$\gamma\f$.
+<span class="lineNum">      56 </span>            : \f$\mu\f$ is the magnetic constant and h is the Planck constant.
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : Common Gyromagnetic Ratios (C.G.S)
+<span class="lineNum">      59 </span>            : - H(1) 26.7513
+<span class="lineNum">      60 </span>            : - C(13) 6.7261
+<span class="lineNum">      61 </span>            : - N(15) -2.7116
+<span class="lineNum">      62 </span>            : and their products (this is what is given in input using the keyword GYROM)
+<span class="lineNum">      63 </span>            : - N-H -72.5388
+<span class="lineNum">      64 </span>            : - C-H 179.9319
+<span class="lineNum">      65 </span>            : - C-N -18.2385
+<span class="lineNum">      66 </span>            : - C-C 45.2404
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : In isotropic media DCs average to zero because of the rotational
+<span class="lineNum">      69 </span>            : averaging, but when the rotational symmetry is broken, either through the introduction of an alignment medium or for molecules
+<span class="lineNum">      70 </span>            : with highly anisotropic paramagnetic susceptibility, then the average of the DCs is not zero and it is possible to measure a Residual Dipolar Coupling (RDCs).
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : This collective variable calculates the Dipolar Coupling for a set of couple of atoms using
+<span class="lineNum">      73 </span>            : the above definition.
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : In a standard MD simulation the average over time of the DC should then be zero. If one wants to model the meaning of a set of measured RDCs it is possible to try to solve the following problem: &quot;what is the distribution of structures and orientations that reproduce the measured RDCs&quot;.
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : This collective variable can then be use to break the rotational symmetry of a simulation by imposing that the average of the DCs over the conformational ensemble must be equal to the measured RDCs \cite Camilloni:2015ka . Since measured RDCs are also a function of the fraction of aligned molecules in the sample it is better to compare them modulo a constant or looking at the correlation.
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : Alternatively if the molecule is rigid it is possible to use the experimental data to calculate the alignment tensor and the use that to back calculate the RDCs, this is what is usually call the Single Value Decomposition approach. In this case the code rely on the
+<span class="lineNum">      80 </span>            : a set of function from the GNU Scientific Library (GSL). (With SVD forces are not currently implemented).
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : Replica-Averaged simulations can be perfomed using RDCs, \ref ENSEMBLE, \ref STATS and \ref RESTRAINT .
+<span class="lineNum">      83 </span>            : \ref METAINFERENCE can be activated using DOSCORE and the other relevant keywords.
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : Additional material and examples can be also found in the tutorial \ref belfast-9
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : \par Examples
+<span class="lineNum">      88 </span>            : In the following example five N-H RDCs are defined and averaged over multiple replicas,
+<span class="lineNum">      89 </span>            : their correlation is then calculated with respect to a set of experimental data and restrained.
+<span class="lineNum">      90 </span>            : In addition, and only for analysis purposes, the same RDCs each single conformation are calculated
+<span class="lineNum">      91 </span>            : using a Single Value Decomposition algorithm, then averaged and again compared with the experimenta data.
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : \plumedfile
+<span class="lineNum">      94 </span>            : RDC ...
+<span class="lineNum">      95 </span>            : GYROM=-72.5388
+<span class="lineNum">      96 </span>            : SCALE=0.001
+<span class="lineNum">      97 </span>            : ATOMS1=20,21
+<span class="lineNum">      98 </span>            : ATOMS2=37,38
+<span class="lineNum">      99 </span>            : ATOMS3=56,57
+<span class="lineNum">     100 </span>            : ATOMS4=76,77
+<span class="lineNum">     101 </span>            : ATOMS5=92,93
+<span class="lineNum">     102 </span>            : LABEL=nh
+<span class="lineNum">     103 </span>            : ... RDC
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : erdc: ENSEMBLE ARG=nh.*
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : st: STATS ARG=erdc.* PARAMETERS=8.17,-8.271,-10.489,-9.871,-9.152
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : rdce: RESTRAINT ARG=st.corr KAPPA=0. SLOPE=-25000.0 AT=1.
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : RDC ...
+<span class="lineNum">     112 </span>            : GYROM=-72.5388
+<span class="lineNum">     113 </span>            : SVD
+<span class="lineNum">     114 </span>            : ATOMS1=20,21 COUPLING1=8.17
+<span class="lineNum">     115 </span>            : ATOMS2=37,38 COUPLING2=-8.271
+<span class="lineNum">     116 </span>            : ATOMS3=56,57 COUPLING3=-10.489
+<span class="lineNum">     117 </span>            : ATOMS4=76,77 COUPLING4=-9.871
+<span class="lineNum">     118 </span>            : ATOMS5=92,93 COUPLING5=-9.152
+<span class="lineNum">     119 </span>            : LABEL=svd
+<span class="lineNum">     120 </span>            : ... RDC
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : esvd: ENSEMBLE ARG=svd.*
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : st_svd: STATS ARG=esvd.* PARAMETERS=8.17,-8.271,-10.489,-9.871,-9.152
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : PRINT ARG=st.corr,st_svd.corr,rdce.bias FILE=colvar
+<span class="lineNum">     128 </span>            : \endplumedfile
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : */
+<span class="lineNum">     131 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : //+PLUMEDOC ISDB_COLVAR PCS
+<span class="lineNum">     134 </span>            : /*
+<span class="lineNum">     135 </span>            : Calculates the Pseudocontact shift of a nucleus determined by the presence of a metal ion susceptible to anisotropic magnetization.
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : The PCS of an atomic nucleus depends on the \f$\theta\f$ angle between the vector from the spin-label to the nucleus
+<span class="lineNum">     138 </span>            :  and the external magnetic field and the module of the vector itself \cite Camilloni:2015jf . While in principle the averaging
+<span class="lineNum">     139 </span>            : resulting from the tumbling should remove the pseudocontact shift, in presence of the NMR magnetic field the magnatically anisotropic molecule bound to system will break the rotational symmetry does resulting in measurable PCSs and RDCs.
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : PCSs can also be calculated using a Single Value Decomposition approach, in this case the code rely on the
+<span class="lineNum">     142 </span>            : a set of function from the GNU Scientific Library (GSL). (With SVD forces are not currently implemented).
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : Replica-Averaged simulations can be perfomed using PCSs, \ref ENSEMBLE, \ref STATS and \ref RESTRAINT .
+<span class="lineNum">     145 </span>            : Metainference simulations can be performed with this CV and \ref METAINFERENCE .
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : \par Examples
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : In the following example five PCSs are defined and their correlation with
+<span class="lineNum">     150 </span>            : respect to a set of experimental data is calculated and restrained. In addition,
+<span class="lineNum">     151 </span>            : and only for analysis purposes, the same PCSs are calculated using a Single Value
+<span class="lineNum">     152 </span>            : Decomposition algorithm.
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : \plumedfile
+<span class="lineNum">     155 </span>            : PCS ...
+<span class="lineNum">     156 </span>            : ATOMS1=20,21
+<span class="lineNum">     157 </span>            : ATOMS2=20,38
+<span class="lineNum">     158 </span>            : ATOMS3=20,57
+<span class="lineNum">     159 </span>            : ATOMS4=20,77
+<span class="lineNum">     160 </span>            : ATOMS5=20,93
+<span class="lineNum">     161 </span>            : LABEL=nh
+<span class="lineNum">     162 </span>            : ... PCS
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : enh: ENSEMBLE ARG=nh.*
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : st: STATS ARG=enh.* PARAMETERS=8.17,-8.271,-10.489,-9.871,-9.152
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : pcse: RESTRAINT ARG=st.corr KAPPA=0. SLOPE=-25000.0 AT=1.
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : PRINT ARG=st.corr,pcse.bias FILE=colvar
+<span class="lineNum">     171 </span>            : \endplumedfile
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : */
+<a name="174"><span class="lineNum">     174 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">         87 : class RDC :</span>
+<span class="lineNum">     177 </span>            :   public MetainferenceBase
+<span class="lineNum">     178 </span>            : {
+<span class="lineNum">     179 </span>            : private:
+<span class="lineNum">     180 </span>            :   double         Const;
+<span class="lineNum">     181 </span>            :   double         mu_s;
+<span class="lineNum">     182 </span>            :   double         scale;
+<span class="lineNum">     183 </span>            :   vector&lt;double&gt; coupl;
+<span class="lineNum">     184 </span>            :   bool           svd;
+<span class="lineNum">     185 </span>            :   bool           pbc;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :   void do_svd();
+<span class="lineNum">     188 </span>            : public:
+<span class="lineNum">     189 </span>            :   explicit RDC(const ActionOptions&amp;);
+<span class="lineNum">     190 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     191 </span>            :   virtual void calculate();
+<span class="lineNum">     192 </span>            :   void update();
+<a name="193"><span class="lineNum">     193 </span>            : };</a>
+<a name="194"><span class="lineNum">     194 </span>            : </a>
+<span class="lineNum">     195 </span><span class="lineCov">       6481 : PLUMED_REGISTER_ACTION(RDC,&quot;RDC&quot;)</span>
+<a name="196"><span class="lineNum">     196 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(RDC,&quot;PCS&quot;)</span></a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">         31 : void RDC::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">         31 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     200 </span><span class="lineCov">         31 :   useCustomisableComponents(keys);</span>
+<span class="lineNum">     201 </span><span class="lineCov">         31 :   MetainferenceBase::registerKeywords(keys);</span>
+<span class="lineNum">     202 </span><span class="lineCov">         93 :   keys.addFlag(&quot;NOPBC&quot;,false,&quot;ignore the periodic boundary conditions when calculating distances&quot;);</span>
+<span class="lineNum">     203 </span><span class="lineCov">        124 :   keys.add(&quot;numbered&quot;,&quot;ATOMS&quot;,&quot;the couple of atoms involved in each of the bonds for which you wish to calculate the RDC. &quot;</span>
+<span class="lineNum">     204 </span>            :            &quot;Keywords like ATOMS1, ATOMS2, ATOMS3,... should be listed and one dipolar coupling will be &quot;
+<span class="lineNum">     205 </span>            :            &quot;calculated for each ATOMS keyword you specify.&quot;);
+<span class="lineNum">     206 </span><span class="lineCov">         93 :   keys.reset_style(&quot;ATOMS&quot;,&quot;atoms&quot;);</span>
+<span class="lineNum">     207 </span><span class="lineCov">        155 :   keys.add(&quot;compulsory&quot;,&quot;GYROM&quot;,&quot;1.&quot;,&quot;Add the product of the gyromagnetic constants for the bond. &quot;);</span>
+<span class="lineNum">     208 </span><span class="lineCov">        155 :   keys.add(&quot;compulsory&quot;,&quot;SCALE&quot;,&quot;1.&quot;,&quot;Add the scaling factor to take into account concentration and other effects. &quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         93 :   keys.addFlag(&quot;SVD&quot;,false,&quot;Set to TRUE if you want to backcalculate using Single Value Decomposition (need GSL at compilation time).&quot;);</span>
+<span class="lineNum">     210 </span><span class="lineCov">         93 :   keys.addFlag(&quot;ADDCOUPLINGS&quot;,false,&quot;Set to TRUE if you want to have fixed components with the experimetnal values.&quot;);</span>
+<span class="lineNum">     211 </span><span class="lineCov">        124 :   keys.add(&quot;numbered&quot;,&quot;COUPLING&quot;,&quot;Add an experimental value for each coupling (needed by SVD and usefull for \ref STATS).&quot;);</span>
+<span class="lineNum">     212 </span><span class="lineCov">        124 :   keys.addOutputComponent(&quot;rdc&quot;,&quot;default&quot;,&quot;the calculated # RDC&quot;);</span>
+<span class="lineNum">     213 </span><span class="lineCov">        124 :   keys.addOutputComponent(&quot;exp&quot;,&quot;SVD/ADDCOUPLINGS&quot;,&quot;the experimental # RDC&quot;);</span>
+<a name="214"><span class="lineNum">     214 </span><span class="lineCov">         31 : }</span></a>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">         29 : RDC::RDC(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     217 </span>            :   PLUMED_METAINF_INIT(ao),
+<span class="lineNum">     218 </span>            :   Const(1.),
+<span class="lineNum">     219 </span>            :   mu_s(1.),
+<span class="lineNum">     220 </span>            :   scale(1.),
+<span class="lineNum">     221 </span><span class="lineCov">         58 :   pbc(true)</span>
+<span class="lineNum">     222 </span>            : {
+<span class="lineNum">     223 </span><span class="lineCov">         29 :   bool nopbc=!pbc;</span>
+<span class="lineNum">     224 </span><span class="lineCov">         58 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     225 </span><span class="lineCov">         29 :   pbc=!nopbc;</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :   const double RDCConst = 0.3356806;
+<span class="lineNum">     228 </span>            :   const double PCSConst = 1.0;
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">         29 :   if( getName().find(&quot;RDC&quot;)!=std::string::npos) { Const *= RDCConst; }</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :   else if( getName().find(&quot;PCS&quot;)!=std::string::npos) { Const *= PCSConst; }</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :   // Read in the atoms
+<span class="lineNum">     234 </span>            :   vector&lt;AtomNumber&gt; t, atoms;
+<span class="lineNum">     235 </span><span class="lineCov">        117 :   for(int i=1;; ++i ) {</span>
+<span class="lineNum">     236 </span><span class="lineCov">        292 :     parseAtomList(&quot;ATOMS&quot;, i, t );</span>
+<span class="lineNum">     237 </span><span class="lineCov">        146 :     if( t.empty() ) break;</span>
+<span class="lineNum">     238 </span><span class="lineCov">        117 :     if( t.size()!=2 ) {</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :       std::string ss; Tools::convert(i,ss);</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :       error(&quot;ATOMS&quot; + ss + &quot; keyword has the wrong number of atoms&quot;);</span>
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span><span class="lineCov">        117 :     atoms.push_back(t[0]);</span>
+<span class="lineNum">     243 </span><span class="lineCov">        117 :     atoms.push_back(t[1]);</span>
+<span class="lineNum">     244 </span><span class="lineCov">        117 :     t.resize(0);</span>
+<span class="lineNum">     245 </span><span class="lineCov">        117 :   }</span>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineCov">         29 :   const unsigned ndata = atoms.size()/2;</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :   // Read in GYROMAGNETIC constants
+<span class="lineNum">     250 </span><span class="lineCov">         58 :   parse(&quot;GYROM&quot;, mu_s);</span>
+<span class="lineNum">     251 </span><span class="lineCov">         29 :   if(mu_s==0.) error(&quot;GYROM cannot be 0&quot;);</span>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :   // Read in SCALING factors
+<span class="lineNum">     254 </span><span class="lineCov">         58 :   parse(&quot;SCALE&quot;, scale);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         29 :   if(scale==0.) error(&quot;SCALE cannot be 0&quot;);</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span><span class="lineCov">         29 :   svd=false;</span>
+<span class="lineNum">     258 </span><span class="lineCov">         58 :   parseFlag(&quot;SVD&quot;,svd);</span>
+<span class="lineNum">     259 </span>            : #ifndef __PLUMED_HAS_GSL
+<span class="lineNum">     260 </span>            :   if(svd) error(&quot;You CANNOT use SVD without GSL. Recompile PLUMED with GSL!\n&quot;);
+<span class="lineNum">     261 </span>            : #endif
+<span class="lineNum">     262 </span><span class="lineCov">         30 :   if(svd&amp;&amp;getDoScore()) error(&quot;It is not possible to use SVD and METAINFERENCE together&quot;);</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">         29 :   bool addexp=false;</span>
+<span class="lineNum">     265 </span><span class="lineCov">         58 :   parseFlag(&quot;ADDCOUPLINGS&quot;,addexp);</span>
+<span class="lineNum">     266 </span><span class="lineCov">         29 :   if(getDoScore()||svd) addexp=true;</span>
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">         29 :   if(addexp) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">         13 :     coupl.resize( ndata );</span>
+<span class="lineNum">     270 </span>            :     unsigned ntarget=0;
+<span class="lineNum">     271 </span><span class="lineCov">         66 :     for(unsigned i=0; i&lt;ndata; ++i) {</span>
+<span class="lineNum">     272 </span><span class="lineCov">        159 :       if( !parseNumbered( &quot;COUPLING&quot;, i+1, coupl[i] ) ) break;</span>
+<span class="lineNum">     273 </span>            :       ntarget++;
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span><span class="lineCov">         13 :     if( ntarget!=ndata ) error(&quot;found wrong number of COUPLING values&quot;);</span>
+<span class="lineNum">     276 </span>            :   }
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :   // Ouput details of all contacts
+<span class="lineNum">     279 </span><span class="lineCov">         29 :   log.printf(&quot;  Gyromagnetic moment is %f. Scaling factor is %f.&quot;,mu_s,scale);</span>
+<span class="lineNum">     280 </span><span class="lineCov">        146 :   for(unsigned i=0; i&lt;ndata; ++i) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">        351 :     log.printf(&quot;  The %uth Bond Dipolar Coupling is calculated from atoms : %d %d.&quot;, i+1, atoms[2*i].serial(), atoms[2*i+1].serial());</span>
+<span class="lineNum">     282 </span><span class="lineCov">        170 :     if(addexp) log.printf(&quot; Experimental coupling is %f.&quot;, coupl[i]);</span>
+<span class="lineNum">     283 </span><span class="lineCov">        117 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     284 </span>            :   }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">         29 :   log&lt;&lt;&quot;  Bibliography &quot;</span>
+<span class="lineNum">     287 </span><span class="lineCov">         87 :      &lt;&lt;plumed.cite(&quot;Camilloni C, Vendruscolo M, J. Phys. Chem. B 119, 653 (2015)&quot;)</span>
+<span class="lineNum">     288 </span><span class="lineCov">        116 :      &lt;&lt;plumed.cite(&quot;Camilloni C, Vendruscolo M, Biochemistry 54, 7470 (2015)&quot;);</span>
+<span class="lineNum">     289 </span><span class="lineCov">         87 :   log&lt;&lt; plumed.cite(&quot;Bonomi, Camilloni, Bioinformatics, 33, 3999 (2017)&quot;) &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span><span class="lineCov">         29 :   if(!getDoScore()&amp;&amp;!svd) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">        144 :     for(unsigned i=0; i&lt;ndata; i++) {</span>
+<span class="lineNum">     294 </span><span class="lineCov">         64 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     295 </span><span class="lineCov">        128 :       addComponentWithDerivatives(&quot;rdc_&quot;+num);</span>
+<span class="lineNum">     296 </span><span class="lineCov">        128 :       componentIsNotPeriodic(&quot;rdc_&quot;+num);</span>
+<span class="lineNum">     297 </span>            :     }
+<span class="lineNum">     298 </span><span class="lineCov">         16 :     if(addexp) {</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;ndata; i++) {</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :         std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         addComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :         componentIsNotPeriodic(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :         Value* comp=getPntrToComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :         comp-&gt;set(coupl[i]);</span>
+<span class="lineNum">     305 </span>            :       }
+<span class="lineNum">     306 </span>            :     }
+<span class="lineNum">     307 </span>            :   } else {
+<span class="lineNum">     308 </span><span class="lineCov">        119 :     for(unsigned i=0; i&lt;ndata; i++) {</span>
+<span class="lineNum">     309 </span><span class="lineCov">         53 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     310 </span><span class="lineCov">        106 :       addComponentWithDerivatives(&quot;rdc_&quot;+num);</span>
+<span class="lineNum">     311 </span><span class="lineCov">        106 :       componentIsNotPeriodic(&quot;rdc_&quot;+num);</span>
+<span class="lineNum">     312 </span>            :     }
+<span class="lineNum">     313 </span><span class="lineCov">        119 :     for(unsigned i=0; i&lt;ndata; i++) {</span>
+<span class="lineNum">     314 </span><span class="lineCov">         53 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     315 </span><span class="lineCov">        106 :       addComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     316 </span><span class="lineCov">        106 :       componentIsNotPeriodic(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     317 </span><span class="lineCov">        106 :       Value* comp=getPntrToComponent(&quot;exp_&quot;+num);</span>
+<span class="lineNum">     318 </span><span class="lineCov">        106 :       comp-&gt;set(coupl[i]);</span>
+<span class="lineNum">     319 </span>            :     }
+<span class="lineNum">     320 </span>            :   }
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">         29 :   if(svd) {</span>
+<span class="lineNum">     323 </span><span class="lineCov">          3 :     addComponent(&quot;Sxx&quot;); componentIsNotPeriodic(&quot;Sxx&quot;);</span>
+<span class="lineNum">     324 </span><span class="lineCov">          3 :     addComponent(&quot;Syy&quot;); componentIsNotPeriodic(&quot;Syy&quot;);</span>
+<span class="lineNum">     325 </span><span class="lineCov">          3 :     addComponent(&quot;Szz&quot;); componentIsNotPeriodic(&quot;Szz&quot;);</span>
+<span class="lineNum">     326 </span><span class="lineCov">          3 :     addComponent(&quot;Sxy&quot;); componentIsNotPeriodic(&quot;Sxy&quot;);</span>
+<span class="lineNum">     327 </span><span class="lineCov">          3 :     addComponent(&quot;Sxz&quot;); componentIsNotPeriodic(&quot;Sxz&quot;);</span>
+<span class="lineNum">     328 </span><span class="lineCov">          3 :     addComponent(&quot;Syz&quot;); componentIsNotPeriodic(&quot;Syz&quot;);</span>
+<span class="lineNum">     329 </span>            :   }
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span><span class="lineCov">         29 :   requestAtoms(atoms);</span>
+<span class="lineNum">     332 </span><span class="lineCov">         29 :   if(getDoScore()) {</span>
+<span class="lineNum">     333 </span><span class="lineCov">         12 :     setParameters(coupl);</span>
+<span class="lineNum">     334 </span><span class="lineCov">         12 :     Initialise(coupl.size());</span>
+<span class="lineNum">     335 </span>            :   }
+<span class="lineNum">     336 </span><span class="lineCov">         29 :   setDerivatives();</span>
+<span class="lineNum">     337 </span><span class="lineCov">         29 :   checkRead();</span>
+<a name="338"><span class="lineNum">     338 </span><span class="lineCov">         29 : }</span></a>
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span><span class="lineCov">          5 : void RDC::do_svd()</span>
+<span class="lineNum">     341 </span>            : {
+<span class="lineNum">     342 </span>            : #ifdef __PLUMED_HAS_GSL
+<span class="lineNum">     343 </span>            :   gsl_vector *rdc_vec, *S, *Stmp, *work, *bc;
+<span class="lineNum">     344 </span>            :   gsl_matrix *coef_mat, *A, *V;
+<span class="lineNum">     345 </span><span class="lineCov">          5 :   rdc_vec = gsl_vector_alloc(coupl.size());</span>
+<span class="lineNum">     346 </span><span class="lineCov">          5 :   bc = gsl_vector_alloc(coupl.size());</span>
+<span class="lineNum">     347 </span><span class="lineCov">          5 :   Stmp = gsl_vector_alloc(5);</span>
+<span class="lineNum">     348 </span><span class="lineCov">          5 :   S = gsl_vector_alloc(5);</span>
+<span class="lineNum">     349 </span><span class="lineCov">          5 :   work = gsl_vector_alloc(5);</span>
+<span class="lineNum">     350 </span><span class="lineCov">          5 :   coef_mat = gsl_matrix_alloc(coupl.size(),5);</span>
+<span class="lineNum">     351 </span><span class="lineCov">          5 :   A = gsl_matrix_alloc(coupl.size(),5);</span>
+<span class="lineNum">     352 </span><span class="lineCov">          5 :   V = gsl_matrix_alloc(5,5);</span>
+<span class="lineNum">     353 </span><span class="lineCov">          5 :   gsl_matrix_set_zero(coef_mat);</span>
+<span class="lineNum">     354 </span><span class="lineCov">          5 :   gsl_vector_set_zero(bc);</span>
+<span class="lineNum">     355 </span>            :   unsigned index=0;
+<span class="lineNum">     356 </span><span class="lineCov">          5 :   vector&lt;double&gt; dmax(coupl.size());</span>
+<span class="lineNum">     357 </span><span class="lineCov">         55 :   for(unsigned r=0; r&lt;getNumberOfAtoms(); r+=2) {</span>
+<span class="lineNum">     358 </span><span class="lineCov">         25 :     Vector  distance;</span>
+<span class="lineNum">     359 </span><span class="lineCov">         75 :     if(pbc) distance = pbcDistance(getPosition(r),getPosition(r+1));</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :     else    distance = delta(getPosition(r),getPosition(r+1));</span>
+<span class="lineNum">     361 </span><span class="lineCov">         25 :     double d    = distance.modulo();</span>
+<span class="lineNum">     362 </span><span class="lineCov">         25 :     double d2   = d*d;</span>
+<span class="lineNum">     363 </span><span class="lineCov">         25 :     double d3   = d2*d;</span>
+<span class="lineNum">     364 </span><span class="lineCov">         25 :     double id3  = 1./d3;</span>
+<span class="lineNum">     365 </span><span class="lineCov">         25 :     double max  = -Const*mu_s*scale;</span>
+<span class="lineNum">     366 </span><span class="lineCov">         50 :     dmax[index] = id3*max;</span>
+<span class="lineNum">     367 </span><span class="lineCov">         25 :     double mu_x = distance[0]/d;</span>
+<span class="lineNum">     368 </span><span class="lineCov">         25 :     double mu_y = distance[1]/d;</span>
+<span class="lineNum">     369 </span><span class="lineCov">         25 :     double mu_z = distance[2]/d;</span>
+<span class="lineNum">     370 </span><span class="lineCov">         50 :     gsl_vector_set(rdc_vec,index,coupl[index]/dmax[index]);</span>
+<span class="lineNum">     371 </span><span class="lineCov">         25 :     gsl_matrix_set(coef_mat,index,0,gsl_matrix_get(coef_mat,index,0)+(mu_x*mu_x-mu_z*mu_z));</span>
+<span class="lineNum">     372 </span><span class="lineCov">         25 :     gsl_matrix_set(coef_mat,index,1,gsl_matrix_get(coef_mat,index,1)+(mu_y*mu_y-mu_z*mu_z));</span>
+<span class="lineNum">     373 </span><span class="lineCov">         25 :     gsl_matrix_set(coef_mat,index,2,gsl_matrix_get(coef_mat,index,2)+(2.0*mu_x*mu_y));</span>
+<span class="lineNum">     374 </span><span class="lineCov">         25 :     gsl_matrix_set(coef_mat,index,3,gsl_matrix_get(coef_mat,index,3)+(2.0*mu_x*mu_z));</span>
+<span class="lineNum">     375 </span><span class="lineCov">         25 :     gsl_matrix_set(coef_mat,index,4,gsl_matrix_get(coef_mat,index,4)+(2.0*mu_y*mu_z));</span>
+<span class="lineNum">     376 </span><span class="lineCov">         25 :     index++;</span>
+<span class="lineNum">     377 </span>            :   }
+<span class="lineNum">     378 </span><span class="lineCov">          5 :   gsl_matrix_memcpy(A,coef_mat);</span>
+<span class="lineNum">     379 </span><span class="lineCov">          5 :   gsl_linalg_SV_decomp(A, V, Stmp, work);</span>
+<span class="lineNum">     380 </span><span class="lineCov">          5 :   gsl_linalg_SV_solve(A, V, Stmp, rdc_vec, S);</span>
+<span class="lineNum">     381 </span>            :   /* tensor */
+<span class="lineNum">     382 </span>            :   Value* tensor;
+<span class="lineNum">     383 </span><span class="lineCov">         10 :   tensor=getPntrToComponent(&quot;Sxx&quot;);</span>
+<span class="lineNum">     384 </span><span class="lineCov">          5 :   double Sxx = gsl_vector_get(S,0);</span>
+<span class="lineNum">     385 </span>            :   tensor-&gt;set(Sxx);
+<span class="lineNum">     386 </span><span class="lineCov">         10 :   tensor=getPntrToComponent(&quot;Syy&quot;);</span>
+<span class="lineNum">     387 </span><span class="lineCov">          5 :   double Syy = gsl_vector_get(S,1);</span>
+<span class="lineNum">     388 </span>            :   tensor-&gt;set(Syy);
+<span class="lineNum">     389 </span><span class="lineCov">         10 :   tensor=getPntrToComponent(&quot;Szz&quot;);</span>
+<span class="lineNum">     390 </span><span class="lineCov">          5 :   double Szz = -Sxx-Syy;</span>
+<span class="lineNum">     391 </span>            :   tensor-&gt;set(Szz);
+<span class="lineNum">     392 </span><span class="lineCov">         10 :   tensor=getPntrToComponent(&quot;Sxy&quot;);</span>
+<span class="lineNum">     393 </span><span class="lineCov">          5 :   double Sxy = gsl_vector_get(S,2);</span>
+<span class="lineNum">     394 </span>            :   tensor-&gt;set(Sxy);
+<span class="lineNum">     395 </span><span class="lineCov">         10 :   tensor=getPntrToComponent(&quot;Sxz&quot;);</span>
+<span class="lineNum">     396 </span><span class="lineCov">          5 :   double Sxz = gsl_vector_get(S,3);</span>
+<span class="lineNum">     397 </span>            :   tensor-&gt;set(Sxz);
+<span class="lineNum">     398 </span><span class="lineCov">         10 :   tensor=getPntrToComponent(&quot;Syz&quot;);</span>
+<span class="lineNum">     399 </span><span class="lineCov">          5 :   double Syz = gsl_vector_get(S,4);</span>
+<span class="lineNum">     400 </span>            :   tensor-&gt;set(Syz);
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span><span class="lineCov">          5 :   gsl_blas_dgemv(CblasNoTrans, 1.0, coef_mat, S, 0., bc);</span>
+<span class="lineNum">     403 </span><span class="lineCov">         85 :   for(index=0; index&lt;coupl.size(); index++) {</span>
+<span class="lineNum">     404 </span><span class="lineCov">         50 :     double rdc = gsl_vector_get(bc,index)*dmax[index];</span>
+<span class="lineNum">     405 </span><span class="lineCov">         25 :     Value* val=getPntrToComponent(index);</span>
+<span class="lineNum">     406 </span>            :     val-&gt;set(rdc);
+<span class="lineNum">     407 </span>            :   }
+<span class="lineNum">     408 </span><span class="lineCov">          5 :   gsl_matrix_free(coef_mat);</span>
+<span class="lineNum">     409 </span><span class="lineCov">          5 :   gsl_matrix_free(A);</span>
+<span class="lineNum">     410 </span><span class="lineCov">          5 :   gsl_matrix_free(V);</span>
+<span class="lineNum">     411 </span><span class="lineCov">          5 :   gsl_vector_free(rdc_vec);</span>
+<span class="lineNum">     412 </span><span class="lineCov">          5 :   gsl_vector_free(bc);</span>
+<span class="lineNum">     413 </span><span class="lineCov">          5 :   gsl_vector_free(Stmp);</span>
+<span class="lineNum">     414 </span><span class="lineCov">          5 :   gsl_vector_free(S);</span>
+<span class="lineNum">     415 </span><span class="lineCov">          5 :   gsl_vector_free(work);</span>
+<span class="lineNum">     416 </span>            : #endif
+<a name="417"><span class="lineNum">     417 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineCov">       2172 : void RDC::calculate()</span>
+<span class="lineNum">     420 </span>            : {
+<span class="lineNum">     421 </span><span class="lineCov">       2172 :   if(svd) {</span>
+<span class="lineNum">     422 </span><span class="lineCov">          5 :     do_svd();</span>
+<span class="lineNum">     423 </span><span class="lineCov">          5 :     return;</span>
+<span class="lineNum">     424 </span>            :   }
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineCov">       2167 :   const double max  = -Const*scale*mu_s;</span>
+<span class="lineNum">     427 </span>            :   const unsigned N=getNumberOfAtoms();
+<span class="lineNum">     428 </span><span class="lineCov">       2167 :   vector&lt;Vector&gt; dRDC(N/2, Vector{0.,0.,0.});</span>
+<a name="429"><span class="lineNum">     429 </span>            : </a>
+<span class="lineNum">     430 </span>            :   /* RDC Calculations and forces */
+<span class="lineNum">     431 </span><span class="lineCov">       6501 :   #pragma omp parallel num_threads(OpenMP::getNumThreads())</span>
+<span class="lineNum">     432 </span>            :   {
+<span class="lineNum">     433 </span>            :     #pragma omp for
+<span class="lineNum">     434 </span>            :     for(unsigned r=0; r&lt;N; r+=2)
+<span class="lineNum">     435 </span>            :     {
+<span class="lineNum">     436 </span><span class="lineCov">       8668 :       const unsigned index=r/2;</span>
+<span class="lineNum">     437 </span><span class="lineCov">       8668 :       Vector  distance;</span>
+<span class="lineNum">     438 </span><span class="lineCov">      34672 :       if(pbc) distance   = pbcDistance(getPosition(r),getPosition(r+1));</span>
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :       else    distance   = delta(getPosition(r),getPosition(r+1));</span>
+<span class="lineNum">     440 </span><span class="lineCov">       8668 :       const double d2    = distance.modulo2();</span>
+<span class="lineNum">     441 </span><span class="lineCov">       8668 :       const double ind   = 1./sqrt(d2);</span>
+<span class="lineNum">     442 </span><span class="lineCov">       8668 :       const double ind2  = 1./d2;</span>
+<span class="lineNum">     443 </span><span class="lineCov">       8668 :       const double ind3  = ind2*ind;</span>
+<span class="lineNum">     444 </span><span class="lineCov">       8668 :       const double x2    = distance[0]*distance[0]*ind2;</span>
+<span class="lineNum">     445 </span><span class="lineCov">       8668 :       const double y2    = distance[1]*distance[1]*ind2;</span>
+<span class="lineNum">     446 </span><span class="lineCov">       8668 :       const double z2    = distance[2]*distance[2]*ind2;</span>
+<span class="lineNum">     447 </span><span class="lineCov">       8668 :       const double dmax  = ind3*max;</span>
+<span class="lineNum">     448 </span><span class="lineCov">       8668 :       const double ddmax = dmax*ind2;</span>
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span><span class="lineCov">       8668 :       const double rdc   = 0.5*dmax*(3.*z2-1.);</span>
+<span class="lineNum">     451 </span><span class="lineCov">       8668 :       const double prod_xy = (x2+y2-4.*z2);</span>
+<span class="lineNum">     452 </span><span class="lineCov">       8668 :       const double prod_z =  (3.*x2 + 3.*y2 - 2.*z2);</span>
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span><span class="lineCov">      17336 :       dRDC[index] = -1.5*ddmax*distance;</span>
+<span class="lineNum">     455 </span><span class="lineCov">      17336 :       dRDC[index][0] *= prod_xy;</span>
+<span class="lineNum">     456 </span><span class="lineCov">       8668 :       dRDC[index][1] *= prod_xy;</span>
+<span class="lineNum">     457 </span><span class="lineCov">       8668 :       dRDC[index][2] *= prod_z;</span>
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span><span class="lineCov">       8668 :       string num; Tools::convert(index,num);</span>
+<span class="lineNum">     460 </span><span class="lineCov">      17336 :       Value* val=getPntrToComponent(&quot;rdc_&quot;+num);</span>
+<span class="lineNum">     461 </span>            :       val-&gt;set(rdc);
+<span class="lineNum">     462 </span><span class="lineCov">       8668 :       if(!getDoScore()) {</span>
+<span class="lineNum">     463 </span><span class="lineCov">       2744 :         setBoxDerivatives(val, Tensor(distance,dRDC[index]));</span>
+<span class="lineNum">     464 </span><span class="lineCov">       2744 :         setAtomsDerivatives(val, r,  dRDC[index]);</span>
+<span class="lineNum">     465 </span><span class="lineCov">       2744 :         setAtomsDerivatives(val, r+1, -dRDC[index]);</span>
+<span class="lineNum">     466 </span>            :       } else setCalcData(index, rdc);
+<span class="lineNum">     467 </span>            :     }
+<span class="lineNum">     468 </span>            :   }
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span><span class="lineCov">       2167 :   if(getDoScore()) {</span>
+<span class="lineNum">     471 </span>            :     /* Metainference */
+<span class="lineNum">     472 </span><span class="lineCov">       1824 :     Tensor dervir;</span>
+<span class="lineNum">     473 </span><span class="lineCov">       1824 :     double score = getScore();</span>
+<span class="lineNum">     474 </span>            :     setScore(score);
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span>            :     /* calculate final derivatives */
+<span class="lineNum">     477 </span><span class="lineCov">       3648 :     Value* val=getPntrToComponent(&quot;score&quot;);</span>
+<span class="lineNum">     478 </span><span class="lineCov">      16416 :     for(unsigned r=0; r&lt;N; r+=2)</span>
+<span class="lineNum">     479 </span>            :     {
+<span class="lineNum">     480 </span><span class="lineCov">       7296 :       const unsigned index=r/2;</span>
+<span class="lineNum">     481 </span><span class="lineCov">       7296 :       Vector  distance;</span>
+<span class="lineNum">     482 </span><span class="lineCov">      21888 :       if(pbc) distance   = pbcDistance(getPosition(r),getPosition(r+1));</span>
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 :       else    distance   = delta(getPosition(r),getPosition(r+1));</span>
+<span class="lineNum">     484 </span><span class="lineCov">       7296 :       const Vector der = dRDC[index]*getMetaDer(index);</span>
+<span class="lineNum">     485 </span><span class="lineCov">       7296 :       dervir += Tensor(distance, der);</span>
+<span class="lineNum">     486 </span><span class="lineCov">       7296 :       setAtomsDerivatives(val, r,  der);</span>
+<span class="lineNum">     487 </span><span class="lineCov">       7296 :       setAtomsDerivatives(val, r+1, -der);</span>
+<span class="lineNum">     488 </span>            :     }
+<span class="lineNum">     489 </span><span class="lineCov">       1824 :     setBoxDerivatives(val, dervir);</span>
+<span class="lineNum">     490 </span>            :   }
+<a name="491"><span class="lineNum">     491 </span>            : }</a>
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span><span class="lineCov">        327 : void RDC::update() {</span>
+<span class="lineNum">     494 </span>            :   // write status file
+<span class="lineNum">     495 </span><span class="lineCov">        654 :   if(getWstride()&gt;0&amp;&amp; (getStep()%getWstride()==0 || getCPT()) ) writeStatus();</span>
+<span class="lineNum">     496 </span><span class="lineCov">        327 : }</span>
+<a name="497"><span class="lineNum">     497 </span>            : </a>
+<span class="lineNum">     498 </span>            : }
+<span class="lineNum">     499 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

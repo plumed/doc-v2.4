@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - mapping/PathBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">mapping</a> - PathBase.cpp<span style="font-size: 80%;"> (source / <a href="PathBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryMed">88.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;PathBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace PLMD {
+<a name="26"><span class="lineNum">      26 </span>            : namespace mapping {</a>
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">         11 : void PathBase::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      29 </span><span class="lineCov">         11 :   Mapping::registerKeywords( keys );</span>
+<span class="lineNum">      30 </span><span class="lineCov">         55 :   keys.add(&quot;compulsory&quot;,&quot;LAMBDA&quot;,&quot;0&quot;,&quot;the value of the lambda parameter for paths&quot;);</span>
+<span class="lineNum">      31 </span><span class="lineCov">         33 :   keys.addFlag(&quot;NOZPATH&quot;,false,&quot;do not calculate the zpath position&quot;);</span>
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">         11 : }</span></a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">          9 : PathBase::PathBase(const ActionOptions&amp; ao):</span>
+<span class="lineNum">      35 </span>            :   Action(ao),
+<span class="lineNum">      36 </span><span class="lineCov">          9 :   Mapping(ao)</span>
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span><span class="lineCov">          9 :   weightHasDerivatives=true;</span>
+<span class="lineNum">      39 </span><span class="lineCov">         18 :   bool noz; parseFlag(&quot;NOZPATH&quot;,noz);</span>
+<span class="lineNum">      40 </span><span class="lineCov">         18 :   parse(&quot;LAMBDA&quot;,lambda);</span>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            :   // Create the list of tasks
+<span class="lineNum">      43 </span><span class="lineCov">        414 :   for(unsigned i=0; i&lt;getNumberOfReferencePoints(); ++i) addTaskToList( i );</span>
+<span class="lineNum">      44 </span>            :   // And activate them all
+<span class="lineNum">      45 </span><span class="lineCov">          9 :   deactivateAllTasks();</span>
+<span class="lineNum">      46 </span><span class="lineCov">        801 :   for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) taskFlags[i]=1;</span>
+<span class="lineNum">      47 </span><span class="lineCov">          9 :   lockContributors();</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">          9 :   std::string empty=&quot;LABEL=zpath&quot;;</span>
+<span class="lineNum">      50 </span><span class="lineCov">          9 :   if(!noz) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">          7 :     if( lambda==0 ) error(&quot;you must set LAMDBA value in order to calculate ZPATH coordinate.  Use LAMBDA/NOZPATH keyword&quot;);</span>
+<span class="lineNum">      52 </span><span class="lineCov">         14 :     addVessel(&quot;ZPATH&quot;,empty,0);</span>
+<span class="lineNum">      53 </span>            :   }
+<a name="54"><span class="lineNum">      54 </span><span class="lineCov">          9 : }</span></a>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">       1103 : double PathBase::getLambda() {</span>
+<span class="lineNum">      57 </span><span class="lineCov">       1103 :   return lambda;</span>
+<a name="58"><span class="lineNum">      58 </span>            : }</a>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">       4914 : void PathBase::calculate() {</span>
+<span class="lineNum">      61 </span>            :   // Loop over all frames is now performed by ActionWithVessel
+<span class="lineNum">      62 </span><span class="lineCov">       4914 :   runAllTasks();</span>
+<a name="63"><span class="lineNum">      63 </span><span class="lineCov">       4914 : }</span></a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">     170352 : void PathBase::performTask( const unsigned&amp; task_index, const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">      66 </span>            :   // This builds a pack to hold the derivatives
+<span class="lineNum">      67 </span><span class="lineCov">     340704 :   ReferenceValuePack mypack( getNumberOfArguments(), getNumberOfAtoms(), myvals );</span>
+<span class="lineNum">      68 </span><span class="lineCov">     170352 :   finishPackSetup( current, mypack );</span>
+<span class="lineNum">      69 </span>            :   // Calculate the distance from the frame
+<span class="lineNum">      70 </span><span class="lineCov">     170352 :   double val=calculateDistanceFunction( current, mypack, true );</span>
+<span class="lineNum">      71 </span>            :   // Put the element value in element zero
+<span class="lineNum">      72 </span>            :   myvals.setValue( 0, val ); myvals.setValue( 1, 1.0 );
+<span class="lineNum">      73 </span><span class="lineCov">     170352 :   return;</span>
+<a name="74"><span class="lineNum">      74 </span>            : }</a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">     170352 : double PathBase::transformHD( const double&amp; dist, double&amp; df ) const {</span>
+<span class="lineNum">      77 </span><span class="lineCov">     170352 :   if( lambda==0 ) { df=1; return dist; }</span>
+<span class="lineNum">      78 </span><span class="lineCov">     114660 :   double val = exp( -dist*lambda );</span>
+<span class="lineNum">      79 </span><span class="lineCov">     114660 :   df = -lambda*val;</span>
+<span class="lineNum">      80 </span><span class="lineCov">     114660 :   return val;</span>
+<span class="lineNum">      81 </span>            : }
+<a name="82"><span class="lineNum">      82 </span>            : </a>
+<span class="lineNum">      83 </span>            : }
+<span class="lineNum">      84 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

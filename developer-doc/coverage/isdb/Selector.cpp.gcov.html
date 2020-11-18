@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - isdb/Selector.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">isdb</a> - Selector.cpp<span style="font-size: 80%;"> (source / <a href="Selector.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">72.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2017-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/Action.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &lt;string&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace isdb {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC ISDB_GENERIC SELECTOR
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Defines a variable (of the type double) inside the PLUMED code that can be used and modified by other actions.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : A \ref SELECTOR can be used for example to activate or modify a bias based on its current value.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : \par Examples
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : A typical example is the simulated-tempering like approach activated by \ref RESCALE.
+<span class="lineNum">      41 </span>            : In this example the total potential energy of the system is rescaled
+<span class="lineNum">      42 </span>            : by a parameter defined on a grid of dimension NBIN in the range from 1 to MAX_RESCALE.
+<span class="lineNum">      43 </span>            : The value of the rescale parameter is determined by the current value of the \ref SELECTOR GAMMA.
+<span class="lineNum">      44 </span>            : The value of the \ref SELECTOR is updated by a MC protocol inside the \ref RESCALE class.
+<span class="lineNum">      45 </span>            : A well-tempered metadynamics potential is used to enhance sampling in the \ref SELECTOR space.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \plumedfile
+<span class="lineNum">      48 </span>            : ene:  ENERGY
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : SELECTOR NAME=GAMMA VALUE=0
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : RESCALE ...
+<span class="lineNum">      53 </span>            : LABEL=res ARG=ene TEMP=300
+<span class="lineNum">      54 </span>            : SELECTOR=GAMMA MAX_RESCALE=1.2 NBIN=2
+<span class="lineNum">      55 </span>            : W0=1000 BIASFACTOR=100.0 BSTRIDE=2000 BFILE=bias.dat
+<span class="lineNum">      56 </span>            : ...
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : PRINT FILE=COLVAR ARG=* STRIDE=100
+<span class="lineNum">      59 </span>            : \endplumedfile
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : */
+<a name="62"><span class="lineNum">      62 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          2 : class Selector:</span>
+<span class="lineNum">      65 </span>            :   public Action
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span>            : public:
+<a name="68"><span class="lineNum">      68 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<a name="69"><span class="lineNum">      69 </span>            :   explicit Selector(const ActionOptions&amp;ao);</a>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :   void calculate() {}</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :   void apply() {}</span>
+<a name="72"><span class="lineNum">      72 </span>            : };</a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(Selector,&quot;SELECTOR&quot;)</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">          3 : void Selector::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">          3 :   Action::registerKeywords(keys);</span>
+<span class="lineNum">      78 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;NAME&quot;,&quot;name of the SELECTOR&quot;);</span>
+<span class="lineNum">      79 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;VALUE&quot;,&quot;set (initial) value of the SELECTOR&quot;);</span>
+<span class="lineNum">      80 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">          2 : Selector::Selector(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      83 </span><span class="lineCov">          2 :   Action(ao)</span>
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span>            :   string name;
+<span class="lineNum">      86 </span><span class="lineCov">          4 :   parse(&quot;NAME&quot;, name);</span>
+<span class="lineNum">      87 </span>            :   double value;
+<span class="lineNum">      88 </span><span class="lineCov">          4 :   parse(&quot;VALUE&quot;, value);</span>
+<span class="lineNum">      89 </span><span class="lineCov">          2 :   plumed.passMap[name] = value;</span>
+<span class="lineNum">      90 </span><span class="lineCov">          2 : }</span>
+<a name="91"><span class="lineNum">      91 </span>            : </a>
+<span class="lineNum">      92 </span>            : }
+<span class="lineNum">      93 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">      94 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

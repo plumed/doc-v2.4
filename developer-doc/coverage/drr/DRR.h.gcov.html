@@ -1,0 +1,420 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - drr/DRR.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">drr</a> - DRR.h<span style="font-size: 80%;"> (source / <a href="DRR.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">100</td>
+            <td class="headerCovTableEntry">100</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryMed">81.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2017 of Haochuan Chen (excluding colvar_UIestimator.h)
+<span class="lineNum">       3 </span>            :     Copyright (c) 2017 of Haohao Fu (colvar_UIestimator.h)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       6 </span>            :     it under the terms of the GNU Lesser General Public License as published
+<span class="lineNum">       7 </span>            :     by the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       8 </span>            :     (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      13 </span>            :     GNU Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :     You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      16 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      17 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      18 </span>            : #ifndef __PLUMED_drr_DRR_h
+<span class="lineNum">      19 </span>            : #define __PLUMED_drr_DRR_h
+<span class="lineNum">      20 </span>            : // Build requirement: boost, c++11 compatible compiler.
+<span class="lineNum">      21 </span>            : #ifdef __PLUMED_HAS_BOOST_SERIALIZATION
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      24 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      25 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      27 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      28 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      29 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      30 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      31 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      32 </span>            : #include &lt;numeric&gt;
+<span class="lineNum">      33 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : // boost headers for serialization
+<span class="lineNum">      36 </span>            : #include &lt;boost/archive/binary_iarchive.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/archive/binary_oarchive.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;boost/serialization/string.hpp&gt;
+<span class="lineNum">      39 </span>            : #include &lt;boost/serialization/vector.hpp&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace PLMD {
+<span class="lineNum">      42 </span>            : namespace drr {
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : /// This class can store the minimum, maximum and bins of a dimension(axis).
+<span class="lineNum">      45 </span>            : class DRRAxis {
+<span class="lineNum">      46 </span>            : public:
+<span class="lineNum">      47 </span>            :   /// Default empty constructor
+<span class="lineNum">      48 </span><span class="lineCov">         22 :   DRRAxis() {</span>
+<span class="lineNum">      49 </span><span class="lineCov">         22 :     min = max = 0.0;</span>
+<span class="lineNum">      50 </span><span class="lineCov">         22 :     nbins = 0;</span>
+<span class="lineNum">      51 </span><span class="lineCov">         22 :     periodic = false;</span>
+<span class="lineNum">      52 </span><span class="lineCov">         22 :     domainMax = domainMin = 0.0;</span>
+<span class="lineNum">      53 </span><span class="lineCov">         22 :     binWidth = 0.0;</span>
+<span class="lineNum">      54 </span>            :   }
+<span class="lineNum">      55 </span>            :   /// Constructor using maximum value, minimum value and the number of bins(No
+<span class="lineNum">      56 </span>            :   /// pbc)
+<span class="lineNum">      57 </span>            :   DRRAxis(double l, double h, size_t n)
+<span class="lineNum">      58 </span>            :     : min(l), max(h), nbins(n), periodic(false), domainMax(0), domainMin(0),
+<span class="lineNum">      59 </span>            :       binWidth((max - min) / double(nbins)) {}
+<span class="lineNum">      60 </span>            :   /// PBC-aware constructor
+<span class="lineNum">      61 </span>            :   DRRAxis(double l, double h, size_t n, bool pbc, double dMax, double dMin)
+<span class="lineNum">      62 </span><span class="lineCov">          2 :     : min(l), max(h), nbins(n), periodic(pbc), domainMax(dMax),</span>
+<span class="lineNum">      63 </span><span class="lineCov">          2 :       domainMin(dMin), binWidth((max - min) / double(nbins)) {}</span>
+<span class="lineNum">      64 </span>            :   /// Set values
+<span class="lineNum">      65 </span>            :   void set(double l, double h, size_t n, bool pbc = false, double dmin = 0,
+<span class="lineNum">      66 </span>            :            double dmax = 0) {
+<span class="lineNum">      67 </span><span class="lineCov">          6 :     min = l;</span>
+<span class="lineNum">      68 </span><span class="lineCov">          6 :     max = h;</span>
+<span class="lineNum">      69 </span><span class="lineCov">          6 :     nbins = n;</span>
+<span class="lineNum">      70 </span><span class="lineCov">          6 :     periodic = pbc;</span>
+<span class="lineNum">      71 </span><span class="lineCov">          6 :     domainMax = dmax;</span>
+<span class="lineNum">      72 </span><span class="lineCov">          6 :     domainMin = dmin;</span>
+<span class="lineNum">      73 </span><span class="lineCov">          6 :     binWidth = (max - min) / nbins;</span>
+<span class="lineNum">      74 </span>            :   }
+<span class="lineNum">      75 </span>            :   /// Set PBC data
+<span class="lineNum">      76 </span>            :   void setPeriodicity(double dmin, double dmax) {
+<span class="lineNum">      77 </span><span class="lineCov">          4 :     domainMax = dmax;</span>
+<span class="lineNum">      78 </span><span class="lineCov">          4 :     domainMin = dmin;</span>
+<span class="lineNum">      79 </span><span class="lineCov">          4 :     periodic = true;</span>
+<span class="lineNum">      80 </span>            :   }
+<span class="lineNum">      81 </span>            :   /// Getters
+<span class="lineNum">      82 </span><span class="lineCov">         10 :   double getMin() const { return this-&gt;min; }</span>
+<span class="lineNum">      83 </span><span class="lineCov">         10 :   double getMax() const { return this-&gt;max; }</span>
+<span class="lineNum">      84 </span><span class="lineCov">      65510 :   double getWidth() const { return binWidth; }</span>
+<span class="lineNum">      85 </span><span class="lineCov">          4 :   double getDomainMax() const { return this-&gt;domainMax; }</span>
+<span class="lineNum">      86 </span><span class="lineCov">          4 :   double getDomainMin() const { return this-&gt;domainMin; }</span>
+<span class="lineNum">      87 </span><span class="lineCov">          6 :   size_t getBins() const { return this-&gt;nbins; }</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :   /// Check periodicity
+<span class="lineNum">      90 </span><span class="lineCov">         26 :   bool isPeriodic() const { return this-&gt;periodic; }</span>
+<span class="lineNum">      91 </span>            :   /// Check real periodicity, i.e. the maximum == the domain maximum
+<span class="lineNum">      92 </span>            :   bool isRealPeriodic() const;
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :   /// Check whether x is in this axis
+<span class="lineNum">      95 </span>            :   bool isInBoundary(double x) const;
+<span class="lineNum">      96 </span>            :   /// Get an array of middle points of each bins
+<span class="lineNum">      97 </span>            :   std::vector&lt;double&gt; getMiddlePoints();
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   /// Combine two axes if they share the same bin width.
+<span class="lineNum">     100 </span>            :   static DRRAxis merge(const DRRAxis &amp;d1, const DRRAxis &amp;d2);
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   friend class DRRForceGrid;
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : protected:
+<span class="lineNum">     105 </span>            :   double min;       // Minimum value of the axis
+<span class="lineNum">     106 </span>            :   double max;       // Maximum value of the axis
+<span class="lineNum">     107 </span>            :   size_t nbins;     // Number of bins
+<span class="lineNum">     108 </span>            :   bool periodic;    // Periodicity
+<span class="lineNum">     109 </span>            :   double domainMax; // Maximum value of the CV domain
+<span class="lineNum">     110 </span>            :   double domainMin; // Minimum value of the CV domain
+<span class="lineNum">     111 </span>            :   friend class boost::serialization::access;
+<a name="112"><span class="lineNum">     112 </span>            :   /// Use boost serialization</a>
+<span class="lineNum">     113 </span>            :   template &lt;typename Archive&gt;
+<span class="lineNum">     114 </span><span class="lineCov">         16 :   void save(Archive &amp;ar, const unsigned int version) const {</span>
+<span class="lineNum">     115 </span><span class="lineCov">         16 :     ar &amp;min;</span>
+<span class="lineNum">     116 </span><span class="lineCov">         16 :     ar &amp;max;</span>
+<span class="lineNum">     117 </span><span class="lineCov">         16 :     ar &amp;nbins;</span>
+<span class="lineNum">     118 </span><span class="lineCov">         16 :     ar &amp;periodic;</span>
+<span class="lineNum">     119 </span><span class="lineCov">         16 :     ar &amp;domainMax;</span>
+<span class="lineNum">     120 </span><span class="lineCov">         16 :     ar &amp;domainMin;</span>
+<span class="lineNum">     121 </span><span class="lineCov">         16 :   }</span>
+<a name="122"><span class="lineNum">     122 </span>            :   /// Split save and load. The bin width is calculated after initialization.</a>
+<span class="lineNum">     123 </span>            :   template &lt;typename Archive&gt;
+<span class="lineNum">     124 </span><span class="lineCov">         14 :   void load(Archive &amp;ar, const unsigned int version) {</span>
+<span class="lineNum">     125 </span><span class="lineCov">         14 :     ar &amp;min;</span>
+<span class="lineNum">     126 </span><span class="lineCov">         14 :     ar &amp;max;</span>
+<span class="lineNum">     127 </span><span class="lineCov">         14 :     ar &amp;nbins;</span>
+<span class="lineNum">     128 </span><span class="lineCov">         14 :     ar &amp;periodic;</span>
+<span class="lineNum">     129 </span><span class="lineCov">         14 :     ar &amp;domainMax;</span>
+<span class="lineNum">     130 </span><span class="lineCov">         14 :     ar &amp;domainMin;</span>
+<span class="lineNum">     131 </span><span class="lineCov">         14 :     binWidth = (max - min) / double(nbins);</span>
+<span class="lineNum">     132 </span><span class="lineCov">         14 :   }</span>
+<span class="lineNum">     133 </span>            :   template &lt;typename Archive&gt;
+<span class="lineNum">     134 </span>            :   void serialize(Archive &amp;ar, const unsigned int version) {
+<span class="lineNum">     135 </span>            :     boost::serialization::split_member(ar, *this, version);
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : private:
+<span class="lineNum">     139 </span>            :   double binWidth; // bin width
+<span class="lineNum">     140 </span>            : };
+<span class="lineNum">     141 </span>            : 
+<a name="142"><span class="lineNum">     142 </span>            : /// A class for collecting instantaneous forces, calculating average forces and</a>
+<span class="lineNum">     143 </span>            : /// build CV histogram.
+<span class="lineNum">     144 </span><span class="lineCov">         36 : class DRRForceGrid {</span>
+<span class="lineNum">     145 </span>            : public:
+<span class="lineNum">     146 </span>            :   /// Empty constructor
+<span class="lineNum">     147 </span>            :   DRRForceGrid();
+<span class="lineNum">     148 </span>            :   /// &quot;Real&quot; constructor
+<span class="lineNum">     149 </span>            :   /// The 2D table vector is mainly used for print grid points in grad and count
+<span class="lineNum">     150 </span>            :   /// file.
+<span class="lineNum">     151 </span>            :   /// So when use binary output we can set initializeTable to false to save
+<span class="lineNum">     152 </span>            :   /// memory.
+<span class="lineNum">     153 </span>            :   explicit DRRForceGrid(const std::vector&lt;DRRAxis&gt; &amp;p_dimensions,
+<span class="lineNum">     154 </span>            :                         const std::string &amp;p_suffix,
+<span class="lineNum">     155 </span>            :                         bool initializeTable = true);
+<span class="lineNum">     156 </span>            :   /// Check whether a point is in this grid
+<span class="lineNum">     157 </span>            :   bool isInBoundary(const std::vector&lt;double&gt; &amp;pos) const;
+<span class="lineNum">     158 </span>            :   //  /// Get internal indices of a point
+<span class="lineNum">     159 </span>            :   //  std::vector&lt;size_t&gt; index(const std::vector&lt;double&gt; &amp;pos) const;
+<span class="lineNum">     160 </span>            :   /// Get internal counts address of a point
+<span class="lineNum">     161 </span>            :   size_t sampleAddress(const std::vector&lt;double&gt; &amp;pos) const;
+<span class="lineNum">     162 </span>            :   /// Store instantaneous forces of a point
+<span class="lineNum">     163 </span>            :   /// nsamples &gt; 1 is useful for merging windows
+<span class="lineNum">     164 </span>            :   bool store(const std::vector&lt;double&gt; &amp;pos, const std::vector&lt;double&gt; &amp;f,
+<span class="lineNum">     165 </span>            :              unsigned long int nsamples = 1);
+<span class="lineNum">     166 </span>            :   /// Get accumulated forces of a point
+<span class="lineNum">     167 </span>            :   std::vector&lt;double&gt;
+<span class="lineNum">     168 </span>            :   getAccumulatedForces(const std::vector&lt;double&gt; &amp;pos) const;
+<span class="lineNum">     169 </span>            :   /// Get counts of a point
+<span class="lineNum">     170 </span>            :   unsigned long int getCount(const std::vector&lt;double&gt; &amp;pos,
+<span class="lineNum">     171 </span>            :                              bool SkipCheck = false) const;
+<span class="lineNum">     172 </span>            :   /// Virtual function! get gradients of a point
+<span class="lineNum">     173 </span>            :   /// CZAR and naive(ABF) have different gradient formulae
+<span class="lineNum">     174 </span>            :   virtual std::vector&lt;double&gt; getGradient(const std::vector&lt;double&gt; &amp;pos,
+<span class="lineNum">     175 </span>            :                                           bool SkipCheck = false) const;
+<span class="lineNum">     176 </span>            :   /// Calculate dln(ρ)/dz, useful for CZAR
+<span class="lineNum">     177 </span>            :   /// This function may be moved to CZAR class in the future
+<span class="lineNum">     178 </span>            :   std::vector&lt;double&gt;
+<span class="lineNum">     179 </span>            :   getCountsLogDerivative(const std::vector&lt;double&gt; &amp;pos) const;
+<span class="lineNum">     180 </span>            :   /// Write grad file
+<span class="lineNum">     181 </span>            : //   void writeGrad(std::string filename) const;
+<span class="lineNum">     182 </span>            :   /// Write 1D pmf file on one dimensional occasion
+<span class="lineNum">     183 </span>            :   void write1DPMF(std::string filename) const;
+<span class="lineNum">     184 </span>            :   /// Write count file
+<span class="lineNum">     185 </span>            : //   void writeCount(std::string filename) const;
+<span class="lineNum">     186 </span>            :   /// Write necessary output file in one function
+<span class="lineNum">     187 </span>            :   void writeAll(const std::string &amp;filename) const;
+<span class="lineNum">     188 </span>            :   /// Miscellaneous getter functions, useful for merging windows
+<span class="lineNum">     189 </span><span class="lineCov">          2 :   std::vector&lt;DRRAxis&gt; getDimensions() const { return this-&gt;dimensions; }</span>
+<span class="lineNum">     190 </span><span class="lineCov">          2 :   size_t getNumberOfDimension() const { return ndims; }</span>
+<span class="lineNum">     191 </span><span class="lineCov">          2 :   size_t getSampleSize() const { return sampleSize; }</span>
+<span class="lineNum">     192 </span><span class="lineCov">          2 :   std::vector&lt;std::vector&lt;double&gt;&gt; getTable() const { return table; }</span>
+<span class="lineNum">     193 </span>            :   /// merge windows
+<span class="lineNum">     194 </span>            :   static std::vector&lt;DRRAxis&gt; merge(const std::vector&lt;DRRAxis&gt; &amp;dA,
+<span class="lineNum">     195 </span>            :                                     const std::vector&lt;DRRAxis&gt; &amp;dB);
+<span class="lineNum">     196 </span>            :   /// Get suffix
+<span class="lineNum">     197 </span>            :   std::string getSuffix() const { return suffix; }
+<span class="lineNum">     198 </span>            :   /// Set unit for .grad output
+<a name="199"><span class="lineNum">     199 </span><span class="lineCov">          4 :   void setOutputUnit(double unit) { outputunit = unit; }</span></a>
+<span class="lineNum">     200 </span>            :   /// Destructor
+<span class="lineNum">     201 </span><span class="lineCov">         90 :   virtual ~DRRForceGrid() {}</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : protected:
+<span class="lineNum">     204 </span>            :   /// The output suffix appended before .grad(.czar.grad) and
+<span class="lineNum">     205 </span>            :   /// .count(.czar.count)
+<span class="lineNum">     206 </span>            :   std::string suffix;
+<span class="lineNum">     207 </span>            :   /// Number of dimensions
+<span class="lineNum">     208 </span>            :   size_t ndims;
+<span class="lineNum">     209 </span>            :   /// Store each axes
+<span class="lineNum">     210 </span>            :   std::vector&lt;DRRAxis&gt; dimensions;
+<span class="lineNum">     211 </span>            :   /// Size of samples
+<span class="lineNum">     212 </span>            :   size_t sampleSize;
+<span class="lineNum">     213 </span>            :   /// Size of forces
+<span class="lineNum">     214 </span>            :   size_t forceSize;
+<span class="lineNum">     215 </span>            :   /// The header lines of .grad and .count files
+<span class="lineNum">     216 </span>            :   std::string headers;
+<span class="lineNum">     217 </span>            :   /// A table stores the middle points of all dimensions.
+<span class="lineNum">     218 </span>            :   /// For output in .grad and .count files
+<span class="lineNum">     219 </span>            :   std::vector&lt;std::vector&lt;double&gt;&gt; table;
+<span class="lineNum">     220 </span>            :   /// Store the average force of each bins
+<span class="lineNum">     221 </span>            :   std::vector&lt;double&gt; forces;
+<span class="lineNum">     222 </span>            :   /// Store counts of each bins
+<span class="lineNum">     223 </span>            :   std::vector&lt;unsigned long int&gt; samples;
+<span class="lineNum">     224 </span>            :   /// Only for 1D pmf output
+<span class="lineNum">     225 </span>            :   std::vector&lt;double&gt; endpoints;
+<span class="lineNum">     226 </span>            :   /// For (possibly) faster indexing
+<span class="lineNum">     227 </span>            :   std::vector&lt;size_t&gt; shifts;
+<span class="lineNum">     228 </span>            :   /// Output precision
+<span class="lineNum">     229 </span>            :   /// The abf_intergrate program has precision requirement.
+<span class="lineNum">     230 </span>            :   /// I test 9 and it just works.
+<span class="lineNum">     231 </span>            :   static const size_t OUTPUTPRECISION = 9;
+<span class="lineNum">     232 </span>            :   /// For set different output units
+<span class="lineNum">     233 </span>            :   double outputunit;
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :   /// Miscellaneous helper functions
+<span class="lineNum">     236 </span>            :   static size_t index1D(const DRRAxis &amp;c, double x);
+<span class="lineNum">     237 </span>            :   void fillTable(const std::vector&lt;std::vector&lt;double&gt;&gt; &amp;in);
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :   /// Boost serialization functions
+<a name="240"><span class="lineNum">     240 </span>            :   friend class boost::serialization::access;</a>
+<span class="lineNum">     241 </span>            :   template &lt;class Archive&gt;
+<span class="lineNum">     242 </span><span class="lineCov">         12 :   void save(Archive &amp;ar, const unsigned int version) const {</span>
+<span class="lineNum">     243 </span>            :     // Don't save all members.
+<span class="lineNum">     244 </span><span class="lineCov">         12 :     ar &lt;&lt; suffix;</span>
+<span class="lineNum">     245 </span><span class="lineCov">         12 :     ar &lt;&lt; dimensions;</span>
+<span class="lineNum">     246 </span><span class="lineCov">         12 :     ar &lt;&lt; forces;</span>
+<span class="lineNum">     247 </span><span class="lineCov">         12 :     ar &lt;&lt; samples;</span>
+<span class="lineNum">     248 </span><span class="lineCov">         12 :   }</span>
+<span class="lineNum">     249 </span><span class="lineCov">         10 :   template &lt;class Archive&gt; void load(Archive &amp;ar, const unsigned int version) {</span>
+<span class="lineNum">     250 </span><span class="lineCov">         10 :     ar &gt;&gt; suffix;</span>
+<span class="lineNum">     251 </span><span class="lineCov">         10 :     ar &gt;&gt; dimensions;</span>
+<span class="lineNum">     252 </span><span class="lineCov">         10 :     ar &gt;&gt; forces;</span>
+<span class="lineNum">     253 </span><span class="lineCov">         10 :     ar &gt;&gt; samples;</span>
+<span class="lineNum">     254 </span>            :     // Restore other members.
+<span class="lineNum">     255 </span><span class="lineCov">         10 :     ndims = dimensions.size();</span>
+<span class="lineNum">     256 </span><span class="lineCov">         10 :     sampleSize = samples.size();</span>
+<span class="lineNum">     257 </span><span class="lineCov">         10 :     forceSize = forces.size();</span>
+<span class="lineNum">     258 </span><span class="lineCov">         20 :     std::stringstream ss;</span>
+<span class="lineNum">     259 </span><span class="lineCov">         10 :     ss &lt;&lt; &quot;# &quot; &lt;&lt; ndims &lt;&lt; '\n';</span>
+<span class="lineNum">     260 </span><span class="lineCov">         20 :     std::vector&lt;std::vector&lt;double&gt;&gt; mp(ndims);</span>
+<span class="lineNum">     261 </span><span class="lineCov">         10 :     shifts.resize(ndims, 0);</span>
+<span class="lineNum">     262 </span><span class="lineCov">         38 :     for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">         28 :       mp[i] = dimensions[i].getMiddlePoints();</span>
+<span class="lineNum">     264 </span><span class="lineCov">         14 :       shifts[i] = std::accumulate(</span>
+<span class="lineNum">     265 </span>            :                     std::begin(dimensions), std::begin(dimensions) + i, size_t(1),
+<span class="lineNum">     266 </span><span class="lineCov">          4 :       [](size_t k, const DRRAxis &amp;d) { return k * d.getBins(); });</span>
+<span class="lineNum">     267 </span>            :       ss.precision(std::numeric_limits&lt;double&gt;::max_digits10);
+<span class="lineNum">     268 </span><span class="lineCov">         14 :       ss &lt;&lt; std::fixed &lt;&lt; &quot;# &quot; &lt;&lt; dimensions[i].min &lt;&lt; ' '</span>
+<span class="lineNum">     269 </span><span class="lineCov">         14 :          &lt;&lt; dimensions[i].getWidth() &lt;&lt; ' ' &lt;&lt; dimensions[i].nbins;</span>
+<span class="lineNum">     270 </span><span class="lineCov">         14 :       if (dimensions[i].isPeriodic())</span>
+<span class="lineNum">     271 </span>            :         ss &lt;&lt; &quot; 1&quot; &lt;&lt; '\n';
+<span class="lineNum">     272 </span>            :       else
+<span class="lineNum">     273 </span>            :         ss &lt;&lt; &quot; 0&quot; &lt;&lt; '\n';
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span><span class="lineCov">         10 :     fillTable(mp);</span>
+<span class="lineNum">     276 </span><span class="lineCov">         20 :     headers = ss.str();</span>
+<span class="lineNum">     277 </span><span class="lineCov">         10 :     outputunit = 1.0;</span>
+<span class="lineNum">     278 </span>            :     // For 1D pmf
+<span class="lineNum">     279 </span><span class="lineCov">         10 :     if (ndims == 1) {</span>
+<span class="lineNum">     280 </span><span class="lineCov">         12 :       endpoints.resize(dimensions[0].nbins + 1, 0);</span>
+<span class="lineNum">     281 </span><span class="lineCov">          6 :       double ep = dimensions[0].min;</span>
+<span class="lineNum">     282 </span>            :       double stride = dimensions[0].getWidth();
+<span class="lineNum">     283 </span><span class="lineCov">        612 :       for (auto it = std::begin(endpoints); it != std::end(endpoints); ++it) {</span>
+<span class="lineNum">     284 </span><span class="lineCov">        606 :         (*it) = ep;</span>
+<span class="lineNum">     285 </span><span class="lineCov">        606 :         ep += stride;</span>
+<span class="lineNum">     286 </span>            :       }
+<span class="lineNum">     287 </span>            :     }
+<span class="lineNum">     288 </span><span class="lineCov">         10 :   }</span>
+<span class="lineNum">     289 </span>            :   template &lt;typename Archive&gt;
+<span class="lineNum">     290 </span>            :   void serialize(Archive &amp;ar, const unsigned int version) {
+<span class="lineNum">     291 </span>            :     boost::serialization::split_member(ar, *this, version);
+<span class="lineNum">     292 </span>            :   }
+<span class="lineNum">     293 </span>            : };
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">          6 : class ABF : public DRRForceGrid {</span>
+<span class="lineNum">     296 </span>            : public:
+<span class="lineNum">     297 </span><span class="lineCov">          8 :   ABF() {}</span>
+<span class="lineNum">     298 </span>            :   ABF(const std::vector&lt;DRRAxis&gt; &amp;p_dimensions, const std::string &amp;p_suffix,
+<span class="lineNum">     299 </span>            :       bool initializeTable = true)
+<span class="lineNum">     300 </span><span class="lineCov">          4 :     : DRRForceGrid(p_dimensions, p_suffix, initializeTable) {}</span>
+<span class="lineNum">     301 </span>            :   // Store the &quot;instantaneous&quot; spring force of a point and get ABF bias forces.
+<span class="lineNum">     302 </span>            :   bool store_getbias(const std::vector&lt;double&gt; &amp;pos,
+<span class="lineNum">     303 </span>            :                      const std::vector&lt;double&gt; &amp;f, std::vector&lt;double&gt; &amp;fbias,
+<a name="304"><span class="lineNum">     304 </span>            :                      double fullsamples);</a>
+<span class="lineNum">     305 </span>            :   static ABF mergewindow(const ABF &amp;aWA, const ABF &amp;aWB);
+<span class="lineNum">     306 </span><span class="lineCov">         15 :   ~ABF() {}</span>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : private:
+<span class="lineNum">     309 </span>            :   // Boost serialization
+<a name="310"><span class="lineNum">     310 </span>            :   friend class boost::serialization::access;</a>
+<span class="lineNum">     311 </span>            :   template &lt;typename Archive&gt;
+<span class="lineNum">     312 </span><span class="lineCov">         11 :   void serialize(Archive &amp;ar, const unsigned int version) {</span>
+<span class="lineNum">     313 </span><span class="lineCov">         11 :     ar &amp;boost::serialization::base_object&lt;DRRForceGrid&gt;(*this);</span>
+<span class="lineNum">     314 </span><span class="lineCov">         11 :   }</span>
+<span class="lineNum">     315 </span>            : };
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">          6 : class CZAR : public DRRForceGrid {</span>
+<span class="lineNum">     318 </span>            : public:
+<span class="lineNum">     319 </span><span class="lineCov">          8 :   CZAR() : kbt(0) {}</span>
+<span class="lineNum">     320 </span>            :   CZAR(const std::vector&lt;DRRAxis&gt; &amp;p_dimensions, const std::string &amp;p_suffix,
+<span class="lineNum">     321 </span>            :        double p_kbt, bool initializeTable = true)
+<span class="lineNum">     322 </span><span class="lineCov">          4 :     : DRRForceGrid(p_dimensions, p_suffix, initializeTable), kbt(p_kbt) {}</span>
+<span class="lineNum">     323 </span>            :   std::vector&lt;double&gt; getGradient(const std::vector&lt;double&gt; &amp;pos,
+<span class="lineNum">     324 </span>            :                                   bool SkipCheck = false) const;
+<span class="lineNum">     325 </span><span class="lineCov">          1 :   double getkbt() const { return kbt; }</span>
+<a name="326"><span class="lineNum">     326 </span>            :   void setkbt(double p_kbt) { kbt = p_kbt; }</a>
+<span class="lineNum">     327 </span>            :   static CZAR mergewindow(const CZAR &amp;cWA, const CZAR &amp;cWB);
+<span class="lineNum">     328 </span><span class="lineCov">         15 :   ~CZAR() {}</span>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            : private:
+<span class="lineNum">     331 </span>            :   double kbt;
+<a name="332"><span class="lineNum">     332 </span>            :   friend class boost::serialization::access;</a>
+<span class="lineNum">     333 </span>            :   template &lt;typename Archive&gt;
+<span class="lineNum">     334 </span><span class="lineCov">         11 :   void serialize(Archive &amp;ar, const unsigned int version) {</span>
+<span class="lineNum">     335 </span><span class="lineCov">         11 :     ar &amp;boost::serialization::base_object&lt;DRRForceGrid&gt;(*this);</span>
+<span class="lineNum">     336 </span><span class="lineCov">         11 :     ar &amp;kbt;</span>
+<span class="lineNum">     337 </span><span class="lineCov">         11 :   }</span>
+<span class="lineNum">     338 </span>            : };
+<span class="lineNum">     339 </span>            : }
+<span class="lineNum">     340 </span>            : }
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            : #endif
+<span class="lineNum">     343 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

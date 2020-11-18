@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/VolumeInCylinder.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - VolumeInCylinder.cpp<span style="font-size: 80%;"> (source / <a href="VolumeInCylinder.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntry">51</td>
+            <td class="headerCovTableEntryHi">96.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ActionVolume.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //+PLUMEDOC VOLUMES INCYLINDER
+<span class="lineNum">      28 </span>            : /*
+<span class="lineNum">      29 </span>            : This quantity can be used to calculate functions of the distribution of collective
+<span class="lineNum">      30 </span>            : variables for the atoms that lie in a particular, user-specified part of of the cell.
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : Each of the base quantities calculated by a multicolvar can can be assigned to a particular point in three
+<span class="lineNum">      33 </span>            : dimensional space. For example, if we have the coordination numbers for all the atoms in the
+<span class="lineNum">      34 </span>            : system each coordination number can be assumed to lie on the position of the central atom.
+<span class="lineNum">      35 </span>            : Because each base quantity can be assigned to a particular point in space we can calculate functions of the
+<span class="lineNum">      36 </span>            : distribution of base quantities in a particular part of the box by using:
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : \f[
+<span class="lineNum">      39 </span>            : \overline{s}_{\tau} = \frac{ \sum_i f(s_i) \sigma(r_{xy}) }{ \sum_i \sigma(r_{xy}) }
+<span class="lineNum">      40 </span>            : \f]
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : where the sum is over the collective variables, \f$s_i\f$, each of which can be thought to be at \f$ (x_i,y_i,z_i)\f$.
+<span class="lineNum">      43 </span>            : The function \f$\sigma\f$ is a \ref switchingfunction that acts on the distance between the point at which the
+<span class="lineNum">      44 </span>            : collective is located \f$(x_i,y_i,z_i)\f$ and the position of the atom that was specified using the ORIGIN keyword
+<span class="lineNum">      45 </span>            : projected in the xy plane if DIRECTION=z is used.  In other words:
+<span class="lineNum">      46 </span>            : \f[
+<span class="lineNum">      47 </span>            : r_{xy} = sqrt{ ( x_i - x_0)^2 + ( y_i - y_0)^2 }
+<span class="lineNum">      48 </span>            : \f]
+<span class="lineNum">      49 </span>            : In short this function, \f$\sigma(r_{xy})\f$, measures whether or not the CV is within a cylinder that
+<span class="lineNum">      50 </span>            : runs along the axis specified using the DIRECTION keyword and that is centered on the position of the atom specified using
+<span class="lineNum">      51 </span>            : ORIGIN.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : The function \f$(s_i)\f$ can be any of the usual LESS_THAN, MORE_THAN, WITHIN etc that are used in all other multicolvars.
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : When INCYLINDER is used with the \ref DENSITY action the number of atoms in the specified region is calculated
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \par Examples
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : The input below can be use to calculate the average coordination numbers for those atoms that are within a cylindrical tube
+<span class="lineNum">      60 </span>            : of radius 1.5 nm that is centered on the position of atom 101 and that has its long axis parallel to the z-axis.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : \plumedfile
+<span class="lineNum">      63 </span>            : c1: COORDINATIONNUMBER SPECIES=1-100 SWITCH={RATIONAL R_0=0.1}
+<span class="lineNum">      64 </span>            : d2: INCYLINDER ATOM=101 DATA=d1 DIRECTION=Z RADIUS={TANH R_0=1.5} SIGMA=0.1 LOWER=-0.1 UPPER=0.1 MEAN
+<span class="lineNum">      65 </span>            : PRINT ARG=d2.* FILE=colvar
+<span class="lineNum">      66 </span>            : \endplumedfile
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : */
+<span class="lineNum">      69 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : namespace PLMD {
+<a name="72"><span class="lineNum">      72 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">          3 : class VolumeInCylinder : public ActionVolume {</span>
+<span class="lineNum">      75 </span>            : private:
+<span class="lineNum">      76 </span>            :   bool docylinder;
+<span class="lineNum">      77 </span>            :   Vector origin;
+<span class="lineNum">      78 </span>            :   HistogramBead bead;
+<span class="lineNum">      79 </span>            :   std::vector&lt;unsigned&gt; dir;
+<span class="lineNum">      80 </span>            :   SwitchingFunction switchingFunction;
+<span class="lineNum">      81 </span>            : public:
+<span class="lineNum">      82 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      83 </span>            :   explicit VolumeInCylinder (const ActionOptions&amp; ao);
+<span class="lineNum">      84 </span>            :   void setupRegions();
+<span class="lineNum">      85 </span>            :   double calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const ;
+<a name="86"><span class="lineNum">      86 </span>            : };</a>
+<span class="lineNum">      87 </span>            : 
+<a name="88"><span class="lineNum">      88 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(VolumeInCylinder,&quot;INCYLINDER&quot;)</span></a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">          2 : void VolumeInCylinder::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      91 </span><span class="lineCov">          2 :   ActionVolume::registerKeywords( keys );</span>
+<span class="lineNum">      92 </span><span class="lineCov">          8 :   keys.add(&quot;atoms&quot;,&quot;ATOM&quot;,&quot;the atom whose vicinity we are interested in examining&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;DIRECTION&quot;,&quot;the direction of the long axis of the cylinder. Must be x, y or z&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;RADIUS&quot;,&quot;a switching function that gives the extent of the cyclinder in the plane perpendicular to the direction&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;LOWER&quot;,&quot;0.0&quot;,&quot;the lower boundary on the direction parallel to the long axis of the cylinder&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;UPPER&quot;,&quot;0.0&quot;,&quot;the upper boundary on the direction parallel to the long axis of the cylinder&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">          6 :   keys.reset_style(&quot;SIGMA&quot;,&quot;optional&quot;);</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          1 : VolumeInCylinder::VolumeInCylinder(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     101 </span>            :   Action(ao),
+<span class="lineNum">     102 </span>            :   ActionVolume(ao),
+<span class="lineNum">     103 </span><span class="lineCov">          2 :   docylinder(false)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span>            :   std::vector&lt;AtomNumber&gt; atom;
+<span class="lineNum">     106 </span><span class="lineCov">          2 :   parseAtomList(&quot;ATOM&quot;,atom);</span>
+<span class="lineNum">     107 </span><span class="lineCov">          1 :   if( atom.size()!=1 ) error(&quot;should only be one atom specified&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">          2 :   log.printf(&quot;  center of cylinder is at position of atom : %d\n&quot;,atom[0].serial() );</span>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">          2 :   std::string sdir; parse(&quot;DIRECTION&quot;,sdir);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          1 :   if( sdir==&quot;X&quot;) {dir.push_back(1); dir.push_back(2); dir.push_back(0); }</span>
+<span class="lineNum">     112 </span><span class="lineCov">          1 :   else if( sdir==&quot;Y&quot;) {dir.push_back(0); dir.push_back(2); dir.push_back(1); }</span>
+<span class="lineNum">     113 </span><span class="lineCov">          4 :   else if( sdir==&quot;Z&quot;) {dir.push_back(0); dir.push_back(1); dir.push_back(2); }</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :   else { error(sdir + &quot;is not a valid direction.  Should be X, Y or Z&quot;); }</span>
+<span class="lineNum">     115 </span><span class="lineCov">          2 :   log.printf(&quot;  cylinder's long axis is along %s axis\n&quot;,sdir.c_str() );</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">          2 :   std::string sw, errors; parse(&quot;RADIUS&quot;,sw);</span>
+<span class="lineNum">     118 </span><span class="lineCov">          1 :   if(sw.length()==0) error(&quot;missing RADIUS keyword&quot;);</span>
+<span class="lineNum">     119 </span><span class="lineCov">          1 :   switchingFunction.set(sw,errors);</span>
+<span class="lineNum">     120 </span><span class="lineCov">          1 :   if( errors.length()!=0 ) error(&quot;problem reading RADIUS keyword : &quot; + errors );</span>
+<span class="lineNum">     121 </span><span class="lineCov">          3 :   log.printf(&quot;  radius of cylinder is given by %s \n&quot;, ( switchingFunction.description() ).c_str() );</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">          3 :   double min, max; parse(&quot;LOWER&quot;,min); parse(&quot;UPPER&quot;,max);</span>
+<span class="lineNum">     124 </span><span class="lineCov">          1 :   if( min!=0.0 ||  max!=0.0 ) {</span>
+<span class="lineNum">     125 </span><span class="lineCov">          1 :     if( min&gt;max ) error(&quot;minimum of cylinder should be less than maximum&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">          1 :     docylinder=true;</span>
+<span class="lineNum">     127 </span><span class="lineCov">          2 :     log.printf(&quot;  cylinder extends from %f to %f along the %s axis\n&quot;,min,max,sdir.c_str() );</span>
+<span class="lineNum">     128 </span><span class="lineCov">          3 :     bead.isNotPeriodic(); bead.setKernelType( getKernelType() ); bead.set( min, max, getSigma() );</span>
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">          1 :   checkRead(); requestAtoms(atom);</span>
+<a name="132"><span class="lineNum">     132 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     133 </span>            : 
+<a name="134"><span class="lineNum">     134 </span><span class="lineCov">         20 : void VolumeInCylinder::setupRegions() { }</span></a>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">       4000 : double VolumeInCylinder::calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const {</span>
+<span class="lineNum">     137 </span>            :   // Calculate position of atom wrt to origin
+<span class="lineNum">     138 </span><span class="lineCov">       8000 :   Vector fpos=pbcDistance( getPosition(0), cpos );</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :   double vcylinder, dcylinder;
+<span class="lineNum">     141 </span><span class="lineCov">       4000 :   if( docylinder ) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">       8000 :     vcylinder=bead.calculate( fpos[dir[2]], dcylinder );</span>
+<span class="lineNum">     143 </span>            :   } else {
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :     vcylinder=1.0; dcylinder=0.0;</span>
+<span class="lineNum">     145 </span>            :   }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">       4000 :   const double dd = fpos[dir[0]]*fpos[dir[0]] + fpos[dir[1]]*fpos[dir[1]];</span>
+<span class="lineNum">     148 </span><span class="lineCov">       4000 :   double dfunc, vswitch = switchingFunction.calculateSqr( dd, dfunc );</span>
+<span class="lineNum">     149 </span><span class="lineCov">       4000 :   derivatives.zero(); double value=vswitch*vcylinder;</span>
+<span class="lineNum">     150 </span><span class="lineCov">       8000 :   derivatives[dir[0]]=vcylinder*dfunc*fpos[dir[0]];</span>
+<span class="lineNum">     151 </span><span class="lineCov">       8000 :   derivatives[dir[1]]=vcylinder*dfunc*fpos[dir[1]];</span>
+<span class="lineNum">     152 </span><span class="lineCov">       8000 :   derivatives[dir[2]]=vswitch*dcylinder;</span>
+<span class="lineNum">     153 </span>            :   // Add derivatives wrt to position of origin atom
+<span class="lineNum">     154 </span><span class="lineCov">       4000 :   refders[0] = -derivatives;</span>
+<span class="lineNum">     155 </span>            :   // Add virial contribution
+<span class="lineNum">     156 </span><span class="lineCov">       4000 :   vir -= Tensor(fpos,derivatives);</span>
+<span class="lineNum">     157 </span><span class="lineCov">       4000 :   return value;</span>
+<span class="lineNum">     158 </span>            : }
+<a name="159"><span class="lineNum">     159 </span>            : </a>
+<span class="lineNum">     160 </span>            : }
+<span class="lineNum">     161 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - function/Target.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">function</a> - Target.cpp<span style="font-size: 80%;"> (source / <a href="Target.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryLo">22.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryLo">41.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Function.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;reference/MetricRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;reference/ArgumentOnlyDistance.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace function {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC DCOLVAR TARGET
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : This function measures the pythagorean distance from a particular structure measured in the space defined by some
+<span class="lineNum">      38 </span>            : set of collective variables.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : This collective variable can be used to calculate something akin to:
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : \f[
+<span class="lineNum">      43 </span>            : d(X,X') = \vert X - X' \vert
+<span class="lineNum">      44 </span>            : \f]
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : where \f$ X \f$ is the instaneous values for a set of collective variables for the system and
+<span class="lineNum">      47 </span>            : \f$ X' \f$ is the values that these self-same set of collective variables take in some reference structure provided as input.
+<span class="lineNum">      48 </span>            : If we call our set of collective variables \f$\{s_i\}\f$ then this CV computes:
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : \f[
+<span class="lineNum">      51 </span>            : d = \sqrt{ \sum_{i=1}^N (s_i - s_i^{(ref)})^2 }
+<span class="lineNum">      52 </span>            : \f]
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : where \f$s_i^{(ref)}\f$ are the values of the CVs in the reference structure and \f$N\f$ is the number of input CVs.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : We can also calculate normalized euclidean differences using this action and the METRIC=NORM-EUCLIDEAN flag.  In other words,
+<span class="lineNum">      57 </span>            : we can compute:
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : \f[
+<span class="lineNum">      60 </span>            : d = \sqrt{ \sum_{i=1}^N \sigma_i (s_i - s_i^{(ref)})^2 }
+<span class="lineNum">      61 </span>            : \f]
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : where \f$\sigma_i\f$ is a vector of weights.  Lastly, by using the METRIC=MAHALONOBIS we can compute mahalonobis distances using:
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : \f[
+<span class="lineNum">      66 </span>            : d = \left( \mathbf{s} - \mathbf{s}^{(ref)} \right)^T \mathbf{\Sigma} \left( \mathbf{s} - \mathbf{s}^{(ref)} \right)
+<span class="lineNum">      67 </span>            : \f]
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : where \f$\mathbf{s}\f$ is a column vector containing the values of all the CVs and \f$\mathbf{s}^{(ref)}\f$ is a column vector
+<span class="lineNum">      70 </span>            : containg the values of the CVs in the reference configuration.  \f$\mathbf{\Sigma}\f$ is then an \f$N \times N\f$ matrix that is
+<span class="lineNum">      71 </span>            : specified in the input.
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : \par Examples
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : The following input calculates the distance between a reference configuration and the instaneous position of the system in the trajectory.
+<span class="lineNum">      76 </span>            : The position of the reference configuration is specified by providing the values of the distance between atoms 1 and 2 and atoms 3 and 4.
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : \plumedfile
+<span class="lineNum">      79 </span>            : d1: DISTANCE ATOMS=1,2
+<span class="lineNum">      80 </span>            : d2: DISTANCE ATOMS=3,4
+<span class="lineNum">      81 </span>            : t1: TARGET REFERENCE=myref.pdb TYPE=EUCLIDEAN
+<span class="lineNum">      82 </span>            : PRINT ARG=t1 FILE=colvar
+<span class="lineNum">      83 </span>            : \endplumedfile
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : The contents of the file containing the reference structure (myref.pdb) is shown below.  As you can see you must provide information on the
+<span class="lineNum">      86 </span>            : labels of the CVs that are being used to define the position of the reference configuration in this file together with the values that these
+<span class="lineNum">      87 </span>            : quantities take in the reference configuration.
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : \verbatim
+<span class="lineNum">      90 </span>            : DESCRIPTION: a reference point.
+<span class="lineNum">      91 </span>            : REMARK WEIGHT=1.0
+<span class="lineNum">      92 </span>            : REMARK ARG=d1,d2
+<span class="lineNum">      93 </span>            : REMARK d1=1.0 d2=1.0
+<span class="lineNum">      94 </span>            : END
+<span class="lineNum">      95 </span>            : \endverbatim
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : */
+<span class="lineNum">      98 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : class Target : public Function {
+<span class="lineNum">     101 </span>            : private:
+<span class="lineNum">     102 </span>            :   MultiValue myvals;
+<span class="lineNum">     103 </span>            :   ReferenceValuePack mypack;
+<span class="lineNum">     104 </span>            :   PLMD::ArgumentOnlyDistance* target;
+<span class="lineNum">     105 </span>            : public:
+<span class="lineNum">     106 </span>            :   explicit Target(const ActionOptions&amp;);
+<span class="lineNum">     107 </span>            :   ~Target();
+<span class="lineNum">     108 </span>            :   virtual void calculate();
+<span class="lineNum">     109 </span>            :   static void registerKeywords(Keywords&amp; keys );
+<a name="110"><span class="lineNum">     110 </span>            : };</a>
+<span class="lineNum">     111 </span>            : 
+<a name="112"><span class="lineNum">     112 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(Target,&quot;TARGET&quot;)</span></a>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">          1 : void Target::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     115 </span><span class="lineCov">          1 :   Function::registerKeywords(keys);</span>
+<span class="lineNum">     116 </span><span class="lineCov">          5 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;EUCLIDEAN&quot;,&quot;the manner in which the distance should be calculated&quot;);</span>
+<span class="lineNum">     117 </span><span class="lineCov">          4 :   keys.add(&quot;compulsory&quot;,&quot;REFERENCE&quot;,&quot;a file in pdb format containing the reference structure. In the PDB file the atomic &quot;</span>
+<span class="lineNum">     118 </span>            :            &quot;coordinates and box lengths should be in Angstroms unless you are working with natural units. &quot;
+<span class="lineNum">     119 </span>            :            &quot;If you are working with natural units then the coordinates should be in your natural length unit. &quot;
+<span class="lineNum">     120 </span>            :            &quot;The charges and masses of the atoms (if required) should be inserted in the beta and occupancy &quot;
+<span class="lineNum">     121 </span>            :            &quot;columns respectively. For more details on the PDB file format visit http://www.wwpdb.org/docs.html&quot;);
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 : Target::Target(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     125 </span>            :   Action(ao),
+<span class="lineNum">     126 </span>            :   Function(ao),
+<span class="lineNum">     127 </span>            :   myvals(1,0),
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :   mypack(0,0,myvals)</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :   std::string type; parse(&quot;TYPE&quot;,type);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :   std::string reference; parse(&quot;REFERENCE&quot;,reference);</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   checkRead(); PDB pdb;</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :   if( !pdb.read(reference,plumed.getAtoms().usingNaturalUnits(),0.1/plumed.getAtoms().getUnits().getLength()) )</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     error(&quot;missing input file &quot; + reference);</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :   // Use the base ActionWithArguments to expand things like a1.*
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :   expandArgKeywordInPDB( pdb );</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :   // Generate the reference structure
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :   target=metricRegister().create&lt;ArgumentOnlyDistance&gt;( type, pdb );</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :   // Get the argument names
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :   std::vector&lt;std::string&gt; args_to_retrieve;</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :   target-&gt;getArgumentRequests( args_to_retrieve, false );</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :   // Get the arguments
+<span class="lineNum">     147 </span>            :   std::vector&lt;Value*&gt; myargs;
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :   interpretArgumentList( args_to_retrieve, myargs );</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :   requestArguments( myargs );</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :   // Now create packs
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :   myvals.resize( 1, myargs.size() );</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :   mypack.resize( myargs.size(), 0 );</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :   // Create the value
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   addValueWithDerivatives(); setNotPeriodic();</span>
+<a name="157"><span class="lineNum">     157 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 : Target::~Target() {</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :   delete target;</span>
+<a name="161"><span class="lineNum">     161 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 : void Target::calculate() {</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :   mypack.clear(); double r=target-&gt;calculate( getArguments(), mypack, false ); setValue(r);</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;getNumberOfArguments(); i++) setDerivative( i, mypack.getArgumentDerivative(i) );</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 : }</span>
+<a name="167"><span class="lineNum">     167 </span>            : </a>
+<span class="lineNum">     168 </span>            : }
+<span class="lineNum">     169 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

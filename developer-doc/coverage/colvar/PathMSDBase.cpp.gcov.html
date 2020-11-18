@@ -1,0 +1,400 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/PathMSDBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - PathMSDBase.cpp<span style="font-size: 80%;"> (source / <a href="PathMSDBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">161</td>
+            <td class="headerCovTableEntry">164</td>
+            <td class="headerCovTableEntryHi">98.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;PathMSDBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/RMSD.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<a name="35"><span class="lineNum">      35 </span>            : namespace colvar {</a>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineCov">         26 : void PathMSDBase::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      38 </span><span class="lineCov">         26 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">      39 </span><span class="lineCov">         52 :   keys.remove(&quot;NOPBC&quot;);</span>
+<span class="lineNum">      40 </span><span class="lineCov">        104 :   keys.add(&quot;compulsory&quot;,&quot;LAMBDA&quot;,&quot;the lambda parameter is needed for smoothing, is in the units of plumed&quot;);</span>
+<span class="lineNum">      41 </span><span class="lineCov">        104 :   keys.add(&quot;compulsory&quot;,&quot;REFERENCE&quot;,&quot;the pdb is needed to provide the various milestones&quot;);</span>
+<span class="lineNum">      42 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;,&quot;NEIGH_SIZE&quot;,&quot;size of the neighbor list&quot;);</span>
+<span class="lineNum">      43 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;,&quot;NEIGH_STRIDE&quot;,&quot;how often the neighbor list needs to be calculated in time units&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;, &quot;EPSILON&quot;, &quot;(default=-1) the maximum distance between the close and the current structure, the positive value turn on the close structure method&quot;);</span>
+<span class="lineNum">      45 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;, &quot;LOG-CLOSE&quot;, &quot;(default=0) value 1 enables logging regarding the close structure&quot;);</span>
+<span class="lineNum">      46 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;, &quot;DEBUG-CLOSE&quot;, &quot;(default=0) value 1 enables extensive debugging info regarding the close structure, the simulation will run much slower&quot;);</span>
+<span class="lineNum">      47 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;, &quot;LOG_CLOSE&quot;, &quot;same as LOG-CLOSE&quot;);</span>
+<span class="lineNum">      48 </span><span class="lineCov">        104 :   keys.add(&quot;optional&quot;, &quot;DEBUG_CLOSE&quot;, &quot;same as DEBUG-CLOSE&quot;);</span>
+<span class="lineNum">      49 </span><span class="lineCov">         26 : }</span>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">         24 : PathMSDBase::PathMSDBase(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      52 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">      53 </span>            :   neigh_size(-1),
+<span class="lineNum">      54 </span>            :   neigh_stride(-1),
+<span class="lineNum">      55 </span>            :   epsilonClose(-1),
+<span class="lineNum">      56 </span>            :   debugClose(0),
+<span class="lineNum">      57 </span>            :   logClose(0),
+<span class="lineNum">      58 </span>            :   computeRefClose(false),
+<span class="lineNum">      59 </span><span class="lineCov">        264 :   nframes(0)</span>
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span><span class="lineCov">         48 :   parse(&quot;LAMBDA&quot;,lambda);</span>
+<span class="lineNum">      62 </span><span class="lineCov">         48 :   parse(&quot;NEIGH_SIZE&quot;,neigh_size);</span>
+<span class="lineNum">      63 </span><span class="lineCov">         48 :   parse(&quot;NEIGH_STRIDE&quot;,neigh_stride);</span>
+<span class="lineNum">      64 </span><span class="lineCov">         48 :   parse(&quot;REFERENCE&quot;,reference);</span>
+<span class="lineNum">      65 </span><span class="lineCov">         48 :   parse(&quot;EPSILON&quot;, epsilonClose);</span>
+<span class="lineNum">      66 </span><span class="lineCov">         48 :   parse(&quot;LOG-CLOSE&quot;, logClose);</span>
+<span class="lineNum">      67 </span><span class="lineCov">         47 :   if(!logClose) parse(&quot;LOG_CLOSE&quot;, logClose);</span>
+<span class="lineNum">      68 </span><span class="lineCov">         48 :   parse(&quot;DEBUG-CLOSE&quot;, debugClose);</span>
+<span class="lineNum">      69 </span><span class="lineCov">         47 :   if(!debugClose) parse(&quot;DEBUG_CLOSE&quot;,debugClose);</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :   // open the file
+<span class="lineNum">      72 </span><span class="lineCov">         48 :   FILE* fp=fopen(reference.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">      73 </span>            :   std::vector&lt;AtomNumber&gt; aaa;
+<span class="lineNum">      74 </span><span class="lineCov">         24 :   if (fp!=NULL)</span>
+<span class="lineNum">      75 </span>            :   {
+<span class="lineNum">      76 </span><span class="lineCov">         48 :     log&lt;&lt;&quot;Opening reference file &quot;&lt;&lt;reference.c_str()&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">      77 </span>            :     bool do_read=true;
+<span class="lineNum">      78 </span><span class="lineCov">       1056 :     while (do_read) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">       2088 :       PDB mypdb;</span>
+<span class="lineNum">      80 </span><span class="lineCov">       2088 :       RMSD mymsd;</span>
+<span class="lineNum">      81 </span><span class="lineCov">       2112 :       do_read=mypdb.readFromFilepointer(fp,plumed.getAtoms().usingNaturalUnits(),0.1/atoms.getUnits().getLength());</span>
+<span class="lineNum">      82 </span><span class="lineCov">       1056 :       if(do_read) {</span>
+<span class="lineNum">      83 </span><span class="lineCov">       1032 :         nframes++;</span>
+<span class="lineNum">      84 </span><span class="lineCov">       2064 :         if(mypdb.getAtomNumbers().size()==0) error(&quot;number of atoms in a frame should be more than zero&quot;);</span>
+<span class="lineNum">      85 </span><span class="lineCov">       1032 :         unsigned nat=mypdb.getAtomNumbers().size();</span>
+<span class="lineNum">      86 </span><span class="lineCov">       2064 :         if(nat!=mypdb.getAtomNumbers().size()) error(&quot;frames should have the same number of atoms&quot;);</span>
+<span class="lineNum">      87 </span><span class="lineCov">       1032 :         if(aaa.empty()) aaa=mypdb.getAtomNumbers();</span>
+<span class="lineNum">      88 </span><span class="lineCov">       2064 :         if(aaa!=mypdb.getAtomNumbers()) error(&quot;frames should contain same atoms in same order&quot;);</span>
+<span class="lineNum">      89 </span><span class="lineCov">       2064 :         log&lt;&lt;&quot;Found PDB: &quot;&lt;&lt;nframes&lt;&lt;&quot; containing  &quot;&lt;&lt;mypdb.getAtomNumbers().size()&lt;&lt;&quot; atoms\n&quot;;</span>
+<span class="lineNum">      90 </span><span class="lineCov">       1032 :         pdbv.push_back(mypdb);</span>
+<span class="lineNum">      91 </span><span class="lineCov">       2064 :         derivs_s.resize(mypdb.getAtomNumbers().size());</span>
+<span class="lineNum">      92 </span><span class="lineCov">       2064 :         derivs_z.resize(mypdb.getAtomNumbers().size());</span>
+<span class="lineNum">      93 </span><span class="lineCov">       2064 :         mymsd.set(mypdb,&quot;OPTIMAL&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">       1032 :         msdv.push_back(mymsd); // the vector that stores the frames</span>
+<span class="lineNum">      95 </span>            :       } else {break ;}
+<span class="lineNum">      96 </span>            :     }
+<span class="lineNum">      97 </span><span class="lineCov">         24 :     fclose (fp);</span>
+<span class="lineNum">      98 </span><span class="lineCov">         48 :     log&lt;&lt;&quot;Found TOTAL &quot;&lt;&lt;nframes&lt;&lt; &quot; PDB in the file &quot;&lt;&lt;reference.c_str()&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">      99 </span><span class="lineCov">         24 :     if(nframes==0) error(&quot;at least one frame expected&quot;);</span>
+<span class="lineNum">     100 </span>            :     //set up rmsdRefClose, initialize it to the first structure loaded from reference file
+<span class="lineNum">     101 </span><span class="lineCov">         72 :     rmsdPosClose.set(pdbv[0], &quot;OPTIMAL&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">         24 :     firstPosClose = true;</span>
+<span class="lineNum">     103 </span>            :   }
+<span class="lineNum">     104 </span><span class="lineCov">         24 :   if(neigh_stride&gt;0 || neigh_size&gt;0) {</span>
+<span class="lineNum">     105 </span><span class="lineCov">         14 :     if(neigh_size&gt;int(nframes)) {</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :       log.printf(&quot; List size required ( %d ) is too large: resizing to the maximum number of frames required: %u  \n&quot;,neigh_size,nframes);</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :       neigh_size=nframes;</span>
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span><span class="lineCov">         14 :     log.printf(&quot;  Neighbor list enabled: \n&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         14 :     log.printf(&quot;                size   :  %d elements\n&quot;,neigh_size);</span>
+<span class="lineNum">     111 </span><span class="lineCov">         14 :     log.printf(&quot;                stride :  %d timesteps \n&quot;,neigh_stride);</span>
+<span class="lineNum">     112 </span>            :   } else {
+<span class="lineNum">     113 </span><span class="lineCov">         10 :     log.printf(&quot;  Neighbor list NOT enabled \n&quot;);</span>
+<span class="lineNum">     114 </span>            :   }
+<span class="lineNum">     115 </span><span class="lineCov">         24 :   if (epsilonClose &gt; 0) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">          2 :     log.printf(&quot; Computing with the close structure, epsilon = %lf\n&quot;, epsilonClose);</span>
+<span class="lineNum">     117 </span><span class="lineCov">          6 :     log &lt;&lt; &quot;  Bibliography &quot; &lt;&lt; plumed.cite(&quot;Pazurikova J, Krenek A, Spiwok V, Simkova M J. Chem. Phys. 146, 115101 (2017)&quot;) &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     118 </span>            :   }
+<span class="lineNum">     119 </span>            :   else {
+<span class="lineNum">     120 </span><span class="lineCov">         22 :     debugClose = 0;</span>
+<span class="lineNum">     121 </span><span class="lineCov">         22 :     logClose = 0;</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineCov">         24 :   if (debugClose)</span>
+<span class="lineNum">     124 </span><span class="lineCov">          2 :     log.printf(&quot; Extensive debug info regarding close structure turned on\n&quot;);</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">         24 :   rotationRefClose.resize(nframes);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         48 :   savedIndices = vector&lt;unsigned&gt;(nframes);</span>
+<span class="lineNum">     128 </span>            : 
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">         72 : PathMSDBase::~PathMSDBase() {</span>
+<span class="lineNum">     132 </span><span class="lineCov">         24 : }</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">      11128 : void PathMSDBase::calculate() {</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">      11128 :   if(neigh_size&gt;0 &amp;&amp; getExchangeStep()) error(&quot;Neighbor lists for this collective variable are not compatible with replica exchange, sorry for that!&quot;);</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   //log.printf(&quot;NOW CALCULATE! \n&quot;);
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :   // resize the list to full
+<span class="lineNum">     142 </span><span class="lineCov">      11128 :   if(imgVec.empty()) { // this is the signal that means: recalculate all</span>
+<span class="lineNum">     143 </span><span class="lineCov">       7163 :     imgVec.resize(nframes);</span>
+<span class="lineNum">     144 </span>            :     #pragma omp simd
+<span class="lineNum">     145 </span><span class="lineCov">       7163 :     for(unsigned i=0; i&lt;nframes; i++) {</span>
+<span class="lineNum">     146 </span><span class="lineCov">     601740 :       imgVec[i].property=indexvec[i];</span>
+<span class="lineNum">     147 </span><span class="lineCov">     300870 :       imgVec[i].index=i;</span>
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span>            :   }
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : // THIS IS THE HEAVY PART (RMSD STUFF)
+<span class="lineNum">     152 </span><span class="lineCov">      11128 :   unsigned stride=comm.Get_size();</span>
+<span class="lineNum">     153 </span><span class="lineCov">      11128 :   unsigned rank=comm.Get_rank();</span>
+<span class="lineNum">     154 </span><span class="lineCov">      11128 :   unsigned nat=pdbv[0].size();</span>
+<span class="lineNum">     155 </span><span class="lineCov">      11128 :   plumed_assert(nat&gt;0);</span>
+<span class="lineNum">     156 </span><span class="lineCov">      11128 :   plumed_assert(nframes&gt;0);</span>
+<span class="lineNum">     157 </span><span class="lineCov">      11128 :   plumed_assert(imgVec.size()&gt;0);</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">      11128 :   std::vector&lt;Tensor&gt; tmp_rotationRefClose(nframes);</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">      11128 :   if (epsilonClose &gt; 0) {</span>
+<span class="lineNum">     162 </span>            :     //compute rmsd between positions and close structure, save rotation matrix, drotation_drr01
+<span class="lineNum">     163 </span><span class="lineCov">       2184 :     double posclose = rmsdPosClose.calc_Rot_DRotDRr01(getPositions(), rotationPosClose, drotationPosCloseDrr01, true);</span>
+<span class="lineNum">     164 </span>            :     //if we compute for the first time or the existing close structure is too far from current structure
+<span class="lineNum">     165 </span><span class="lineCov">       1092 :     if (firstPosClose || (posclose &gt; epsilonClose)) {</span>
+<span class="lineNum">     166 </span>            :       //set the current structure as close one for a few next steps
+<span class="lineNum">     167 </span><span class="lineCov">         16 :       if (logClose)</span>
+<span class="lineNum">     168 </span><span class="lineCov">         16 :         log &lt;&lt; &quot;PLUMED-CLOSE: new close structure, rmsd pos close &quot; &lt;&lt; posclose &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     169 </span><span class="lineCov">         16 :       rmsdPosClose.clear();</span>
+<span class="lineNum">     170 </span><span class="lineCov">         16 :       rmsdPosClose.setReference(getPositions());</span>
+<span class="lineNum">     171 </span>            :       //as this is a new close structure, we need to save the rotation matrices fitted to the reference structures
+<span class="lineNum">     172 </span>            :       // and we need to accurately recalculate for all reference structures
+<span class="lineNum">     173 </span><span class="lineCov">         16 :       computeRefClose = true;</span>
+<span class="lineNum">     174 </span><span class="lineCov">         16 :       imgVec.resize(nframes);</span>
+<span class="lineNum">     175 </span><span class="lineCov">       1360 :       for(unsigned i=0; i&lt;nframes; i++) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">       1344 :         imgVec[i].property=indexvec[i];</span>
+<span class="lineNum">     177 </span><span class="lineCov">        672 :         imgVec[i].index=i;</span>
+<span class="lineNum">     178 </span>            :       }
+<span class="lineNum">     179 </span><span class="lineCov">         16 :       firstPosClose = false;</span>
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span>            :     else {
+<span class="lineNum">     182 </span>            :       //the current structure is pretty close to the close structure, so we use saved rotation matrices to decrease the complexity of rmsd comuptation
+<span class="lineNum">     183 </span><span class="lineCov">       1076 :       if (debugClose)</span>
+<span class="lineNum">     184 </span><span class="lineCov">       1076 :         log &lt;&lt; &quot;PLUMED-CLOSE: old close structure, rmsd pos close &quot; &lt;&lt; posclose &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     185 </span><span class="lineCov">       1076 :       computeRefClose = false;</span>
+<span class="lineNum">     186 </span>            :     }
+<span class="lineNum">     187 </span>            :   }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">      22256 :   std::vector&lt;double&gt; tmp_distances(imgVec.size(),0.0);</span>
+<span class="lineNum">     190 </span>            :   std::vector&lt;Vector&gt; tmp_derivs;
+<span class="lineNum">     191 </span>            : // this array is a merge of all tmp_derivs, so as to allow a single comm.Sum below
+<span class="lineNum">     192 </span><span class="lineCov">      11128 :   std::vector&lt;Vector&gt; tmp_derivs2(imgVec.size()*nat);</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : // if imgVec.size() is less than nframes, it means that only some msd will be calculated
+<span class="lineNum">     195 </span><span class="lineCov">      11128 :   if (epsilonClose &gt; 0) {</span>
+<span class="lineNum">     196 </span><span class="lineCov">       1092 :     if (computeRefClose) {</span>
+<span class="lineNum">     197 </span>            :       //recompute rotation matrices accurately
+<span class="lineNum">     198 </span><span class="lineCov">       2048 :       for(unsigned i=rank; i&lt;imgVec.size(); i+=stride) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">       1344 :         tmp_distances[i] = msdv[imgVec[i].index].calc_Rot(getPositions(), tmp_derivs, tmp_rotationRefClose[imgVec[i].index], true);</span>
+<span class="lineNum">     200 </span><span class="lineCov">        672 :         plumed_assert(tmp_derivs.size()==nat);</span>
+<span class="lineNum">     201 </span>            :         #pragma omp simd
+<span class="lineNum">     202 </span><span class="lineCov">      26208 :         for(unsigned j=0; j&lt;nat; j++) tmp_derivs2[i*nat+j]=tmp_derivs[j];</span>
+<span class="lineNum">     203 </span>            :       }
+<span class="lineNum">     204 </span>            :     }
+<span class="lineNum">     205 </span>            :     else {
+<span class="lineNum">     206 </span>            :       //approximate distance with saved rotation matrices
+<span class="lineNum">     207 </span><span class="lineCov">     137728 :       for(unsigned i=rank; i&lt;imgVec.size(); i+=stride) {</span>
+<span class="lineNum">     208 </span><span class="lineCov">     180768 :         tmp_distances[i] = msdv[imgVec[i].index].calculateWithCloseStructure(getPositions(), tmp_derivs, rotationPosClose, rotationRefClose[imgVec[i].index], drotationPosCloseDrr01, true);</span>
+<span class="lineNum">     209 </span><span class="lineCov">      45192 :         plumed_assert(tmp_derivs.size()==nat);</span>
+<span class="lineNum">     210 </span>            :         #pragma omp simd
+<span class="lineNum">     211 </span><span class="lineCov">    1762488 :         for(unsigned j=0; j&lt;nat; j++) tmp_derivs2[i*nat+j]=tmp_derivs[j];</span>
+<span class="lineNum">     212 </span><span class="lineCov">      45192 :         if (debugClose) {</span>
+<span class="lineNum">     213 </span><span class="lineCov">      45192 :           double withclose = tmp_distances[i];</span>
+<span class="lineNum">     214 </span><span class="lineCov">      90384 :           RMSD opt;</span>
+<span class="lineNum">     215 </span><span class="lineCov">      90384 :           opt.setType(&quot;OPTIMAL&quot;);</span>
+<span class="lineNum">     216 </span><span class="lineCov">     135576 :           opt.setReference(msdv[imgVec[i].index].getReference());</span>
+<span class="lineNum">     217 </span>            :           vector&lt;Vector&gt; ders;
+<span class="lineNum">     218 </span><span class="lineCov">      45192 :           double withoutclose = opt.calculate(getPositions(), ders, true);</span>
+<span class="lineNum">     219 </span><span class="lineCov">      45192 :           float difference = fabs(withoutclose-withclose);</span>
+<span class="lineNum">     220 </span><span class="lineCov">      90384 :           log.printf(&quot;PLUMED-CLOSE: difference original %lf - with close %lf = %lf, step %d, i %d imgVec[i].index %d \n&quot;, withoutclose, withclose, difference, getStep(), i, imgVec[i].index);</span>
+<span class="lineNum">     221 </span>            :         }
+<span class="lineNum">     222 </span>            :       }
+<span class="lineNum">     223 </span>            :     }
+<span class="lineNum">     224 </span>            :   }
+<span class="lineNum">     225 </span>            :   else {
+<span class="lineNum">     226 </span>            :     // store temporary local results
+<span class="lineNum">     227 </span><span class="lineCov">     875504 :     for(unsigned i=rank; i&lt;imgVec.size(); i+=stride) {</span>
+<span class="lineNum">     228 </span><span class="lineCov">     570288 :       tmp_distances[i]=msdv[imgVec[i].index].calculate(getPositions(),tmp_derivs,true);</span>
+<span class="lineNum">     229 </span><span class="lineCov">     285144 :       plumed_assert(tmp_derivs.size()==nat);</span>
+<span class="lineNum">     230 </span>            :       #pragma omp simd
+<span class="lineNum">     231 </span><span class="lineCov">   11097666 :       for(unsigned j=0; j&lt;nat; j++) tmp_derivs2[i*nat+j]=tmp_derivs[j];</span>
+<span class="lineNum">     232 </span>            :     }
+<span class="lineNum">     233 </span>            :   }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : // reduce over all processors
+<span class="lineNum">     236 </span><span class="lineCov">      11128 :   comm.Sum(tmp_distances);</span>
+<span class="lineNum">     237 </span><span class="lineCov">      11128 :   comm.Sum(tmp_derivs2);</span>
+<span class="lineNum">     238 </span><span class="lineCov">      11128 :   if (epsilonClose &gt; 0 &amp;&amp; computeRefClose) {</span>
+<span class="lineNum">     239 </span><span class="lineCov">         16 :     comm.Sum(tmp_rotationRefClose);</span>
+<span class="lineNum">     240 </span><span class="lineCov">       1360 :     for (unsigned i=0; i&lt;nframes; i++) {</span>
+<span class="lineNum">     241 </span><span class="lineCov">       1344 :       rotationRefClose[i] = tmp_rotationRefClose[i];</span>
+<span class="lineNum">     242 </span>            :     }
+<span class="lineNum">     243 </span>            :   }
+<span class="lineNum">     244 </span>            : // assign imgVec[i].distance and imgVec[i].distder
+<span class="lineNum">     245 </span><span class="lineCov">    1428056 :   for(unsigned i=0; i&lt;imgVec.size(); i++) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">     468600 :     imgVec[i].distance=tmp_distances[i];</span>
+<span class="lineNum">     247 </span><span class="lineCov">     937200 :     imgVec[i].distder.assign(&amp;tmp_derivs2[i*nat],nat+&amp;tmp_derivs2[i*nat]);</span>
+<span class="lineNum">     248 </span>            :   }
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : // END OF THE HEAVY PART
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :   vector&lt;Value*&gt; val_s_path;
+<span class="lineNum">     253 </span><span class="lineCov">      11128 :   if(labels.size()&gt;0) {</span>
+<span class="lineNum">     254 </span><span class="lineCov">      72072 :     for(unsigned i=0; i&lt;labels.size(); i++) { val_s_path.push_back(getPntrToComponent(labels[i].c_str()));}</span>
+<span class="lineNum">     255 </span>            :   } else {
+<span class="lineNum">     256 </span><span class="lineCov">      15366 :     val_s_path.push_back(getPntrToComponent(&quot;sss&quot;));</span>
+<span class="lineNum">     257 </span>            :   }
+<span class="lineNum">     258 </span><span class="lineCov">      22256 :   Value* val_z_path=getPntrToComponent(&quot;zzz&quot;);</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineCov">      56524 :   vector&lt;double&gt; s_path(val_s_path.size()); for(unsigned i=0; i&lt;s_path.size(); i++)s_path[i]=0.;</span>
+<span class="lineNum">     261 </span>            :   double partition=0.;
+<span class="lineNum">     262 </span>            :   double tmp;
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :   // clean vector
+<span class="lineNum">     265 </span><span class="lineCov">     455789 :   for(unsigned i=0; i&lt; derivs_z.size(); i++) {derivs_z[i].zero();}</span>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineCov">     479728 :   for(auto &amp; it : imgVec) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">     468600 :     it.similarity=exp(-lambda*(it.distance));</span>
+<span class="lineNum">     269 </span>            :     //log&lt;&lt;&quot;DISTANCE &quot;&lt;&lt;(*it).distance&lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     270 </span><span class="lineCov">    3099756 :     for(unsigned i=0; i&lt;s_path.size(); i++) {</span>
+<span class="lineNum">     271 </span><span class="lineCov">    1441704 :       s_path[i]+=(it.property[i])*it.similarity;</span>
+<span class="lineNum">     272 </span>            :     }
+<span class="lineNum">     273 </span><span class="lineCov">     468600 :     partition+=it.similarity;</span>
+<span class="lineNum">     274 </span>            :   }
+<span class="lineNum">     275 </span><span class="lineCov">     125060 :   for(unsigned i=0; i&lt;s_path.size(); i++) { s_path[i]/=partition;  val_s_path[i]-&gt;set(s_path[i]) ;}</span>
+<span class="lineNum">     276 </span><span class="lineCov">      11128 :   val_z_path-&gt;set(-(1./lambda)*std::log(partition));</span>
+<span class="lineNum">     277 </span><span class="lineCov">      73658 :   for(unsigned j=0; j&lt;s_path.size(); j++) {</span>
+<span class="lineNum">     278 </span>            :     // clean up
+<span class="lineNum">     279 </span>            :     #pragma omp simd
+<span class="lineNum">     280 </span><span class="lineCov">     239723 :     for(unsigned i=0; i&lt; derivs_s.size(); i++) {derivs_s[i].zero();}</span>
+<span class="lineNum">     281 </span>            :     // do the derivative
+<span class="lineNum">     282 </span><span class="lineCov">     737986 :     for(const auto &amp; it : imgVec) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">     720852 :       double expval=it.similarity;</span>
+<span class="lineNum">     284 </span><span class="lineCov">    2162556 :       tmp=lambda*expval*(s_path[j]-it.property[j])/partition;</span>
+<span class="lineNum">     285 </span>            :       #pragma omp simd
+<span class="lineNum">     286 </span><span class="lineCov">   19447704 :       for(unsigned i=0; i&lt; derivs_s.size(); i++) { derivs_s[i]+=tmp*it.distder[i] ;}</span>
+<span class="lineNum">     287 </span><span class="lineCov">     720852 :       if(j==0) {</span>
+<span class="lineNum">     288 </span>            :         #pragma omp simd
+<span class="lineNum">     289 </span><span class="lineCov">   12636900 :         for(unsigned i=0; i&lt; derivs_z.size(); i++) { derivs_z[i]+=it.distder[i]*expval/partition;}</span>
+<span class="lineNum">     290 </span>            :       }
+<span class="lineNum">     291 </span>            :     }
+<span class="lineNum">     292 </span><span class="lineCov">     702035 :     for(unsigned i=0; i&lt; derivs_s.size(); i++) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">     667767 :       setAtomsDerivatives (val_s_path[j],i,derivs_s[i]);</span>
+<span class="lineNum">     294 </span><span class="lineCov">     367100 :       if(j==0) {setAtomsDerivatives (val_z_path,i,derivs_z[i]);}</span>
+<span class="lineNum">     295 </span>            :     }
+<span class="lineNum">     296 </span>            :   }
+<span class="lineNum">     297 </span><span class="lineCov">      73658 :   for(unsigned i=0; i&lt;val_s_path.size(); ++i) setBoxDerivativesNoPbc(val_s_path[i]);</span>
+<span class="lineNum">     298 </span><span class="lineCov">      11128 :   setBoxDerivativesNoPbc(val_z_path);</span>
+<span class="lineNum">     299 </span>            :   //
+<span class="lineNum">     300 </span>            :   //  here set next round neighbors
+<span class="lineNum">     301 </span>            :   //
+<span class="lineNum">     302 </span><span class="lineCov">      11128 :   if (neigh_size&gt;0) {</span>
+<span class="lineNum">     303 </span>            :     //if( int(getStep())%int(neigh_stride/getTimeStep())==0 ){
+<span class="lineNum">     304 </span>            :     // enforce consistency: the stride is in time steps
+<span class="lineNum">     305 </span><span class="lineCov">       7153 :     if( int(getStep())%int(neigh_stride)==0 ) {</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :       // next round do it all:empty the vector
+<span class="lineNum">     308 </span>            :       imgVec.clear();
+<span class="lineNum">     309 </span>            :     }
+<span class="lineNum">     310 </span>            :     // time to analyze the results:
+<span class="lineNum">     311 </span><span class="lineCov">       7153 :     if(imgVec.size()==nframes) {</span>
+<span class="lineNum">     312 </span>            :       //sort by msd
+<span class="lineNum">     313 </span>            :       sort(imgVec.begin(), imgVec.end(), imgOrderByDist());
+<span class="lineNum">     314 </span>            :       //resize
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :       imgVec.resize(neigh_size);</span>
+<span class="lineNum">     316 </span>            :     }
+<span class="lineNum">     317 </span>            :   }
+<span class="lineNum">     318 </span>            :   //log.printf(&quot;CALCULATION DONE! \n&quot;);
+<span class="lineNum">     319 </span><span class="lineCov">      11128 : }</span>
+<span class="lineNum">     320 </span>            : 
+<a name="321"><span class="lineNum">     321 </span>            : }</a>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

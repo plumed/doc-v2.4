@@ -1,0 +1,464 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/ActionWithVessel.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - ActionWithVessel.cpp<span style="font-size: 80%;"> (source / <a href="ActionWithVessel.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">196</td>
+            <td class="headerCovTableEntry">208</td>
+            <td class="headerCovTableEntryHi">94.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryMed">79.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ActionWithVessel.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Vessel.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ShortcutVessel.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;StoreDataVessel.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;VesselRegister.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;BridgeVessel.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;FunctionVessel.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;StoreDataVessel.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/OpenMP.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;tools/Stopwatch.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : using namespace std;
+<span class="lineNum">      35 </span>            : namespace PLMD {
+<span class="lineNum">      36 </span>            : namespace vesselbase {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">        513 : void ActionWithVessel::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      39 </span><span class="lineCov">       2052 :   keys.add(&quot;hidden&quot;,&quot;TOL&quot;,&quot;this keyword can be used to speed up your calculation. When accumulating sums in which the individual &quot;</span>
+<span class="lineNum">      40 </span>            :            &quot;terms are numbers inbetween zero and one it is assumed that terms less than a certain tolerance &quot;
+<span class="lineNum">      41 </span>            :            &quot;make only a small contribution to the sum.  They can thus be safely ignored as can the the derivatives &quot;
+<span class="lineNum">      42 </span>            :            &quot;wrt these small quantities.&quot;);
+<span class="lineNum">      43 </span><span class="lineCov">       2052 :   keys.add(&quot;hidden&quot;,&quot;MAXDERIVATIVES&quot;,&quot;The maximum number of derivatives that can be used when storing data.  This controls when &quot;</span>
+<span class="lineNum">      44 </span>            :            &quot;we have to start using lowmem&quot;);
+<span class="lineNum">      45 </span><span class="lineCov">       1539 :   keys.addFlag(&quot;SERIAL&quot;,false,&quot;do the calculation in serial.  Do not parallelize&quot;);</span>
+<span class="lineNum">      46 </span><span class="lineCov">       1539 :   keys.addFlag(&quot;LOWMEM&quot;,false,&quot;lower the memory requirements&quot;);</span>
+<span class="lineNum">      47 </span><span class="lineCov">       1539 :   keys.addFlag(&quot;TIMINGS&quot;,false,&quot;output information on the timings of the various parts of the calculation&quot;);</span>
+<span class="lineNum">      48 </span><span class="lineCov">       1539 :   keys.reserveFlag(&quot;HIGHMEM&quot;,false,&quot;use a more memory intensive version of this collective variable&quot;);</span>
+<span class="lineNum">      49 </span><span class="lineCov">        513 :   keys.add( vesselRegister().getKeywords() );</span>
+<span class="lineNum">      50 </span><span class="lineCov">        513 : }</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">        422 : ActionWithVessel::ActionWithVessel(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      53 </span>            :   Action(ao),
+<span class="lineNum">      54 </span>            :   serial(false),
+<span class="lineNum">      55 </span>            :   lowmem(false),
+<span class="lineNum">      56 </span>            :   noderiv(true),
+<span class="lineNum">      57 </span>            :   actionIsBridged(false),
+<span class="lineNum">      58 </span>            :   nactive_tasks(0),
+<span class="lineNum">      59 </span><span class="lineCov">        422 :   stopwatch(*new Stopwatch),</span>
+<span class="lineNum">      60 </span>            :   dertime_can_be_off(false),
+<span class="lineNum">      61 </span>            :   dertime(true),
+<span class="lineNum">      62 </span>            :   contributorsAreUnlocked(false),
+<span class="lineNum">      63 </span>            :   weightHasDerivatives(false),
+<span class="lineNum">      64 </span><span class="lineCov">       1266 :   mydata(NULL)</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span><span class="lineCov">        844 :   maxderivatives=309; parse(&quot;MAXDERIVATIVES&quot;,maxderivatives);</span>
+<span class="lineNum">      67 </span><span class="lineCov">       1264 :   if( keywords.exists(&quot;SERIAL&quot;) ) parseFlag(&quot;SERIAL&quot;,serial);</span>
+<span class="lineNum">      68 </span><span class="lineCov">          2 :   else serial=true;</span>
+<span class="lineNum">      69 </span><span class="lineCov">        422 :   if(serial)log.printf(&quot;  doing calculation in serial\n&quot;);</span>
+<span class="lineNum">      70 </span><span class="lineCov">        844 :   if( keywords.exists(&quot;LOWMEM&quot;) ) {</span>
+<span class="lineNum">      71 </span><span class="lineCov">        786 :     plumed_assert( !keywords.exists(&quot;HIGHMEM&quot;) );</span>
+<span class="lineNum">      72 </span><span class="lineCov">        786 :     parseFlag(&quot;LOWMEM&quot;,lowmem);</span>
+<span class="lineNum">      73 </span><span class="lineCov">        393 :     if(lowmem) {</span>
+<span class="lineNum">      74 </span><span class="lineCov">         26 :       log.printf(&quot;  lowering memory requirements\n&quot;);</span>
+<span class="lineNum">      75 </span><span class="lineCov">         26 :       dertime_can_be_off=true;</span>
+<span class="lineNum">      76 </span>            :     }
+<span class="lineNum">      77 </span>            :   }
+<span class="lineNum">      78 </span><span class="lineCov">        844 :   if( keywords.exists(&quot;HIGHMEM&quot;) ) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">         42 :     plumed_assert( !keywords.exists(&quot;LOWMEM&quot;) );</span>
+<span class="lineNum">      80 </span><span class="lineCov">         42 :     bool highmem; parseFlag(&quot;HIGHMEM&quot;,highmem);</span>
+<span class="lineNum">      81 </span><span class="lineCov">         21 :     lowmem=!highmem;</span>
+<span class="lineNum">      82 </span><span class="lineCov">         21 :     if(!lowmem) log.printf(&quot;  increasing the memory requirements\n&quot;);</span>
+<span class="lineNum">      83 </span>            :   }
+<span class="lineNum">      84 </span><span class="lineCov">        422 :   tolerance=nl_tolerance=epsilon;</span>
+<span class="lineNum">      85 </span><span class="lineCov">       1261 :   if( keywords.exists(&quot;TOL&quot;) ) parse(&quot;TOL&quot;,tolerance);</span>
+<span class="lineNum">      86 </span><span class="lineCov">        422 :   if( tolerance&gt;epsilon) {</span>
+<span class="lineNum">      87 </span><span class="lineCov">          6 :     log.printf(&quot; Ignoring contributions less than %f \n&quot;,tolerance);</span>
+<span class="lineNum">      88 </span>            :   }
+<span class="lineNum">      89 </span><span class="lineCov">        844 :   parseFlag(&quot;TIMINGS&quot;,timers);</span>
+<span class="lineNum">      90 </span><span class="lineCov">        422 :   stopwatch.start(); stopwatch.pause();</span>
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">        422 : }</span></a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">        422 : ActionWithVessel::~ActionWithVessel() {</span>
+<span class="lineNum">      94 </span><span class="lineCov">       2416 :   for(unsigned i=0; i&lt;functions.size(); ++i) delete functions[i];</span>
+<span class="lineNum">      95 </span><span class="lineCov">        422 :   stopwatch.start(); stopwatch.stop();</span>
+<span class="lineNum">      96 </span><span class="lineCov">        422 :   if(timers) {</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     log.printf(&quot;timings for action %s with label %s \n&quot;, getName().c_str(), getLabel().c_str() );</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     log&lt;&lt;stopwatch;</span>
+<span class="lineNum">      99 </span>            :   }
+<span class="lineNum">     100 </span><span class="lineCov">        844 :   delete &amp;stopwatch;</span>
+<span class="lineNum">     101 </span><span class="lineCov">        422 : }</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">        328 : void ActionWithVessel::addVessel( const std::string&amp; name, const std::string&amp; input, const int numlab ) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">        984 :   VesselOptions da(name,&quot;&quot;,numlab,input,this);</span>
+<span class="lineNum">     105 </span><span class="lineCov">        984 :   Vessel* vv=vesselRegister().create(name,da);</span>
+<span class="lineNum">     106 </span><span class="lineCov">        328 :   FunctionVessel* fv=dynamic_cast&lt;FunctionVessel*&gt;(vv);</span>
+<span class="lineNum">     107 </span><span class="lineCov">        328 :   if( fv ) {</span>
+<span class="lineNum">     108 </span><span class="lineCov">        303 :     std::string mylabel=Vessel::transformName( name );</span>
+<span class="lineNum">     109 </span><span class="lineCov">        303 :     plumed_massert( keywords.outputComponentExists(mylabel,false), &quot;a description of the value calculated by vessel &quot; + name + &quot; has not been added to the manual&quot;);</span>
+<span class="lineNum">     110 </span>            :   }
+<span class="lineNum">     111 </span><span class="lineCov">        328 :   addVessel(vv);</span>
+<span class="lineNum">     112 </span><span class="lineCov">        328 : }</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">        488 : void ActionWithVessel::addVessel( Vessel* vv ) {</span>
+<span class="lineNum">     115 </span><span class="lineCov">        488 :   ShortcutVessel* sv=dynamic_cast&lt;ShortcutVessel*&gt;(vv);</span>
+<span class="lineNum">     116 </span><span class="lineCov">        488 :   if(!sv) { vv-&gt;checkRead(); functions.push_back(vv); }</span>
+<span class="lineNum">     117 </span><span class="lineCov">         10 :   else { delete sv; return; }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">        956 :   StoreDataVessel* mm=dynamic_cast&lt;StoreDataVessel*&gt;( vv );</span>
+<span class="lineNum">     120 </span><span class="lineCov">        478 :   if( mydata &amp;&amp; mm ) error(&quot;cannot have more than one StoreDataVessel in one action&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">        478 :   else if( mm ) mydata=mm;</span>
+<span class="lineNum">     122 </span><span class="lineCov">        359 :   else dertime_can_be_off=false;</span>
+<span class="lineNum">     123 </span>            : }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">         46 : BridgeVessel* ActionWithVessel::addBridgingVessel( ActionWithVessel* tome ) {</span>
+<span class="lineNum">     126 </span><span class="lineCov">        230 :   VesselOptions da(&quot;&quot;,&quot;&quot;,0,&quot;&quot;,this);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         46 :   BridgeVessel* bv=new BridgeVessel(da);</span>
+<span class="lineNum">     128 </span><span class="lineCov">         46 :   bv-&gt;setOutputAction( tome );</span>
+<span class="lineNum">     129 </span><span class="lineCov">         46 :   tome-&gt;actionIsBridged=true; dertime_can_be_off=false;</span>
+<span class="lineNum">     130 </span><span class="lineCov">         92 :   functions.push_back( dynamic_cast&lt;Vessel*&gt;(bv) );</span>
+<span class="lineNum">     131 </span><span class="lineCov">         46 :   resizeFunctions();</span>
+<span class="lineNum">     132 </span><span class="lineCov">         46 :   return bv;</span>
+<span class="lineNum">     133 </span>            : }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">        171 : StoreDataVessel* ActionWithVessel::buildDataStashes( ActionWithVessel* actionThatUses ) {</span>
+<span class="lineNum">     136 </span><span class="lineCov">        171 :   if(mydata) {</span>
+<span class="lineNum">     137 </span><span class="lineCov">         81 :     if( actionThatUses ) mydata-&gt;addActionThatUses( actionThatUses );</span>
+<span class="lineNum">     138 </span><span class="lineCov">         81 :     return mydata;</span>
+<span class="lineNum">     139 </span>            :   }
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">        450 :   VesselOptions da(&quot;&quot;,&quot;&quot;,0,&quot;&quot;,this);</span>
+<span class="lineNum">     142 </span><span class="lineCov">         90 :   StoreDataVessel* mm=new StoreDataVessel(da);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         90 :   if( actionThatUses ) mm-&gt;addActionThatUses( actionThatUses );</span>
+<span class="lineNum">     144 </span><span class="lineCov">         90 :   addVessel(mm);</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :   // Make sure resizing of vessels is done
+<span class="lineNum">     147 </span><span class="lineCov">         90 :   resizeFunctions();</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         90 :   return mydata;</span>
+<span class="lineNum">     150 </span>            : }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">   12650372 : void ActionWithVessel::addTaskToList( const unsigned&amp; taskCode ) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">   25300744 :   fullTaskList.push_back( taskCode ); taskFlags.push_back(0);</span>
+<span class="lineNum">     154 </span><span class="lineCov">   12650372 :   plumed_assert( fullTaskList.size()==taskFlags.size() );</span>
+<span class="lineNum">     155 </span><span class="lineCov">   12650372 : }</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">        391 : void ActionWithVessel::readVesselKeywords() {</span>
+<span class="lineNum">     158 </span>            :   // Set maxderivatives if it is too big
+<span class="lineNum">     159 </span><span class="lineCov">        391 :   if( maxderivatives&gt;getNumberOfDerivatives() ) maxderivatives=getNumberOfDerivatives();</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :   // Loop over all keywords find the vessels and create appropriate functions
+<span class="lineNum">     162 </span><span class="lineCov">      16849 :   for(unsigned i=0; i&lt;keywords.size(); ++i) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">      16458 :     std::string thiskey,input; thiskey=keywords.getKeyword(i);</span>
+<span class="lineNum">     164 </span>            :     // Check if this is a key for a vessel
+<span class="lineNum">     165 </span><span class="lineCov">      24687 :     if( vesselRegister().check(thiskey) ) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">       5002 :       plumed_assert( keywords.style(thiskey,&quot;vessel&quot;) );</span>
+<span class="lineNum">     167 </span><span class="lineCov">       2501 :       bool dothis=false; parseFlag(thiskey,dothis);</span>
+<span class="lineNum">     168 </span><span class="lineCov">       2501 :       if(dothis) addVessel( thiskey, input );</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">       2501 :       parse(thiskey,input);</span>
+<span class="lineNum">     171 </span><span class="lineCov">       2501 :       if(input.size()!=0) {</span>
+<span class="lineNum">     172 </span><span class="lineCov">        115 :         addVessel( thiskey, input );</span>
+<span class="lineNum">     173 </span>            :       } else {
+<span class="lineNum">     174 </span><span class="lineCov">         22 :         for(unsigned i=1;; ++i) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">       2408 :           if( !parseNumbered(thiskey,i,input) ) break;</span>
+<span class="lineNum">     176 </span><span class="lineCov">         22 :           std::string ss; Tools::convert(i,ss);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         22 :           addVessel( thiskey, input, i );</span>
+<span class="lineNum">     178 </span>            :           input.clear();
+<span class="lineNum">     179 </span><span class="lineCov">         22 :         }</span>
+<span class="lineNum">     180 </span>            :       }
+<span class="lineNum">     181 </span>            :     }
+<span class="lineNum">     182 </span>            :   }
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :   // Make sure all vessels have had been resized at start
+<span class="lineNum">     185 </span><span class="lineCov">        391 :   if( functions.size()&gt;0 ) resizeFunctions();</span>
+<a name="186"><span class="lineNum">     186 </span><span class="lineCov">        391 : }</span></a>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">       1274 : void ActionWithVessel::resizeFunctions() {</span>
+<span class="lineNum">     189 </span><span class="lineCov">       8518 :   for(unsigned i=0; i&lt;functions.size(); ++i) functions[i]-&gt;resize();</span>
+<a name="190"><span class="lineNum">     190 </span><span class="lineCov">       1274 : }</span></a>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">        765 : void ActionWithVessel::needsDerivatives() {</span>
+<span class="lineNum">     193 </span>            :   // Turn on the derivatives and resize
+<span class="lineNum">     194 </span><span class="lineCov">        765 :   noderiv=false; resizeFunctions();</span>
+<span class="lineNum">     195 </span>            :   // Setting contributors unlocked here ensures that link cells are ignored
+<span class="lineNum">     196 </span><span class="lineCov">        765 :   contributorsAreUnlocked=true; contributorsAreUnlocked=false;</span>
+<span class="lineNum">     197 </span>            :   // And turn on the derivatives in all actions on which we are dependent
+<span class="lineNum">     198 </span><span class="lineCov">       2373 :   for(unsigned i=0; i&lt;getDependencies().size(); ++i) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">        281 :     ActionWithVessel* vv=dynamic_cast&lt;ActionWithVessel*&gt;( getDependencies()[i] );</span>
+<span class="lineNum">     200 </span><span class="lineCov">        281 :     if(vv) vv-&gt;needsDerivatives();</span>
+<span class="lineNum">     201 </span>            :   }
+<a name="202"><span class="lineNum">     202 </span><span class="lineCov">        765 : }</span></a>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">       3542 : void ActionWithVessel::lockContributors() {</span>
+<span class="lineNum">     205 </span><span class="lineCov">       3542 :   nactive_tasks = 0;</span>
+<span class="lineNum">     206 </span><span class="lineCov">   55576579 :   for(unsigned i=0; i&lt;fullTaskList.size(); ++i) {</span>
+<span class="lineNum">     207 </span><span class="lineCov">   18523165 :     if( taskFlags[i]&gt;0 ) nactive_tasks++;</span>
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :   unsigned n=0;
+<span class="lineNum">     211 </span><span class="lineCov">       3542 :   partialTaskList.resize( nactive_tasks );</span>
+<span class="lineNum">     212 </span><span class="lineCov">       3542 :   indexOfTaskInFullList.resize( nactive_tasks );</span>
+<span class="lineNum">     213 </span><span class="lineCov">   55576579 :   for(unsigned i=0; i&lt;fullTaskList.size(); ++i) {</span>
+<span class="lineNum">     214 </span>            :     // Deactivate sets inactive tasks to number not equal to zero
+<span class="lineNum">     215 </span><span class="lineCov">   18523165 :     if( taskFlags[i]&gt;0 ) {</span>
+<span class="lineNum">     216 </span><span class="lineCov">   11032342 :       partialTaskList[n] = fullTaskList[i];</span>
+<span class="lineNum">     217 </span><span class="lineCov">    5516171 :       indexOfTaskInFullList[n]=i;</span>
+<span class="lineNum">     218 </span><span class="lineCov">    5516171 :       n++;</span>
+<span class="lineNum">     219 </span>            :     }
+<span class="lineNum">     220 </span>            :   }
+<span class="lineNum">     221 </span>            :   plumed_dbg_assert( n==nactive_tasks );
+<span class="lineNum">     222 </span><span class="lineCov">      20980 :   for(unsigned i=0; i&lt;functions.size(); ++i) {</span>
+<span class="lineNum">     223 </span><span class="lineCov">       4632 :     BridgeVessel* bb = dynamic_cast&lt;BridgeVessel*&gt;( functions[i] );</span>
+<span class="lineNum">     224 </span><span class="lineCov">       4632 :     if( bb ) bb-&gt;copyTaskFlags();</span>
+<span class="lineNum">     225 </span>            :   }
+<span class="lineNum">     226 </span>            :   // Resize mydata to accomodate all active tasks
+<span class="lineNum">     227 </span><span class="lineCov">       3542 :   if( mydata ) mydata-&gt;resize();</span>
+<span class="lineNum">     228 </span><span class="lineCov">       3542 :   contributorsAreUnlocked=false;</span>
+<a name="229"><span class="lineNum">     229 </span><span class="lineCov">       3542 : }</span></a>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">       3542 : void ActionWithVessel::deactivateAllTasks() {</span>
+<span class="lineNum">     232 </span><span class="lineCov">       3542 :   contributorsAreUnlocked=true; nactive_tasks = 0;</span>
+<span class="lineNum">     233 </span><span class="lineCov">       7084 :   taskFlags.assign(taskFlags.size(),0);</span>
+<a name="234"><span class="lineNum">     234 </span><span class="lineCov">       3542 : }</span></a>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">     205651 : bool ActionWithVessel::taskIsCurrentlyActive( const unsigned&amp; index ) const {</span>
+<span class="lineNum">     237 </span><span class="lineCov">     411302 :   plumed_dbg_assert( index&lt;taskFlags.size() ); return (taskFlags[index]&gt;0);</span>
+<a name="238"><span class="lineNum">     238 </span>            : }</a>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">      22917 : void ActionWithVessel::doJobsRequiredBeforeTaskList() {</span>
+<span class="lineNum">     241 </span>            :   // Do any preparatory stuff for functions
+<span class="lineNum">     242 </span><span class="lineCov">     148833 :   for(unsigned j=0; j&lt;functions.size(); ++j) functions[j]-&gt;prepare();</span>
+<a name="243"><span class="lineNum">     243 </span><span class="lineCov">      22917 : }</span></a>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineCov">      23430 : unsigned ActionWithVessel::getSizeOfBuffer( unsigned&amp; bufsize ) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">     151887 :   for(unsigned i=0; i&lt;functions.size(); ++i) functions[i]-&gt;setBufferStart( bufsize );</span>
+<span class="lineNum">     247 </span><span class="lineCov">      23430 :   if( buffer.size()!=bufsize ) buffer.resize( bufsize );</span>
+<span class="lineNum">     248 </span><span class="lineCov">      23430 :   if( mydata ) {</span>
+<span class="lineNum">     249 </span>            :     unsigned dsize=mydata-&gt;getSizeOfDerivativeList();
+<span class="lineNum">     250 </span><span class="lineCov">       2315 :     if( der_list.size()!=dsize ) der_list.resize( dsize );</span>
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span><span class="lineCov">      23430 :   return bufsize;</span>
+<span class="lineNum">     253 </span>            : }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span><span class="lineCov">      19892 : void ActionWithVessel::runAllTasks() {</span>
+<span class="lineNum">     256 </span><span class="lineCov">      39784 :   plumed_massert( !contributorsAreUnlocked &amp;&amp; functions.size()&gt;0, &quot;you must have a call to readVesselKeywords somewhere&quot; );</span>
+<span class="lineNum">     257 </span><span class="lineCov">      19892 :   unsigned stride=comm.Get_size();</span>
+<span class="lineNum">     258 </span><span class="lineCov">      19892 :   unsigned rank=comm.Get_rank();</span>
+<span class="lineNum">     259 </span><span class="lineCov">      19892 :   if(serial) { stride=1; rank=0; }</span>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :   // Make sure jobs are done
+<span class="lineNum">     262 </span><span class="lineCov">      19892 :   if(timers) stopwatch.start(&quot;1 Prepare Tasks&quot;);</span>
+<span class="lineNum">     263 </span><span class="lineCov">      19892 :   doJobsRequiredBeforeTaskList();</span>
+<span class="lineNum">     264 </span><span class="lineCov">      19892 :   if(timers) stopwatch.stop(&quot;1 Prepare Tasks&quot;);</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :   // Get number of threads for OpenMP
+<span class="lineNum">     267 </span><span class="lineCov">      19892 :   unsigned nt=OpenMP::getNumThreads();</span>
+<span class="lineNum">     268 </span><span class="lineCov">      19892 :   if( nt*stride*2&gt;nactive_tasks || !threadSafe()) nt=1;</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :   // Get size for buffer
+<span class="lineNum">     271 </span><span class="lineCov">      19892 :   unsigned bsize=0, bufsize=getSizeOfBuffer( bsize );</span>
+<span class="lineNum">     272 </span>            :   // Clear buffer
+<span class="lineNum">     273 </span><span class="lineCov">      39784 :   buffer.assign( buffer.size(), 0.0 );</span>
+<span class="lineNum">     274 </span>            :   // Switch off calculation of derivatives in main loop
+<span class="lineNum">     275 </span><span class="lineCov">      19892 :   if( dertime_can_be_off ) dertime=false;</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">      19892 :   if(timers) stopwatch.start(&quot;2 Loop over tasks&quot;);</span>
+<span class="lineNum">     278 </span><span class="lineCov">      49316 :   #pragma omp parallel num_threads(nt)</span>
+<span class="lineNum">     279 </span>            :   {
+<span class="lineNum">     280 </span>            :     std::vector&lt;double&gt; omp_buffer;
+<span class="lineNum">     281 </span><span class="lineCov">      48488 :     if( nt&gt;1 ) omp_buffer.resize( bufsize, 0.0 );</span>
+<span class="lineNum">     282 </span><span class="lineCov">      58848 :     MultiValue myvals( getNumberOfQuantities(), getNumberOfDerivatives() );</span>
+<span class="lineNum">     283 </span><span class="lineCov">      58848 :     MultiValue bvals( getNumberOfQuantities(), getNumberOfDerivatives() );</span>
+<span class="lineNum">     284 </span><span class="lineCov">      29424 :     myvals.clearAll(); bvals.clearAll();</span>
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :     #pragma omp for nowait schedule(dynamic)
+<span class="lineNum">     287 </span><span class="lineCov">      29424 :     for(unsigned i=rank; i&lt;nactive_tasks; i+=stride) {</span>
+<span class="lineNum">     288 </span>            :       // Calculate the stuff in the loop for this action
+<span class="lineNum">     289 </span><span class="lineCov">    1982494 :       performTask( indexOfTaskInFullList[i], partialTaskList[i], myvals );</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :       // Check for conditions that allow us to just to skip the calculation
+<span class="lineNum">     292 </span>            :       // the condition is that the weight of the contribution is low
+<span class="lineNum">     293 </span>            :       // N.B. Here weights are assumed to be between zero and one
+<span class="lineNum">     294 </span><span class="lineCov">    1569085 :       if( myvals.get(0)&lt;tolerance ) {</span>
+<span class="lineNum">     295 </span>            :         // Clear the derivatives
+<span class="lineNum">     296 </span><span class="lineCov">     577838 :         myvals.clearAll();</span>
+<span class="lineNum">     297 </span><span class="lineCov">     577838 :         continue;</span>
+<span class="lineNum">     298 </span>            :       }
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :       // Now calculate all the functions
+<span class="lineNum">     301 </span>            :       // If the contribution of this quantity is very small at neighbour list time ignore it
+<span class="lineNum">     302 </span>            :       // untill next neighbour list time
+<span class="lineNum">     303 </span><span class="lineCov">     413409 :       if( nt&gt;1 ) {</span>
+<span class="lineNum">     304 </span><span class="lineCov">     739826 :         calculateAllVessels( indexOfTaskInFullList[i], myvals, bvals, omp_buffer, der_list );</span>
+<span class="lineNum">     305 </span>            :       } else {
+<span class="lineNum">     306 </span><span class="lineCov">      86992 :         calculateAllVessels( indexOfTaskInFullList[i], myvals, bvals, buffer, der_list );</span>
+<span class="lineNum">     307 </span>            :       }
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :       // Clear the value
+<span class="lineNum">     310 </span><span class="lineCov">     413409 :       myvals.clearAll();</span>
+<span class="lineNum">     311 </span>            :     }
+<span class="lineNum">     312 </span><span class="lineCov">      58848 :     #pragma omp critical</span>
+<span class="lineNum">     313 </span><span class="lineCov">   38538680 :     if(nt&gt;1) for(unsigned i=0; i&lt;bufsize; ++i) buffer[i]+=omp_buffer[i];</span>
+<span class="lineNum">     314 </span>            :   }
+<span class="lineNum">     315 </span><span class="lineCov">      19892 :   if(timers) stopwatch.stop(&quot;2 Loop over tasks&quot;);</span>
+<span class="lineNum">     316 </span>            :   // Turn back on derivative calculation
+<span class="lineNum">     317 </span><span class="lineCov">      19892 :   dertime=true;</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span><span class="lineCov">      19892 :   if(timers) stopwatch.start(&quot;3 MPI gather&quot;);</span>
+<span class="lineNum">     320 </span>            :   // MPI Gather everything
+<span class="lineNum">     321 </span><span class="lineCov">      39784 :   if( !serial &amp;&amp; buffer.size()&gt;0 ) comm.Sum( buffer );</span>
+<span class="lineNum">     322 </span>            :   // MPI Gather index stores
+<span class="lineNum">     323 </span><span class="lineCov">      19892 :   if( mydata &amp;&amp; !lowmem &amp;&amp; !noderiv ) {</span>
+<span class="lineNum">     324 </span><span class="lineCov">        671 :     comm.Sum( der_list ); mydata-&gt;setActiveValsAndDerivatives( der_list );</span>
+<span class="lineNum">     325 </span>            :   }
+<span class="lineNum">     326 </span>            :   // Update the elements that are makign contributions to the sum here
+<span class="lineNum">     327 </span>            :   // this causes problems if we do it in prepare
+<span class="lineNum">     328 </span><span class="lineCov">      19892 :   if(timers) stopwatch.stop(&quot;3 MPI gather&quot;);</span>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span><span class="lineCov">      19892 :   if(timers) stopwatch.start(&quot;4 Finishing computations&quot;);</span>
+<span class="lineNum">     331 </span><span class="lineCov">      19892 :   finishComputations( buffer );</span>
+<span class="lineNum">     332 </span><span class="lineCov">      19892 :   if(timers) stopwatch.stop(&quot;4 Finishing computations&quot;);</span>
+<span class="lineNum">     333 </span><span class="lineCov">      19892 : }</span>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 : void ActionWithVessel::transformBridgedDerivatives( const unsigned&amp; current, MultiValue&amp; invals, MultiValue&amp; outvals ) const {</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :   plumed_error();</span>
+<a name="337"><span class="lineNum">     337 </span>            : }</a>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">     475917 : void ActionWithVessel::calculateAllVessels( const unsigned&amp; taskCode, MultiValue&amp; myvals, MultiValue&amp; bvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) {</span>
+<span class="lineNum">     340 </span><span class="lineCov">    2776587 :   for(unsigned j=0; j&lt;functions.size(); ++j) {</span>
+<span class="lineNum">     341 </span>            :     // Calculate returns a bool that tells us if this particular
+<span class="lineNum">     342 </span>            :     // quantity is contributing more than the tolerance
+<span class="lineNum">     343 </span><span class="lineCov">     608251 :     functions[j]-&gt;calculate( taskCode, functions[j]-&gt;transformDerivatives(taskCode, myvals, bvals), buffer, der_list );</span>
+<span class="lineNum">     344 </span><span class="lineCov">     608251 :     if( !actionIsBridged ) bvals.clearAll();</span>
+<span class="lineNum">     345 </span>            :   }
+<span class="lineNum">     346 </span><span class="lineCov">     475917 :   return;</span>
+<a name="347"><span class="lineNum">     347 </span>            : }</a>
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineCov">      22917 : void ActionWithVessel::finishComputations( const std::vector&lt;double&gt;&amp; buffer ) {</span>
+<span class="lineNum">     350 </span>            :   // Set the final value of the function
+<span class="lineNum">     351 </span><span class="lineCov">     148833 :   for(unsigned j=0; j&lt;functions.size(); ++j) functions[j]-&gt;finish( buffer );</span>
+<a name="352"><span class="lineNum">     352 </span><span class="lineCov">      22917 : }</span></a>
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineCov">       6971 : bool ActionWithVessel::getForcesFromVessels( std::vector&lt;double&gt;&amp; forcesToApply ) {</span>
+<span class="lineNum">     355 </span>            : #ifndef NDEBUG
+<span class="lineNum">     356 </span>            :   if( forcesToApply.size()&gt;0 ) plumed_dbg_assert( forcesToApply.size()==getNumberOfDerivatives() );
+<span class="lineNum">     357 </span>            : #endif
+<span class="lineNum">     358 </span><span class="lineCov">       6971 :   if(tmpforces.size()!=forcesToApply.size() ) tmpforces.resize( forcesToApply.size() );</span>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineCov">      13942 :   forcesToApply.assign( forcesToApply.size(),0.0 );</span>
+<span class="lineNum">     361 </span>            :   bool wasforced=false;
+<span class="lineNum">     362 </span><span class="lineCov">      33301 :   for(unsigned i=0; i&lt;getNumberOfVessels(); ++i) {</span>
+<span class="lineNum">     363 </span><span class="lineCov">      26330 :     if( (functions[i]-&gt;applyForce( tmpforces )) ) {</span>
+<span class="lineNum">     364 </span>            :       wasforced=true;
+<span class="lineNum">     365 </span><span class="lineCov">    2096364 :       for(unsigned j=0; j&lt;forcesToApply.size(); ++j) forcesToApply[j]+=tmpforces[j];</span>
+<span class="lineNum">     366 </span>            :     }
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span><span class="lineCov">       6971 :   return wasforced;</span>
+<span class="lineNum">     369 </span>            : }
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 : void ActionWithVessel::retrieveDomain( std::string&amp; min, std::string&amp; max ) {</span>
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;If your function is periodic you need to add a retrieveDomain function so that ActionWithVessel can retrieve the domain&quot;);</span>
+<span class="lineNum">     373 </span>            : }
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 : Vessel* ActionWithVessel::getVesselWithName( const std::string&amp; mynam ) {</span>
+<span class="lineNum">     376 </span>            :   int target=-1;
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;functions.size(); ++i) {</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :     if( functions[i]-&gt;getName().find(mynam)!=std::string::npos ) {</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :       if( target&lt;0 ) target=i;</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :       else error(&quot;found more than one &quot; + mynam + &quot; object in action&quot;);</span>
+<span class="lineNum">     381 </span>            :     }
+<span class="lineNum">     382 </span>            :   }
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :   return functions[target];</span>
+<span class="lineNum">     384 </span>            : }
+<a name="385"><span class="lineNum">     385 </span>            : </a>
+<span class="lineNum">     386 </span>            : }
+<span class="lineNum">     387 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

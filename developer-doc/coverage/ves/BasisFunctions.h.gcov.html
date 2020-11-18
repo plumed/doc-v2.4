@@ -1,0 +1,394 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/BasisFunctions.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - BasisFunctions.h<span style="font-size: 80%;"> (source / <a href="BasisFunctions.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">51</td>
+            <td class="headerCovTableEntry">53</td>
+            <td class="headerCovTableEntryHi">96.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">55.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_ves_BasisFunctions_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_ves_BasisFunctions_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;core/Action.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #define PLUMED_VES_BASISFUNCTIONS_INIT(ao) BasisFunctions(ao)
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /**
+<span class="lineNum">      37 </span>            : \ingroup INHERIT
+<span class="lineNum">      38 </span>            : Abstract base class for implenting new 1D basis sets.
+<span class="lineNum">      39 </span>            : */
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : class Action;
+<span class="lineNum">      42 </span>            : class Grid;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace ves {
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : class VesBias;
+<a name="47"><span class="lineNum">      47 </span>            : class TargetDistribution;</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">        720 : class BasisFunctions :</span>
+<span class="lineNum">      50 </span>            :   public Action
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            : private:
+<span class="lineNum">      53 </span>            :   // print extra info about the basis set
+<span class="lineNum">      54 </span>            :   bool print_debug_info_;
+<span class="lineNum">      55 </span>            :   // to check if the basis set has been defined
+<span class="lineNum">      56 </span>            :   bool has_been_set;
+<span class="lineNum">      57 </span>            :   // description of the basis set
+<span class="lineNum">      58 </span>            :   std::string description_;
+<span class="lineNum">      59 </span>            :   // the type of the basis set
+<span class="lineNum">      60 </span>            :   std::string type_;
+<span class="lineNum">      61 </span>            :   // the maximum order of the basis functions
+<span class="lineNum">      62 </span>            :   unsigned int norder_;
+<span class="lineNum">      63 </span>            :   // the total number of basis functions
+<span class="lineNum">      64 </span>            :   unsigned int nbasis_;
+<span class="lineNum">      65 </span>            :   // the keywords used to invoke the basis set
+<span class="lineNum">      66 </span>            :   std::vector&lt;std::string&gt; bf_keywords_;
+<span class="lineNum">      67 </span>            :   // prefix for the basis function labels
+<span class="lineNum">      68 </span>            :   std::string bf_label_prefix_;
+<span class="lineNum">      69 </span>            :   // label of each basis function
+<span class="lineNum">      70 </span>            :   std::vector&lt;std::string&gt; bf_labels_;
+<span class="lineNum">      71 </span>            :   // if the basis functions are periodic or not
+<span class="lineNum">      72 </span>            :   bool periodic_;
+<span class="lineNum">      73 </span>            :   // if the basis functions are defined on a bounded interval or not
+<span class="lineNum">      74 </span>            :   bool interval_bounded_;
+<span class="lineNum">      75 </span>            :   // the intrinsic interval of the basis functions
+<span class="lineNum">      76 </span>            :   std::string interval_intrinsic_min_str_;
+<span class="lineNum">      77 </span>            :   std::string interval_intrinsic_max_str_;
+<span class="lineNum">      78 </span>            :   double interval_intrinsic_min_;
+<span class="lineNum">      79 </span>            :   double interval_intrinsic_max_;
+<span class="lineNum">      80 </span>            :   double interval_intrinsic_range_;
+<span class="lineNum">      81 </span>            :   double interval_intrinsic_mean_;
+<span class="lineNum">      82 </span>            :   // the defined (translated) interval of the basis functions
+<span class="lineNum">      83 </span>            :   std::string interval_min_str_;
+<span class="lineNum">      84 </span>            :   std::string interval_max_str_;
+<span class="lineNum">      85 </span>            :   double interval_min_;
+<span class="lineNum">      86 </span>            :   double interval_max_;
+<span class="lineNum">      87 </span>            :   double interval_range_;
+<span class="lineNum">      88 </span>            :   double interval_mean_;
+<span class="lineNum">      89 </span>            :   // the derivative term in the chain rule coming from the translation of the interval
+<span class="lineNum">      90 </span>            :   double argT_derivf_;
+<span class="lineNum">      91 </span>            :   // calculate numerically the integrals of the basis functions over the intervals
+<span class="lineNum">      92 </span>            :   bool numerical_uniform_integrals_;
+<span class="lineNum">      93 </span>            :   unsigned int nbins_;
+<span class="lineNum">      94 </span>            :   // the integrals of the basis functions over the interval on which they are defined
+<span class="lineNum">      95 </span>            :   std::vector &lt;double&gt; uniform_integrals_;
+<span class="lineNum">      96 </span>            :   //
+<span class="lineNum">      97 </span>            :   VesBias* vesbias_pntr_;
+<span class="lineNum">      98 </span>            :   Action* action_pntr_;
+<span class="lineNum">      99 </span>            :   //
+<span class="lineNum">     100 </span>            :   void getAllValuesNumericalDerivs(const double, double&amp;, bool&amp;, std::vector&lt;double&gt;&amp;, std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : protected:
+<span class="lineNum">     103 </span>            :   // setup various stuff
+<span class="lineNum">     104 </span>            :   void setupBF();
+<span class="lineNum">     105 </span>            :   void setupInterval();
+<span class="lineNum">     106 </span>            :   void setNumericalIntegrationBins(const unsigned int nbins) {nbins_=nbins;}
+<span class="lineNum">     107 </span>            :   void numericalUniformIntegrals();
+<span class="lineNum">     108 </span>            :   std::vector&lt;double&gt; numericalTargetDistributionIntegralsFromGrid(const Grid*) const ;
+<span class="lineNum">     109 </span>            :   virtual void setupLabels();
+<span class="lineNum">     110 </span>            :   virtual void setupUniformIntegrals();
+<span class="lineNum">     111 </span>            :   template&lt;typename T&gt;
+<span class="lineNum">     112 </span>            :   void addKeywordToList(const std::string&amp;, const T);
+<span class="lineNum">     113 </span>            :   template&lt;typename T&gt;
+<span class="lineNum">     114 </span>            :   void addKeywordToList(const std::string&amp;, const std::vector&lt;T&gt;&amp;);
+<span class="lineNum">     115 </span>            :   void addKeywordToList(const std::string&amp;, const bool);
+<span class="lineNum">     116 </span>            :   //
+<span class="lineNum">     117 </span><span class="lineCov">        101 :   void setPeriodic() {periodic_=true;}</span>
+<span class="lineNum">     118 </span><span class="lineCov">         79 :   void setNonPeriodic() {periodic_=false;}</span>
+<span class="lineNum">     119 </span><span class="lineCov">        180 :   void setIntervalBounded() {interval_bounded_=true;}</span>
+<span class="lineNum">     120 </span>            :   void setIntervalNonBounded() {interval_bounded_=false;}
+<span class="lineNum">     121 </span><span class="lineCov">        180 :   void setType(const std::string&amp; type_in) {type_=type_in;}</span>
+<span class="lineNum">     122 </span><span class="lineCov">        180 :   void setDescription(const std::string&amp; description_in) {description_=description_in;}</span>
+<span class="lineNum">     123 </span>            :   //
+<span class="lineNum">     124 </span>            :   void setNumberOfBasisFunctions(const unsigned int);
+<span class="lineNum">     125 </span><span class="lineCov">         12 :   void setOrder(const unsigned int norder_in) {norder_=norder_in;}</span>
+<span class="lineNum">     126 </span>            :   void setIntrinsicInterval(const double, const double);
+<span class="lineNum">     127 </span>            :   void setIntrinsicInterval(const std::string&amp;, const std::string&amp;);
+<span class="lineNum">     128 </span>            :   void setInterval(const double, const double);
+<span class="lineNum">     129 </span>            :   void setInterval(const std::string&amp;, const std::string&amp;);
+<span class="lineNum">     130 </span>            :   //
+<span class="lineNum">     131 </span>            :   double intrinsicIntervalMin() const {return interval_intrinsic_min_;}
+<span class="lineNum">     132 </span>            :   double intrinsicIntervalMax() const {return interval_intrinsic_max_;}
+<span class="lineNum">     133 </span>            :   std::string intrinsicIntervalMinStr() const {return interval_intrinsic_min_str_;}
+<span class="lineNum">     134 </span>            :   std::string intrinsicIntervalMaxStr() const {return interval_intrinsic_max_str_;}
+<span class="lineNum">     135 </span>            :   //
+<span class="lineNum">     136 </span>            :   void setUniformIntegral(const unsigned int, const double);
+<span class="lineNum">     137 </span>            :   void setUniformIntegrals(const std::vector&lt;double&gt;&amp;);
+<span class="lineNum">     138 </span>            :   void setAllUniformIntegralsToZero();
+<span class="lineNum">     139 </span>            :   //
+<span class="lineNum">     140 </span>            :   void setLabelPrefix(const std::string&amp;);
+<span class="lineNum">     141 </span>            :   void setLabel(const unsigned int, const std::string&amp;);
+<span class="lineNum">     142 </span>            :   void setLabels(const std::vector&lt;std::string&gt;&amp;);
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : public:
+<span class="lineNum">     145 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     146 </span>            :   explicit BasisFunctions(const ActionOptions&amp;ao);
+<span class="lineNum">     147 </span>            :   bool hasBeenSet() const {return has_been_set;}
+<span class="lineNum">     148 </span>            :   std::string getType() const {return type_;}
+<span class="lineNum">     149 </span>            :   std::string getDescription() const {return description_;}
+<span class="lineNum">     150 </span><span class="lineCov">   32305161 :   unsigned int getOrder() const {return norder_;}</span>
+<span class="lineNum">     151 </span><span class="lineCov">   13076142 :   unsigned int getNumberOfBasisFunctions() const {return nbasis_;}</span>
+<span class="lineNum">     152 </span><span class="lineCov">     169279 :   unsigned int numberOfBasisFunctions() const {return nbasis_;}</span>
+<span class="lineNum">     153 </span>            :   unsigned int getSize() const {return nbasis_;}
+<span class="lineNum">     154 </span><span class="lineCov">        358 :   bool arePeriodic() const {return periodic_;}</span>
+<span class="lineNum">     155 </span>            :   bool intervalBounded() const {return interval_bounded_;}
+<span class="lineNum">     156 </span><span class="lineCov">        136 :   double intervalMin() const {return interval_min_;}</span>
+<span class="lineNum">     157 </span><span class="lineCov">       3143 :   double intervalMax() const {return interval_max_;}</span>
+<span class="lineNum">     158 </span>            :   double intervalRange() const {return interval_range_;}
+<span class="lineNum">     159 </span>            :   double intervalMean() const {return interval_mean_;}
+<span class="lineNum">     160 </span><span class="lineCov">   43601228 :   double intervalDerivf() const {return argT_derivf_;}</span>
+<span class="lineNum">     161 </span>            :   std::string intervalMinStr() const {return interval_min_str_;}
+<span class="lineNum">     162 </span>            :   std::string intervalMaxStr() const {return interval_max_str_;}
+<span class="lineNum">     163 </span><span class="lineCov">        118 :   std::vector&lt;double&gt; getUniformIntegrals() const {return uniform_integrals_;}</span>
+<span class="lineNum">     164 </span>            :   std::vector&lt;double&gt; getTargetDistributionIntegrals(const TargetDistribution*) const;
+<span class="lineNum">     165 </span>            :   //
+<span class="lineNum">     166 </span>            :   std::vector&lt;std::string&gt; getKeywordList() const {return bf_keywords_;}
+<span class="lineNum">     167 </span>            :   std::string getKeywordString() const;
+<span class="lineNum">     168 </span>            :   //
+<span class="lineNum">     169 </span><span class="lineCov">       8855 :   std::string getBasisFunctionLabel(const unsigned int index) const {return bf_labels_[index];}</span>
+<span class="lineNum">     170 </span>            :   std::vector&lt;std::string&gt; getBasisFunctionLabels() const {return bf_labels_;}
+<span class="lineNum">     171 </span>            :   //
+<span class="lineNum">     172 </span>            :   void linkVesBias(VesBias*);
+<span class="lineNum">     173 </span>            :   void linkAction(Action*);
+<span class="lineNum">     174 </span>            :   VesBias* getPntrToVesBias() const;
+<span class="lineNum">     175 </span>            :   Action* getPntrToAction() const;
+<span class="lineNum">     176 </span>            :   //
+<span class="lineNum">     177 </span>            :   double translateArgument(const double, bool&amp;) const;
+<a name="178"><span class="lineNum">     178 </span>            :   double checkIfArgumentInsideInterval(const double, bool&amp;) const;</a>
+<a name="179"><span class="lineNum">     179 </span>            :   //</a>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :   void apply() {};</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :   void calculate() {};</span>
+<span class="lineNum">     182 </span>            :   // calculate the value for the n-th basis function
+<span class="lineNum">     183 </span>            :   double getValue(const double, const unsigned int, double&amp;, bool&amp;) const;
+<span class="lineNum">     184 </span>            :   // calcuate the values for all basis functions
+<span class="lineNum">     185 </span>            :   virtual void getAllValues(const double, double&amp;, bool&amp;, std::vector&lt;double&gt;&amp;, std::vector&lt;double&gt;&amp;) const = 0;
+<span class="lineNum">     186 </span>            :   //virtual void get2ndDerivatives(const double, std::vector&lt;double&gt;&amp;)=0;
+<span class="lineNum">     187 </span>            :   void printInfo() const;
+<span class="lineNum">     188 </span>            :   //
+<span class="lineNum">     189 </span>            :   void getMultipleValue(const std::vector&lt;double&gt;&amp;, std::vector&lt;double&gt;&amp;, std::vector&lt;std::vector&lt;double&gt; &gt;&amp;, std::vector&lt;std::vector&lt;double&gt; &gt;&amp;, const bool numerical_deriv=false) const;
+<span class="lineNum">     190 </span>            :   void writeBasisFunctionsToFile(OFile&amp;, OFile&amp;, const std::string&amp; min_in, const std::string&amp; max_in, unsigned int nbins=1000, const bool ignore_periodicity=false, const std::string&amp; output_fmt=&quot;%15.8f&quot;, const bool numerical_deriv=false) const;
+<span class="lineNum">     191 </span>            : };
+<span class="lineNum">     192 </span>            : 
+<a name="193"><span class="lineNum">     193 </span>            : </a>
+<span class="lineNum">     194 </span>            : inline
+<span class="lineNum">     195 </span><span class="lineCov">        180 : void BasisFunctions::setNumberOfBasisFunctions(const unsigned int nbasis_in) {</span>
+<span class="lineNum">     196 </span><span class="lineCov">        180 :   nbasis_=nbasis_in;</span>
+<span class="lineNum">     197 </span><span class="lineCov">        360 :   bf_labels_.assign(nbasis_,&quot;&quot;);</span>
+<span class="lineNum">     198 </span><span class="lineCov">        360 :   uniform_integrals_.assign(nbasis_,0.0);</span>
+<span class="lineNum">     199 </span><span class="lineCov">        180 : }</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : inline
+<span class="lineNum">     203 </span>            : VesBias* BasisFunctions::getPntrToVesBias() const {
+<span class="lineNum">     204 </span>            :   plumed_massert(vesbias_pntr_!=NULL,&quot;the VES bias has not been linked&quot;);
+<span class="lineNum">     205 </span>            :   return vesbias_pntr_;
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            : inline
+<span class="lineNum">     210 </span>            : Action* BasisFunctions::getPntrToAction() const {
+<span class="lineNum">     211 </span>            :   plumed_massert(action_pntr_!=NULL,&quot;the action has not been linked&quot;);
+<span class="lineNum">     212 </span>            :   return action_pntr_;
+<span class="lineNum">     213 </span>            : }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            : inline
+<span class="lineNum">     217 </span>            : void BasisFunctions::setUniformIntegral(const unsigned index, const double value) {
+<span class="lineNum">     218 </span><span class="lineCov">        355 :   uniform_integrals_[index] = value;</span>
+<span class="lineNum">     219 </span>            : }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : inline
+<span class="lineNum">     223 </span>            : void BasisFunctions::setUniformIntegrals(const std::vector&lt;double&gt;&amp; uniform_integrals_in) {
+<span class="lineNum">     224 </span>            :   plumed_assert(uniform_integrals_in.size()==nbasis_);
+<span class="lineNum">     225 </span>            :   uniform_integrals_ = uniform_integrals_in;
+<span class="lineNum">     226 </span>            : }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : inline
+<span class="lineNum">     230 </span>            : void BasisFunctions::setAllUniformIntegralsToZero() {
+<span class="lineNum">     231 </span><span class="lineCov">        294 :   uniform_integrals_.assign(nbasis_,0.0);</span>
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : inline
+<span class="lineNum">     235 </span>            : void BasisFunctions::setLabelPrefix(const std::string&amp; bf_label_prefix_in) {
+<span class="lineNum">     236 </span><span class="lineCov">         57 :   bf_label_prefix_ = bf_label_prefix_in;</span>
+<span class="lineNum">     237 </span>            : }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : inline
+<span class="lineNum">     241 </span>            : void BasisFunctions::setLabel(const unsigned int index, const std::string&amp; label) {
+<span class="lineNum">     242 </span><span class="lineCov">       1084 :   bf_labels_[index] = label;</span>
+<span class="lineNum">     243 </span>            : }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : inline
+<span class="lineNum">     247 </span>            : void BasisFunctions::setLabels(const std::vector&lt;std::string&gt;&amp; bf_labels_in) {
+<span class="lineNum">     248 </span>            :   bf_labels_ = bf_labels_in;
+<span class="lineNum">     249 </span>            : }
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : inline
+<span class="lineNum">     253 </span>            : double BasisFunctions::translateArgument(const double arg, bool&amp; inside_interval) const {
+<span class="lineNum">     254 </span>            :   // NOTE: only works for symmetric intrinsic intervals
+<span class="lineNum">     255 </span>            :   inside_interval=true;
+<span class="lineNum">     256 </span><span class="lineCov">    4735480 :   double argT = (arg-interval_mean_)*argT_derivf_;</span>
+<span class="lineNum">     257 </span><span class="lineCov">    4735480 :   if(argT &lt; interval_intrinsic_min_) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">        429 :     inside_interval=false;</span>
+<span class="lineNum">     259 </span><span class="lineCov">        429 :     argT=interval_intrinsic_min_;</span>
+<span class="lineNum">     260 </span>            :   }
+<span class="lineNum">     261 </span><span class="lineCov">    4735051 :   else if(argT &gt; interval_intrinsic_max_) {</span>
+<span class="lineNum">     262 </span><span class="lineCov">      13642 :     inside_interval=false;</span>
+<span class="lineNum">     263 </span><span class="lineCov">      13642 :     argT=interval_intrinsic_max_;</span>
+<span class="lineNum">     264 </span>            :   }
+<span class="lineNum">     265 </span>            :   return argT;
+<span class="lineNum">     266 </span>            : }
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            : inline
+<span class="lineNum">     270 </span>            : double BasisFunctions::checkIfArgumentInsideInterval(const double arg, bool&amp; inside_interval) const {
+<span class="lineNum">     271 </span>            :   inside_interval=true;
+<span class="lineNum">     272 </span>            :   double argT = arg;
+<span class="lineNum">     273 </span><span class="lineCov">     727711 :   if(arg &lt; interval_min_) {</span>
+<span class="lineNum">     274 </span><span class="lineCov">        202 :     inside_interval=false;</span>
+<span class="lineNum">     275 </span><span class="lineCov">        202 :     argT=interval_min_;</span>
+<span class="lineNum">     276 </span>            :   }
+<span class="lineNum">     277 </span><span class="lineCov">     727509 :   else if(arg &gt; interval_max_) {</span>
+<span class="lineNum">     278 </span><span class="lineCov">        187 :     inside_interval=false;</span>
+<span class="lineNum">     279 </span><span class="lineCov">        187 :     argT=interval_max_;</span>
+<span class="lineNum">     280 </span>            :   }
+<span class="lineNum">     281 </span>            :   return argT;
+<span class="lineNum">     282 </span>            : }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            : template&lt;typename T&gt;
+<span class="lineNum">     287 </span><span class="lineCov">        576 : void BasisFunctions::addKeywordToList(const std::string&amp; keyword, const T value) {</span>
+<span class="lineNum">     288 </span>            :   std::string str_value;
+<span class="lineNum">     289 </span><span class="lineCov">        576 :   Tools::convert(value,str_value);</span>
+<span class="lineNum">     290 </span><span class="lineCov">       1728 :   bf_keywords_.push_back(keyword+&quot;=&quot;+str_value);</span>
+<span class="lineNum">     291 </span><span class="lineCov">        576 : }</span>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : template&lt;typename T&gt;
+<span class="lineNum">     295 </span><span class="lineCov">          2 : void BasisFunctions::addKeywordToList(const std::string&amp; keyword, const std::vector&lt;T&gt;&amp; values) {</span>
+<span class="lineNum">     296 </span>            :   std::string str_value;
+<span class="lineNum">     297 </span>            :   std::string str_keywordvalues;
+<span class="lineNum">     298 </span><span class="lineCov">          2 :   Tools::convert(values[0],str_value);</span>
+<span class="lineNum">     299 </span><span class="lineCov">          6 :   str_keywordvalues = keyword + &quot;=&quot; + str_value;</span>
+<span class="lineNum">     300 </span><span class="lineCov">         13 :   for(unsigned int i=1; i&lt;values.size(); i++) {</span>
+<span class="lineNum">     301 </span><span class="lineCov">          3 :     Tools::convert(values[i],str_value);</span>
+<span class="lineNum">     302 </span><span class="lineCov">          6 :     str_keywordvalues += &quot;,&quot; + str_value;</span>
+<span class="lineNum">     303 </span>            :   }
+<span class="lineNum">     304 </span><span class="lineCov">          2 :   bf_keywords_.push_back(str_keywordvalues);</span>
+<span class="lineNum">     305 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : inline
+<span class="lineNum">     309 </span>            : void BasisFunctions::addKeywordToList(const std::string&amp; keyword, const bool value) {
+<span class="lineNum">     310 </span><span class="lineCov">         73 :   if(value) {bf_keywords_.push_back(keyword);}</span>
+<span class="lineNum">     311 </span>            : }
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : }
+<span class="lineNum">     315 </span>            : }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

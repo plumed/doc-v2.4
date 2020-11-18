@@ -1,0 +1,1540 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/RMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - RMSD.cpp<span style="font-size: 80%;"> (source / <a href="RMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">533</td>
+            <td class="headerCovTableEntry">724</td>
+            <td class="headerCovTableEntryLo">73.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntryLo">52.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;RMSD.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;PDB.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Log.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      27 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      28 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      29 </span>            : using namespace std;
+<a name="30"><span class="lineNum">      30 </span>            : namespace PLMD {</a>
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">      94576 : RMSD::RMSD() : alignmentMethod(SIMPLE),reference_center_is_calculated(false),reference_center_is_removed(false),positions_center_is_calculated(false),positions_center_is_removed(false) {}</span>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : ///
+<span class="lineNum">      35 </span>            : /// general method to set all the rmsd property at once by using a pdb where occupancy column sets the weights for the atoms involved in the
+<a name="36"><span class="lineNum">      36 </span>            : /// alignment and beta sets the weight that are used for calculating the displacement.</a>
+<span class="lineNum">      37 </span>            : ///
+<span class="lineNum">      38 </span><span class="lineCov">       1057 : void RMSD::set(const PDB&amp;pdb, const string &amp; mytype, bool remove_center, bool normalize_weights ) {</span>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">       1057 :   set(pdb.getOccupancy(),pdb.getBeta(),pdb.getPositions(),mytype,remove_center,normalize_weights);</span>
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<span class="lineNum">      42 </span><span class="lineCov">       1057 : }</span>
+<span class="lineNum">      43 </span><span class="lineCov">       2056 : void RMSD::set(const std::vector&lt;double&gt; &amp; align, const std::vector&lt;double&gt; &amp; displace, const std::vector&lt;Vector&gt; &amp; reference, const string &amp; mytype, bool remove_center, bool normalize_weights ) {</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">       2056 :   setReference(reference); // this by default remove the com and assumes uniform weights</span>
+<span class="lineNum">      46 </span><span class="lineCov">       2056 :   setAlign(align, normalize_weights, remove_center); // this recalculates the com with weights. If remove_center=false then it restore the center back</span>
+<span class="lineNum">      47 </span><span class="lineCov">       2056 :   setDisplace(displace, normalize_weights);  // this is does not affect any calculation of the weights</span>
+<span class="lineNum">      48 </span><span class="lineCov">       2056 :   setType(mytype);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">       2056 : }</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">      47248 : void RMSD::setType(const string &amp; mytype) {</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineCov">      47248 :   alignmentMethod=SIMPLE; // initialize with the simplest case: no rotation</span>
+<span class="lineNum">      55 </span><span class="lineCov">      47248 :   if (mytype==&quot;SIMPLE&quot;) {</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     alignmentMethod=SIMPLE;</span>
+<span class="lineNum">      57 </span>            :   }
+<span class="lineNum">      58 </span><span class="lineCov">      47248 :   else if (mytype==&quot;OPTIMAL&quot;) {</span>
+<span class="lineNum">      59 </span><span class="lineCov">      47248 :     alignmentMethod=OPTIMAL;</span>
+<span class="lineNum">      60 </span>            :   }
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :   else if (mytype==&quot;OPTIMAL-FAST&quot;) {</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :     alignmentMethod=OPTIMAL_FAST;</span>
+<span class="lineNum">      63 </span>            :   }
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :   else plumed_merror(&quot;unknown RMSD type&quot; + mytype);</span>
+<span class="lineNum">      65 </span>            : 
+<a name="66"><span class="lineNum">      66 </span><span class="lineCov">      47248 : }</span></a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">       1010 : void RMSD::clear() {</span>
+<span class="lineNum">      69 </span>            :   reference.clear();
+<span class="lineNum">      70 </span><span class="lineCov">       1010 :   reference_center.zero();</span>
+<span class="lineNum">      71 </span><span class="lineCov">       1010 :   reference_center_is_calculated=false;</span>
+<span class="lineNum">      72 </span><span class="lineCov">       1010 :   reference_center_is_removed=false;</span>
+<span class="lineNum">      73 </span>            :   align.clear();
+<span class="lineNum">      74 </span>            :   displace.clear();
+<span class="lineNum">      75 </span><span class="lineCov">       1010 :   positions_center.zero();</span>
+<span class="lineNum">      76 </span><span class="lineCov">       1010 :   positions_center_is_calculated=false;</span>
+<span class="lineNum">      77 </span><span class="lineCov">       1010 :   positions_center_is_removed=false;</span>
+<span class="lineNum">      78 </span><span class="lineCov">       1010 : }</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          4 : string RMSD::getMethod() {</span>
+<span class="lineNum">      81 </span>            :   string mystring;
+<span class="lineNum">      82 </span><span class="lineCov">          4 :   switch(alignmentMethod) {</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :   case SIMPLE: mystring.assign(&quot;SIMPLE&quot;); break;</span>
+<span class="lineNum">      84 </span><span class="lineCov">          4 :   case OPTIMAL: mystring.assign(&quot;OPTIMAL&quot;); break;</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST: mystring.assign(&quot;OPTIMAL-FAST&quot;); break;</span>
+<span class="lineNum">      86 </span>            :   }
+<span class="lineNum">      87 </span><span class="lineCov">          4 :   return mystring;</span>
+<span class="lineNum">      88 </span>            : }
+<span class="lineNum">      89 </span>            : ///
+<span class="lineNum">      90 </span>            : /// this calculates the center of mass for the reference and removes it from the reference itself
+<span class="lineNum">      91 </span>            : /// considering uniform weights for alignment
+<span class="lineNum">      92 </span>            : ///
+<span class="lineNum">      93 </span><span class="lineCov">      47264 : void RMSD::setReference(const vector&lt;Vector&gt; &amp; reference) {</span>
+<span class="lineNum">      94 </span><span class="lineCov">      47264 :   unsigned n=reference.size();</span>
+<span class="lineNum">      95 </span><span class="lineCov">      47264 :   this-&gt;reference=reference;</span>
+<span class="lineNum">      96 </span><span class="lineCov">      47264 :   plumed_massert(align.empty(),&quot;you should first clear() an RMSD object, then set a new reference&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">      47264 :   plumed_massert(displace.empty(),&quot;you should first clear() an RMSD object, then set a new reference&quot;);</span>
+<span class="lineNum">      98 </span><span class="lineCov">      47264 :   align.resize(n,1.0/n);</span>
+<span class="lineNum">      99 </span><span class="lineCov">      47264 :   displace.resize(n,1.0/n);</span>
+<span class="lineNum">     100 </span><span class="lineCov">    1913936 :   for(unsigned i=0; i&lt;n; i++) reference_center+=this-&gt;reference[i]*align[i];</span>
+<span class="lineNum">     101 </span>            :   #pragma omp simd
+<span class="lineNum">     102 </span><span class="lineCov">    1244448 :   for(unsigned i=0; i&lt;n; i++) this-&gt;reference[i]-=reference_center;</span>
+<span class="lineNum">     103 </span><span class="lineCov">      47264 :   reference_center_is_calculated=true;</span>
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">      47264 :   reference_center_is_removed=true;</span></a>
+<span class="lineNum">     105 </span><span class="lineCov">      47264 : }</span>
+<span class="lineNum">     106 </span><span class="lineCov">      45192 : std::vector&lt;Vector&gt; RMSD::getReference() {</span>
+<span class="lineNum">     107 </span><span class="lineCov">      45192 :   return reference;</span>
+<span class="lineNum">     108 </span>            : }
+<span class="lineNum">     109 </span>            : ///
+<span class="lineNum">     110 </span>            : /// the alignment weights are here normalized to 1 and  the center of the reference is removed accordingly
+<span class="lineNum">     111 </span>            : ///
+<span class="lineNum">     112 </span><span class="lineCov">       2056 : void RMSD::setAlign(const vector&lt;double&gt; &amp; align, bool normalize_weights, bool remove_center) {</span>
+<span class="lineNum">     113 </span><span class="lineCov">       2056 :   unsigned n=reference.size();</span>
+<span class="lineNum">     114 </span><span class="lineCov">       2056 :   plumed_massert(this-&gt;align.size()==align.size(),&quot;mismatch in dimension of align/displace arrays&quot;);</span>
+<span class="lineNum">     115 </span><span class="lineCov">       2056 :   this-&gt;align=align;</span>
+<span class="lineNum">     116 </span><span class="lineCov">       2056 :   if(normalize_weights) {</span>
+<span class="lineNum">     117 </span>            :     double w=0.0;
+<span class="lineNum">     118 </span><span class="lineCov">       4104 :     #pragma omp simd reduction(+:w)</span>
+<span class="lineNum">     119 </span><span class="lineCov">      69000 :     for(unsigned i=0; i&lt;n; i++) w+=this-&gt;align[i];</span>
+<span class="lineNum">     120 </span><span class="lineCov">       2052 :     plumed_massert(w&gt;epsilon,&quot;It looks like weights used for alignment are zero. Check your reference PDB file.&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">       2052 :     double inv=1.0/w;</span>
+<span class="lineNum">     122 </span>            :     #pragma omp simd
+<span class="lineNum">     123 </span><span class="lineCov">      69000 :     for(unsigned i=0; i&lt;n; i++) this-&gt;align[i]*=inv;</span>
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span>            :   // recalculate the center anyway
+<span class="lineNum">     126 </span>            :   // just remove the center if that is asked
+<span class="lineNum">     127 </span>            :   // if the center was removed before, then add it and store the new one
+<span class="lineNum">     128 </span><span class="lineCov">       2056 :   if(reference_center_is_removed) {</span>
+<span class="lineNum">     129 </span><span class="lineCov">       2056 :     plumed_massert(reference_center_is_calculated,&quot; seems that the reference center has been removed but not calculated and stored!&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       2056 :     addCenter(reference,reference_center);</span>
+<span class="lineNum">     131 </span>            :   }
+<span class="lineNum">     132 </span><span class="lineCov">       2056 :   reference_center=calculateCenter(reference,this-&gt;align);</span>
+<span class="lineNum">     133 </span><span class="lineCov">       2056 :   reference_center_is_calculated=true;</span>
+<span class="lineNum">     134 </span><span class="lineCov">       2056 :   if(remove_center) {</span>
+<span class="lineNum">     135 </span><span class="lineCov">       2052 :     removeCenter(reference,reference_center);</span>
+<span class="lineNum">     136 </span><span class="lineCov">       2052 :     reference_center_is_removed=true;</span>
+<span class="lineNum">     137 </span>            :   } else {
+<span class="lineNum">     138 </span><span class="lineCov">          4 :     reference_center_is_removed=false;</span>
+<a name="139"><span class="lineNum">     139 </span>            :   }</a>
+<span class="lineNum">     140 </span><span class="lineCov">       2056 : }</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 : std::vector&lt;double&gt; RMSD::getAlign() {</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   return align;</span>
+<span class="lineNum">     143 </span>            : }
+<span class="lineNum">     144 </span>            : ///
+<span class="lineNum">     145 </span>            : /// here the weigth for normalized weighths are normalized and set
+<span class="lineNum">     146 </span>            : ///
+<span class="lineNum">     147 </span><span class="lineCov">       2056 : void RMSD::setDisplace(const vector&lt;double&gt; &amp; displace, bool normalize_weights) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">       2056 :   unsigned n=reference.size();</span>
+<span class="lineNum">     149 </span><span class="lineCov">       2056 :   plumed_massert(this-&gt;displace.size()==displace.size(),&quot;mismatch in dimension of align/displace arrays&quot;);</span>
+<span class="lineNum">     150 </span><span class="lineCov">       2056 :   this-&gt;displace=displace;</span>
+<span class="lineNum">     151 </span>            :   double w=0.0;
+<span class="lineNum">     152 </span><span class="lineCov">       4112 :   #pragma omp simd reduction(+:w)</span>
+<span class="lineNum">     153 </span><span class="lineCov">      69040 :   for(unsigned i=0; i&lt;n; i++) w+=this-&gt;displace[i];</span>
+<span class="lineNum">     154 </span><span class="lineCov">       2056 :   plumed_massert(w&gt;epsilon,&quot;It looks like weights used for displacement are zero. Check your reference PDB file.&quot;);</span>
+<span class="lineNum">     155 </span><span class="lineCov">       2056 :   double inv=1.0/w;</span>
+<span class="lineNum">     156 </span><span class="lineCov">       2056 :   if(normalize_weights) {</span>
+<span class="lineNum">     157 </span>            :     #pragma omp simd
+<span class="lineNum">     158 </span><span class="lineCov">      69000 :     for(unsigned i=0; i&lt;n; i++) this-&gt;displace[i]*=inv;</span>
+<a name="159"><span class="lineNum">     159 </span>            :   }</a>
+<span class="lineNum">     160 </span><span class="lineCov">       2056 : }</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 : std::vector&lt;double&gt; RMSD::getDisplace() {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   return displace;</span>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : ///
+<span class="lineNum">     165 </span>            : /// This is the main workhorse for rmsd that decides to use specific optimal alignment versions
+<span class="lineNum">     166 </span>            : ///
+<span class="lineNum">     167 </span><span class="lineCov">     330337 : double RMSD::calculate(const std::vector&lt;Vector&gt; &amp; positions,std::vector&lt;Vector&gt; &amp;derivatives, bool squared)const {</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :   double ret=0.;
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">     330337 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     172 </span>            :   case SIMPLE : {
+<span class="lineNum">     173 </span>            :     //  do a simple alignment without rotation
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :     std::vector&lt;Vector&gt; displacement( derivatives.size() );</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :     ret=simpleAlignment(align,displace,positions,reference,derivatives,displacement,squared);</span>
+<span class="lineNum">     176 </span>            :     break;
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :   } case OPTIMAL_FAST : {</span>
+<span class="lineNum">     178 </span>            :     // this is calling the fastest option:
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment&lt;false,true&gt;(align,displace,positions,reference,derivatives,squared);</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment&lt;false,false&gt;(align,displace,positions,reference,derivatives,squared);</span>
+<span class="lineNum">     181 </span>            :     break;
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">     330337 :   } case OPTIMAL : {</span>
+<span class="lineNum">     184 </span>            :     // this is the fast routine but in the &quot;safe&quot; mode, which gives less numerical error:
+<span class="lineNum">     185 </span><span class="lineCov">     330337 :     if(align==displace) ret=optimalAlignment&lt;true,true&gt;(align,displace,positions,reference,derivatives,squared);</span>
+<span class="lineNum">     186 </span><span class="lineCov">          1 :     else ret=optimalAlignment&lt;true,false&gt;(align,displace,positions,reference,derivatives,squared);</span>
+<span class="lineNum">     187 </span>            :     break;
+<span class="lineNum">     188 </span>            :   }
+<span class="lineNum">     189 </span>            :   }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">     330337 :   return ret;</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : /// convenience method for calculating the standard derivatives and the derivative of the rmsd respect to the reference position
+<span class="lineNum">     197 </span><span class="lineCov">          1 : double RMSD::calc_DDistDRef( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;derivatives, std::vector&lt;Vector&gt;&amp; DDistDRef, const bool squared  ) {</span>
+<span class="lineNum">     198 </span>            :   double ret=0.;
+<span class="lineNum">     199 </span><span class="lineCov">          1 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     202 </span>            :     break;
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_DDistDRef&lt;false,true&gt;(align,displace,positions,reference,derivatives,DDistDRef, squared);</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_DDistDRef&lt;false,false&gt;(align,displace,positions,reference,derivatives,DDistDRef,squared);</span>
+<span class="lineNum">     206 </span>            :     break;
+<span class="lineNum">     207 </span><span class="lineCov">          1 :   case OPTIMAL:</span>
+<span class="lineNum">     208 </span><span class="lineCov">          1 :     if(align==displace) ret=optimalAlignment_DDistDRef&lt;true,true&gt;(align,displace,positions,reference,derivatives,DDistDRef,squared);</span>
+<span class="lineNum">     209 </span><span class="lineCov">          1 :     else                ret=optimalAlignment_DDistDRef&lt;true,false&gt;(align,displace,positions,reference,derivatives,DDistDRef,squared);</span>
+<span class="lineNum">     210 </span>            :     break;
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span><span class="lineCov">          1 :   return ret;</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            : /// convenience method for calculating the standard derivatives and the derivative of the rmsd respect to the reference position without the matrix contribution
+<span class="lineNum">     217 </span>            : /// as required by SOMA
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 : double RMSD::calc_SOMA( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;derivatives, std::vector&lt;Vector&gt;&amp; DDistDRef, const bool squared  ) {</span>
+<span class="lineNum">     219 </span>            :   double ret=0.;
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     223 </span>            :     break;
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_SOMA&lt;false,true&gt;(align,displace,positions,reference,derivatives,DDistDRef, squared);</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_SOMA&lt;false,false&gt;(align,displace,positions,reference,derivatives,DDistDRef,squared);</span>
+<span class="lineNum">     227 </span>            :     break;
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :   case OPTIMAL:</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_SOMA&lt;true,true&gt;(align,displace,positions,reference,derivatives,DDistDRef,squared);</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_SOMA&lt;true,false&gt;(align,displace,positions,reference,derivatives,DDistDRef,squared);</span>
+<span class="lineNum">     231 </span>            :     break;
+<span class="lineNum">     232 </span>            :   }
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :   return ret;</span>
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 : double RMSD::calc_DDistDRef_Rot_DRotDPos( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;derivatives, std::vector&lt;Vector&gt;&amp; DDistDRef, Tensor &amp; Rot, Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp;DRotDPos, const bool squared  ) {</span>
+<span class="lineNum">     238 </span>            :   double ret=0.;
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     242 </span>            :     break;
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_DDistDRef_Rot_DRotDPos&lt;false,true&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos,  squared);</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_DDistDRef_Rot_DRotDPos&lt;false,false&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, squared);</span>
+<span class="lineNum">     246 </span>            :     break;
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :   case OPTIMAL:</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_DDistDRef_Rot_DRotDPos&lt;true,true&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, squared);</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_DDistDRef_Rot_DRotDPos&lt;true,false&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, squared);</span>
+<span class="lineNum">     250 </span>            :     break;
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :   return ret;</span>
+<span class="lineNum">     253 </span>            : }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 : double RMSD::calc_DDistDRef_Rot_DRotDPos_DRotDRef( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;derivatives, std::vector&lt;Vector&gt;&amp; DDistDRef, Tensor &amp; Rot, Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp;DRotDPos,  Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp;DRotDRef, const bool squared  ) {</span>
+<span class="lineNum">     256 </span>            :   double ret=0.;
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     260 </span>            :     break;
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_DDistDRef_Rot_DRotDPos_DRotDRef&lt;false,true&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, DRotDRef,   squared);</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_DDistDRef_Rot_DRotDPos_DRotDRef&lt;false,false&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, DRotDRef,  squared);</span>
+<span class="lineNum">     264 </span>            :     break;
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :   case OPTIMAL:</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_DDistDRef_Rot_DRotDPos_DRotDRef&lt;true,true&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, DRotDRef, squared);</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_DDistDRef_Rot_DRotDPos_DRotDRef&lt;true,false&gt;(align,displace,positions,reference,derivatives,DDistDRef, Rot, DRotDPos, DRotDRef, squared);</span>
+<span class="lineNum">     268 </span>            :     break;
+<span class="lineNum">     269 </span>            :   }
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :   return ret;</span>
+<span class="lineNum">     271 </span>            : }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">       1092 : double RMSD::calc_Rot_DRotDRr01( const std::vector&lt;Vector&gt;&amp; positions, Tensor &amp; Rotation, std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; &amp; DRotDRr01, const bool squared) {</span>
+<span class="lineNum">     274 </span>            :   double ret=0.;
+<span class="lineNum">     275 </span><span class="lineCov">       1092 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     278 </span>            :     break;
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_Rot_DRotDRr01&lt;false,true&gt;(align,displace,positions,reference, Rotation, DRotDRr01,   squared);</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_Rot_DRotDRr01&lt;false,false&gt;(align,displace,positions,reference, Rotation, DRotDRr01,  squared);</span>
+<span class="lineNum">     282 </span>            :     break;
+<span class="lineNum">     283 </span><span class="lineCov">       1092 :   case OPTIMAL:</span>
+<span class="lineNum">     284 </span><span class="lineCov">       1092 :     if(align==displace) ret=optimalAlignment_Rot_DRotDRr01&lt;true,true&gt;(align,displace,positions,reference, Rotation, DRotDRr01, squared);</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_Rot_DRotDRr01&lt;true,false&gt;(align,displace,positions,reference, Rotation, DRotDRr01, squared);</span>
+<span class="lineNum">     286 </span>            :     break;
+<span class="lineNum">     287 </span>            :   }
+<span class="lineNum">     288 </span><span class="lineCov">       1092 :   return ret;</span>
+<span class="lineNum">     289 </span>            : }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineCov">        672 : double RMSD::calc_Rot( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;derivatives, Tensor &amp; Rotation, const bool squared) {</span>
+<span class="lineNum">     292 </span>            :   double ret=0.;
+<span class="lineNum">     293 </span><span class="lineCov">        672 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     296 </span>            :     break;
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_Rot&lt;false,true&gt;(align,displace,positions,reference,derivatives, Rotation, squared);</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_Rot&lt;false,false&gt;(align,displace,positions,reference,derivatives, Rotation, squared);</span>
+<span class="lineNum">     300 </span>            :     break;
+<span class="lineNum">     301 </span><span class="lineCov">        672 :   case OPTIMAL:</span>
+<span class="lineNum">     302 </span><span class="lineCov">        672 :     if(align==displace) ret=optimalAlignment_Rot&lt;true,true&gt;(align,displace,positions,reference,derivatives, Rotation, squared);</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_Rot&lt;true,false&gt;(align,displace,positions,reference,derivatives, Rotation, squared);</span>
+<span class="lineNum">     304 </span>            :     break;
+<span class="lineNum">     305 </span>            :   }
+<span class="lineNum">     306 </span><span class="lineCov">        672 :   return ret;</span>
+<span class="lineNum">     307 </span>            : }
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineCov">      45192 : double RMSD::calculateWithCloseStructure( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;derivatives, Tensor &amp; rotationPosClose, Tensor &amp; rotationRefClose, std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; &amp; drotationPosCloseDrr01, const bool squared) {</span>
+<span class="lineNum">     310 </span>            :   double ret=0.;
+<span class="lineNum">     311 </span><span class="lineCov">      45192 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     314 </span>            :     break;
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignmentWithCloseStructure&lt;false,true&gt;(align,displace,positions,reference,derivatives, rotationPosClose, rotationRefClose, drotationPosCloseDrr01, squared);</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignmentWithCloseStructure&lt;false,false&gt;(align,displace,positions,reference,derivatives, rotationPosClose, rotationRefClose, drotationPosCloseDrr01, squared);</span>
+<span class="lineNum">     318 </span>            :     break;
+<span class="lineNum">     319 </span><span class="lineCov">      45192 :   case OPTIMAL:</span>
+<span class="lineNum">     320 </span><span class="lineCov">      45192 :     if(align==displace) ret=optimalAlignmentWithCloseStructure&lt;true,true&gt;(align,displace,positions,reference,derivatives, rotationPosClose, rotationRefClose, drotationPosCloseDrr01, squared);</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignmentWithCloseStructure&lt;true,false&gt;(align,displace,positions,reference,derivatives, rotationPosClose, rotationRefClose, drotationPosCloseDrr01, squared);</span>
+<span class="lineNum">     322 </span>            :     break;
+<span class="lineNum">     323 </span>            :   }
+<span class="lineNum">     324 </span><span class="lineCov">      45192 :   return ret;</span>
+<span class="lineNum">     325 </span>            : }
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineCov">       4441 : double RMSD::calc_PCAelements( const std::vector&lt;Vector&gt;&amp; positions, std::vector&lt;Vector&gt; &amp;DDistDPos, Tensor &amp; Rotation, Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp; DRotDPos,std::vector&lt;Vector&gt;  &amp; alignedpositions, std::vector&lt;Vector&gt; &amp; centeredpositions, std::vector&lt;Vector&gt; &amp;centeredreference, const bool&amp; squared  ) const {</span>
+<span class="lineNum">     328 </span>            :   double ret=0.;
+<span class="lineNum">     329 </span><span class="lineCov">       4441 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     332 </span>            :     break;
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :     if(align==displace) ret=optimalAlignment_PCA&lt;false,true&gt;(align,displace,positions,reference, alignedpositions, centeredpositions,centeredreference,Rotation,DDistDPos,DRotDPos,squared);</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_PCA&lt;false,false&gt;(align,displace,positions,reference, alignedpositions, centeredpositions,centeredreference,Rotation,DDistDPos,DRotDPos,squared);</span>
+<span class="lineNum">     336 </span>            :     break;
+<span class="lineNum">     337 </span><span class="lineCov">       4441 :   case OPTIMAL:</span>
+<span class="lineNum">     338 </span><span class="lineCov">       4441 :     if(align==displace) ret=optimalAlignment_PCA&lt;true,true&gt;(align,displace,positions,reference, alignedpositions, centeredpositions,centeredreference,Rotation,DDistDPos,DRotDPos,squared);</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :     else                ret=optimalAlignment_PCA&lt;true,false&gt;(align,displace,positions,reference, alignedpositions, centeredpositions,centeredreference,Rotation,DDistDPos,DRotDPos,squared);</span>
+<span class="lineNum">     340 </span>            :     break;
+<span class="lineNum">     341 </span>            :   }
+<span class="lineNum">     342 </span><span class="lineCov">       4441 :   return ret;</span>
+<span class="lineNum">     343 </span>            : }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">         48 : double RMSD::calc_FitElements( const std::vector&lt;Vector&gt;&amp; positions, Tensor &amp; Rotation, Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp; DRotDPos, std::vector&lt;Vector&gt; &amp; centeredpositions, Vector &amp;center_positions, const bool&amp; squared  ) {</span>
+<span class="lineNum">     347 </span>            :   double ret=0.;
+<span class="lineNum">     348 </span><span class="lineCov">         48 :   switch(alignmentMethod) {</span>
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :   case SIMPLE:</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;derivative of the refreence frame not implemented for SIMPLE alignmentMethod \n&quot;);</span>
+<span class="lineNum">     351 </span>            :     break;
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :   case OPTIMAL_FAST:</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :     if(align==displace)ret=optimalAlignment_Fit&lt;false,true&gt;(align,displace,positions,reference, Rotation,DRotDPos,centeredpositions,center_positions,squared);</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :     else               ret=optimalAlignment_Fit&lt;false,false&gt;(align,displace,positions,reference, Rotation,DRotDPos,centeredpositions,center_positions,squared);</span>
+<span class="lineNum">     355 </span>            :     break;
+<span class="lineNum">     356 </span><span class="lineCov">         48 :   case OPTIMAL:</span>
+<span class="lineNum">     357 </span><span class="lineCov">         48 :     if(align==displace)ret=optimalAlignment_Fit&lt;true,true&gt;(align,displace,positions,reference,Rotation,DRotDPos,centeredpositions,center_positions,squared);</span>
+<span class="lineNum">     358 </span><span class="lineCov">         48 :     else               ret=optimalAlignment_Fit&lt;true,false&gt;(align,displace,positions,reference,Rotation,DRotDPos,centeredpositions,center_positions,squared);</span>
+<span class="lineNum">     359 </span>            :     break;
+<span class="lineNum">     360 </span>            :   }
+<span class="lineNum">     361 </span><span class="lineCov">         48 :   return ret;</span>
+<span class="lineNum">     362 </span>            : }
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : 
+<a name="367"><span class="lineNum">     367 </span>            : </a>
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span><span class="lineCov">        149 : double RMSD::simpleAlignment(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     370 </span>            :                              const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     371 </span>            :                              const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     372 </span>            :                              const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     373 </span>            :                              std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     374 </span>            :                              std::vector&lt;Vector&gt;  &amp; displacement,
+<span class="lineNum">     375 </span>            :                              bool squared)const {
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :   double dist(0);
+<span class="lineNum">     378 </span><span class="lineCov">        149 :   unsigned n=reference.size();</span>
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span><span class="lineCov">        149 :   Vector apositions;</span>
+<span class="lineNum">     381 </span><span class="lineCov">        149 :   Vector areference;</span>
+<span class="lineNum">     382 </span><span class="lineCov">        149 :   Vector dpositions;</span>
+<span class="lineNum">     383 </span><span class="lineCov">        149 :   Vector dreference;</span>
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineCov">       4693 :   for(unsigned i=0; i&lt;n; i++) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">       4544 :     double aw=align[i];</span>
+<span class="lineNum">     387 </span><span class="lineCov">       2272 :     double dw=displace[i];</span>
+<span class="lineNum">     388 </span><span class="lineCov">       2272 :     apositions+=positions[i]*aw;</span>
+<span class="lineNum">     389 </span><span class="lineCov">       2272 :     areference+=reference[i]*aw;</span>
+<span class="lineNum">     390 </span><span class="lineCov">       2272 :     dpositions+=positions[i]*dw;</span>
+<span class="lineNum">     391 </span><span class="lineCov">       2272 :     dreference+=reference[i]*dw;</span>
+<span class="lineNum">     392 </span>            :   }
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span><span class="lineCov">        149 :   Vector shift=((apositions-areference)-(dpositions-dreference));</span>
+<span class="lineNum">     395 </span><span class="lineCov">       4693 :   for(unsigned i=0; i&lt;n; i++) {</span>
+<span class="lineNum">     396 </span><span class="lineCov">       9088 :     displacement[i]=(positions[i]-apositions)-(reference[i]-areference);</span>
+<span class="lineNum">     397 </span><span class="lineCov">       4544 :     dist+=displace[i]*displacement[i].modulo2();</span>
+<span class="lineNum">     398 </span><span class="lineCov">       6816 :     derivatives[i]=2*(displace[i]*displacement[i]+align[i]*shift);</span>
+<span class="lineNum">     399 </span>            :   }
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span><span class="lineCov">        149 :   if(!squared) {</span>
+<span class="lineNum">     402 </span>            :     // sqrt
+<span class="lineNum">     403 </span><span class="lineCov">        106 :     dist=sqrt(dist);</span>
+<span class="lineNum">     404 </span>            :     ///// sqrt on derivatives
+<span class="lineNum">     405 </span><span class="lineCov">       4192 :     for(unsigned i=0; i&lt;n; i++) {derivatives[i]*=(0.5/dist);}</span>
+<span class="lineNum">     406 </span>            :   }
+<span class="lineNum">     407 </span><span class="lineCov">        149 :   return dist;</span>
+<span class="lineNum">     408 </span>            : }
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            : // this below enable the standard case for rmsd where the rmsd is calculated and the derivative of rmsd respect to positions is retrieved
+<span class="lineNum">     411 </span>            : // additionally this assumes that the com of the reference is already subtracted.
+<span class="lineNum">     412 </span>            : #define OLDRMSD
+<span class="lineNum">     413 </span>            : #ifdef OLDRMSD
+<span class="lineNum">     414 </span>            : // notice that in the current implementation the safe argument only makes sense for
+<span class="lineNum">     415 </span>            : // align==displace
+<span class="lineNum">     416 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     417 </span><span class="lineCov">     546477 : double RMSD::optimalAlignment(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     418 </span>            :                               const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     419 </span>            :                               const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     420 </span>            :                               const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     421 </span>            :                               std::vector&lt;Vector&gt;  &amp; derivatives, bool squared)const {
+<span class="lineNum">     422 </span>            :   double dist(0);
+<span class="lineNum">     423 </span><span class="lineCov">     546477 :   const unsigned n=reference.size();</span>
+<span class="lineNum">     424 </span>            : // This is the trace of positions*positions + reference*reference
+<span class="lineNum">     425 </span>            :   double rr00(0);
+<span class="lineNum">     426 </span>            :   double rr11(0);
+<span class="lineNum">     427 </span>            : // This is positions*reference
+<span class="lineNum">     428 </span><span class="lineCov">     546477 :   Tensor rr01;</span>
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span><span class="lineCov">     546477 :   derivatives.resize(n);</span>
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span><span class="lineCov">     546477 :   Vector cpositions;</span>
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span>            : // first expensive loop: compute centers
+<span class="lineNum">     435 </span><span class="lineCov">   44117285 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">     436 </span><span class="lineCov">   43570808 :     double w=align[iat];</span>
+<span class="lineNum">     437 </span><span class="lineCov">   21785404 :     cpositions+=positions[iat]*w;</span>
+<span class="lineNum">     438 </span>            :   }
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            : // second expensive loop: compute second moments wrt centers
+<span class="lineNum">     441 </span><span class="lineCov">   44117285 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">     442 </span><span class="lineCov">   43570808 :     double w=align[iat];</span>
+<span class="lineNum">     443 </span><span class="lineCov">   43570808 :     rr00+=dotProduct(positions[iat]-cpositions,positions[iat]-cpositions)*w;</span>
+<span class="lineNum">     444 </span><span class="lineCov">   21783228 :     rr11+=dotProduct(reference[iat],reference[iat])*w;</span>
+<span class="lineNum">     445 </span><span class="lineCov">   21785404 :     rr01+=Tensor(positions[iat]-cpositions,reference[iat])*w;</span>
+<span class="lineNum">     446 </span>            :   }
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            :   Matrix&lt;double&gt; m=Matrix&lt;double&gt;(4,4);
+<span class="lineNum">     449 </span><span class="lineCov">     546477 :   m[0][0]=2.0*(-rr01[0][0]-rr01[1][1]-rr01[2][2]);</span>
+<span class="lineNum">     450 </span><span class="lineCov">     546477 :   m[1][1]=2.0*(-rr01[0][0]+rr01[1][1]+rr01[2][2]);</span>
+<span class="lineNum">     451 </span><span class="lineCov">     546477 :   m[2][2]=2.0*(+rr01[0][0]-rr01[1][1]+rr01[2][2]);</span>
+<span class="lineNum">     452 </span><span class="lineCov">     546477 :   m[3][3]=2.0*(+rr01[0][0]+rr01[1][1]-rr01[2][2]);</span>
+<span class="lineNum">     453 </span><span class="lineCov">     546477 :   m[0][1]=2.0*(-rr01[1][2]+rr01[2][1]);</span>
+<span class="lineNum">     454 </span><span class="lineCov">     546477 :   m[0][2]=2.0*(+rr01[0][2]-rr01[2][0]);</span>
+<span class="lineNum">     455 </span><span class="lineCov">     546477 :   m[0][3]=2.0*(-rr01[0][1]+rr01[1][0]);</span>
+<span class="lineNum">     456 </span><span class="lineCov">     546477 :   m[1][2]=2.0*(-rr01[0][1]-rr01[1][0]);</span>
+<span class="lineNum">     457 </span><span class="lineCov">     546477 :   m[1][3]=2.0*(-rr01[0][2]-rr01[2][0]);</span>
+<span class="lineNum">     458 </span><span class="lineCov">     546477 :   m[2][3]=2.0*(-rr01[1][2]-rr01[2][1]);</span>
+<span class="lineNum">     459 </span><span class="lineCov">     546477 :   m[1][0] = m[0][1];</span>
+<span class="lineNum">     460 </span><span class="lineCov">     546477 :   m[2][0] = m[0][2];</span>
+<span class="lineNum">     461 </span><span class="lineCov">     546477 :   m[2][1] = m[1][2];</span>
+<span class="lineNum">     462 </span><span class="lineCov">     546477 :   m[3][0] = m[0][3];</span>
+<span class="lineNum">     463 </span><span class="lineCov">     546477 :   m[3][1] = m[1][3];</span>
+<span class="lineNum">     464 </span><span class="lineCov">     546477 :   m[3][2] = m[2][3];</span>
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span><span class="lineCov">    2732385 :   Tensor dm_drr01[4][4];</span>
+<span class="lineNum">     467 </span>            :   if(!alEqDis) {
+<span class="lineNum">     468 </span><span class="lineCov">        114 :     dm_drr01[0][0] = 2.0*Tensor(-1.0, 0.0, 0.0,  0.0,-1.0, 0.0,  0.0, 0.0,-1.0);</span>
+<span class="lineNum">     469 </span><span class="lineCov">        114 :     dm_drr01[1][1] = 2.0*Tensor(-1.0, 0.0, 0.0,  0.0,+1.0, 0.0,  0.0, 0.0,+1.0);</span>
+<span class="lineNum">     470 </span><span class="lineCov">        114 :     dm_drr01[2][2] = 2.0*Tensor(+1.0, 0.0, 0.0,  0.0,-1.0, 0.0,  0.0, 0.0,+1.0);</span>
+<span class="lineNum">     471 </span><span class="lineCov">        114 :     dm_drr01[3][3] = 2.0*Tensor(+1.0, 0.0, 0.0,  0.0,+1.0, 0.0,  0.0, 0.0,-1.0);</span>
+<span class="lineNum">     472 </span><span class="lineCov">        114 :     dm_drr01[0][1] = 2.0*Tensor( 0.0, 0.0, 0.0,  0.0, 0.0,-1.0,  0.0,+1.0, 0.0);</span>
+<span class="lineNum">     473 </span><span class="lineCov">        114 :     dm_drr01[0][2] = 2.0*Tensor( 0.0, 0.0,+1.0,  0.0, 0.0, 0.0, -1.0, 0.0, 0.0);</span>
+<span class="lineNum">     474 </span><span class="lineCov">        114 :     dm_drr01[0][3] = 2.0*Tensor( 0.0,-1.0, 0.0, +1.0, 0.0, 0.0,  0.0, 0.0, 0.0);</span>
+<span class="lineNum">     475 </span><span class="lineCov">        114 :     dm_drr01[1][2] = 2.0*Tensor( 0.0,-1.0, 0.0, -1.0, 0.0, 0.0,  0.0, 0.0, 0.0);</span>
+<span class="lineNum">     476 </span><span class="lineCov">        114 :     dm_drr01[1][3] = 2.0*Tensor( 0.0, 0.0,-1.0,  0.0, 0.0, 0.0, -1.0, 0.0, 0.0);</span>
+<span class="lineNum">     477 </span><span class="lineCov">        114 :     dm_drr01[2][3] = 2.0*Tensor( 0.0, 0.0, 0.0,  0.0, 0.0,-1.0,  0.0,-1.0, 0.0);</span>
+<span class="lineNum">     478 </span><span class="lineCov">        114 :     dm_drr01[1][0] = dm_drr01[0][1];</span>
+<span class="lineNum">     479 </span><span class="lineCov">        114 :     dm_drr01[2][0] = dm_drr01[0][2];</span>
+<span class="lineNum">     480 </span><span class="lineCov">        114 :     dm_drr01[2][1] = dm_drr01[1][2];</span>
+<span class="lineNum">     481 </span><span class="lineCov">        114 :     dm_drr01[3][0] = dm_drr01[0][3];</span>
+<span class="lineNum">     482 </span><span class="lineCov">        114 :     dm_drr01[3][1] = dm_drr01[1][3];</span>
+<span class="lineNum">     483 </span><span class="lineCov">        114 :     dm_drr01[3][2] = dm_drr01[2][3];</span>
+<span class="lineNum">     484 </span>            :   }
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            :   vector&lt;double&gt; eigenvals;
+<span class="lineNum">     487 </span>            :   Matrix&lt;double&gt; eigenvecs;
+<span class="lineNum">     488 </span><span class="lineCov">     546477 :   int diagerror=diagMat(m, eigenvals, eigenvecs );</span>
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span><span class="lineCov">     546477 :   if (diagerror!=0) {</span>
+<span class="lineNum">     491 </span>            :     string sdiagerror;
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :     Tools::convert(diagerror,sdiagerror);</span>
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :     string msg=&quot;DIAGONALIZATION FAILED WITH ERROR CODE &quot;+sdiagerror;</span>
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :     plumed_merror(msg);</span>
+<span class="lineNum">     495 </span>            :   }
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span><span class="lineCov">     546363 :   dist=eigenvals[0]+rr00+rr11;</span>
+<span class="lineNum">     498 </span>            : 
+<span class="lineNum">     499 </span>            :   Matrix&lt;double&gt; ddist_dm(4,4);
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineCov">    1092954 :   Vector4d q(eigenvecs[0][0],eigenvecs[0][1],eigenvecs[0][2],eigenvecs[0][3]);</span>
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span><span class="lineCov">    2732385 :   Tensor dq_drr01[4];</span>
+<span class="lineNum">     504 </span>            :   if(!alEqDis) {
+<span class="lineNum">     505 </span>            :     double dq_dm[4][4][4];
+<span class="lineNum">     506 </span><span class="lineCov">       7866 :     for(unsigned i=0; i&lt;4; i++) for(unsigned j=0; j&lt;4; j++) for(unsigned k=0; k&lt;4; k++) {</span>
+<span class="lineNum">     507 </span>            :           double tmp=0.0;
+<span class="lineNum">     508 </span>            : // perturbation theory for matrix m
+<span class="lineNum">     509 </span><span class="lineCov">      72960 :           for(unsigned l=1; l&lt;4; l++) tmp+=eigenvecs[l][j]*eigenvecs[l][i]/(eigenvals[0]-eigenvals[l])*eigenvecs[0][k];</span>
+<span class="lineNum">     510 </span><span class="lineCov">       7296 :           dq_dm[i][j][k]=tmp;</span>
+<span class="lineNum">     511 </span>            :         }
+<span class="lineNum">     512 </span>            : // propagation to _drr01
+<span class="lineNum">     513 </span><span class="lineCov">       1026 :     for(unsigned i=0; i&lt;4; i++) {</span>
+<span class="lineNum">     514 </span><span class="lineCov">        456 :       Tensor tmp;</span>
+<span class="lineNum">     515 </span><span class="lineCov">       9576 :       for(unsigned j=0; j&lt;4; j++) for(unsigned k=0; k&lt;4; k++) {</span>
+<span class="lineNum">     516 </span><span class="lineCov">       7296 :           tmp+=dq_dm[i][j][k]*dm_drr01[j][k];</span>
+<span class="lineNum">     517 </span>            :         }
+<span class="lineNum">     518 </span><span class="lineCov">        456 :       dq_drr01[i]=tmp;</span>
+<span class="lineNum">     519 </span>            :     }
+<span class="lineNum">     520 </span>            :   }
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span>            : // This is the rotation matrix that brings reference to positions
+<span class="lineNum">     523 </span>            : // i.e. matmul(rotation,reference[iat])+shift is fitted to positions[iat]
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span><span class="lineCov">     546477 :   Tensor rotation;</span>
+<span class="lineNum">     526 </span><span class="lineCov">     546477 :   rotation[0][0]=q[0]*q[0]+q[1]*q[1]-q[2]*q[2]-q[3]*q[3];</span>
+<span class="lineNum">     527 </span><span class="lineCov">     546477 :   rotation[1][1]=q[0]*q[0]-q[1]*q[1]+q[2]*q[2]-q[3]*q[3];</span>
+<span class="lineNum">     528 </span><span class="lineCov">     546477 :   rotation[2][2]=q[0]*q[0]-q[1]*q[1]-q[2]*q[2]+q[3]*q[3];</span>
+<span class="lineNum">     529 </span><span class="lineCov">     546477 :   rotation[0][1]=2*(+q[0]*q[3]+q[1]*q[2]);</span>
+<span class="lineNum">     530 </span><span class="lineCov">     546477 :   rotation[0][2]=2*(-q[0]*q[2]+q[1]*q[3]);</span>
+<span class="lineNum">     531 </span><span class="lineCov">     546477 :   rotation[1][2]=2*(+q[0]*q[1]+q[2]*q[3]);</span>
+<span class="lineNum">     532 </span><span class="lineCov">     546477 :   rotation[1][0]=2*(-q[0]*q[3]+q[1]*q[2]);</span>
+<span class="lineNum">     533 </span><span class="lineCov">     546477 :   rotation[2][0]=2*(+q[0]*q[2]+q[1]*q[3]);</span>
+<span class="lineNum">     534 </span><span class="lineCov">     546477 :   rotation[2][1]=2*(-q[0]*q[1]+q[2]*q[3]);</span>
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span><span class="lineCov">     546477 :   std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; drotation_drr01;</span>
+<span class="lineNum">     538 </span>            :   if(!alEqDis) {
+<span class="lineNum">     539 </span><span class="lineCov">        114 :     drotation_drr01[0][0]=2*q[0]*dq_drr01[0]+2*q[1]*dq_drr01[1]-2*q[2]*dq_drr01[2]-2*q[3]*dq_drr01[3];</span>
+<span class="lineNum">     540 </span><span class="lineCov">        114 :     drotation_drr01[1][1]=2*q[0]*dq_drr01[0]-2*q[1]*dq_drr01[1]+2*q[2]*dq_drr01[2]-2*q[3]*dq_drr01[3];</span>
+<span class="lineNum">     541 </span><span class="lineCov">        114 :     drotation_drr01[2][2]=2*q[0]*dq_drr01[0]-2*q[1]*dq_drr01[1]-2*q[2]*dq_drr01[2]+2*q[3]*dq_drr01[3];</span>
+<span class="lineNum">     542 </span><span class="lineCov">        114 :     drotation_drr01[0][1]=2*(+(q[0]*dq_drr01[3]+dq_drr01[0]*q[3])+(q[1]*dq_drr01[2]+dq_drr01[1]*q[2]));</span>
+<span class="lineNum">     543 </span><span class="lineCov">        114 :     drotation_drr01[0][2]=2*(-(q[0]*dq_drr01[2]+dq_drr01[0]*q[2])+(q[1]*dq_drr01[3]+dq_drr01[1]*q[3]));</span>
+<span class="lineNum">     544 </span><span class="lineCov">        114 :     drotation_drr01[1][2]=2*(+(q[0]*dq_drr01[1]+dq_drr01[0]*q[1])+(q[2]*dq_drr01[3]+dq_drr01[2]*q[3]));</span>
+<span class="lineNum">     545 </span><span class="lineCov">        114 :     drotation_drr01[1][0]=2*(-(q[0]*dq_drr01[3]+dq_drr01[0]*q[3])+(q[1]*dq_drr01[2]+dq_drr01[1]*q[2]));</span>
+<span class="lineNum">     546 </span><span class="lineCov">        114 :     drotation_drr01[2][0]=2*(+(q[0]*dq_drr01[2]+dq_drr01[0]*q[2])+(q[1]*dq_drr01[3]+dq_drr01[1]*q[3]));</span>
+<span class="lineNum">     547 </span><span class="lineCov">        114 :     drotation_drr01[2][1]=2*(-(q[0]*dq_drr01[1]+dq_drr01[0]*q[1])+(q[2]*dq_drr01[3]+dq_drr01[2]*q[3]));</span>
+<span class="lineNum">     548 </span>            :   }
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span>            :   double prefactor=2.0;
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span><span class="lineCov">     546363 :   if(!squared &amp;&amp; alEqDis) prefactor*=0.5/sqrt(dist);</span>
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            : // if &quot;safe&quot;, recompute dist here to a better accuracy
+<span class="lineNum">     555 </span>            :   if(safe || !alEqDis) dist=0.0;
+<span class="lineNum">     556 </span>            : 
+<span class="lineNum">     557 </span>            : // If safe is set to &quot;false&quot;, MSD is taken from the eigenvalue of the M matrix
+<span class="lineNum">     558 </span>            : // If safe is set to &quot;true&quot;, MSD is recomputed from the rotational matrix
+<span class="lineNum">     559 </span>            : // For some reason, this last approach leads to less numerical noise but adds an overhead
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span><span class="lineCov">     546477 :   Tensor ddist_drotation;</span>
+<span class="lineNum">     562 </span><span class="lineCov">     546477 :   Vector ddist_dcpositions;</span>
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span>            : // third expensive loop: derivatives
+<span class="lineNum">     565 </span><span class="lineCov">   44117285 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">     566 </span><span class="lineCov">   65356212 :     Vector d(positions[iat]-cpositions - matmul(rotation,reference[iat]));</span>
+<span class="lineNum">     567 </span>            :     if(alEqDis) {
+<span class="lineNum">     568 </span>            : // there is no need for derivatives of rotation and shift here as it is by construction zero
+<span class="lineNum">     569 </span>            : // (similar to Hellman-Feynman forces)
+<span class="lineNum">     570 </span><span class="lineCov">   43566456 :       derivatives[iat]= prefactor*align[iat]*d;</span>
+<span class="lineNum">     571 </span><span class="lineCov">    4921522 :       if(safe) dist+=align[iat]*modulo2(d);</span>
+<span class="lineNum">     572 </span>            :     } else {
+<span class="lineNum">     573 </span>            : // the case for align != displace is different, sob:
+<span class="lineNum">     574 </span><span class="lineCov">       2176 :       dist+=displace[iat]*modulo2(d);</span>
+<span class="lineNum">     575 </span>            : // these are the derivatives assuming the roto-translation as frozen
+<span class="lineNum">     576 </span><span class="lineCov">       4352 :       derivatives[iat]=2*displace[iat]*d;</span>
+<span class="lineNum">     577 </span>            : // here I accumulate derivatives wrt rotation matrix ..
+<span class="lineNum">     578 </span><span class="lineCov">       4352 :       ddist_drotation+=-2*displace[iat]*extProduct(d,reference[iat]);</span>
+<span class="lineNum">     579 </span>            : // .. and cpositions
+<span class="lineNum">     580 </span><span class="lineCov">       2176 :       ddist_dcpositions+=-2*displace[iat]*d;</span>
+<span class="lineNum">     581 </span>            :     }
+<span class="lineNum">     582 </span>            :   }
+<span class="lineNum">     583 </span>            : 
+<span class="lineNum">     584 </span>            :   if(!alEqDis) {
+<span class="lineNum">     585 </span><span class="lineCov">        114 :     Tensor ddist_drr01;</span>
+<span class="lineNum">     586 </span><span class="lineCov">       1482 :     for(unsigned i=0; i&lt;3; i++) for(unsigned j=0; j&lt;3; j++) ddist_drr01+=ddist_drotation[i][j]*drotation_drr01[i][j];</span>
+<span class="lineNum">     587 </span><span class="lineCov">       4466 :     for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">     588 </span>            : // this is propagating to positions.
+<span class="lineNum">     589 </span>            : // I am implicitly using the derivative of rr01 wrt positions here
+<span class="lineNum">     590 </span><span class="lineCov">       8704 :       derivatives[iat]+=matmul(ddist_drr01,reference[iat])*align[iat];</span>
+<span class="lineNum">     591 </span><span class="lineCov">       4352 :       derivatives[iat]+=ddist_dcpositions*align[iat];</span>
+<span class="lineNum">     592 </span>            :     }
+<span class="lineNum">     593 </span>            :   }
+<span class="lineNum">     594 </span><span class="lineCov">     546477 :   if(!squared) {</span>
+<span class="lineNum">     595 </span><span class="lineCov">      74171 :     dist=sqrt(dist);</span>
+<span class="lineNum">     596 </span>            :     if(!alEqDis) {
+<span class="lineNum">     597 </span><span class="lineCov">        114 :       double xx=0.5/dist;</span>
+<span class="lineNum">     598 </span><span class="lineCov">       4466 :       for(unsigned iat=0; iat&lt;n; iat++) derivatives[iat]*=xx;</span>
+<span class="lineNum">     599 </span>            :     }
+<span class="lineNum">     600 </span>            :   }
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span><span class="lineCov">     546477 :   return dist;</span>
+<span class="lineNum">     603 </span>            : }
+<span class="lineNum">     604 </span>            : #else
+<span class="lineNum">     605 </span>            : /// note that this method is intended to be repeatedly invoked
+<span class="lineNum">     606 </span>            : /// when the reference does already have the center subtracted
+<span class="lineNum">     607 </span>            : /// but the position has not calculated center and not subtracted
+<span class="lineNum">     608 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     609 </span>            : double RMSD::optimalAlignment(const  std::vector&lt;double&gt;  &amp; align,
+<span class="lineNum">     610 </span>            :                               const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     611 </span>            :                               const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     612 </span>            :                               const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     613 </span>            :                               std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     614 </span>            :                               bool squared) const {
+<span class="lineNum">     615 </span>            :   //std::cerr&lt;&lt;&quot;setting up the core data \n&quot;;
+<span class="lineNum">     616 </span>            :   RMSDCoreData cd(align,displace,positions,reference);
+<span class="lineNum">     617 </span>            : 
+<span class="lineNum">     618 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     619 </span>            :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);
+<span class="lineNum">     620 </span>            :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}
+<span class="lineNum">     621 </span>            :   else {cd.calcPositionsCenter();};
+<span class="lineNum">     622 </span>            : 
+<span class="lineNum">     623 </span>            :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);
+<span class="lineNum">     624 </span>            :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}
+<span class="lineNum">     625 </span>            :   else {cd.setReferenceCenter(reference_center);}
+<span class="lineNum">     626 </span>            : 
+<span class="lineNum">     627 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     628 </span>            :   cd.doCoreCalc(safe,alEqDis);
+<span class="lineNum">     629 </span>            :   // make the core calc distance
+<span class="lineNum">     630 </span>            :   double dist=cd.getDistance(squared);
+<span class="lineNum">     631 </span>            : //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     632 </span>            :   derivatives=cd.getDDistanceDPositions();
+<span class="lineNum">     633 </span>            :   return dist;
+<span class="lineNum">     634 </span>            : }
+<span class="lineNum">     635 </span>            : #endif
+<span class="lineNum">     636 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     637 </span><span class="lineCov">          1 : double RMSD::optimalAlignment_DDistDRef(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     638 </span>            :                                         const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     639 </span>            :                                         const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     640 </span>            :                                         const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     641 </span>            :                                         std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     642 </span>            :                                         std::vector&lt;Vector&gt; &amp; ddistdref,
+<span class="lineNum">     643 </span>            :                                         bool squared) const {
+<span class="lineNum">     644 </span>            :   //initialize the data into the structure
+<span class="lineNum">     645 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     646 </span><span class="lineCov">          2 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     647 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     648 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     649 </span><span class="lineCov">          1 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     650 </span><span class="lineCov">          1 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     651 </span><span class="lineCov">          1 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span><span class="lineCov">          1 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     654 </span><span class="lineCov">          1 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     655 </span><span class="lineCov">          1 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     656 </span>            : 
+<span class="lineNum">     657 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     658 </span><span class="lineCov">          1 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     659 </span>            :   // make the core calc distance
+<span class="lineNum">     660 </span><span class="lineCov">          1 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     661 </span>            : //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     662 </span><span class="lineCov">          2 :   derivatives=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     663 </span><span class="lineCov">          2 :   ddistdref=cd.getDDistanceDReference();</span>
+<span class="lineNum">     664 </span><span class="lineCov">          1 :   return dist;</span>
+<span class="lineNum">     665 </span>            : }
+<span class="lineNum">     666 </span>            : 
+<span class="lineNum">     667 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     668 </span><span class="lineNoCov">          0 : double RMSD::optimalAlignment_SOMA(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     669 </span>            :                                    const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     670 </span>            :                                    const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     671 </span>            :                                    const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     672 </span>            :                                    std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     673 </span>            :                                    std::vector&lt;Vector&gt; &amp; ddistdref,
+<span class="lineNum">     674 </span>            :                                    bool squared) const {
+<span class="lineNum">     675 </span>            :   //initialize the data into the structure
+<span class="lineNum">     676 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     677 </span><span class="lineNoCov">          0 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     678 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     679 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     680 </span><span class="lineNoCov">          0 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     681 </span><span class="lineNoCov">          0 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     682 </span><span class="lineNoCov">          0 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     685 </span><span class="lineNoCov">          0 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     686 </span><span class="lineNoCov">          0 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     687 </span>            : 
+<span class="lineNum">     688 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     690 </span>            :   // make the core calc distance
+<span class="lineNum">     691 </span><span class="lineNoCov">          0 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     692 </span>            : //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     693 </span><span class="lineNoCov">          0 :   derivatives=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     694 </span><span class="lineNoCov">          0 :   ddistdref=cd.getDDistanceDReferenceSOMA();</span>
+<span class="lineNum">     695 </span><span class="lineNoCov">          0 :   return dist;</span>
+<span class="lineNum">     696 </span>            : }
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span>            : 
+<span class="lineNum">     699 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     700 </span><span class="lineNoCov">          0 : double RMSD::optimalAlignment_DDistDRef_Rot_DRotDPos(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     701 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     702 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     703 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     704 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     705 </span>            :     std::vector&lt;Vector&gt; &amp; ddistdref,
+<span class="lineNum">     706 </span>            :     Tensor &amp; Rotation,
+<span class="lineNum">     707 </span>            :     Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp;DRotDPos,
+<span class="lineNum">     708 </span>            :     bool squared) const {
+<span class="lineNum">     709 </span>            :   //initialize the data into the structure
+<span class="lineNum">     710 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     711 </span><span class="lineNoCov">          0 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     712 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     713 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     714 </span><span class="lineNoCov">          0 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     715 </span><span class="lineNoCov">          0 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     716 </span><span class="lineNoCov">          0 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     717 </span>            : 
+<span class="lineNum">     718 </span><span class="lineNoCov">          0 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     719 </span><span class="lineNoCov">          0 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     720 </span><span class="lineNoCov">          0 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     721 </span>            : 
+<span class="lineNum">     722 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     723 </span><span class="lineNoCov">          0 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     724 </span>            :   // make the core calc distance
+<span class="lineNum">     725 </span><span class="lineNoCov">          0 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     726 </span>            : //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     727 </span><span class="lineNoCov">          0 :   derivatives=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     728 </span><span class="lineNoCov">          0 :   ddistdref=cd.getDDistanceDReference();</span>
+<span class="lineNum">     729 </span>            :   // get the rotation matrix
+<span class="lineNum">     730 </span><span class="lineNoCov">          0 :   Rotation=cd.getRotationMatrixReferenceToPositions();</span>
+<span class="lineNum">     731 </span>            :   // get its derivative
+<span class="lineNum">     732 </span><span class="lineNoCov">          0 :   DRotDPos=cd.getDRotationDPositions();</span>
+<span class="lineNum">     733 </span><span class="lineNoCov">          0 :   return dist;</span>
+<span class="lineNum">     734 </span>            : }
+<span class="lineNum">     735 </span>            : 
+<span class="lineNum">     736 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     737 </span><span class="lineNoCov">          0 : double RMSD::optimalAlignment_DDistDRef_Rot_DRotDPos_DRotDRef(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     738 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     739 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     740 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     741 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     742 </span>            :     std::vector&lt;Vector&gt; &amp; ddistdref,
+<span class="lineNum">     743 </span>            :     Tensor &amp; Rotation,
+<span class="lineNum">     744 </span>            :     Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp;DRotDPos,
+<span class="lineNum">     745 </span>            :     Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp;DRotDRef,
+<span class="lineNum">     746 </span>            :     bool squared) const {
+<span class="lineNum">     747 </span>            :   //initialize the data into the structure
+<span class="lineNum">     748 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     749 </span><span class="lineNoCov">          0 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     750 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     751 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     752 </span><span class="lineNoCov">          0 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     753 </span><span class="lineNoCov">          0 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     754 </span><span class="lineNoCov">          0 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     755 </span>            : 
+<span class="lineNum">     756 </span><span class="lineNoCov">          0 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     757 </span><span class="lineNoCov">          0 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     758 </span><span class="lineNoCov">          0 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     759 </span>            : 
+<span class="lineNum">     760 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     761 </span><span class="lineNoCov">          0 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     762 </span>            :   // make the core calc distance
+<span class="lineNum">     763 </span><span class="lineNoCov">          0 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     764 </span>            : //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     765 </span><span class="lineNoCov">          0 :   derivatives=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     766 </span><span class="lineNoCov">          0 :   ddistdref=cd.getDDistanceDReference();</span>
+<span class="lineNum">     767 </span>            :   // get the rotation matrix
+<span class="lineNum">     768 </span><span class="lineNoCov">          0 :   Rotation=cd.getRotationMatrixReferenceToPositions();</span>
+<span class="lineNum">     769 </span>            :   // get its derivative
+<span class="lineNum">     770 </span><span class="lineNoCov">          0 :   DRotDPos=cd.getDRotationDPositions();</span>
+<span class="lineNum">     771 </span><span class="lineNoCov">          0 :   DRotDRef=cd.getDRotationDReference();</span>
+<span class="lineNum">     772 </span><span class="lineNoCov">          0 :   return dist;</span>
+<span class="lineNum">     773 </span>            : }
+<a name="774"><span class="lineNum">     774 </span>            : </a>
+<span class="lineNum">     775 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     776 </span><span class="lineCov">       1092 : double RMSD::optimalAlignment_Rot_DRotDRr01(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     777 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     778 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     779 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     780 </span>            :     Tensor &amp; Rotation,
+<span class="lineNum">     781 </span>            :     std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; &amp; DRotDRr01,
+<span class="lineNum">     782 </span>            :     bool squared) const {
+<span class="lineNum">     783 </span>            :   //initialize the data into the structure
+<span class="lineNum">     784 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     785 </span><span class="lineCov">       2184 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     786 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     787 </span><span class="lineCov">       1092 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     788 </span><span class="lineCov">       1092 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     789 </span><span class="lineCov">       1092 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     790 </span>            : 
+<span class="lineNum">     791 </span><span class="lineCov">       1092 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     792 </span><span class="lineCov">       1092 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     793 </span><span class="lineCov">       1092 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     794 </span>            : 
+<span class="lineNum">     795 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     796 </span><span class="lineCov">       1092 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     797 </span>            :   // make the core calc distance
+<span class="lineNum">     798 </span><span class="lineCov">       1092 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     799 </span>            :   // get the rotation matrix
+<span class="lineNum">     800 </span><span class="lineCov">       1092 :   Rotation=cd.getRotationMatrixReferenceToPositions();</span>
+<span class="lineNum">     801 </span>            :   //get detivative w.r.t. rr01
+<span class="lineNum">     802 </span><span class="lineCov">       1092 :   DRotDRr01=cd.getDRotationDRr01();</span>
+<span class="lineNum">     803 </span><span class="lineCov">       1092 :   return dist;</span>
+<span class="lineNum">     804 </span>            : }
+<span class="lineNum">     805 </span>            : 
+<span class="lineNum">     806 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     807 </span><span class="lineCov">        672 : double RMSD::optimalAlignment_Rot(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     808 </span>            :                                   const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     809 </span>            :                                   const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     810 </span>            :                                   const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     811 </span>            :                                   std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     812 </span>            :                                   Tensor &amp; Rotation,
+<span class="lineNum">     813 </span>            :                                   bool squared) const {
+<span class="lineNum">     814 </span>            :   //initialize the data into the structure
+<span class="lineNum">     815 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     816 </span><span class="lineCov">       1344 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     817 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     818 </span><span class="lineCov">        672 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     819 </span><span class="lineCov">        672 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     820 </span><span class="lineCov">        672 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     821 </span>            : 
+<span class="lineNum">     822 </span><span class="lineCov">        672 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     823 </span><span class="lineCov">        672 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     824 </span><span class="lineCov">        672 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     825 </span>            : 
+<span class="lineNum">     826 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     827 </span><span class="lineCov">        672 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     828 </span>            :   // make the core calc distance
+<span class="lineNum">     829 </span><span class="lineCov">        672 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     830 </span>            :   //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     831 </span><span class="lineCov">       1344 :   derivatives=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     832 </span>            :   // get the rotation matrix
+<span class="lineNum">     833 </span><span class="lineCov">        672 :   Rotation=cd.getRotationMatrixReferenceToPositions();</span>
+<span class="lineNum">     834 </span><span class="lineCov">        672 :   return dist;</span>
+<span class="lineNum">     835 </span>            : }
+<span class="lineNum">     836 </span>            : 
+<span class="lineNum">     837 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     838 </span><span class="lineCov">      45192 : double RMSD::optimalAlignmentWithCloseStructure(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     839 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     840 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     841 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     842 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives,
+<span class="lineNum">     843 </span>            :     Tensor &amp; rotationPosClose,
+<span class="lineNum">     844 </span>            :     Tensor &amp; rotationRefClose,
+<span class="lineNum">     845 </span>            :     std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; &amp; drotationPosCloseDrr01,
+<span class="lineNum">     846 </span>            :     bool squared) const {
+<span class="lineNum">     847 </span>            :   //initialize the data into the structure
+<span class="lineNum">     848 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     849 </span><span class="lineCov">      90384 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     850 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     851 </span><span class="lineCov">      45192 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     852 </span><span class="lineCov">      45192 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     853 </span><span class="lineCov">      45192 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     854 </span>            : 
+<span class="lineNum">     855 </span><span class="lineCov">      45192 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     856 </span><span class="lineCov">      45192 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     857 </span><span class="lineCov">      45192 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     858 </span>            : 
+<span class="lineNum">     859 </span>            :   // instead of diagonalization, approximate with saved rotation matrix
+<span class="lineNum">     860 </span><span class="lineCov">      45192 :   cd.doCoreCalcWithCloseStructure(safe,alEqDis, rotationPosClose, rotationRefClose, drotationPosCloseDrr01);</span>
+<span class="lineNum">     861 </span>            :   // make the core calc distance
+<span class="lineNum">     862 </span><span class="lineCov">      45192 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     863 </span>            :   //  make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     864 </span><span class="lineCov">      90384 :   derivatives=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     865 </span><span class="lineCov">      45192 :   return dist;</span>
+<span class="lineNum">     866 </span>            : }
+<span class="lineNum">     867 </span>            : 
+<span class="lineNum">     868 </span>            : 
+<span class="lineNum">     869 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     870 </span><span class="lineCov">       4441 : double RMSD::optimalAlignment_PCA(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     871 </span>            :                                   const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     872 </span>            :                                   const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     873 </span>            :                                   const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     874 </span>            :                                   std::vector&lt;Vector&gt; &amp; alignedpositions,
+<span class="lineNum">     875 </span>            :                                   std::vector&lt;Vector&gt; &amp; centeredpositions,
+<span class="lineNum">     876 </span>            :                                   std::vector&lt;Vector&gt; &amp; centeredreference,
+<span class="lineNum">     877 </span>            :                                   Tensor &amp; Rotation,
+<span class="lineNum">     878 </span>            :                                   std::vector&lt;Vector&gt; &amp; DDistDPos,
+<span class="lineNum">     879 </span>            :                                   Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp; DRotDPos,
+<span class="lineNum">     880 </span>            :                                   bool squared) const {
+<span class="lineNum">     881 </span>            :   //initialize the data into the structure
+<span class="lineNum">     882 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     883 </span><span class="lineCov">       8882 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     884 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     885 </span><span class="lineCov">       4441 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     886 </span><span class="lineCov">       4441 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     887 </span><span class="lineCov">       4441 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     888 </span>            : 
+<span class="lineNum">     889 </span><span class="lineCov">       4441 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     890 </span><span class="lineCov">       4441 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     891 </span><span class="lineCov">       4441 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     894 </span><span class="lineCov">       4441 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     895 </span>            :   // make the core calc distance
+<span class="lineNum">     896 </span><span class="lineCov">       4441 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     897 </span>            :   // make the derivatives by using pieces calculated in coreCalc (probably the best is just to copy the vector...)
+<span class="lineNum">     898 </span><span class="lineCov">       8882 :   DDistDPos=cd.getDDistanceDPositions();</span>
+<span class="lineNum">     899 </span>            :   // get the rotation matrix
+<span class="lineNum">     900 </span><span class="lineCov">       4441 :   Rotation=cd.getRotationMatrixPositionsToReference();</span>
+<span class="lineNum">     901 </span>            :   // get its derivative
+<span class="lineNum">     902 </span><span class="lineCov">       8882 :   DRotDPos=cd.getDRotationDPositions(true); // this gives back the inverse</span>
+<span class="lineNum">     903 </span>            :   // get aligned positions
+<span class="lineNum">     904 </span><span class="lineCov">       8882 :   alignedpositions=cd.getAlignedPositionsToReference();</span>
+<span class="lineNum">     905 </span>            :   // get centered positions
+<span class="lineNum">     906 </span><span class="lineCov">       8882 :   centeredpositions=cd.getCenteredPositions();</span>
+<span class="lineNum">     907 </span>            :   // get centered reference
+<span class="lineNum">     908 </span><span class="lineCov">       8882 :   centeredreference=cd.getCenteredReference();</span>
+<span class="lineNum">     909 </span><span class="lineCov">       4441 :   return dist;</span>
+<span class="lineNum">     910 </span>            : }
+<span class="lineNum">     911 </span>            : 
+<span class="lineNum">     912 </span>            : 
+<span class="lineNum">     913 </span>            : template &lt;bool safe,bool alEqDis&gt;
+<span class="lineNum">     914 </span><span class="lineCov">         48 : double RMSD::optimalAlignment_Fit(const  std::vector&lt;double&gt;  &amp; align,</span>
+<span class="lineNum">     915 </span>            :                                   const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">     916 </span>            :                                   const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">     917 </span>            :                                   const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">     918 </span>            :                                   Tensor &amp; Rotation,
+<span class="lineNum">     919 </span>            :                                   Matrix&lt;std::vector&lt;Vector&gt; &gt; &amp; DRotDPos,
+<span class="lineNum">     920 </span>            :                                   std::vector&lt;Vector&gt; &amp; centeredpositions,
+<span class="lineNum">     921 </span>            :                                   Vector &amp; center_positions,
+<span class="lineNum">     922 </span>            :                                   bool squared) {
+<span class="lineNum">     923 </span>            :   //initialize the data into the structure
+<span class="lineNum">     924 </span>            :   // typically the positions do not have the com neither calculated nor subtracted. This layer takes care of this business
+<span class="lineNum">     925 </span><span class="lineCov">         96 :   RMSDCoreData cd(align,displace,positions,reference);</span>
+<span class="lineNum">     926 </span>            :   // transfer the settings for the center to let the CoreCalc deal with it
+<span class="lineNum">     927 </span><span class="lineCov">         48 :   cd.setPositionsCenterIsRemoved(positions_center_is_removed);</span>
+<span class="lineNum">     928 </span><span class="lineCov">         48 :   if(positions_center_is_calculated) {cd.setPositionsCenter(positions_center);}</span>
+<span class="lineNum">     929 </span><span class="lineCov">         48 :   else {cd.calcPositionsCenter();};</span>
+<span class="lineNum">     930 </span>            : 
+<span class="lineNum">     931 </span><span class="lineCov">         48 :   cd.setReferenceCenterIsRemoved(reference_center_is_removed);</span>
+<span class="lineNum">     932 </span><span class="lineCov">         48 :   if(!reference_center_is_calculated) {cd.calcReferenceCenter();}</span>
+<span class="lineNum">     933 </span><span class="lineCov">         48 :   else {cd.setReferenceCenter(reference_center);}</span>
+<span class="lineNum">     934 </span>            : 
+<span class="lineNum">     935 </span>            :   // Perform the diagonalization and all the needed stuff
+<span class="lineNum">     936 </span><span class="lineCov">         48 :   cd.doCoreCalc(safe,alEqDis);</span>
+<span class="lineNum">     937 </span>            :   // make the core calc distance
+<span class="lineNum">     938 </span><span class="lineCov">         48 :   double dist=cd.getDistance(squared);</span>
+<span class="lineNum">     939 </span>            :   // get the rotation matrix
+<span class="lineNum">     940 </span><span class="lineCov">         48 :   Rotation=cd.getRotationMatrixPositionsToReference();</span>
+<span class="lineNum">     941 </span>            :   // get its derivative
+<span class="lineNum">     942 </span><span class="lineCov">         96 :   DRotDPos=cd.getDRotationDPositions(true); // this gives back the inverse</span>
+<span class="lineNum">     943 </span>            :   // get centered positions
+<span class="lineNum">     944 </span><span class="lineCov">         96 :   centeredpositions=cd.getCenteredPositions();</span>
+<span class="lineNum">     945 </span>            :   // get center
+<span class="lineNum">     946 </span><span class="lineCov">         48 :   center_positions=cd.getPositionsCenter();</span>
+<span class="lineNum">     947 </span><span class="lineCov">         48 :   return dist;</span>
+<span class="lineNum">     948 </span>            : }
+<span class="lineNum">     949 </span>            : 
+<span class="lineNum">     950 </span>            : 
+<span class="lineNum">     951 </span>            : 
+<span class="lineNum">     952 </span>            : 
+<span class="lineNum">     953 </span>            : 
+<span class="lineNum">     954 </span>            : 
+<span class="lineNum">     955 </span>            : /// This calculates the elements needed by the quaternion to calculate everything that is needed
+<span class="lineNum">     956 </span>            : /// additional calls retrieve different components
+<span class="lineNum">     957 </span>            : /// note that this considers that the centers of both reference and positions are already setted
+<span class="lineNum">     958 </span>            : /// but automatically should properly account for non removed components: if not removed then it
+<span class="lineNum">     959 </span>            : /// removes prior to calculation of the alignment
+<span class="lineNum">     960 </span><span class="lineCov">       6254 : void RMSDCoreData::doCoreCalc(bool safe,bool alEqDis, bool only_rotation) {</span>
+<span class="lineNum">     961 </span>            : 
+<span class="lineNum">     962 </span><span class="lineCov">       6254 :   retrieve_only_rotation=only_rotation;</span>
+<span class="lineNum">     963 </span><span class="lineCov">      12508 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">     964 </span>            : 
+<span class="lineNum">     965 </span><span class="lineCov">       6254 :   plumed_massert(creference_is_calculated,&quot;the center of the reference frame must be already provided at this stage&quot;);</span>
+<span class="lineNum">     966 </span><span class="lineCov">       6254 :   plumed_massert(cpositions_is_calculated,&quot;the center of the positions frame must be already provided at this stage&quot;);</span>
+<span class="lineNum">     967 </span>            : 
+<span class="lineNum">     968 </span>            : // This is the trace of positions*positions + reference*reference
+<span class="lineNum">     969 </span><span class="lineCov">       6254 :   rr00=0.;</span>
+<span class="lineNum">     970 </span><span class="lineCov">       6254 :   rr11=0.;</span>
+<span class="lineNum">     971 </span>            : // This is positions*reference
+<span class="lineNum">     972 </span><span class="lineCov">       6254 :   Tensor rr01;</span>
+<span class="lineNum">     973 </span>            : // center of mass managing: must subtract the center from the position or not?
+<span class="lineNum">     974 </span><span class="lineCov">       6254 :   Vector cp; cp.zero(); if(!cpositions_is_removed)cp=cpositions;</span>
+<span class="lineNum">     975 </span><span class="lineCov">       6254 :   Vector cr; cr.zero(); if(!creference_is_removed)cr=creference;</span>
+<span class="lineNum">     976 </span>            : // second expensive loop: compute second moments wrt centers
+<span class="lineNum">     977 </span><span class="lineCov">     186678 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">     978 </span><span class="lineCov">     180424 :     double w=align[iat];</span>
+<span class="lineNum">     979 </span><span class="lineCov">     270636 :     rr00+=dotProduct(positions[iat]-cp,positions[iat]-cp)*w;</span>
+<span class="lineNum">     980 </span><span class="lineCov">     270636 :     rr11+=dotProduct(reference[iat]-cr,reference[iat]-cr)*w;</span>
+<span class="lineNum">     981 </span><span class="lineCov">     270636 :     rr01+=Tensor(positions[iat]-cp,reference[iat]-cr)*w;</span>
+<span class="lineNum">     982 </span>            :   }
+<span class="lineNum">     983 </span>            : 
+<span class="lineNum">     984 </span>            : // the quaternion matrix: this is internal
+<span class="lineNum">     985 </span>            :   Matrix&lt;double&gt; m=Matrix&lt;double&gt;(4,4);
+<span class="lineNum">     986 </span>            : 
+<span class="lineNum">     987 </span><span class="lineCov">       6254 :   m[0][0]=2.0*(-rr01[0][0]-rr01[1][1]-rr01[2][2]);</span>
+<span class="lineNum">     988 </span><span class="lineCov">       6254 :   m[1][1]=2.0*(-rr01[0][0]+rr01[1][1]+rr01[2][2]);</span>
+<span class="lineNum">     989 </span><span class="lineCov">       6254 :   m[2][2]=2.0*(+rr01[0][0]-rr01[1][1]+rr01[2][2]);</span>
+<span class="lineNum">     990 </span><span class="lineCov">       6254 :   m[3][3]=2.0*(+rr01[0][0]+rr01[1][1]-rr01[2][2]);</span>
+<span class="lineNum">     991 </span><span class="lineCov">       6254 :   m[0][1]=2.0*(-rr01[1][2]+rr01[2][1]);</span>
+<span class="lineNum">     992 </span><span class="lineCov">       6254 :   m[0][2]=2.0*(+rr01[0][2]-rr01[2][0]);</span>
+<span class="lineNum">     993 </span><span class="lineCov">       6254 :   m[0][3]=2.0*(-rr01[0][1]+rr01[1][0]);</span>
+<span class="lineNum">     994 </span><span class="lineCov">       6254 :   m[1][2]=2.0*(-rr01[0][1]-rr01[1][0]);</span>
+<span class="lineNum">     995 </span><span class="lineCov">       6254 :   m[1][3]=2.0*(-rr01[0][2]-rr01[2][0]);</span>
+<span class="lineNum">     996 </span><span class="lineCov">       6254 :   m[2][3]=2.0*(-rr01[1][2]-rr01[2][1]);</span>
+<span class="lineNum">     997 </span><span class="lineCov">       6254 :   m[1][0] = m[0][1];</span>
+<span class="lineNum">     998 </span><span class="lineCov">       6254 :   m[2][0] = m[0][2];</span>
+<span class="lineNum">     999 </span><span class="lineCov">       6254 :   m[2][1] = m[1][2];</span>
+<span class="lineNum">    1000 </span><span class="lineCov">       6254 :   m[3][0] = m[0][3];</span>
+<span class="lineNum">    1001 </span><span class="lineCov">       6254 :   m[3][1] = m[1][3];</span>
+<span class="lineNum">    1002 </span><span class="lineCov">       6254 :   m[3][2] = m[2][3];</span>
+<span class="lineNum">    1003 </span>            : 
+<span class="lineNum">    1004 </span>            : 
+<span class="lineNum">    1005 </span><span class="lineCov">      31270 :   Tensor dm_drr01[4][4];</span>
+<span class="lineNum">    1006 </span><span class="lineCov">       6254 :   if(!alEqDis or !retrieve_only_rotation) {</span>
+<span class="lineNum">    1007 </span><span class="lineCov">       6254 :     dm_drr01[0][0] = 2.0*Tensor(-1.0, 0.0, 0.0,  0.0,-1.0, 0.0,  0.0, 0.0,-1.0);</span>
+<span class="lineNum">    1008 </span><span class="lineCov">       6254 :     dm_drr01[1][1] = 2.0*Tensor(-1.0, 0.0, 0.0,  0.0,+1.0, 0.0,  0.0, 0.0,+1.0);</span>
+<span class="lineNum">    1009 </span><span class="lineCov">       6254 :     dm_drr01[2][2] = 2.0*Tensor(+1.0, 0.0, 0.0,  0.0,-1.0, 0.0,  0.0, 0.0,+1.0);</span>
+<span class="lineNum">    1010 </span><span class="lineCov">       6254 :     dm_drr01[3][3] = 2.0*Tensor(+1.0, 0.0, 0.0,  0.0,+1.0, 0.0,  0.0, 0.0,-1.0);</span>
+<span class="lineNum">    1011 </span><span class="lineCov">       6254 :     dm_drr01[0][1] = 2.0*Tensor( 0.0, 0.0, 0.0,  0.0, 0.0,-1.0,  0.0,+1.0, 0.0);</span>
+<span class="lineNum">    1012 </span><span class="lineCov">       6254 :     dm_drr01[0][2] = 2.0*Tensor( 0.0, 0.0,+1.0,  0.0, 0.0, 0.0, -1.0, 0.0, 0.0);</span>
+<span class="lineNum">    1013 </span><span class="lineCov">       6254 :     dm_drr01[0][3] = 2.0*Tensor( 0.0,-1.0, 0.0, +1.0, 0.0, 0.0,  0.0, 0.0, 0.0);</span>
+<span class="lineNum">    1014 </span><span class="lineCov">       6254 :     dm_drr01[1][2] = 2.0*Tensor( 0.0,-1.0, 0.0, -1.0, 0.0, 0.0,  0.0, 0.0, 0.0);</span>
+<span class="lineNum">    1015 </span><span class="lineCov">       6254 :     dm_drr01[1][3] = 2.0*Tensor( 0.0, 0.0,-1.0,  0.0, 0.0, 0.0, -1.0, 0.0, 0.0);</span>
+<span class="lineNum">    1016 </span><span class="lineCov">       6254 :     dm_drr01[2][3] = 2.0*Tensor( 0.0, 0.0, 0.0,  0.0, 0.0,-1.0,  0.0,-1.0, 0.0);</span>
+<span class="lineNum">    1017 </span><span class="lineCov">       6254 :     dm_drr01[1][0] = dm_drr01[0][1];</span>
+<span class="lineNum">    1018 </span><span class="lineCov">       6254 :     dm_drr01[2][0] = dm_drr01[0][2];</span>
+<span class="lineNum">    1019 </span><span class="lineCov">       6254 :     dm_drr01[2][1] = dm_drr01[1][2];</span>
+<span class="lineNum">    1020 </span><span class="lineCov">       6254 :     dm_drr01[3][0] = dm_drr01[0][3];</span>
+<span class="lineNum">    1021 </span><span class="lineCov">       6254 :     dm_drr01[3][1] = dm_drr01[1][3];</span>
+<span class="lineNum">    1022 </span><span class="lineCov">       6254 :     dm_drr01[3][2] = dm_drr01[2][3];</span>
+<span class="lineNum">    1023 </span>            :   }
+<span class="lineNum">    1024 </span>            : 
+<span class="lineNum">    1025 </span>            : 
+<span class="lineNum">    1026 </span><span class="lineCov">       6254 :   int diagerror=diagMat(m, eigenvals, eigenvecs );</span>
+<span class="lineNum">    1027 </span>            : 
+<span class="lineNum">    1028 </span><span class="lineCov">       6254 :   if (diagerror!=0) {</span>
+<span class="lineNum">    1029 </span>            :     std::string sdiagerror;
+<span class="lineNum">    1030 </span><span class="lineNoCov">          0 :     Tools::convert(diagerror,sdiagerror);</span>
+<span class="lineNum">    1031 </span><span class="lineNoCov">          0 :     std::string msg=&quot;DIAGONALIZATION FAILED WITH ERROR CODE &quot;+sdiagerror;</span>
+<span class="lineNum">    1032 </span><span class="lineNoCov">          0 :     plumed_merror(msg);</span>
+<span class="lineNum">    1033 </span>            :   }
+<span class="lineNum">    1034 </span>            : 
+<span class="lineNum">    1035 </span><span class="lineCov">      12508 :   Vector4d q(eigenvecs[0][0],eigenvecs[0][1],eigenvecs[0][2],eigenvecs[0][3]);</span>
+<span class="lineNum">    1036 </span>            : //  cerr&lt;&lt;&quot;EIGENVAL &quot;&lt;&lt;eigenvals[0]&lt;&lt;&quot; &quot;&lt;&lt;eigenvals[1]&lt;&lt;&quot; &quot;&lt;&lt;eigenvals[2]&lt;&lt;&quot; &quot;&lt;&lt;eigenvals[3]&lt;&lt;&quot;\n&quot;;
+<span class="lineNum">    1037 </span>            : 
+<span class="lineNum">    1038 </span><span class="lineCov">      31270 :   Tensor dq_drr01[4];</span>
+<span class="lineNum">    1039 </span><span class="lineCov">       6254 :   if(!alEqDis or !only_rotation) {</span>
+<span class="lineNum">    1040 </span>            :     double dq_dm[4][4][4];
+<span class="lineNum">    1041 </span><span class="lineCov">     431526 :     for(unsigned i=0; i&lt;4; i++) for(unsigned j=0; j&lt;4; j++) for(unsigned k=0; k&lt;4; k++) {</span>
+<span class="lineNum">    1042 </span>            :           double tmp=0.0;
+<span class="lineNum">    1043 </span>            : // perturbation theory for matrix m
+<span class="lineNum">    1044 </span><span class="lineCov">    4002560 :           for(unsigned l=1; l&lt;4; l++) tmp+=eigenvecs[l][j]*eigenvecs[l][i]/(eigenvals[0]-eigenvals[l])*eigenvecs[0][k];</span>
+<span class="lineNum">    1045 </span><span class="lineCov">     400256 :           dq_dm[i][j][k]=tmp;</span>
+<span class="lineNum">    1046 </span>            :         }
+<span class="lineNum">    1047 </span>            : // propagation to _drr01
+<span class="lineNum">    1048 </span><span class="lineCov">      56286 :     for(unsigned i=0; i&lt;4; i++) {</span>
+<span class="lineNum">    1049 </span><span class="lineCov">      25016 :       Tensor tmp;</span>
+<span class="lineNum">    1050 </span><span class="lineCov">     525336 :       for(unsigned j=0; j&lt;4; j++) for(unsigned k=0; k&lt;4; k++) {</span>
+<span class="lineNum">    1051 </span><span class="lineCov">     400256 :           tmp+=dq_dm[i][j][k]*dm_drr01[j][k];</span>
+<span class="lineNum">    1052 </span>            :         }
+<span class="lineNum">    1053 </span><span class="lineCov">      25016 :       dq_drr01[i]=tmp;</span>
+<span class="lineNum">    1054 </span>            :     }
+<span class="lineNum">    1055 </span>            :   }
+<span class="lineNum">    1056 </span>            : 
+<span class="lineNum">    1057 </span>            : // This is the rotation matrix that brings reference to positions
+<span class="lineNum">    1058 </span>            : // i.e. matmul(rotation,reference[iat])+shift is fitted to positions[iat]
+<span class="lineNum">    1059 </span>            : 
+<span class="lineNum">    1060 </span><span class="lineCov">       6254 :   rotation[0][0]=q[0]*q[0]+q[1]*q[1]-q[2]*q[2]-q[3]*q[3];</span>
+<span class="lineNum">    1061 </span><span class="lineCov">       6254 :   rotation[1][1]=q[0]*q[0]-q[1]*q[1]+q[2]*q[2]-q[3]*q[3];</span>
+<span class="lineNum">    1062 </span><span class="lineCov">       6254 :   rotation[2][2]=q[0]*q[0]-q[1]*q[1]-q[2]*q[2]+q[3]*q[3];</span>
+<span class="lineNum">    1063 </span><span class="lineCov">       6254 :   rotation[0][1]=2*(+q[0]*q[3]+q[1]*q[2]);</span>
+<span class="lineNum">    1064 </span><span class="lineCov">       6254 :   rotation[0][2]=2*(-q[0]*q[2]+q[1]*q[3]);</span>
+<span class="lineNum">    1065 </span><span class="lineCov">       6254 :   rotation[1][2]=2*(+q[0]*q[1]+q[2]*q[3]);</span>
+<span class="lineNum">    1066 </span><span class="lineCov">       6254 :   rotation[1][0]=2*(-q[0]*q[3]+q[1]*q[2]);</span>
+<span class="lineNum">    1067 </span><span class="lineCov">       6254 :   rotation[2][0]=2*(+q[0]*q[2]+q[1]*q[3]);</span>
+<span class="lineNum">    1068 </span><span class="lineCov">       6254 :   rotation[2][1]=2*(-q[0]*q[1]+q[2]*q[3]);</span>
+<span class="lineNum">    1069 </span>            : 
+<span class="lineNum">    1070 </span>            : 
+<span class="lineNum">    1071 </span><span class="lineCov">       6254 :   if(!alEqDis or !only_rotation) {</span>
+<span class="lineNum">    1072 </span><span class="lineCov">      12508 :     drotation_drr01[0][0]=2*q[0]*dq_drr01[0]+2*q[1]*dq_drr01[1]-2*q[2]*dq_drr01[2]-2*q[3]*dq_drr01[3];</span>
+<span class="lineNum">    1073 </span><span class="lineCov">      12508 :     drotation_drr01[1][1]=2*q[0]*dq_drr01[0]-2*q[1]*dq_drr01[1]+2*q[2]*dq_drr01[2]-2*q[3]*dq_drr01[3];</span>
+<span class="lineNum">    1074 </span><span class="lineCov">      12508 :     drotation_drr01[2][2]=2*q[0]*dq_drr01[0]-2*q[1]*dq_drr01[1]-2*q[2]*dq_drr01[2]+2*q[3]*dq_drr01[3];</span>
+<span class="lineNum">    1075 </span><span class="lineCov">      12508 :     drotation_drr01[0][1]=2*(+(q[0]*dq_drr01[3]+dq_drr01[0]*q[3])+(q[1]*dq_drr01[2]+dq_drr01[1]*q[2]));</span>
+<span class="lineNum">    1076 </span><span class="lineCov">      12508 :     drotation_drr01[0][2]=2*(-(q[0]*dq_drr01[2]+dq_drr01[0]*q[2])+(q[1]*dq_drr01[3]+dq_drr01[1]*q[3]));</span>
+<span class="lineNum">    1077 </span><span class="lineCov">      12508 :     drotation_drr01[1][2]=2*(+(q[0]*dq_drr01[1]+dq_drr01[0]*q[1])+(q[2]*dq_drr01[3]+dq_drr01[2]*q[3]));</span>
+<span class="lineNum">    1078 </span><span class="lineCov">      12508 :     drotation_drr01[1][0]=2*(-(q[0]*dq_drr01[3]+dq_drr01[0]*q[3])+(q[1]*dq_drr01[2]+dq_drr01[1]*q[2]));</span>
+<span class="lineNum">    1079 </span><span class="lineCov">      12508 :     drotation_drr01[2][0]=2*(+(q[0]*dq_drr01[2]+dq_drr01[0]*q[2])+(q[1]*dq_drr01[3]+dq_drr01[1]*q[3]));</span>
+<span class="lineNum">    1080 </span><span class="lineCov">      12508 :     drotation_drr01[2][1]=2*(-(q[0]*dq_drr01[1]+dq_drr01[0]*q[1])+(q[2]*dq_drr01[3]+dq_drr01[2]*q[3]));</span>
+<span class="lineNum">    1081 </span>            :   }
+<span class="lineNum">    1082 </span>            : 
+<span class="lineNum">    1083 </span><span class="lineCov">       6254 :   d.resize(n);</span>
+<span class="lineNum">    1084 </span>            : 
+<span class="lineNum">    1085 </span>            :   // calculate rotation matrix derivatives and components distances needed for components only when align!=displacement
+<span class="lineNum">    1086 </span><span class="lineCov">       6254 :   if(!alEqDis)ddist_drotation.zero();</span>
+<span class="lineNum">    1087 </span>            :   #pragma omp simd
+<span class="lineNum">    1088 </span>            :   for(unsigned iat=0; iat&lt;n; iat++) {
+<span class="lineNum">    1089 </span>            :     // components differences: this is useful externally
+<span class="lineNum">    1090 </span><span class="lineCov">     360848 :     d[iat]=positions[iat]-cp - matmul(rotation,reference[iat]-cr);</span>
+<span class="lineNum">    1091 </span>            :     //cerr&lt;&lt;&quot;D &quot;&lt;&lt;iat&lt;&lt;&quot; &quot;&lt;&lt;d[iat][0]&lt;&lt;&quot; &quot;&lt;&lt;d[iat][1]&lt;&lt;&quot; &quot;&lt;&lt;d[iat][2]&lt;&lt;&quot;\n&quot;;
+<span class="lineNum">    1092 </span>            :   }
+<span class="lineNum">    1093 </span>            :   // ddist_drotation if needed
+<span class="lineNum">    1094 </span><span class="lineCov">       6254 :   if(!alEqDis or !only_rotation)</span>
+<span class="lineNum">    1095 </span><span class="lineCov">     186678 :     for (unsigned iat=0; iat&lt;n; iat++)</span>
+<span class="lineNum">    1096 </span><span class="lineCov">     360848 :       ddist_drotation+=-2*displace[iat]*extProduct(d[iat],reference[iat]-cr);</span>
+<span class="lineNum">    1097 </span>            : 
+<span class="lineNum">    1098 </span><span class="lineCov">       6254 :   if(!alEqDis or !only_rotation) {</span>
+<span class="lineNum">    1099 </span><span class="lineCov">       6254 :     ddist_drr01.zero();</span>
+<span class="lineNum">    1100 </span><span class="lineCov">      81302 :     for(unsigned i=0; i&lt;3; i++) for(unsigned j=0; j&lt;3; j++) ddist_drr01+=ddist_drotation[i][j]*drotation_drr01[i][j];</span>
+<span class="lineNum">    1101 </span>            :   }
+<span class="lineNum">    1102 </span>            :   // transfer this bools to the cd so that this settings will be reflected in the other calls
+<span class="lineNum">    1103 </span><span class="lineCov">       6254 :   this-&gt;alEqDis=alEqDis;</span>
+<span class="lineNum">    1104 </span><span class="lineCov">       6254 :   this-&gt;safe=safe;</span>
+<span class="lineNum">    1105 </span><span class="lineCov">       6254 :   isInitialized=true;</span>
+<span class="lineNum">    1106 </span>            : 
+<span class="lineNum">    1107 </span><span class="lineCov">       6254 : }</span>
+<span class="lineNum">    1108 </span>            : /// just retrieve the distance already calculated
+<span class="lineNum">    1109 </span><span class="lineCov">      51446 : double RMSDCoreData::getDistance( bool squared) {</span>
+<span class="lineNum">    1110 </span>            : 
+<span class="lineNum">    1111 </span><span class="lineCov">      51446 :   if(!isInitialized)plumed_merror(&quot;getDistance cannot calculate the distance without being initialized first by doCoreCalc &quot;);</span>
+<span class="lineNum">    1112 </span>            : 
+<span class="lineNum">    1113 </span>            :   double localDist=0.0;
+<span class="lineNum">    1114 </span><span class="lineCov">     102892 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1115 </span><span class="lineCov">      51446 :   if(safe || !alEqDis) localDist=0.0;</span>
+<span class="lineNum">    1116 </span>            :   else
+<span class="lineNum">    1117 </span><span class="lineNoCov">          0 :     localDist=eigenvals[0]+rr00+rr11;</span>
+<span class="lineNum">    1118 </span><span class="lineCov">     102892 :   #pragma omp simd reduction(+:localDist)</span>
+<span class="lineNum">    1119 </span>            :   for(unsigned iat=0; iat&lt;n; iat++) {
+<span class="lineNum">    1120 </span><span class="lineCov">     677708 :     if(alEqDis) {</span>
+<span class="lineNum">    1121 </span><span class="lineCov">    2029839 :       if(safe) localDist+=align[iat]*modulo2(d[iat]);</span>
+<span class="lineNum">    1122 </span>            :     } else {
+<span class="lineNum">    1123 </span><span class="lineCov">       3285 :       localDist+=displace[iat]*modulo2(d[iat]);</span>
+<span class="lineNum">    1124 </span>            :     }
+<span class="lineNum">    1125 </span>            :   }
+<span class="lineNum">    1126 </span><span class="lineCov">      51446 :   if(!squared) {</span>
+<span class="lineNum">    1127 </span><span class="lineCov">         75 :     dist=sqrt(localDist);</span>
+<span class="lineNum">    1128 </span><span class="lineCov">         75 :     distanceIsMSD=false;</span>
+<span class="lineNum">    1129 </span>            :   } else {
+<span class="lineNum">    1130 </span><span class="lineCov">      51371 :     dist=localDist;</span>
+<span class="lineNum">    1131 </span><span class="lineCov">      51371 :     distanceIsMSD=true;</span>
+<span class="lineNum">    1132 </span>            :   }
+<span class="lineNum">    1133 </span><span class="lineCov">      51446 :   hasDistance=true;</span>
+<span class="lineNum">    1134 </span><span class="lineCov">      51446 :   return dist;</span>
+<a name="1135"><span class="lineNum">    1135 </span>            : }</a>
+<span class="lineNum">    1136 </span>            : 
+<span class="lineNum">    1137 </span><span class="lineCov">      45192 : void RMSDCoreData::doCoreCalcWithCloseStructure(bool safe,bool alEqDis, Tensor &amp; rotationPosClose, Tensor &amp; rotationRefClose, std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; &amp; drotationPosCloseDrr01) {</span>
+<span class="lineNum">    1138 </span>            : 
+<span class="lineNum">    1139 </span><span class="lineCov">      90384 :   unsigned natoms = reference.size();</span>
+<span class="lineNum">    1140 </span><span class="lineCov">      45192 :   Tensor ddist_drxy;</span>
+<span class="lineNum">    1141 </span><span class="lineCov">      45192 :   ddist_drr01.zero();</span>
+<span class="lineNum">    1142 </span><span class="lineCov">      45192 :   d.resize(natoms);</span>
+<span class="lineNum">    1143 </span>            : 
+<span class="lineNum">    1144 </span>            :   // center of mass managing: must subtract the center from the position or not?
+<span class="lineNum">    1145 </span><span class="lineCov">      45192 :   Vector cp; cp.zero(); if(!cpositions_is_removed)cp=cpositions;</span>
+<span class="lineNum">    1146 </span><span class="lineCov">      45192 :   Vector cr; cr.zero(); if(!creference_is_removed)cr=creference;</span>
+<span class="lineNum">    1147 </span>            :   //distance = \sum_{n=0}^{N} w_n(x_n-cpos-R_{XY} R_{AY} a_n)^2
+<span class="lineNum">    1148 </span>            : 
+<span class="lineNum">    1149 </span><span class="lineCov">      45192 :   Tensor rotation = matmul(rotationPosClose, rotationRefClose);</span>
+<span class="lineNum">    1150 </span>            : 
+<span class="lineNum">    1151 </span>            :   #pragma omp simd
+<span class="lineNum">    1152 </span>            :   for (unsigned iat=0; iat&lt;natoms; iat++) {
+<span class="lineNum">    1153 </span><span class="lineCov">    2349984 :     d[iat] = positions[iat] - cp - matmul(rotation, reference[iat]-cr);</span>
+<span class="lineNum">    1154 </span>            :   }
+<span class="lineNum">    1155 </span><span class="lineCov">      45192 :   if (!alEqDis) {</span>
+<span class="lineNum">    1156 </span><span class="lineNoCov">          0 :     for (unsigned iat=0; iat&lt;natoms; iat++) {</span>
+<span class="lineNum">    1157 </span>            :       //dist = \sum w_i(x_i - cpos - R_xy * R_ay * a_i)
+<span class="lineNum">    1158 </span><span class="lineNoCov">          0 :       ddist_drxy += -2*displace[iat]*extProduct(matmul(d[iat], rotationRefClose), reference[iat]-cr);</span>
+<span class="lineNum">    1159 </span>            :     }
+<span class="lineNum">    1160 </span>            :   }
+<span class="lineNum">    1161 </span>            : 
+<span class="lineNum">    1162 </span><span class="lineCov">      45192 :   if (!alEqDis) {</span>
+<span class="lineNum">    1163 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;3; i++)</span>
+<span class="lineNum">    1164 </span><span class="lineNoCov">          0 :       for(unsigned j=0; j&lt;3; j++)</span>
+<span class="lineNum">    1165 </span><span class="lineNoCov">          0 :         ddist_drr01+=ddist_drxy[i][j]*drotationPosCloseDrr01[i][j];</span>
+<span class="lineNum">    1166 </span>            :   }
+<span class="lineNum">    1167 </span><span class="lineCov">      45192 :   this-&gt;alEqDis=alEqDis;</span>
+<span class="lineNum">    1168 </span><span class="lineCov">      45192 :   this-&gt;safe=safe;</span>
+<span class="lineNum">    1169 </span><span class="lineCov">      45192 :   isInitialized=true;</span>
+<span class="lineNum">    1170 </span><span class="lineCov">      45192 : }</span>
+<span class="lineNum">    1171 </span>            : 
+<span class="lineNum">    1172 </span><span class="lineCov">      50306 : std::vector&lt;Vector&gt; RMSDCoreData::getDDistanceDPositions() {</span>
+<span class="lineNum">    1173 </span>            :   std::vector&lt;Vector&gt;  derivatives;
+<span class="lineNum">    1174 </span><span class="lineCov">     100612 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1175 </span><span class="lineCov">      50306 :   Vector ddist_dcpositions;</span>
+<span class="lineNum">    1176 </span><span class="lineCov">      50306 :   derivatives.resize(n);</span>
+<span class="lineNum">    1177 </span>            :   double prefactor=1.0;
+<span class="lineNum">    1178 </span><span class="lineCov">      50306 :   if(!distanceIsMSD) prefactor*=0.5/dist;</span>
+<span class="lineNum">    1179 </span><span class="lineCov">      50306 :   plumed_massert(!retrieve_only_rotation,&quot;You used  only_rotation=true in doCoreCalc therefore you cannot retrieve this information now&quot;);</span>
+<span class="lineNum">    1180 </span><span class="lineCov">      50306 :   if(!hasDistance)plumed_merror(&quot;getDPositionsDerivatives needs to calculate the distance via getDistance first !&quot;);</span>
+<span class="lineNum">    1181 </span><span class="lineCov">      50306 :   if(!isInitialized)plumed_merror(&quot;getDPositionsDerivatives needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1182 </span><span class="lineCov">      50306 :   Vector csum;</span>
+<span class="lineNum">    1183 </span><span class="lineCov">    1376850 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1184 </span><span class="lineCov">     663272 :     if(alEqDis) {</span>
+<span class="lineNum">    1185 </span>            : // there is no need for derivatives of rotation and shift here as it is by construction zero
+<span class="lineNum">    1186 </span>            : // (similar to Hellman-Feynman forces)
+<span class="lineNum">    1187 </span><span class="lineCov">    2649668 :       derivatives[iat]= 2*prefactor*align[iat]*d[iat];</span>
+<span class="lineNum">    1188 </span>            :     } else {
+<span class="lineNum">    1189 </span>            : // these are the derivatives assuming the roto-translation as frozen
+<span class="lineNum">    1190 </span><span class="lineCov">       2565 :       Vector tmp1=2*displace[iat]*d[iat];</span>
+<span class="lineNum">    1191 </span><span class="lineCov">        855 :       derivatives[iat]=tmp1;</span>
+<span class="lineNum">    1192 </span>            : // derivative of cpositions
+<span class="lineNum">    1193 </span><span class="lineCov">        855 :       ddist_dcpositions+=-tmp1;</span>
+<span class="lineNum">    1194 </span>            :       // these needed for com corrections
+<span class="lineNum">    1195 </span><span class="lineCov">       2565 :       Vector tmp2=matmul(ddist_drr01,reference[iat]-creference)*align[iat];</span>
+<span class="lineNum">    1196 </span><span class="lineCov">        855 :       derivatives[iat]+=tmp2;</span>
+<span class="lineNum">    1197 </span><span class="lineCov">        855 :       csum+=tmp2;</span>
+<span class="lineNum">    1198 </span>            :     }
+<span class="lineNum">    1199 </span>            :   }
+<span class="lineNum">    1200 </span>            : 
+<span class="lineNum">    1201 </span><span class="lineCov">      50306 :   if(!alEqDis)</span>
+<span class="lineNum">    1202 </span>            :     #pragma omp simd
+<span class="lineNum">    1203 </span><span class="lineCov">       3420 :     for(unsigned iat=0; iat&lt;n; iat++) {derivatives[iat]= prefactor*(derivatives[iat]+(ddist_dcpositions-csum)*align[iat]); }</span>
+<span class="lineNum">    1204 </span>            : 
+<span class="lineNum">    1205 </span><span class="lineCov">      50306 :   return derivatives;</span>
+<span class="lineNum">    1206 </span>            : }
+<span class="lineNum">    1207 </span>            : 
+<span class="lineNum">    1208 </span><span class="lineCov">          1 : std::vector&lt;Vector&gt;  RMSDCoreData::getDDistanceDReference() {</span>
+<span class="lineNum">    1209 </span>            :   std::vector&lt;Vector&gt;  derivatives;
+<span class="lineNum">    1210 </span><span class="lineCov">          2 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1211 </span><span class="lineCov">          1 :   Vector ddist_dcreference;</span>
+<span class="lineNum">    1212 </span><span class="lineCov">          1 :   derivatives.resize(n);</span>
+<span class="lineNum">    1213 </span>            :   double prefactor=1.0;
+<span class="lineNum">    1214 </span><span class="lineCov">          1 :   if(!distanceIsMSD) prefactor*=0.5/dist;</span>
+<span class="lineNum">    1215 </span><span class="lineCov">          1 :   Vector csum;</span>
+<span class="lineNum">    1216 </span>            : 
+<span class="lineNum">    1217 </span><span class="lineCov">          1 :   plumed_massert(!retrieve_only_rotation,&quot;You used  only_rotation=true in doCoreCalc therefore you cannot retrieve this information now&quot;);</span>
+<span class="lineNum">    1218 </span><span class="lineCov">          1 :   if(!hasDistance)plumed_merror(&quot;getDDistanceDReference needs to calculate the distance via getDistance first !&quot;);</span>
+<span class="lineNum">    1219 </span><span class="lineCov">          1 :   if(!isInitialized)plumed_merror(&quot;getDDistanceDReference to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1220 </span>            :   // get the transpose rotation
+<span class="lineNum">    1221 </span><span class="lineCov">          1 :   Tensor t_rotation=rotation.transpose();</span>
+<span class="lineNum">    1222 </span><span class="lineCov">          1 :   Tensor t_ddist_drr01=ddist_drr01.transpose();</span>
+<span class="lineNum">    1223 </span>            : 
+<span class="lineNum">    1224 </span>            : // third expensive loop: derivatives
+<span class="lineNum">    1225 </span><span class="lineCov">       1711 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1226 </span><span class="lineCov">        855 :     if(alEqDis) {</span>
+<span class="lineNum">    1227 </span>            : // there is no need for derivatives of rotation and shift here as it is by construction zero
+<span class="lineNum">    1228 </span>            : // (similar to Hellman-Feynman forces)
+<span class="lineNum">    1229 </span>            :       //TODO: check this derivative down here
+<span class="lineNum">    1230 </span><span class="lineNoCov">          0 :       derivatives[iat]= -2*prefactor*align[iat]*matmul(t_rotation,d[iat]);</span>
+<span class="lineNum">    1231 </span>            :     } else {
+<span class="lineNum">    1232 </span>            : // these are the derivatives assuming the roto-translation as frozen
+<span class="lineNum">    1233 </span><span class="lineCov">       2565 :       Vector tmp1=2*displace[iat]*matmul(t_rotation,d[iat]);</span>
+<span class="lineNum">    1234 </span><span class="lineCov">        855 :       derivatives[iat]= -tmp1;</span>
+<span class="lineNum">    1235 </span>            : // derivative of cpositions
+<span class="lineNum">    1236 </span><span class="lineCov">        855 :       ddist_dcreference+=tmp1;</span>
+<span class="lineNum">    1237 </span>            :       // these below are needed for com correction
+<span class="lineNum">    1238 </span><span class="lineCov">       2565 :       Vector tmp2=matmul(t_ddist_drr01,positions[iat]-cpositions)*align[iat];</span>
+<span class="lineNum">    1239 </span><span class="lineCov">        855 :       derivatives[iat]+=tmp2;</span>
+<span class="lineNum">    1240 </span><span class="lineCov">        855 :       csum+=tmp2;</span>
+<span class="lineNum">    1241 </span>            :     }
+<span class="lineNum">    1242 </span>            :   }
+<span class="lineNum">    1243 </span>            : 
+<span class="lineNum">    1244 </span><span class="lineCov">          1 :   if(!alEqDis)</span>
+<span class="lineNum">    1245 </span>            :     #pragma omp simd
+<span class="lineNum">    1246 </span><span class="lineCov">       3420 :     for(unsigned iat=0; iat&lt;n; iat++) {derivatives[iat]= prefactor*(derivatives[iat]+(ddist_dcreference-csum)*align[iat]);}</span>
+<span class="lineNum">    1247 </span>            : 
+<span class="lineNum">    1248 </span><span class="lineCov">          1 :   return derivatives;</span>
+<span class="lineNum">    1249 </span>            : }
+<span class="lineNum">    1250 </span>            : 
+<span class="lineNum">    1251 </span>            : /// this version does not calculate the derivative of rotation matrix as needed for SOMA
+<span class="lineNum">    1252 </span><span class="lineNoCov">          0 : std::vector&lt;Vector&gt;  RMSDCoreData::getDDistanceDReferenceSOMA() {</span>
+<span class="lineNum">    1253 </span>            :   std::vector&lt;Vector&gt;  derivatives;
+<span class="lineNum">    1254 </span><span class="lineNoCov">          0 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1255 </span><span class="lineNoCov">          0 :   Vector ddist_dcreference;</span>
+<span class="lineNum">    1256 </span><span class="lineNoCov">          0 :   derivatives.resize(n);</span>
+<span class="lineNum">    1257 </span>            :   double prefactor=1.0;
+<span class="lineNum">    1258 </span><span class="lineNoCov">          0 :   if(!distanceIsMSD) prefactor*=0.5/dist;</span>
+<span class="lineNum">    1259 </span><span class="lineNoCov">          0 :   Vector csum,tmp1,tmp2;</span>
+<span class="lineNum">    1260 </span>            : 
+<span class="lineNum">    1261 </span><span class="lineNoCov">          0 :   plumed_massert(!retrieve_only_rotation,&quot;You used  only_rotation=true in doCoreCalc therefore you cannot retrieve this information now&quot;);</span>
+<span class="lineNum">    1262 </span><span class="lineNoCov">          0 :   if(!hasDistance)plumed_merror(&quot;getDDistanceDReference needs to calculate the distance via getDistance first !&quot;);</span>
+<span class="lineNum">    1263 </span><span class="lineNoCov">          0 :   if(!isInitialized)plumed_merror(&quot;getDDistanceDReference to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1264 </span>            :   // get the transpose rotation
+<span class="lineNum">    1265 </span><span class="lineNoCov">          0 :   Tensor t_rotation=rotation.transpose();</span>
+<span class="lineNum">    1266 </span>            : 
+<span class="lineNum">    1267 </span>            : // third expensive loop: derivatives
+<span class="lineNum">    1268 </span><span class="lineNoCov">          0 :   for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1269 </span><span class="lineNoCov">          0 :     if(alEqDis) {</span>
+<span class="lineNum">    1270 </span>            : // there is no need for derivatives of rotation and shift here as it is by construction zero
+<span class="lineNum">    1271 </span>            : // (similar to Hellman-Feynman forces)
+<span class="lineNum">    1272 </span>            :       //TODO: check this derivative down here
+<span class="lineNum">    1273 </span><span class="lineNoCov">          0 :       derivatives[iat]= -2*prefactor*align[iat]*matmul(t_rotation,d[iat]);</span>
+<span class="lineNum">    1274 </span>            :     } else {
+<span class="lineNum">    1275 </span>            : // these are the derivatives assuming the roto-translation as frozen
+<span class="lineNum">    1276 </span><span class="lineNoCov">          0 :       tmp1=2*displace[iat]*matmul(t_rotation,d[iat]);</span>
+<span class="lineNum">    1277 </span><span class="lineNoCov">          0 :       derivatives[iat]= -tmp1;</span>
+<span class="lineNum">    1278 </span>            : // derivative of cpositions
+<span class="lineNum">    1279 </span><span class="lineNoCov">          0 :       ddist_dcreference+=tmp1;</span>
+<span class="lineNum">    1280 </span>            :     }
+<span class="lineNum">    1281 </span>            :   }
+<span class="lineNum">    1282 </span>            : 
+<span class="lineNum">    1283 </span><span class="lineNoCov">          0 :   if(!alEqDis) for(unsigned iat=0; iat&lt;n; iat++)derivatives[iat]=prefactor*(derivatives[iat]+ddist_dcreference*align[iat]);</span>
+<span class="lineNum">    1284 </span>            : 
+<span class="lineNum">    1285 </span><span class="lineNoCov">          0 :   return derivatives;</span>
+<span class="lineNum">    1286 </span>            : }
+<span class="lineNum">    1287 </span>            : 
+<span class="lineNum">    1288 </span>            : 
+<span class="lineNum">    1289 </span>            : 
+<span class="lineNum">    1290 </span>            : /*
+<span class="lineNum">    1291 </span>            : This below is the derivative of the rotation matrix that aligns the reference onto the positions
+<span class="lineNum">    1292 </span>            : respect to positions
+<span class="lineNum">    1293 </span>            : note that the this transformation overlap the  reference onto position
+<span class="lineNum">    1294 </span>            : if inverseTransform=true then aligns the positions onto reference
+<span class="lineNum">    1295 </span>            : */
+<span class="lineNum">    1296 </span><span class="lineCov">       4489 : Matrix&lt;std::vector&lt;Vector&gt; &gt;  RMSDCoreData::getDRotationDPositions( bool inverseTransform ) {</span>
+<span class="lineNum">    1297 </span><span class="lineCov">       8978 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1298 </span><span class="lineCov">       4489 :   plumed_massert(!retrieve_only_rotation,&quot;You used  only_rotation=true in doCoreCalc therefore you cannot retrieve this information now&quot;);</span>
+<span class="lineNum">    1299 </span><span class="lineCov">       4489 :   if(!isInitialized)plumed_merror(&quot;getDRotationDPosition to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1300 </span>            :   Matrix&lt;std::vector&lt;Vector&gt; &gt; DRotDPos=Matrix&lt;std::vector&lt;Vector&gt; &gt;(3,3);
+<span class="lineNum">    1301 </span>            :   // remember drotation_drr01 is Tensor drotation_drr01[3][3]
+<span class="lineNum">    1302 </span>            :   //           (3x3 rot) (3x3 components of rr01)
+<span class="lineNum">    1303 </span><span class="lineCov">       4489 :   std::vector&lt;Vector&gt; v(n);</span>
+<span class="lineNum">    1304 </span><span class="lineCov">       4489 :   Vector csum;</span>
+<span class="lineNum">    1305 </span>            :   // these below could probably be calculated in the main routine
+<span class="lineNum">    1306 </span><span class="lineCov">       4489 :   Vector cp; cp.zero(); if(!cpositions_is_removed)cp=cpositions;</span>
+<span class="lineNum">    1307 </span><span class="lineCov">       4489 :   Vector cr; cr.zero(); if(!creference_is_removed)cr=creference;</span>
+<span class="lineNum">    1308 </span><span class="lineCov">     203764 :   for(unsigned iat=0; iat&lt;n; iat++) csum+=(reference[iat]-cr)*align[iat];</span>
+<span class="lineNum">    1309 </span><span class="lineCov">     270189 :   for(unsigned iat=0; iat&lt;n; iat++) v[iat]=(reference[iat]-cr-csum)*align[iat];</span>
+<span class="lineNum">    1310 </span><span class="lineCov">      31423 :   for(unsigned a=0; a&lt;3; a++) {</span>
+<span class="lineNum">    1311 </span><span class="lineCov">      94269 :     for(unsigned b=0; b&lt;3; b++) {</span>
+<span class="lineNum">    1312 </span><span class="lineCov">      40401 :       if(inverseTransform) {</span>
+<span class="lineNum">    1313 </span><span class="lineCov">      40401 :         DRotDPos[b][a].resize(n);</span>
+<span class="lineNum">    1314 </span><span class="lineCov">    1236051 :         for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1315 </span><span class="lineCov">    2391300 :           DRotDPos[b][a][iat]=matmul(drotation_drr01[a][b],v[iat]);</span>
+<span class="lineNum">    1316 </span>            :         }
+<span class="lineNum">    1317 </span>            :       } else {
+<span class="lineNum">    1318 </span><span class="lineNoCov">          0 :         DRotDPos[a][b].resize(n);</span>
+<span class="lineNum">    1319 </span><span class="lineNoCov">          0 :         for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1320 </span><span class="lineNoCov">          0 :           DRotDPos[a][b][iat]=matmul(drotation_drr01[a][b],v[iat]);</span>
+<span class="lineNum">    1321 </span>            :         }
+<span class="lineNum">    1322 </span>            :       }
+<span class="lineNum">    1323 </span>            :     }
+<span class="lineNum">    1324 </span>            :   }
+<span class="lineNum">    1325 </span><span class="lineCov">       4489 :   return DRotDPos;</span>
+<span class="lineNum">    1326 </span>            : }
+<span class="lineNum">    1327 </span>            : 
+<span class="lineNum">    1328 </span>            : /*
+<span class="lineNum">    1329 </span>            : This below is the derivative of the rotation matrix that aligns the reference onto the positions
+<span class="lineNum">    1330 </span>            : respect to reference
+<span class="lineNum">    1331 </span>            : note that the this transformation overlap the  reference onto position
+<span class="lineNum">    1332 </span>            : if inverseTransform=true then aligns the positions onto reference
+<span class="lineNum">    1333 </span>            : */
+<span class="lineNum">    1334 </span><span class="lineNoCov">          0 : Matrix&lt;std::vector&lt;Vector&gt; &gt;  RMSDCoreData::getDRotationDReference( bool inverseTransform ) {</span>
+<span class="lineNum">    1335 </span><span class="lineNoCov">          0 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1336 </span><span class="lineNoCov">          0 :   plumed_massert(!retrieve_only_rotation,&quot;You used  only_rotation=true in doCoreCalc therefore you cannot retrieve this information now&quot;);</span>
+<span class="lineNum">    1337 </span><span class="lineNoCov">          0 :   if(!isInitialized)plumed_merror(&quot;getDRotationDPositions to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1338 </span>            :   Matrix&lt;std::vector&lt;Vector&gt; &gt; DRotDRef=Matrix&lt;std::vector&lt;Vector&gt; &gt;(3,3);
+<span class="lineNum">    1339 </span>            :   // remember drotation_drr01 is Tensor drotation_drr01[3][3]
+<span class="lineNum">    1340 </span>            :   //           (3x3 rot) (3x3 components of rr01)
+<span class="lineNum">    1341 </span><span class="lineNoCov">          0 :   std::vector&lt;Vector&gt; v(n);</span>
+<span class="lineNum">    1342 </span><span class="lineNoCov">          0 :   Vector csum;</span>
+<span class="lineNum">    1343 </span>            :   // these below could probably be calculated in the main routine
+<span class="lineNum">    1344 </span><span class="lineNoCov">          0 :   Vector cp; cp.zero(); if(!cpositions_is_removed)cp=cpositions;</span>
+<span class="lineNum">    1345 </span><span class="lineNoCov">          0 :   Vector cr; cr.zero(); if(!creference_is_removed)cr=creference;</span>
+<span class="lineNum">    1346 </span><span class="lineNoCov">          0 :   for(unsigned iat=0; iat&lt;n; iat++) csum+=(positions[iat]-cp)*align[iat];</span>
+<span class="lineNum">    1347 </span><span class="lineNoCov">          0 :   for(unsigned iat=0; iat&lt;n; iat++) v[iat]=(positions[iat]-cp-csum)*align[iat];</span>
+<span class="lineNum">    1348 </span>            : 
+<span class="lineNum">    1349 </span><span class="lineNoCov">          0 :   for(unsigned a=0; a&lt;3; a++) {</span>
+<span class="lineNum">    1350 </span><span class="lineNoCov">          0 :     for(unsigned b=0; b&lt;3; b++) {</span>
+<span class="lineNum">    1351 </span><span class="lineNoCov">          0 :       Tensor t_drotation_drr01=drotation_drr01[a][b].transpose();</span>
+<span class="lineNum">    1352 </span><span class="lineNoCov">          0 :       if(inverseTransform) {</span>
+<span class="lineNum">    1353 </span><span class="lineNoCov">          0 :         DRotDRef[b][a].resize(n);</span>
+<span class="lineNum">    1354 </span><span class="lineNoCov">          0 :         for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1355 </span><span class="lineNoCov">          0 :           DRotDRef[b][a][iat]=matmul(t_drotation_drr01,v[iat]);</span>
+<span class="lineNum">    1356 </span>            :         }
+<span class="lineNum">    1357 </span>            :       } else {
+<span class="lineNum">    1358 </span><span class="lineNoCov">          0 :         DRotDRef[a][b].resize(n);</span>
+<span class="lineNum">    1359 </span><span class="lineNoCov">          0 :         for(unsigned iat=0; iat&lt;n; iat++) {</span>
+<span class="lineNum">    1360 </span><span class="lineNoCov">          0 :           DRotDRef[a][b][iat]=matmul(t_drotation_drr01,v[iat]);</span>
+<span class="lineNum">    1361 </span>            :         }
+<span class="lineNum">    1362 </span>            :       }
+<span class="lineNum">    1363 </span>            :     }
+<span class="lineNum">    1364 </span>            :   }
+<span class="lineNum">    1365 </span><span class="lineNoCov">          0 :   return DRotDRef;</span>
+<span class="lineNum">    1366 </span>            : }
+<span class="lineNum">    1367 </span>            : 
+<span class="lineNum">    1368 </span>            : 
+<span class="lineNum">    1369 </span><span class="lineNoCov">          0 : std::vector&lt;Vector&gt; RMSDCoreData::getAlignedReferenceToPositions() {</span>
+<span class="lineNum">    1370 </span>            :   std::vector&lt;Vector&gt; alignedref;
+<span class="lineNum">    1371 </span><span class="lineNoCov">          0 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1372 </span><span class="lineNoCov">          0 :   alignedref.resize(n);</span>
+<span class="lineNum">    1373 </span><span class="lineNoCov">          0 :   if(!isInitialized)plumed_merror(&quot;getAlignedReferenceToPostions needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1374 </span>            :   // avoid to calculate matrix element but use the sum of what you have
+<span class="lineNum">    1375 </span><span class="lineNoCov">          0 :   Vector cp; cp.zero(); if(!cpositions_is_removed)cp=cpositions;</span>
+<span class="lineNum">    1376 </span><span class="lineNoCov">          0 :   for(unsigned iat=0; iat&lt;n; iat++)alignedref[iat]=-d[iat]+positions[iat]-cp;</span>
+<span class="lineNum">    1377 </span><span class="lineNoCov">          0 :   return alignedref;</span>
+<span class="lineNum">    1378 </span>            : }
+<span class="lineNum">    1379 </span><span class="lineCov">       4441 : std::vector&lt;Vector&gt; RMSDCoreData::getAlignedPositionsToReference() {</span>
+<span class="lineNum">    1380 </span>            :   std::vector&lt;Vector&gt; alignedpos;
+<span class="lineNum">    1381 </span><span class="lineCov">       4441 :   if(!isInitialized)plumed_merror(&quot;getAlignedPostionsToReference needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1382 </span><span class="lineCov">       8882 :   const unsigned n=static_cast&lt;unsigned int&gt;(positions.size());</span>
+<span class="lineNum">    1383 </span><span class="lineCov">       4441 :   alignedpos.resize(n);</span>
+<span class="lineNum">    1384 </span><span class="lineCov">       4441 :   Vector cp; cp.zero(); if(!cpositions_is_removed)cp=cpositions;</span>
+<span class="lineNum">    1385 </span>            :   // avoid to calculate matrix element but use the sum of what you have
+<span class="lineNum">    1386 </span><span class="lineCov">     202996 :   for(unsigned iat=0; iat&lt;n; iat++)alignedpos[iat]=matmul(rotation.transpose(),positions[iat]-cp);</span>
+<span class="lineNum">    1387 </span><span class="lineCov">       4441 :   return alignedpos;</span>
+<span class="lineNum">    1388 </span>            : }
+<span class="lineNum">    1389 </span>            : 
+<span class="lineNum">    1390 </span>            : 
+<span class="lineNum">    1391 </span><span class="lineCov">       4489 : std::vector&lt;Vector&gt; RMSDCoreData::getCenteredPositions() {</span>
+<span class="lineNum">    1392 </span>            :   std::vector&lt;Vector&gt; centeredpos;
+<span class="lineNum">    1393 </span><span class="lineCov">       8978 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1394 </span><span class="lineCov">       4489 :   centeredpos.resize(n);</span>
+<span class="lineNum">    1395 </span><span class="lineCov">       4489 :   if(!isInitialized)plumed_merror(&quot;getCenteredPositions needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1396 </span>            :   // avoid to calculate matrix element but use the sum of what you have
+<span class="lineNum">    1397 </span><span class="lineCov">     137339 :   for(unsigned iat=0; iat&lt;n; iat++)centeredpos[iat]=positions[iat]-cpositions;</span>
+<span class="lineNum">    1398 </span><span class="lineCov">       4489 :   return centeredpos;</span>
+<span class="lineNum">    1399 </span>            : }
+<span class="lineNum">    1400 </span>            : 
+<span class="lineNum">    1401 </span><span class="lineCov">       4441 : std::vector&lt;Vector&gt; RMSDCoreData::getCenteredReference() {</span>
+<span class="lineNum">    1402 </span>            :   std::vector&lt;Vector&gt; centeredref;
+<span class="lineNum">    1403 </span><span class="lineCov">       8882 :   const unsigned n=static_cast&lt;unsigned int&gt;(reference.size());</span>
+<span class="lineNum">    1404 </span><span class="lineCov">       4441 :   centeredref.resize(n);</span>
+<span class="lineNum">    1405 </span><span class="lineCov">       4441 :   if(!isInitialized)plumed_merror(&quot;getCenteredReference needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1406 </span>            :   // avoid to calculate matrix element but use the sum of what you have
+<span class="lineNum">    1407 </span><span class="lineCov">       4441 :   Vector cr; cr.zero(); if(!creference_is_removed)cr=creference;</span>
+<span class="lineNum">    1408 </span><span class="lineCov">     136811 :   for(unsigned iat=0; iat&lt;n; iat++)centeredref[iat]=reference[iat]-cr;</span>
+<span class="lineNum">    1409 </span><span class="lineCov">       4441 :   return centeredref;</span>
+<span class="lineNum">    1410 </span>            : }
+<span class="lineNum">    1411 </span>            : 
+<span class="lineNum">    1412 </span>            : 
+<span class="lineNum">    1413 </span><span class="lineCov">         48 : Vector RMSDCoreData::getPositionsCenter() {</span>
+<span class="lineNum">    1414 </span><span class="lineCov">         48 :   if(!isInitialized)plumed_merror(&quot;getCenteredPositions needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1415 </span><span class="lineCov">         48 :   return cpositions;</span>
+<span class="lineNum">    1416 </span>            : }
+<span class="lineNum">    1417 </span>            : 
+<span class="lineNum">    1418 </span><span class="lineNoCov">          0 : Vector RMSDCoreData::getReferenceCenter() {</span>
+<span class="lineNum">    1419 </span><span class="lineNoCov">          0 :   if(!isInitialized)plumed_merror(&quot;getCenteredPositions needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1420 </span><span class="lineNoCov">          0 :   return creference;</span>
+<span class="lineNum">    1421 </span>            : }
+<span class="lineNum">    1422 </span>            : 
+<span class="lineNum">    1423 </span><span class="lineCov">       1764 : Tensor RMSDCoreData::getRotationMatrixReferenceToPositions() {</span>
+<span class="lineNum">    1424 </span><span class="lineCov">       1764 :   if(!isInitialized)plumed_merror(&quot;getRotationMatrixReferenceToPositions needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1425 </span><span class="lineCov">       1764 :   return rotation;</span>
+<span class="lineNum">    1426 </span>            : }
+<span class="lineNum">    1427 </span>            : 
+<span class="lineNum">    1428 </span><span class="lineCov">       4489 : Tensor RMSDCoreData::getRotationMatrixPositionsToReference() {</span>
+<span class="lineNum">    1429 </span><span class="lineCov">       4489 :   if(!isInitialized)plumed_merror(&quot;getRotationMatrixReferenceToPositions needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1430 </span><span class="lineCov">       4489 :   return rotation.transpose();</span>
+<span class="lineNum">    1431 </span>            : }
+<span class="lineNum">    1432 </span>            : 
+<span class="lineNum">    1433 </span><span class="lineCov">       1092 : const std::array&lt;std::array&lt;Tensor,3&gt;,3&gt; &amp;  RMSDCoreData::getDRotationDRr01() const {</span>
+<span class="lineNum">    1434 </span><span class="lineCov">       1092 :   if(!isInitialized)plumed_merror(&quot;getDRotationDRr01 needs to initialize the coreData first!&quot;);</span>
+<span class="lineNum">    1435 </span><span class="lineCov">       1092 :   return drotation_drr01;</span>
+<span class="lineNum">    1436 </span>            : }
+<span class="lineNum">    1437 </span>            : 
+<span class="lineNum">    1438 </span>            : 
+<span class="lineNum">    1439 </span>            : 
+<span class="lineNum">    1440 </span>            : template double RMSD::optimalAlignment&lt;true,true&gt;(const  std::vector&lt;double&gt;  &amp; align,
+<span class="lineNum">    1441 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">    1442 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">    1443 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">    1444 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives, bool squared)const;
+<span class="lineNum">    1445 </span>            : template double RMSD::optimalAlignment&lt;true,false&gt;(const  std::vector&lt;double&gt;  &amp; align,
+<span class="lineNum">    1446 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">    1447 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">    1448 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">    1449 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives, bool squared)const;
+<span class="lineNum">    1450 </span>            : template double RMSD::optimalAlignment&lt;false,true&gt;(const  std::vector&lt;double&gt;  &amp; align,
+<span class="lineNum">    1451 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">    1452 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">    1453 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">    1454 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives, bool squared)const;
+<span class="lineNum">    1455 </span>            : template double RMSD::optimalAlignment&lt;false,false&gt;(const  std::vector&lt;double&gt;  &amp; align,
+<span class="lineNum">    1456 </span>            :     const  std::vector&lt;double&gt;  &amp; displace,
+<span class="lineNum">    1457 </span>            :     const std::vector&lt;Vector&gt; &amp; positions,
+<span class="lineNum">    1458 </span>            :     const std::vector&lt;Vector&gt; &amp; reference,
+<span class="lineNum">    1459 </span>            :     std::vector&lt;Vector&gt;  &amp; derivatives, bool squared)const;
+<span class="lineNum">    1460 </span>            : 
+<a name="1461"><span class="lineNum">    1461 </span>            : </a>
+<span class="lineNum">    1462 </span>            : 
+<span class="lineNum">    1463 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,1683 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - isdb/Metainference.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">isdb</a> - Metainference.cpp<span style="font-size: 80%;"> (source / <a href="Metainference.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">674</td>
+            <td class="headerCovTableEntry">810</td>
+            <td class="headerCovTableEntryMed">83.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryHi">94.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;bias/Bias.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;bias/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/OpenMP.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      31 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      32 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">      33 </span>            : #include &lt;numeric&gt;
+<span class="lineNum">      34 </span>            : using namespace std;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #ifndef M_PI
+<span class="lineNum">      37 </span>            : #define M_PI           3.14159265358979323846
+<span class="lineNum">      38 </span>            : #endif
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace PLMD {
+<span class="lineNum">      41 </span>            : namespace isdb {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : //+PLUMEDOC ISDB_BIAS METAINFERENCE
+<span class="lineNum">      44 </span>            : /*
+<span class="lineNum">      45 </span>            : Calculates the Metainference energy for a set of experimental data.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : Metainference \cite Bonomi:2016ip is a Bayesian framework
+<span class="lineNum">      48 </span>            : to model heterogeneous systems by integrating prior information with noisy, ensemble-averaged data.
+<span class="lineNum">      49 </span>            : Metainference models a system and quantifies the level of noise in the data by considering a set of replicas of the system.
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : Calculated experimental data are given in input as ARG while reference experimental values
+<span class="lineNum">      52 </span>            : can be given either from fixed components of other actions using PARARG or as numbers using
+<span class="lineNum">      53 </span>            : PARAMETERS. The default behavior is that of averaging the data over the available replicas,
+<span class="lineNum">      54 </span>            : if this is not wanted the keyword NOENSEMBLE prevent this averaging.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : Metadynamic Metainference \cite Bonomi:2016ge or more in general biased Metainference requires the knowledge of
+<span class="lineNum">      57 </span>            : biasing potential in order to calculate the weighted average. In this case the value of the bias
+<span class="lineNum">      58 </span>            : can be provided as the last argument in ARG and adding the keyword REWEIGHT. To avoid the noise
+<span class="lineNum">      59 </span>            : resulting from the instantaneus value of the bias the weight of each replica can be averaged
+<span class="lineNum">      60 </span>            : over a give time using the keyword AVERAGING.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : The data can be averaged by using multiple replicas and weighted for a bias if present.
+<span class="lineNum">      63 </span>            : The functional form of Metainference can be chosen among four variants selected
+<span class="lineNum">      64 </span>            : with NOISE=GAUSS,MGAUSS,OUTLIERS,MOUTLIERS,GENERIC which correspond to modelling the noise for
+<span class="lineNum">      65 </span>            : the arguments as a single gaussian common to all the data points, a gaussian per data
+<span class="lineNum">      66 </span>            : point, a single long-tailed gaussian common to all the data points, a log-tailed
+<span class="lineNum">      67 </span>            :  gaussian per data point or using two distinct noises as for the most general formulation of Metainference.
+<span class="lineNum">      68 </span>            : In this latter case the noise of the replica-averaging is gaussian (one per data point) and the noise for
+<span class="lineNum">      69 </span>            : the comparison with the experiemntal data can chosen using the keywork LIKELIHOOD
+<span class="lineNum">      70 </span>            : between gaussian or log-normal (one per data point), furthermore the evolution of the estimated average
+<span class="lineNum">      71 </span>            : over an infinite number of replicas is driven by DFTILDE.
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : As for Metainference theory there are two sigma values: SIGMA_MEAN represent the
+<span class="lineNum">      74 </span>            : error of calculating an average quantity using a finite set of replica and should
+<span class="lineNum">      75 </span>            : be set as small as possible following the guidelines for replica-averaged simulations
+<span class="lineNum">      76 </span>            : in the framework of the Maximum Entropy Principle. Alternatively, this can be obtained
+<span class="lineNum">      77 </span>            : automatically using the internal sigma mean optimisation as introduced in \cite Lohr:2017gc
+<span class="lineNum">      78 </span>            : (OPTSIGMAMEAN=SEM), in this second case sigma_mean is estimated from the maximum standard error
+<span class="lineNum">      79 </span>            : of the mean either over the simulation or over a defined time using the keyword AVERAGING.
+<span class="lineNum">      80 </span>            : SIGMA_BIAS is an uncertainty parameter, sampled by a MC algorithm in the bounded interval
+<span class="lineNum">      81 </span>            : defined by SIGMA_MIN and SIGMA_MAX. The initial value is set at SIGMA0. The MC move is a
+<span class="lineNum">      82 </span>            : random displacement of maximum value equal to DSIGMA. If the number of data point is
+<span class="lineNum">      83 </span>            : too large and the acceptance rate drops it is possible to make the MC move over mutually
+<span class="lineNum">      84 </span>            : exclusive, random subset of size MC_CHUNKSIZE and run more than one move setting MC_STRIDE
+<span class="lineNum">      85 </span>            : in such a way that MC_CHUNKSIZE*MC_STEPS will cover all the data points.
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : Calculated and experimental data can be compared modulo a scaling factor and/or an offset
+<span class="lineNum">      88 </span>            : using SCALEDATA and/or ADDOFFSET, the sampling is obtained by a MC algorithm either using
+<span class="lineNum">      89 </span>            : a flat or a gaussian prior setting it with SCALE_PRIOR or OFFSET_PRIOR.
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : \par Examples
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : In the following example we calculate a set of \ref RDC, take the replica-average of
+<span class="lineNum">      94 </span>            : them and comparing them with a set of experimental values. RDCs are compared with
+<span class="lineNum">      95 </span>            : the experimental data but for a multiplication factor SCALE that is also sampled by
+<span class="lineNum">      96 </span>            : MC on-the-fly
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : \plumedfile
+<span class="lineNum">      99 </span>            : RDC ...
+<span class="lineNum">     100 </span>            : LABEL=rdc
+<span class="lineNum">     101 </span>            : SCALE=0.0001
+<span class="lineNum">     102 </span>            : GYROM=-72.5388
+<span class="lineNum">     103 </span>            : ATOMS1=22,23
+<span class="lineNum">     104 </span>            : ATOMS2=25,27
+<span class="lineNum">     105 </span>            : ATOMS3=29,31
+<span class="lineNum">     106 </span>            : ATOMS4=33,34
+<span class="lineNum">     107 </span>            : ... RDC
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : METAINFERENCE ...
+<span class="lineNum">     110 </span>            : ARG=rdc.*
+<span class="lineNum">     111 </span>            : NOISETYPE=MGAUSS
+<span class="lineNum">     112 </span>            : PARAMETERS=1.9190,2.9190,3.9190,4.9190
+<span class="lineNum">     113 </span>            : SCALEDATA SCALE0=1 SCALE_MIN=0.1 SCALE_MAX=3 DSCALE=0.01
+<span class="lineNum">     114 </span>            : SIGMA0=0.01 SIGMA_MIN=0.00001 SIGMA_MAX=3 DSIGMA=0.01
+<span class="lineNum">     115 </span>            : SIGMA_MEAN=0.001
+<span class="lineNum">     116 </span>            : LABEL=spe
+<span class="lineNum">     117 </span>            : ... METAINFERENCE
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : PRINT ARG=spe.bias FILE=BIAS STRIDE=1
+<span class="lineNum">     120 </span>            : \endplumedfile
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : in the following example instead of using one uncertainty parameter per data point we use
+<span class="lineNum">     123 </span>            : a single uncertainty value in a long-tailed gaussian to take into account for outliers, furthermore
+<span class="lineNum">     124 </span>            : the data are weighted for the bias applied to other variables of the system.
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : \plumedfile
+<span class="lineNum">     127 </span>            : cv1: TORSION ATOMS=1,2,3,4
+<span class="lineNum">     128 </span>            : cv2: TORSION ATOMS=2,3,4,5
+<span class="lineNum">     129 </span>            : mm: METAD ARG=cv1,cv2 HEIGHT=0.5 SIGMA=0.3,0.3 PACE=200 BIASFACTOR=8 WALKERS_MPI
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : METAINFERENCE ...
+<span class="lineNum">     132 </span>            : ARG=rdc.*,mm.bias
+<span class="lineNum">     133 </span>            : REWEIGHT
+<span class="lineNum">     134 </span>            : NOISETYPE=OUTLIERS
+<span class="lineNum">     135 </span>            : PARAMETERS=1.9190,2.9190,3.9190,4.9190
+<span class="lineNum">     136 </span>            : SCALEDATA SCALE0=1 SCALE_MIN=0.1 SCALE_MAX=3 DSCALE=0.01
+<span class="lineNum">     137 </span>            : SIGMA0=0.01 SIGMA_MIN=0.00001 SIGMA_MAX=3 DSIGMA=0.01
+<span class="lineNum">     138 </span>            : SIGMA_MEAN=0.001
+<span class="lineNum">     139 </span>            : LABEL=spe
+<span class="lineNum">     140 </span>            : ... METAINFERENCE
+<span class="lineNum">     141 </span>            : \endplumedfile
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : (See also \ref RDC, \ref PBMETAD).
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : */
+<span class="lineNum">     146 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : class Metainference : public bias::Bias
+<span class="lineNum">     149 </span>            : {
+<span class="lineNum">     150 </span>            :   // experimental values
+<span class="lineNum">     151 </span>            :   vector&lt;double&gt; parameters;
+<span class="lineNum">     152 </span>            :   // noise type
+<span class="lineNum">     153 </span>            :   unsigned noise_type_;
+<span class="lineNum">     154 </span>            :   enum { GAUSS, MGAUSS, OUTLIERS, MOUTLIERS, GENERIC };
+<span class="lineNum">     155 </span>            :   unsigned gen_likelihood_;
+<span class="lineNum">     156 </span>            :   enum { LIKE_GAUSS, LIKE_LOGN };
+<span class="lineNum">     157 </span>            :   // scale is data scaling factor
+<span class="lineNum">     158 </span>            :   // noise type
+<span class="lineNum">     159 </span>            :   unsigned scale_prior_;
+<span class="lineNum">     160 </span>            :   enum { SC_GAUSS, SC_FLAT };
+<span class="lineNum">     161 </span>            :   bool   doscale_;
+<span class="lineNum">     162 </span>            :   double scale_;
+<span class="lineNum">     163 </span>            :   double scale_mu_;
+<span class="lineNum">     164 </span>            :   double scale_min_;
+<span class="lineNum">     165 </span>            :   double scale_max_;
+<span class="lineNum">     166 </span>            :   double Dscale_;
+<span class="lineNum">     167 </span>            :   // scale is data scaling factor
+<span class="lineNum">     168 </span>            :   // noise type
+<span class="lineNum">     169 </span>            :   unsigned offset_prior_;
+<span class="lineNum">     170 </span>            :   bool   dooffset_;
+<span class="lineNum">     171 </span>            :   double offset_;
+<span class="lineNum">     172 </span>            :   double offset_mu_;
+<span class="lineNum">     173 </span>            :   double offset_min_;
+<span class="lineNum">     174 </span>            :   double offset_max_;
+<span class="lineNum">     175 </span>            :   double Doffset_;
+<span class="lineNum">     176 </span>            :   // sigma is data uncertainty
+<span class="lineNum">     177 </span>            :   vector&lt;double&gt; sigma_;
+<span class="lineNum">     178 </span>            :   vector&lt;double&gt; sigma_min_;
+<span class="lineNum">     179 </span>            :   vector&lt;double&gt; sigma_max_;
+<span class="lineNum">     180 </span>            :   vector&lt;double&gt; Dsigma_;
+<span class="lineNum">     181 </span>            :   // sigma_mean is uncertainty in the mean estimate
+<span class="lineNum">     182 </span>            :   vector&lt;double&gt; sigma_mean2_;
+<span class="lineNum">     183 </span>            :   // this is the estimator of the mean value per replica for generic metainference
+<span class="lineNum">     184 </span>            :   vector&lt;double&gt; ftilde_;
+<span class="lineNum">     185 </span>            :   double Dftilde_;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :   // temperature in kbt
+<span class="lineNum">     188 </span>            :   double   kbt_;
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :   // Monte Carlo stuff
+<span class="lineNum">     191 </span>            :   vector&lt;Random&gt; random;
+<span class="lineNum">     192 </span>            :   unsigned MCsteps_;
+<span class="lineNum">     193 </span>            :   unsigned MCstride_;
+<span class="lineNum">     194 </span>            :   long unsigned MCaccept_;
+<span class="lineNum">     195 </span>            :   long unsigned MCacceptScale_;
+<span class="lineNum">     196 </span>            :   long unsigned MCacceptFT_;
+<span class="lineNum">     197 </span>            :   long unsigned MCtrial_;
+<span class="lineNum">     198 </span>            :   unsigned MCchunksize_;
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :   // output
+<span class="lineNum">     201 </span>            :   Value*   valueScale;
+<span class="lineNum">     202 </span>            :   Value*   valueOffset;
+<span class="lineNum">     203 </span>            :   Value*   valueAccept;
+<span class="lineNum">     204 </span>            :   Value*   valueAcceptScale;
+<span class="lineNum">     205 </span>            :   Value*   valueAcceptFT;
+<span class="lineNum">     206 </span>            :   vector&lt;Value*&gt; valueSigma;
+<span class="lineNum">     207 </span>            :   vector&lt;Value*&gt; valueSigmaMean;
+<span class="lineNum">     208 </span>            :   vector&lt;Value*&gt; valueFtilde;
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :   // restart
+<span class="lineNum">     211 </span>            :   unsigned write_stride_;
+<span class="lineNum">     212 </span>            :   OFile    sfile_;
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :   // others
+<span class="lineNum">     215 </span>            :   bool         firstTime;
+<span class="lineNum">     216 </span>            :   vector&lt;bool&gt; firstTimeW;
+<span class="lineNum">     217 </span>            :   bool     master;
+<span class="lineNum">     218 </span>            :   bool     do_reweight_;
+<span class="lineNum">     219 </span>            :   unsigned do_optsigmamean_;
+<span class="lineNum">     220 </span>            :   unsigned nrep_;
+<span class="lineNum">     221 </span>            :   unsigned replica_;
+<span class="lineNum">     222 </span>            :   unsigned narg;
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :   // selector
+<span class="lineNum">     225 </span>            :   string selector_;
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :   // optimize sigma mean
+<span class="lineNum">     228 </span>            :   vector&lt; vector &lt; vector &lt;double&gt; &gt; &gt; sigma_mean2_last_;
+<span class="lineNum">     229 </span>            :   unsigned optsigmamean_stride_;
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :   // average weights
+<span class="lineNum">     232 </span>            :   unsigned                   average_weights_stride_;
+<span class="lineNum">     233 </span>            :   vector&lt; vector &lt;double&gt; &gt;  average_weights_;
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :   double getEnergyMIGEN(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;ftilde, const vector&lt;double&gt; &amp;sigma,
+<span class="lineNum">     236 </span>            :                         const double scale, const double offset);
+<span class="lineNum">     237 </span>            :   double getEnergySP(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,
+<span class="lineNum">     238 </span>            :                      const double scale, const double offset);
+<span class="lineNum">     239 </span>            :   double getEnergySPE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,
+<span class="lineNum">     240 </span>            :                       const double scale, const double offset);
+<span class="lineNum">     241 </span>            :   double getEnergyGJ(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,
+<span class="lineNum">     242 </span>            :                      const double scale, const double offset);
+<span class="lineNum">     243 </span>            :   double getEnergyGJE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,
+<span class="lineNum">     244 </span>            :                       const double scale, const double offset);
+<span class="lineNum">     245 </span>            :   void   doMonteCarlo(const vector&lt;double&gt; &amp;mean);
+<span class="lineNum">     246 </span>            :   double getEnergyForceMIGEN(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x, const vector&lt;double&gt; &amp;dmean_b);
+<span class="lineNum">     247 </span>            :   double getEnergyForceSP(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x, const vector&lt;double&gt; &amp;dmean_b);
+<span class="lineNum">     248 </span>            :   double getEnergyForceSPE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x, const vector&lt;double&gt; &amp;dmean_b);
+<span class="lineNum">     249 </span>            :   double getEnergyForceGJ(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x, const vector&lt;double&gt; &amp;dmean_b);
+<span class="lineNum">     250 </span>            :   double getEnergyForceGJE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x, const vector&lt;double&gt; &amp;dmean_b);
+<span class="lineNum">     251 </span>            :   void get_weights(const unsigned iselect, double &amp;fact, double &amp;var_fact);
+<span class="lineNum">     252 </span>            :   void replica_averaging(const double fact, std::vector&lt;double&gt; &amp;mean, std::vector&lt;double&gt; &amp;dmean_b);
+<span class="lineNum">     253 </span>            :   void get_sigma_mean(const unsigned iselect, const double fact, const double var_fact, const vector&lt;double&gt; &amp;mean);
+<span class="lineNum">     254 </span>            :   void   writeStatus();
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : public:
+<span class="lineNum">     257 </span>            :   explicit Metainference(const ActionOptions&amp;);
+<span class="lineNum">     258 </span>            :   ~Metainference();
+<span class="lineNum">     259 </span>            :   void calculate();
+<span class="lineNum">     260 </span>            :   void update();
+<span class="lineNum">     261 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">     262 </span>            : };
+<a name="263"><span class="lineNum">     263 </span>            : </a>
+<span class="lineNum">     264 </span>            : 
+<a name="265"><span class="lineNum">     265 </span><span class="lineCov">       6471 : PLUMED_REGISTER_ACTION(Metainference,&quot;METAINFERENCE&quot;)</span></a>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineCov">         20 : void Metainference::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">         20 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">     269 </span><span class="lineCov">         40 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     270 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;PARARG&quot;,&quot;reference values for the experimental data, these can be provided as arguments without derivatives&quot;);</span>
+<span class="lineNum">     271 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;PARAMETERS&quot;,&quot;reference values for the experimental data&quot;);</span>
+<span class="lineNum">     272 </span><span class="lineCov">         60 :   keys.addFlag(&quot;NOENSEMBLE&quot;,false,&quot;don't perform any replica-averaging&quot;);</span>
+<span class="lineNum">     273 </span><span class="lineCov">         60 :   keys.addFlag(&quot;REWEIGHT&quot;,false,&quot;simple REWEIGHT using the latest ARG as energy&quot;);</span>
+<span class="lineNum">     274 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;AVERAGING&quot;, &quot;Stride for calculation of averaged weights and sigma_mean&quot;);</span>
+<span class="lineNum">     275 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;NOISETYPE&quot;,&quot;MGAUSS&quot;,&quot;functional form of the noise (GAUSS,MGAUSS,OUTLIERS,MOUTLIERS,GENERIC)&quot;);</span>
+<span class="lineNum">     276 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;LIKELIHOOD&quot;,&quot;GAUSS&quot;,&quot;the likelihood for the GENERIC metainference model, GAUSS or LOGN&quot;);</span>
+<span class="lineNum">     277 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;DFTILDE&quot;,&quot;0.1&quot;,&quot;fraction of sigma_mean used to evolve ftilde&quot;);</span>
+<span class="lineNum">     278 </span><span class="lineCov">         60 :   keys.addFlag(&quot;SCALEDATA&quot;,false,&quot;Set to TRUE if you want to sample a scaling factor common to all values and replicas&quot;);</span>
+<span class="lineNum">     279 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;SCALE0&quot;,&quot;1.0&quot;,&quot;initial value of the scaling factor&quot;);</span>
+<span class="lineNum">     280 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;SCALE_PRIOR&quot;,&quot;FLAT&quot;,&quot;either FLAT or GAUSSIAN&quot;);</span>
+<span class="lineNum">     281 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;SCALE_MIN&quot;,&quot;minimum value of the scaling factor&quot;);</span>
+<span class="lineNum">     282 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;SCALE_MAX&quot;,&quot;maximum value of the scaling factor&quot;);</span>
+<span class="lineNum">     283 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;DSCALE&quot;,&quot;maximum MC move of the scaling factor&quot;);</span>
+<span class="lineNum">     284 </span><span class="lineCov">         60 :   keys.addFlag(&quot;ADDOFFSET&quot;,false,&quot;Set to TRUE if you want to sample an offset common to all values and replicas&quot;);</span>
+<span class="lineNum">     285 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;OFFSET0&quot;,&quot;0.0&quot;,&quot;initial value of the offset&quot;);</span>
+<span class="lineNum">     286 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;OFFSET_PRIOR&quot;,&quot;FLAT&quot;,&quot;either FLAT or GAUSSIAN&quot;);</span>
+<span class="lineNum">     287 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;OFFSET_MIN&quot;,&quot;minimum value of the offset&quot;);</span>
+<span class="lineNum">     288 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;OFFSET_MAX&quot;,&quot;maximum value of the offset&quot;);</span>
+<span class="lineNum">     289 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;DOFFSET&quot;,&quot;maximum MC move of the offset&quot;);</span>
+<span class="lineNum">     290 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;SIGMA0&quot;,&quot;1.0&quot;,&quot;initial value of the uncertainty parameter&quot;);</span>
+<span class="lineNum">     291 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;SIGMA_MIN&quot;,&quot;0.0&quot;,&quot;minimum value of the uncertainty parameter&quot;);</span>
+<span class="lineNum">     292 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;SIGMA_MAX&quot;,&quot;10.&quot;,&quot;maximum value of the uncertainty parameter&quot;);</span>
+<span class="lineNum">     293 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;DSIGMA&quot;,&quot;maximum MC move of the uncertainty parameter&quot;);</span>
+<span class="lineNum">     294 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;OPTSIGMAMEAN&quot;,&quot;NONE&quot;,&quot;Set to NONE/SEM to manually set sigma mean, or to estimate it on the fly&quot;);</span>
+<span class="lineNum">     295 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;SIGMA_MEAN0&quot;,&quot;starting value for the uncertainty in the mean estimate&quot;);</span>
+<span class="lineNum">     296 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;TEMP&quot;,&quot;the system temperature - this is only needed if code doesnt' pass the temperature to plumed&quot;);</span>
+<span class="lineNum">     297 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;MC_STEPS&quot;,&quot;number of MC steps&quot;);</span>
+<span class="lineNum">     298 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;MC_STRIDE&quot;,&quot;MC stride&quot;);</span>
+<span class="lineNum">     299 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;MC_CHUNKSIZE&quot;,&quot;MC chunksize&quot;);</span>
+<span class="lineNum">     300 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;STATUS_FILE&quot;,&quot;write a file with all the data usefull for restart/continuation of Metainference&quot;);</span>
+<span class="lineNum">     301 </span><span class="lineCov">        100 :   keys.add(&quot;compulsory&quot;,&quot;WRITE_STRIDE&quot;,&quot;1000&quot;,&quot;write the status to a file every N steps, this can be used for restart/continuation&quot;);</span>
+<span class="lineNum">     302 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;SELECTOR&quot;,&quot;name of selector&quot;);</span>
+<span class="lineNum">     303 </span><span class="lineCov">         80 :   keys.add(&quot;optional&quot;,&quot;NSELECT&quot;,&quot;range of values for selector [0, N-1]&quot;);</span>
+<span class="lineNum">     304 </span><span class="lineCov">         40 :   keys.use(&quot;RESTART&quot;);</span>
+<span class="lineNum">     305 </span><span class="lineCov">         20 :   useCustomisableComponents(keys);</span>
+<span class="lineNum">     306 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;sigma&quot;,        &quot;default&quot;,      &quot;uncertainty parameter&quot;);</span>
+<span class="lineNum">     307 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;sigmaMean&quot;,    &quot;default&quot;,      &quot;uncertainty in the mean estimate&quot;);</span>
+<span class="lineNum">     308 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;acceptSigma&quot;,  &quot;default&quot;,      &quot;MC acceptance&quot;);</span>
+<span class="lineNum">     309 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;acceptScale&quot;,  &quot;SCALEDATA&quot;,    &quot;MC acceptance&quot;);</span>
+<span class="lineNum">     310 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;weight&quot;,       &quot;REWEIGHT&quot;,     &quot;weights of the weighted average&quot;);</span>
+<span class="lineNum">     311 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;biasDer&quot;,      &quot;REWEIGHT&quot;,     &quot;derivatives wrt the bias&quot;);</span>
+<span class="lineNum">     312 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;scale&quot;,        &quot;SCALEDATA&quot;,    &quot;scale parameter&quot;);</span>
+<span class="lineNum">     313 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;offset&quot;,       &quot;ADDOFFSET&quot;,    &quot;offset parameter&quot;);</span>
+<span class="lineNum">     314 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;ftilde&quot;,       &quot;GENERIC&quot;,      &quot;ensemble average estimator&quot;);</span>
+<span class="lineNum">     315 </span><span class="lineCov">         20 : }</span>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">         19 : Metainference::Metainference(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     318 </span>            :   PLUMED_BIAS_INIT(ao),
+<span class="lineNum">     319 </span>            :   doscale_(false),
+<span class="lineNum">     320 </span>            :   scale_(1.),
+<span class="lineNum">     321 </span>            :   scale_mu_(0),
+<span class="lineNum">     322 </span>            :   scale_min_(1),
+<span class="lineNum">     323 </span>            :   scale_max_(-1),
+<span class="lineNum">     324 </span>            :   Dscale_(-1),
+<span class="lineNum">     325 </span>            :   dooffset_(false),
+<span class="lineNum">     326 </span>            :   offset_(0.),
+<span class="lineNum">     327 </span>            :   offset_mu_(0),
+<span class="lineNum">     328 </span>            :   offset_min_(1),
+<span class="lineNum">     329 </span>            :   offset_max_(-1),
+<span class="lineNum">     330 </span>            :   Doffset_(-1),
+<span class="lineNum">     331 </span>            :   Dftilde_(0.1),
+<span class="lineNum">     332 </span>            :   random(3),
+<span class="lineNum">     333 </span>            :   MCsteps_(1),
+<span class="lineNum">     334 </span>            :   MCstride_(1),
+<span class="lineNum">     335 </span>            :   MCaccept_(0),
+<span class="lineNum">     336 </span>            :   MCacceptScale_(0),
+<span class="lineNum">     337 </span>            :   MCacceptFT_(0),
+<span class="lineNum">     338 </span>            :   MCtrial_(0),
+<span class="lineNum">     339 </span>            :   MCchunksize_(0),
+<span class="lineNum">     340 </span>            :   write_stride_(0),
+<span class="lineNum">     341 </span>            :   firstTime(true),
+<span class="lineNum">     342 </span>            :   do_reweight_(false),
+<span class="lineNum">     343 </span>            :   do_optsigmamean_(0),
+<span class="lineNum">     344 </span>            :   optsigmamean_stride_(0),
+<span class="lineNum">     345 </span><span class="lineCov">        247 :   average_weights_stride_(1)</span>
+<span class="lineNum">     346 </span>            : {
+<span class="lineNum">     347 </span><span class="lineCov">         19 :   bool noensemble = false;</span>
+<span class="lineNum">     348 </span><span class="lineCov">         38 :   parseFlag(&quot;NOENSEMBLE&quot;, noensemble);</span>
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :   // set up replica stuff
+<span class="lineNum">     351 </span><span class="lineCov">         19 :   master = (comm.Get_rank()==0);</span>
+<span class="lineNum">     352 </span><span class="lineCov">         19 :   if(master) {</span>
+<span class="lineNum">     353 </span><span class="lineCov">         11 :     nrep_    = multi_sim_comm.Get_size();</span>
+<span class="lineNum">     354 </span><span class="lineCov">         11 :     replica_ = multi_sim_comm.Get_rank();</span>
+<span class="lineNum">     355 </span><span class="lineCov">         11 :     if(noensemble) nrep_ = 1;</span>
+<span class="lineNum">     356 </span>            :   } else {
+<span class="lineNum">     357 </span><span class="lineCov">          8 :     nrep_    = 0;</span>
+<span class="lineNum">     358 </span><span class="lineCov">          8 :     replica_ = 0;</span>
+<span class="lineNum">     359 </span>            :   }
+<span class="lineNum">     360 </span><span class="lineCov">         19 :   comm.Sum(&amp;nrep_,1);</span>
+<span class="lineNum">     361 </span><span class="lineCov">         19 :   comm.Sum(&amp;replica_,1);</span>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span><span class="lineCov">         19 :   unsigned nsel = 1;</span>
+<span class="lineNum">     364 </span><span class="lineCov">         38 :   parse(&quot;SELECTOR&quot;, selector_);</span>
+<span class="lineNum">     365 </span><span class="lineCov">         38 :   parse(&quot;NSELECT&quot;, nsel);</span>
+<span class="lineNum">     366 </span>            :   // do checks
+<span class="lineNum">     367 </span><span class="lineCov">         19 :   if(selector_.length()&gt;0 &amp;&amp; nsel&lt;=1) error(&quot;With SELECTOR active, NSELECT must be greater than 1&quot;);</span>
+<span class="lineNum">     368 </span><span class="lineCov">         19 :   if(selector_.length()==0 &amp;&amp; nsel&gt;1) error(&quot;With NSELECT greater than 1, you must specify SELECTOR&quot;);</span>
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            :   // initialise firstTimeW
+<span class="lineNum">     371 </span><span class="lineCov">         19 :   firstTimeW.resize(nsel, true);</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            :   // reweight implies a different number of arguments (the latest one must always be the bias)
+<span class="lineNum">     374 </span><span class="lineCov">         38 :   parseFlag(&quot;REWEIGHT&quot;, do_reweight_);</span>
+<span class="lineNum">     375 </span><span class="lineCov">         19 :   if(do_reweight_&amp;&amp;nrep_&lt;2) error(&quot;REWEIGHT can only be used in parallel with 2 or more replicas&quot;);</span>
+<span class="lineNum">     376 </span><span class="lineCov">         38 :   if(!getRestart()) average_weights_.resize(nsel, vector&lt;double&gt; (nrep_, 1./static_cast&lt;double&gt;(nrep_)));</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :   else average_weights_.resize(nsel, vector&lt;double&gt; (nrep_, 0.));</span>
+<span class="lineNum">     378 </span><span class="lineCov">         19 :   narg = getNumberOfArguments();</span>
+<span class="lineNum">     379 </span><span class="lineCov">         19 :   if(do_reweight_) narg--;</span>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineCov">         19 :   unsigned averaging=0;</span>
+<span class="lineNum">     382 </span><span class="lineCov">         38 :   parse(&quot;AVERAGING&quot;, averaging);</span>
+<span class="lineNum">     383 </span><span class="lineCov">         19 :   if(averaging&gt;0) {</span>
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :     average_weights_stride_ = averaging;</span>
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :     optsigmamean_stride_    = averaging;</span>
+<span class="lineNum">     386 </span>            :   }
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span><span class="lineCov">         38 :   parseVector(&quot;PARAMETERS&quot;,parameters);</span>
+<span class="lineNum">     389 </span><span class="lineCov">         19 :   if(parameters.size()!=static_cast&lt;unsigned&gt;(narg)&amp;&amp;!parameters.empty())</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :     error(&quot;Size of PARAMETERS array should be either 0 or the same as of the number of arguments in ARG1&quot;);</span>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span>            :   vector&lt;Value*&gt; arg2;
+<span class="lineNum">     393 </span><span class="lineCov">         38 :   parseArgumentList(&quot;PARARG&quot;,arg2);</span>
+<span class="lineNum">     394 </span><span class="lineCov">         19 :   if(!arg2.empty()) {</span>
+<span class="lineNum">     395 </span><span class="lineCov">          4 :     if(parameters.size()&gt;0) error(&quot;It is not possible to use PARARG and PARAMETERS together&quot;);</span>
+<span class="lineNum">     396 </span><span class="lineCov">          4 :     if(arg2.size()!=narg) error(&quot;Size of PARARG array should be the same as number for arguments in ARG&quot;);</span>
+<span class="lineNum">     397 </span><span class="lineCov">       7076 :     for(unsigned i=0; i&lt;arg2.size(); i++) {</span>
+<span class="lineNum">     398 </span><span class="lineCov">       7068 :       parameters.push_back(arg2[i]-&gt;get());</span>
+<span class="lineNum">     399 </span><span class="lineCov">       4712 :       if(arg2[i]-&gt;hasDerivatives()==true) error(&quot;PARARG can only accept arguments without derivatives&quot;);</span>
+<span class="lineNum">     400 </span>            :     }
+<span class="lineNum">     401 </span>            :   }
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineCov">         19 :   if(parameters.size()!=narg)</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :     error(&quot;PARARG or PARAMETERS arrays should include the same number of elements as the arguments in ARG&quot;);</span>
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :   string stringa_noise;
+<span class="lineNum">     407 </span><span class="lineCov">         38 :   parse(&quot;NOISETYPE&quot;,stringa_noise);</span>
+<span class="lineNum">     408 </span><span class="lineCov">         19 :   if(stringa_noise==&quot;GAUSS&quot;)           noise_type_ = GAUSS;</span>
+<span class="lineNum">     409 </span><span class="lineCov">         18 :   else if(stringa_noise==&quot;MGAUSS&quot;)     noise_type_ = MGAUSS;</span>
+<span class="lineNum">     410 </span><span class="lineCov">         10 :   else if(stringa_noise==&quot;OUTLIERS&quot;)   noise_type_ = OUTLIERS;</span>
+<span class="lineNum">     411 </span><span class="lineCov">          5 :   else if(stringa_noise==&quot;MOUTLIERS&quot;)  noise_type_ = MOUTLIERS;</span>
+<span class="lineNum">     412 </span><span class="lineCov">          1 :   else if(stringa_noise==&quot;GENERIC&quot;)    noise_type_ = GENERIC;</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :   else error(&quot;Unknown noise type!&quot;);</span>
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span><span class="lineCov">         19 :   if(noise_type_== GENERIC) {</span>
+<span class="lineNum">     416 </span>            :     string stringa_like;
+<span class="lineNum">     417 </span><span class="lineCov">          2 :     parse(&quot;LIKELIHOOD&quot;,stringa_like);</span>
+<span class="lineNum">     418 </span><span class="lineCov">          1 :     if(stringa_like==&quot;GAUSS&quot;) gen_likelihood_ = LIKE_GAUSS;</span>
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :     else if(stringa_like==&quot;LOGN&quot;) gen_likelihood_ = LIKE_LOGN;</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :     else error(&quot;Unknown likelihood type!&quot;);</span>
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span><span class="lineCov">          2 :     parse(&quot;DFTILDE&quot;,Dftilde_);</span>
+<span class="lineNum">     423 </span>            :   }
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span><span class="lineCov">         38 :   parse(&quot;WRITE_STRIDE&quot;,write_stride_);</span>
+<span class="lineNum">     426 </span>            :   string status_file_name_;
+<span class="lineNum">     427 </span><span class="lineCov">         38 :   parse(&quot;STATUS_FILE&quot;,status_file_name_);</span>
+<span class="lineNum">     428 </span><span class="lineCov">         57 :   if(status_file_name_==&quot;&quot;) status_file_name_ = &quot;MISTATUS&quot;+getLabel();</span>
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :   else                      status_file_name_ = status_file_name_+getLabel();</span>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span>            :   string stringa_optsigma;
+<span class="lineNum">     432 </span><span class="lineCov">         38 :   parse(&quot;OPTSIGMAMEAN&quot;, stringa_optsigma);</span>
+<span class="lineNum">     433 </span><span class="lineCov">         19 :   if(stringa_optsigma==&quot;NONE&quot;)      do_optsigmamean_=0;</span>
+<span class="lineNum">     434 </span><span class="lineNoCov">          0 :   else if(stringa_optsigma==&quot;SEM&quot;)  do_optsigmamean_=1;</span>
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span>            :   // resize vector for sigma_mean history
+<span class="lineNum">     437 </span><span class="lineCov">         19 :   sigma_mean2_last_.resize(nsel);</span>
+<span class="lineNum">     438 </span><span class="lineCov">         57 :   for(unsigned i=0; i&lt;nsel; i++) sigma_mean2_last_[i].resize(narg);</span>
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            :   vector&lt;double&gt; read_sigma_mean_;
+<span class="lineNum">     441 </span><span class="lineCov">         38 :   parseVector(&quot;SIGMA_MEAN0&quot;,read_sigma_mean_);</span>
+<span class="lineNum">     442 </span><span class="lineCov">         38 :   if(!do_optsigmamean_ &amp;&amp; read_sigma_mean_.size()==0 &amp;&amp; !getRestart())</span>
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :     error(&quot;If you don't use OPTSIGMAMEAN and you are not RESTARTING then you MUST SET SIGMA_MEAN0&quot;);</span>
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span><span class="lineCov">         19 :   if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">     446 </span><span class="lineCov">         13 :     if(read_sigma_mean_.size()==narg) {</span>
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :       sigma_mean2_.resize(narg);</span>
+<span class="lineNum">     448 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; i++) sigma_mean2_[i]=read_sigma_mean_[i]*read_sigma_mean_[i];</span>
+<span class="lineNum">     449 </span><span class="lineCov">         13 :     } else if(read_sigma_mean_.size()==1) {</span>
+<span class="lineNum">     450 </span><span class="lineCov">         13 :       sigma_mean2_.resize(narg,read_sigma_mean_[0]*read_sigma_mean_[0]);</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :     } else if(read_sigma_mean_.size()==0) {</span>
+<span class="lineNum">     452 </span><span class="lineNoCov">          0 :       sigma_mean2_.resize(narg,0.000001);</span>
+<span class="lineNum">     453 </span>            :     } else {
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :       error(&quot;SIGMA_MEAN0 can accept either one single value or as many values as the arguments (with NOISETYPE=MGAUSS|MOUTLIERS)&quot;);</span>
+<span class="lineNum">     455 </span>            :     }
+<span class="lineNum">     456 </span>            :     // set the initial value for the history
+<span class="lineNum">     457 </span><span class="lineCov">       2416 :     for(unsigned i=0; i&lt;nsel; i++) for(unsigned j=0; j&lt;narg; j++) sigma_mean2_last_[i][j].push_back(sigma_mean2_[j]);</span>
+<span class="lineNum">     458 </span>            :   } else {
+<span class="lineNum">     459 </span><span class="lineCov">          6 :     if(read_sigma_mean_.size()==1) {</span>
+<span class="lineNum">     460 </span><span class="lineCov">          6 :       sigma_mean2_.resize(1, read_sigma_mean_[0]*read_sigma_mean_[0]);</span>
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :     } else if(read_sigma_mean_.size()==0) {</span>
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :       sigma_mean2_.resize(1, 0.000001);</span>
+<span class="lineNum">     463 </span>            :     } else {
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :       error(&quot;If you want to use more than one SIGMA_MEAN0 you should use NOISETYPE=MGAUSS|MOUTLIERS&quot;);</span>
+<span class="lineNum">     465 </span>            :     }
+<span class="lineNum">     466 </span>            :     // set the initial value for the history
+<span class="lineNum">     467 </span><span class="lineCov">         37 :     for(unsigned i=0; i&lt;nsel; i++) for(unsigned j=0; j&lt;narg; j++) sigma_mean2_last_[i][j].push_back(sigma_mean2_[0]);</span>
+<span class="lineNum">     468 </span>            :   }
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span><span class="lineCov">         38 :   parseFlag(&quot;SCALEDATA&quot;, doscale_);</span>
+<span class="lineNum">     471 </span><span class="lineCov">         19 :   if(doscale_) {</span>
+<span class="lineNum">     472 </span>            :     string stringa_noise;
+<span class="lineNum">     473 </span><span class="lineCov">         24 :     parse(&quot;SCALE_PRIOR&quot;,stringa_noise);</span>
+<span class="lineNum">     474 </span><span class="lineCov">         12 :     if(stringa_noise==&quot;GAUSSIAN&quot;)  scale_prior_ = SC_GAUSS;</span>
+<span class="lineNum">     475 </span><span class="lineCov">         12 :     else if(stringa_noise==&quot;FLAT&quot;) scale_prior_ = SC_FLAT;</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :     else error(&quot;Unknown SCALE_PRIOR type!&quot;);</span>
+<span class="lineNum">     477 </span><span class="lineCov">         24 :     parse(&quot;SCALE0&quot;,scale_);</span>
+<span class="lineNum">     478 </span><span class="lineCov">         24 :     parse(&quot;DSCALE&quot;,Dscale_);</span>
+<span class="lineNum">     479 </span><span class="lineCov">         12 :     if(Dscale_&lt;0.) error(&quot;DSCALE must be set when using SCALEDATA&quot;);</span>
+<span class="lineNum">     480 </span><span class="lineCov">         12 :     if(scale_prior_==SC_GAUSS) {</span>
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :       scale_mu_=scale_;</span>
+<span class="lineNum">     482 </span>            :     } else {
+<span class="lineNum">     483 </span><span class="lineCov">         24 :       parse(&quot;SCALE_MIN&quot;,scale_min_);</span>
+<span class="lineNum">     484 </span><span class="lineCov">         24 :       parse(&quot;SCALE_MAX&quot;,scale_max_);</span>
+<span class="lineNum">     485 </span><span class="lineCov">         12 :       if(scale_max_&lt;scale_min_) error(&quot;SCALE_MAX and SCALE_MIN must be set when using SCALE_PRIOR=FLAT&quot;);</span>
+<span class="lineNum">     486 </span>            :     }
+<span class="lineNum">     487 </span>            :   }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span><span class="lineCov">         38 :   parseFlag(&quot;ADDOFFSET&quot;, dooffset_);</span>
+<span class="lineNum">     490 </span><span class="lineCov">         19 :   if(dooffset_) {</span>
+<span class="lineNum">     491 </span>            :     string stringa_noise;
+<span class="lineNum">     492 </span><span class="lineCov">          4 :     parse(&quot;OFFSET_PRIOR&quot;,stringa_noise);</span>
+<span class="lineNum">     493 </span><span class="lineCov">          2 :     if(stringa_noise==&quot;GAUSSIAN&quot;)  offset_prior_ = SC_GAUSS;</span>
+<span class="lineNum">     494 </span><span class="lineCov">          2 :     else if(stringa_noise==&quot;FLAT&quot;) offset_prior_ = SC_FLAT;</span>
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :     else error(&quot;Unknown OFFSET_PRIOR type!&quot;);</span>
+<span class="lineNum">     496 </span><span class="lineCov">          4 :     parse(&quot;OFFSET0&quot;,offset_);</span>
+<span class="lineNum">     497 </span><span class="lineCov">          4 :     parse(&quot;DOFFSET&quot;,Doffset_);</span>
+<span class="lineNum">     498 </span><span class="lineCov">          2 :     if(offset_prior_==SC_GAUSS) {</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :       offset_mu_=offset_;</span>
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :       if(Doffset_&lt;0.) error(&quot;DOFFSET must be set when using OFFSET_PRIOR=GAUSS&quot;);</span>
+<span class="lineNum">     501 </span>            :     } else {
+<span class="lineNum">     502 </span><span class="lineCov">          4 :       parse(&quot;OFFSET_MIN&quot;,offset_min_);</span>
+<span class="lineNum">     503 </span><span class="lineCov">          4 :       parse(&quot;OFFSET_MAX&quot;,offset_max_);</span>
+<span class="lineNum">     504 </span><span class="lineCov">          2 :       if(Doffset_&lt;0) Doffset_ = 0.05*(offset_max_ - offset_min_);</span>
+<span class="lineNum">     505 </span><span class="lineCov">          2 :       if(offset_max_&lt;offset_min_) error(&quot;OFFSET_MAX and OFFSET_MIN must be set when using OFFSET_PRIOR=FLAT&quot;);</span>
+<span class="lineNum">     506 </span>            :     }
+<span class="lineNum">     507 </span>            :   }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :   vector&lt;double&gt; readsigma;
+<span class="lineNum">     510 </span><span class="lineCov">         38 :   parseVector(&quot;SIGMA0&quot;,readsigma);</span>
+<span class="lineNum">     511 </span><span class="lineCov">         25 :   if((noise_type_!=MGAUSS&amp;&amp;noise_type_!=MOUTLIERS&amp;&amp;noise_type_!=GENERIC)&amp;&amp;readsigma.size()&gt;1)</span>
+<span class="lineNum">     512 </span><span class="lineNoCov">          0 :     error(&quot;If you want to use more than one SIGMA you should use NOISETYPE=MGAUSS|MOUTLIERS&quot;);</span>
+<span class="lineNum">     513 </span><span class="lineCov">         19 :   if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">     514 </span><span class="lineCov">         13 :     if(readsigma.size()==narg) {</span>
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :       sigma_.resize(narg);</span>
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 :       sigma_=readsigma;</span>
+<span class="lineNum">     517 </span><span class="lineCov">         13 :     } else if(readsigma.size()==1) {</span>
+<span class="lineNum">     518 </span><span class="lineCov">         13 :       sigma_.resize(narg,readsigma[0]);</span>
+<span class="lineNum">     519 </span>            :     } else {
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :       error(&quot;SIGMA0 can accept either one single value or as many values as the number of arguments (with NOISETYPE=MGAUSS|MOUTLIERS)&quot;);</span>
+<span class="lineNum">     521 </span>            :     }
+<span class="lineNum">     522 </span><span class="lineCov">          6 :   } else sigma_.resize(1, readsigma[0]);</span>
+<span class="lineNum">     523 </span>            : 
+<span class="lineNum">     524 </span>            :   double read_smin_;
+<span class="lineNum">     525 </span><span class="lineCov">         38 :   parse(&quot;SIGMA_MIN&quot;,read_smin_);</span>
+<span class="lineNum">     526 </span><span class="lineCov">         19 :   sigma_min_.resize(sigma_.size(),read_smin_);</span>
+<span class="lineNum">     527 </span>            :   double read_smax_;
+<span class="lineNum">     528 </span><span class="lineCov">         38 :   parse(&quot;SIGMA_MAX&quot;,read_smax_);</span>
+<span class="lineNum">     529 </span><span class="lineCov">         19 :   sigma_max_.resize(sigma_.size(),read_smax_);</span>
+<span class="lineNum">     530 </span><span class="lineCov">         19 :   double read_dsigma_=-1.;</span>
+<span class="lineNum">     531 </span><span class="lineCov">         38 :   parse(&quot;DSIGMA&quot;,read_dsigma_);</span>
+<span class="lineNum">     532 </span><span class="lineCov">         19 :   if(read_dsigma_&lt;0) read_dsigma_ = 0.05*(read_smax_ - read_smin_);</span>
+<span class="lineNum">     533 </span><span class="lineCov">         19 :   Dsigma_.resize(sigma_.size(),read_dsigma_);</span>
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span>            :   // monte carlo stuff
+<span class="lineNum">     536 </span><span class="lineCov">         38 :   parse(&quot;MC_STEPS&quot;,MCsteps_);</span>
+<span class="lineNum">     537 </span><span class="lineCov">         38 :   parse(&quot;MC_STRIDE&quot;,MCstride_);</span>
+<span class="lineNum">     538 </span><span class="lineCov">         38 :   parse(&quot;MC_CHUNKSIZE&quot;, MCchunksize_);</span>
+<span class="lineNum">     539 </span>            :   // adjust for multiple-time steps
+<span class="lineNum">     540 </span><span class="lineCov">         19 :   MCstride_ *= getStride();</span>
+<span class="lineNum">     541 </span>            :   // get temperature
+<span class="lineNum">     542 </span><span class="lineCov">         19 :   double temp=0.0;</span>
+<span class="lineNum">     543 </span><span class="lineCov">         38 :   parse(&quot;TEMP&quot;,temp);</span>
+<span class="lineNum">     544 </span><span class="lineCov">         38 :   if(temp&gt;0.0) kbt_=plumed.getAtoms().getKBoltzmann()*temp;</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :   else kbt_=plumed.getAtoms().getKbT();</span>
+<span class="lineNum">     546 </span><span class="lineCov">         19 :   if(kbt_==0.0) error(&quot;Unless the MD engine passes the temperature to plumed, you must specify it using TEMP&quot;);</span>
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span><span class="lineCov">         19 :   checkRead();</span>
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span><span class="lineCov">         38 :   IFile restart_sfile;</span>
+<span class="lineNum">     551 </span><span class="lineCov">         19 :   restart_sfile.link(*this);</span>
+<span class="lineNum">     552 </span><span class="lineCov">         19 :   if(getRestart()&amp;&amp;restart_sfile.FileExist(status_file_name_)) {</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :     firstTime = false;</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;nsel; i++) firstTimeW[i] = false;</span>
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :     restart_sfile.open(status_file_name_);</span>
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :     log.printf(&quot;  Restarting from %s\n&quot;, status_file_name_.c_str());</span>
+<span class="lineNum">     557 </span>            :     double dummy;
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :     if(restart_sfile.scanField(&quot;time&quot;,dummy)) {</span>
+<span class="lineNum">     559 </span>            :       // nsel
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;sigma_mean2_last_.size(); i++) {</span>
+<span class="lineNum">     561 </span>            :         std::string msg_i;
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :         Tools::convert(i,msg_i);</span>
+<span class="lineNum">     563 </span>            :         // narg
+<span class="lineNum">     564 </span><span class="lineNoCov">          0 :         if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :           for(unsigned j=0; j&lt;narg; ++j) {</span>
+<span class="lineNum">     566 </span>            :             std::string msg_j;
+<span class="lineNum">     567 </span><span class="lineNoCov">          0 :             Tools::convert(j,msg_j);</span>
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 :             std::string msg = msg_i+&quot;_&quot;+msg_j;</span>
+<span class="lineNum">     569 </span>            :             double read_sm;
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :             restart_sfile.scanField(&quot;sigma_mean_&quot;+msg,read_sm);</span>
+<span class="lineNum">     571 </span><span class="lineNoCov">          0 :             sigma_mean2_last_[i][j][0] = read_sm*read_sm;</span>
+<span class="lineNum">     572 </span>            :           }
+<span class="lineNum">     573 </span>            :         }
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :         if(noise_type_==GAUSS||noise_type_==OUTLIERS) {</span>
+<span class="lineNum">     575 </span>            :           double read_sm;
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 :           restart_sfile.scanField(&quot;sigma_mean_0_&quot;+msg_i,read_sm);</span>
+<span class="lineNum">     577 </span><span class="lineNoCov">          0 :           for(unsigned j=0; j&lt;narg; j++) sigma_mean2_last_[i][j][0] = read_sm*read_sm;</span>
+<span class="lineNum">     578 </span>            :         }
+<span class="lineNum">     579 </span>            :       }
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;sigma_.size(); ++i) {</span>
+<span class="lineNum">     582 </span>            :         std::string msg;
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :         Tools::convert(i,msg);</span>
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :         restart_sfile.scanField(&quot;sigma_&quot;+msg,sigma_[i]);</span>
+<span class="lineNum">     585 </span>            :       }
+<span class="lineNum">     586 </span><span class="lineNoCov">          0 :       if(noise_type_==GENERIC) {</span>
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;ftilde_.size(); ++i) {</span>
+<span class="lineNum">     588 </span>            :           std::string msg;
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 :           Tools::convert(i,msg);</span>
+<span class="lineNum">     590 </span><span class="lineNoCov">          0 :           restart_sfile.scanField(&quot;ftilde_&quot;+msg,ftilde_[i]);</span>
+<span class="lineNum">     591 </span>            :         }
+<span class="lineNum">     592 </span>            :       }
+<span class="lineNum">     593 </span><span class="lineNoCov">          0 :       restart_sfile.scanField(&quot;scale0_&quot;,scale_);</span>
+<span class="lineNum">     594 </span><span class="lineNoCov">          0 :       restart_sfile.scanField(&quot;offset0_&quot;,offset_);</span>
+<span class="lineNum">     595 </span>            : 
+<span class="lineNum">     596 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;nsel; i++) {</span>
+<span class="lineNum">     597 </span>            :         std::string msg;
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :         Tools::convert(i,msg);</span>
+<span class="lineNum">     599 </span>            :         double tmp_w;
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :         restart_sfile.scanField(&quot;weight_&quot;+msg,tmp_w);</span>
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :         if(master) {</span>
+<span class="lineNum">     602 </span><span class="lineNoCov">          0 :           average_weights_[i][replica_] = tmp_w;</span>
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :           if(nrep_&gt;1) multi_sim_comm.Sum(&amp;average_weights_[i][0], nrep_);</span>
+<span class="lineNum">     604 </span>            :         }
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :         comm.Sum(&amp;average_weights_[i][0], nrep_);</span>
+<span class="lineNum">     606 </span>            :       }
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span>            :     }
+<span class="lineNum">     609 </span><span class="lineNoCov">          0 :     restart_sfile.scanField();</span>
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 :     restart_sfile.close();</span>
+<span class="lineNum">     611 </span>            :   }
+<span class="lineNum">     612 </span>            : 
+<span class="lineNum">     613 </span><span class="lineCov">         19 :   switch(noise_type_) {</span>
+<span class="lineNum">     614 </span><span class="lineCov">          1 :   case GENERIC:</span>
+<span class="lineNum">     615 </span><span class="lineCov">          1 :     log.printf(&quot;  with general metainference &quot;);</span>
+<span class="lineNum">     616 </span><span class="lineCov">          1 :     if(gen_likelihood_==LIKE_GAUSS) log.printf(&quot; and a gaussian likelihood\n&quot;);</span>
+<span class="lineNum">     617 </span><span class="lineNoCov">          0 :     else if(gen_likelihood_==LIKE_LOGN) log.printf(&quot; and a log-normal likelihood\n&quot;);</span>
+<span class="lineNum">     618 </span><span class="lineCov">          1 :     log.printf(&quot;  ensemble average parameter sampled with a step %lf of sigma_mean\n&quot;, Dftilde_);</span>
+<span class="lineNum">     619 </span>            :     break;
+<span class="lineNum">     620 </span><span class="lineCov">          1 :   case GAUSS:</span>
+<span class="lineNum">     621 </span><span class="lineCov">          1 :     log.printf(&quot;  with gaussian noise and a single noise parameter for all the data\n&quot;);</span>
+<span class="lineNum">     622 </span>            :     break;
+<span class="lineNum">     623 </span><span class="lineCov">          8 :   case MGAUSS:</span>
+<span class="lineNum">     624 </span><span class="lineCov">          8 :     log.printf(&quot;  with gaussian noise and a noise parameter for each data point\n&quot;);</span>
+<span class="lineNum">     625 </span>            :     break;
+<span class="lineNum">     626 </span><span class="lineCov">          5 :   case OUTLIERS:</span>
+<span class="lineNum">     627 </span><span class="lineCov">          5 :     log.printf(&quot;  with long tailed gaussian noise and a single noise parameter for all the data\n&quot;);</span>
+<span class="lineNum">     628 </span>            :     break;
+<span class="lineNum">     629 </span><span class="lineCov">          4 :   case MOUTLIERS:</span>
+<span class="lineNum">     630 </span><span class="lineCov">          4 :     log.printf(&quot;  with long tailed gaussian noise and a noise parameter for each data point\n&quot;);</span>
+<span class="lineNum">     631 </span>            :     break;
+<span class="lineNum">     632 </span>            :   }
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span><span class="lineCov">         19 :   if(doscale_) {</span>
+<span class="lineNum">     635 </span><span class="lineCov">         12 :     log.printf(&quot;  sampling a common scaling factor with:\n&quot;);</span>
+<span class="lineNum">     636 </span><span class="lineCov">         12 :     log.printf(&quot;    initial scale parameter %f\n&quot;,scale_);</span>
+<span class="lineNum">     637 </span><span class="lineCov">         12 :     if(scale_prior_==SC_GAUSS) {</span>
+<span class="lineNum">     638 </span><span class="lineNoCov">          0 :       log.printf(&quot;    gaussian prior with mean %f and width %f\n&quot;,scale_mu_,Dscale_);</span>
+<span class="lineNum">     639 </span>            :     }
+<span class="lineNum">     640 </span><span class="lineCov">         12 :     if(scale_prior_==SC_FLAT) {</span>
+<span class="lineNum">     641 </span><span class="lineCov">         12 :       log.printf(&quot;    flat prior between %f - %f\n&quot;,scale_min_,scale_max_);</span>
+<span class="lineNum">     642 </span><span class="lineCov">         12 :       log.printf(&quot;    maximum MC move of scale parameter %f\n&quot;,Dscale_);</span>
+<span class="lineNum">     643 </span>            :     }
+<span class="lineNum">     644 </span>            :   }
+<span class="lineNum">     645 </span>            : 
+<span class="lineNum">     646 </span><span class="lineCov">         19 :   if(dooffset_) {</span>
+<span class="lineNum">     647 </span><span class="lineCov">          2 :     log.printf(&quot;  sampling a common offset with:\n&quot;);</span>
+<span class="lineNum">     648 </span><span class="lineCov">          2 :     log.printf(&quot;    initial offset parameter %f\n&quot;,offset_);</span>
+<span class="lineNum">     649 </span><span class="lineCov">          2 :     if(offset_prior_==SC_GAUSS) {</span>
+<span class="lineNum">     650 </span><span class="lineNoCov">          0 :       log.printf(&quot;    gaussian prior with mean %f and width %f\n&quot;,offset_mu_,Doffset_);</span>
+<span class="lineNum">     651 </span>            :     }
+<span class="lineNum">     652 </span><span class="lineCov">          2 :     if(offset_prior_==SC_FLAT) {</span>
+<span class="lineNum">     653 </span><span class="lineCov">          2 :       log.printf(&quot;    flat prior between %f - %f\n&quot;,offset_min_,offset_max_);</span>
+<span class="lineNum">     654 </span><span class="lineCov">          2 :       log.printf(&quot;    maximum MC move of offset parameter %f\n&quot;,Doffset_);</span>
+<span class="lineNum">     655 </span>            :     }
+<span class="lineNum">     656 </span>            :   }
+<span class="lineNum">     657 </span>            : 
+<span class="lineNum">     658 </span><span class="lineCov">         19 :   log.printf(&quot;  number of experimental data points %u\n&quot;,narg);</span>
+<span class="lineNum">     659 </span><span class="lineCov">         19 :   log.printf(&quot;  number of replicas %u\n&quot;,nrep_);</span>
+<span class="lineNum">     660 </span><span class="lineCov">         19 :   log.printf(&quot;  initial data uncertainties&quot;);</span>
+<span class="lineNum">     661 </span><span class="lineCov">       7226 :   for(unsigned i=0; i&lt;sigma_.size(); ++i) log.printf(&quot; %f&quot;, sigma_[i]);</span>
+<span class="lineNum">     662 </span><span class="lineCov">         19 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     663 </span><span class="lineCov">         19 :   log.printf(&quot;  minimum data uncertainty %f\n&quot;,read_smin_);</span>
+<span class="lineNum">     664 </span><span class="lineCov">         19 :   log.printf(&quot;  maximum data uncertainty %f\n&quot;,read_smax_);</span>
+<span class="lineNum">     665 </span><span class="lineCov">         19 :   log.printf(&quot;  maximum MC move of data uncertainty %f\n&quot;,read_dsigma_);</span>
+<span class="lineNum">     666 </span><span class="lineCov">         19 :   log.printf(&quot;  temperature of the system %f\n&quot;,kbt_);</span>
+<span class="lineNum">     667 </span><span class="lineCov">         19 :   log.printf(&quot;  MC steps %u\n&quot;,MCsteps_);</span>
+<span class="lineNum">     668 </span><span class="lineCov">         19 :   log.printf(&quot;  MC stride %u\n&quot;,MCstride_);</span>
+<span class="lineNum">     669 </span><span class="lineCov">         19 :   log.printf(&quot;  initial standard errors of the mean&quot;);</span>
+<span class="lineNum">     670 </span><span class="lineCov">       7226 :   for(unsigned i=0; i&lt;sigma_mean2_.size(); ++i) log.printf(&quot; %f&quot;, sqrt(sigma_mean2_[i]));</span>
+<span class="lineNum">     671 </span><span class="lineCov">         19 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     672 </span>            : 
+<span class="lineNum">     673 </span><span class="lineCov">         19 :   if(do_reweight_) {</span>
+<span class="lineNum">     674 </span><span class="lineCov">         32 :     addComponent(&quot;biasDer&quot;);</span>
+<span class="lineNum">     675 </span><span class="lineCov">         32 :     componentIsNotPeriodic(&quot;biasDer&quot;);</span>
+<span class="lineNum">     676 </span><span class="lineCov">         32 :     addComponent(&quot;weight&quot;);</span>
+<span class="lineNum">     677 </span><span class="lineCov">         32 :     componentIsNotPeriodic(&quot;weight&quot;);</span>
+<span class="lineNum">     678 </span>            :   }
+<span class="lineNum">     679 </span>            : 
+<span class="lineNum">     680 </span><span class="lineCov">         19 :   if(doscale_) {</span>
+<span class="lineNum">     681 </span><span class="lineCov">         24 :     addComponent(&quot;scale&quot;);</span>
+<span class="lineNum">     682 </span><span class="lineCov">         24 :     componentIsNotPeriodic(&quot;scale&quot;);</span>
+<span class="lineNum">     683 </span><span class="lineCov">         24 :     valueScale=getPntrToComponent(&quot;scale&quot;);</span>
+<span class="lineNum">     684 </span>            :   }
+<span class="lineNum">     685 </span>            : 
+<span class="lineNum">     686 </span><span class="lineCov">         19 :   if(dooffset_) {</span>
+<span class="lineNum">     687 </span><span class="lineCov">          4 :     addComponent(&quot;offset&quot;);</span>
+<span class="lineNum">     688 </span><span class="lineCov">          4 :     componentIsNotPeriodic(&quot;offset&quot;);</span>
+<span class="lineNum">     689 </span><span class="lineCov">          4 :     valueOffset=getPntrToComponent(&quot;offset&quot;);</span>
+<span class="lineNum">     690 </span>            :   }
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span><span class="lineCov">         19 :   if(dooffset_||doscale_) {</span>
+<span class="lineNum">     693 </span><span class="lineCov">         28 :     addComponent(&quot;acceptScale&quot;);</span>
+<span class="lineNum">     694 </span><span class="lineCov">         28 :     componentIsNotPeriodic(&quot;acceptScale&quot;);</span>
+<span class="lineNum">     695 </span><span class="lineCov">         28 :     valueAcceptScale=getPntrToComponent(&quot;acceptScale&quot;);</span>
+<span class="lineNum">     696 </span>            :   }
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span><span class="lineCov">         19 :   if(noise_type_==GENERIC) {</span>
+<span class="lineNum">     699 </span><span class="lineCov">          2 :     addComponent(&quot;acceptFT&quot;);</span>
+<span class="lineNum">     700 </span><span class="lineCov">          2 :     componentIsNotPeriodic(&quot;acceptFT&quot;);</span>
+<span class="lineNum">     701 </span><span class="lineCov">          2 :     valueAcceptFT=getPntrToComponent(&quot;acceptFT&quot;);</span>
+<span class="lineNum">     702 </span>            :   }
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span><span class="lineCov">         38 :   addComponent(&quot;acceptSigma&quot;);</span>
+<span class="lineNum">     705 </span><span class="lineCov">         38 :   componentIsNotPeriodic(&quot;acceptSigma&quot;);</span>
+<span class="lineNum">     706 </span><span class="lineCov">         38 :   valueAccept=getPntrToComponent(&quot;acceptSigma&quot;);</span>
+<span class="lineNum">     707 </span>            : 
+<span class="lineNum">     708 </span><span class="lineCov">         19 :   if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">     709 </span><span class="lineCov">       7196 :     for(unsigned i=0; i&lt;sigma_mean2_.size(); ++i) {</span>
+<span class="lineNum">     710 </span><span class="lineCov">       2390 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     711 </span><span class="lineCov">       7170 :       addComponent(&quot;sigmaMean_&quot;+num); componentIsNotPeriodic(&quot;sigmaMean_&quot;+num);</span>
+<span class="lineNum">     712 </span><span class="lineCov">       7170 :       valueSigmaMean.push_back(getPntrToComponent(&quot;sigmaMean_&quot;+num));</span>
+<span class="lineNum">     713 </span><span class="lineCov">       7170 :       getPntrToComponent(&quot;sigmaMean_&quot;+num)-&gt;set(sqrt(sigma_mean2_[i]));</span>
+<span class="lineNum">     714 </span><span class="lineCov">       7170 :       addComponent(&quot;sigma_&quot;+num); componentIsNotPeriodic(&quot;sigma_&quot;+num);</span>
+<span class="lineNum">     715 </span><span class="lineCov">       7170 :       valueSigma.push_back(getPntrToComponent(&quot;sigma_&quot;+num));</span>
+<span class="lineNum">     716 </span><span class="lineCov">       7170 :       getPntrToComponent(&quot;sigma_&quot;+num)-&gt;set(sigma_[i]);</span>
+<span class="lineNum">     717 </span><span class="lineCov">       2390 :       if(noise_type_==GENERIC) {</span>
+<span class="lineNum">     718 </span><span class="lineCov">          6 :         addComponent(&quot;ftilde_&quot;+num); componentIsNotPeriodic(&quot;ftilde_&quot;+num);</span>
+<span class="lineNum">     719 </span><span class="lineCov">          6 :         valueFtilde.push_back(getPntrToComponent(&quot;ftilde_&quot;+num));</span>
+<span class="lineNum">     720 </span>            :       }
+<span class="lineNum">     721 </span>            :     }
+<span class="lineNum">     722 </span>            :   } else {
+<span class="lineNum">     723 </span><span class="lineCov">         18 :     addComponent(&quot;sigmaMean&quot;); componentIsNotPeriodic(&quot;sigmaMean&quot;);</span>
+<span class="lineNum">     724 </span><span class="lineCov">         18 :     valueSigmaMean.push_back(getPntrToComponent(&quot;sigmaMean&quot;));</span>
+<span class="lineNum">     725 </span><span class="lineCov">         18 :     getPntrToComponent(&quot;sigmaMean&quot;)-&gt;set(sqrt(sigma_mean2_[0]));</span>
+<span class="lineNum">     726 </span><span class="lineCov">         18 :     addComponent(&quot;sigma&quot;); componentIsNotPeriodic(&quot;sigma&quot;);</span>
+<span class="lineNum">     727 </span><span class="lineCov">         18 :     valueSigma.push_back(getPntrToComponent(&quot;sigma&quot;));</span>
+<span class="lineNum">     728 </span><span class="lineCov">         18 :     getPntrToComponent(&quot;sigma&quot;)-&gt;set(sigma_[0]);</span>
+<span class="lineNum">     729 </span>            :   }
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span>            :   // initialize random seed
+<span class="lineNum">     732 </span>            :   unsigned iseed;
+<span class="lineNum">     733 </span><span class="lineCov">         19 :   if(master) iseed = time(NULL)+replica_;</span>
+<span class="lineNum">     734 </span><span class="lineCov">          8 :   else iseed = 0;</span>
+<span class="lineNum">     735 </span><span class="lineCov">         19 :   comm.Sum(&amp;iseed, 1);</span>
+<span class="lineNum">     736 </span><span class="lineCov">         19 :   random[0].setSeed(-iseed);</span>
+<span class="lineNum">     737 </span>            :   // Random chunk
+<span class="lineNum">     738 </span><span class="lineCov">         19 :   if(master) iseed = time(NULL)+replica_;</span>
+<span class="lineNum">     739 </span><span class="lineCov">          8 :   else iseed = 0;</span>
+<span class="lineNum">     740 </span><span class="lineCov">         19 :   comm.Sum(&amp;iseed, 1);</span>
+<span class="lineNum">     741 </span><span class="lineCov">         19 :   random[2].setSeed(-iseed);</span>
+<span class="lineNum">     742 </span><span class="lineCov">         19 :   if(doscale_||dooffset_) {</span>
+<span class="lineNum">     743 </span>            :     // in this case we want the same seed everywhere
+<span class="lineNum">     744 </span><span class="lineCov">         14 :     iseed = time(NULL);</span>
+<span class="lineNum">     745 </span><span class="lineCov">         14 :     if(master&amp;&amp;nrep_&gt;1) multi_sim_comm.Bcast(iseed,0);</span>
+<span class="lineNum">     746 </span><span class="lineCov">         14 :     comm.Bcast(iseed,0);</span>
+<span class="lineNum">     747 </span><span class="lineCov">         14 :     random[1].setSeed(-iseed);</span>
+<span class="lineNum">     748 </span>            :   }
+<span class="lineNum">     749 </span>            : 
+<span class="lineNum">     750 </span>            :   // outfile stuff
+<span class="lineNum">     751 </span><span class="lineCov">         19 :   if(write_stride_&gt;0) {</span>
+<span class="lineNum">     752 </span><span class="lineCov">         19 :     sfile_.link(*this);</span>
+<span class="lineNum">     753 </span><span class="lineCov">         19 :     sfile_.open(status_file_name_);</span>
+<span class="lineNum">     754 </span>            :   }
+<span class="lineNum">     755 </span>            : 
+<span class="lineNum">     756 </span><span class="lineCov">         57 :   log&lt;&lt;&quot;  Bibliography &quot;&lt;&lt;plumed.cite(&quot;Bonomi, Camilloni, Cavalli, Vendruscolo, Sci. Adv. 2, e150117 (2016)&quot;);</span>
+<span class="lineNum">     757 </span><span class="lineCov">         51 :   if(do_reweight_) log&lt;&lt;plumed.cite(&quot;Bonomi, Camilloni, Vendruscolo, Sci. Rep. 6, 31232 (2016)&quot;);</span>
+<span class="lineNum">     758 </span><span class="lineCov">         19 :   if(do_optsigmamean_&gt;0) log&lt;&lt;plumed.cite(&quot;Loehr, Jussupow, Camilloni, J. Chem. Phys. 146, 165102 (2017)&quot;);</span>
+<span class="lineNum">     759 </span><span class="lineCov">         57 :   log&lt;&lt;plumed.cite(&quot;Bonomi, Camilloni, Bioinformatics, 33, 3999 (2017)&quot;);</span>
+<span class="lineNum">     760 </span><span class="lineCov">         19 :   log&lt;&lt;&quot;\n&quot;;</span>
+<a name="761"><span class="lineNum">     761 </span><span class="lineCov">         19 : }</span></a>
+<span class="lineNum">     762 </span>            : 
+<span class="lineNum">     763 </span><span class="lineCov">        114 : Metainference::~Metainference()</span>
+<span class="lineNum">     764 </span>            : {
+<span class="lineNum">     765 </span><span class="lineCov">         19 :   if(sfile_.isOpen()) sfile_.close();</span>
+<span class="lineNum">     766 </span><span class="lineCov">         38 : }</span>
+<span class="lineNum">     767 </span>            : 
+<span class="lineNum">     768 </span><span class="lineCov">        156 : double Metainference::getEnergySP(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,</span>
+<span class="lineNum">     769 </span>            :                                   const double scale, const double offset)
+<span class="lineNum">     770 </span>            : {
+<span class="lineNum">     771 </span><span class="lineCov">        156 :   const double scale2 = scale*scale;</span>
+<span class="lineNum">     772 </span><span class="lineCov">        156 :   const double sm2    = sigma_mean2_[0];</span>
+<span class="lineNum">     773 </span><span class="lineCov">        156 :   const double ss2    = sigma[0]*sigma[0] + scale2*sm2;</span>
+<span class="lineNum">     774 </span><span class="lineCov">        156 :   const double sss    = sigma[0]*sigma[0] + sm2;</span>
+<span class="lineNum">     775 </span>            : 
+<span class="lineNum">     776 </span>            :   double ene = 0.0;
+<span class="lineNum">     777 </span><span class="lineCov">        468 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene)</span>
+<span class="lineNum">     778 </span>            :   {
+<span class="lineNum">     779 </span><span class="lineCov">        312 :     #pragma omp for reduction( + : ene)</span>
+<span class="lineNum">     780 </span><span class="lineCov">        312 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     781 </span><span class="lineCov">       1980 :       const double dev = scale*mean[i]-parameters[i]+offset;</span>
+<span class="lineNum">     782 </span><span class="lineCov">        660 :       const double a2 = 0.5*dev*dev + ss2;</span>
+<span class="lineNum">     783 </span><span class="lineCov">        660 :       ene += std::log(2.0*a2/(1.0-exp(-a2/sm2)));</span>
+<span class="lineNum">     784 </span>            :     }
+<span class="lineNum">     785 </span>            :   }
+<span class="lineNum">     786 </span>            :   // add one single Jeffrey's prior and one normalisation per data point
+<span class="lineNum">     787 </span><span class="lineCov">        156 :   ene += 0.5*std::log(sss) + static_cast&lt;double&gt;(narg)*0.5*std::log(0.5*M_PI*M_PI/ss2);</span>
+<span class="lineNum">     788 </span><span class="lineCov">        156 :   if(doscale_)  ene += 0.5*std::log(sss);</span>
+<span class="lineNum">     789 </span><span class="lineCov">        156 :   if(dooffset_) ene += 0.5*std::log(sss);</span>
+<span class="lineNum">     790 </span><span class="lineCov">        156 :   return kbt_ * ene;</span>
+<a name="791"><span class="lineNum">     791 </span>            : }</a>
+<span class="lineNum">     792 </span>            : 
+<span class="lineNum">     793 </span><span class="lineCov">        144 : double Metainference::getEnergySPE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,</span>
+<span class="lineNum">     794 </span>            :                                    const double scale, const double offset)
+<span class="lineNum">     795 </span>            : {
+<span class="lineNum">     796 </span><span class="lineCov">        144 :   const double scale2 = scale*scale;</span>
+<span class="lineNum">     797 </span>            :   double ene = 0.0;
+<span class="lineNum">     798 </span><span class="lineCov">        432 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene)</span>
+<span class="lineNum">     799 </span>            :   {
+<span class="lineNum">     800 </span><span class="lineCov">        288 :     #pragma omp for reduction( + : ene)</span>
+<span class="lineNum">     801 </span><span class="lineCov">        288 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     802 </span><span class="lineCov">       1152 :       const double sm2 = sigma_mean2_[i];</span>
+<span class="lineNum">     803 </span><span class="lineCov">       1152 :       const double ss2 = sigma[i]*sigma[i] + scale2*sm2;</span>
+<span class="lineNum">     804 </span><span class="lineCov">        576 :       const double sss = sigma[i]*sigma[i] + sm2;</span>
+<span class="lineNum">     805 </span><span class="lineCov">       1728 :       const double dev = scale*mean[i]-parameters[i]+offset;</span>
+<span class="lineNum">     806 </span><span class="lineCov">        576 :       const double a2  = 0.5*dev*dev + ss2;</span>
+<span class="lineNum">     807 </span><span class="lineCov">        576 :       ene += 0.5*std::log(sss) + 0.5*std::log(0.5*M_PI*M_PI/ss2) + std::log(2.0*a2/(1.0-exp(-a2/sm2)));</span>
+<span class="lineNum">     808 </span><span class="lineCov">       1152 :       if(doscale_)  ene += 0.5*std::log(sss);</span>
+<span class="lineNum">     809 </span><span class="lineCov">        576 :       if(dooffset_) ene += 0.5*std::log(sss);</span>
+<span class="lineNum">     810 </span>            :     }
+<span class="lineNum">     811 </span>            :   }
+<span class="lineNum">     812 </span><span class="lineCov">        144 :   return kbt_ * ene;</span>
+<a name="813"><span class="lineNum">     813 </span>            : }</a>
+<span class="lineNum">     814 </span>            : 
+<span class="lineNum">     815 </span><span class="lineCov">         48 : double Metainference::getEnergyMIGEN(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;ftilde, const vector&lt;double&gt; &amp;sigma,</span>
+<span class="lineNum">     816 </span>            :                                      const double scale, const double offset)
+<span class="lineNum">     817 </span>            : {
+<span class="lineNum">     818 </span>            :   double ene = 0.0;
+<span class="lineNum">     819 </span><span class="lineCov">        144 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene)</span>
+<span class="lineNum">     820 </span>            :   {
+<span class="lineNum">     821 </span><span class="lineCov">         96 :     #pragma omp for reduction( + : ene)</span>
+<span class="lineNum">     822 </span><span class="lineCov">         96 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     823 </span><span class="lineCov">        192 :       const double inv_sb2  = 1./(sigma[i]*sigma[i]);</span>
+<span class="lineNum">     824 </span><span class="lineCov">         96 :       const double inv_sm2  = 1./sigma_mean2_[i];</span>
+<span class="lineNum">     825 </span>            :       double devb = 0;
+<span class="lineNum">     826 </span><span class="lineCov">        384 :       if(gen_likelihood_==LIKE_GAUSS)     devb = scale*ftilde[i]-parameters[i]+offset;</span>
+<span class="lineNum">     827 </span><span class="lineNoCov">          0 :       else if(gen_likelihood_==LIKE_LOGN) devb = std::log(scale*ftilde[i]/parameters[i]);</span>
+<span class="lineNum">     828 </span><span class="lineCov">        288 :       double devm = mean[i] - ftilde[i];</span>
+<span class="lineNum">     829 </span>            :       // deviation + normalisation + jeffrey
+<span class="lineNum">     830 </span>            :       double normb = 0.;
+<span class="lineNum">     831 </span><span class="lineCov">        192 :       if(gen_likelihood_==LIKE_GAUSS)     normb = -0.5*std::log(0.5/M_PI*inv_sb2);</span>
+<span class="lineNum">     832 </span><span class="lineNoCov">          0 :       else if(gen_likelihood_==LIKE_LOGN) normb = -0.5*std::log(0.5/M_PI*inv_sb2/(parameters[i]*parameters[i]));</span>
+<span class="lineNum">     833 </span><span class="lineCov">         96 :       const double normm         = -0.5*std::log(0.5/M_PI*inv_sm2);</span>
+<span class="lineNum">     834 </span><span class="lineCov">         96 :       const double jeffreys      = -0.5*std::log(2.*inv_sb2);</span>
+<span class="lineNum">     835 </span><span class="lineCov">         96 :       ene += 0.5*devb*devb*inv_sb2 + 0.5*devm*devm*inv_sm2 + normb + normm + jeffreys;</span>
+<span class="lineNum">     836 </span><span class="lineCov">         96 :       if(doscale_)  ene += jeffreys;</span>
+<span class="lineNum">     837 </span><span class="lineCov">         96 :       if(dooffset_) ene += jeffreys;</span>
+<span class="lineNum">     838 </span>            :     }
+<span class="lineNum">     839 </span>            :   }
+<span class="lineNum">     840 </span><span class="lineCov">         48 :   return kbt_ * ene;</span>
+<span class="lineNum">     841 </span>            : }
+<span class="lineNum">     842 </span>            : 
+<span class="lineNum">     843 </span><span class="lineCov">         36 : double Metainference::getEnergyGJ(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,</span>
+<span class="lineNum">     844 </span>            :                                   const double scale, const double offset)
+<span class="lineNum">     845 </span>            : {
+<span class="lineNum">     846 </span><span class="lineCov">         36 :   const double scale2  = scale*scale;</span>
+<span class="lineNum">     847 </span><span class="lineCov">         72 :   const double inv_s2  = 1./(sigma[0]*sigma[0] + scale2*sigma_mean2_[0]);</span>
+<span class="lineNum">     848 </span><span class="lineCov">         36 :   const double inv_sss = 1./(sigma[0]*sigma[0] + sigma_mean2_[0]);</span>
+<span class="lineNum">     849 </span>            : 
+<span class="lineNum">     850 </span>            :   double ene = 0.0;
+<span class="lineNum">     851 </span><span class="lineCov">        108 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene)</span>
+<span class="lineNum">     852 </span>            :   {
+<span class="lineNum">     853 </span><span class="lineCov">         72 :     #pragma omp for reduction( + : ene)</span>
+<span class="lineNum">     854 </span><span class="lineCov">         72 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     855 </span><span class="lineCov">        216 :       double dev = scale*mean[i]-parameters[i]+offset;</span>
+<span class="lineNum">     856 </span><span class="lineCov">         72 :       ene += 0.5*dev*dev*inv_s2;</span>
+<span class="lineNum">     857 </span>            :     }
+<span class="lineNum">     858 </span>            :   }
+<span class="lineNum">     859 </span><span class="lineCov">         36 :   const double normalisation = -0.5*std::log(0.5/M_PI*inv_s2);</span>
+<span class="lineNum">     860 </span><span class="lineCov">         36 :   const double jeffreys = -0.5*std::log(2.*inv_sss);</span>
+<span class="lineNum">     861 </span>            :   // add Jeffrey's prior in case one sigma for all data points + one normalisation per datapoint
+<span class="lineNum">     862 </span><span class="lineCov">         36 :   ene += jeffreys + static_cast&lt;double&gt;(narg)*normalisation;</span>
+<span class="lineNum">     863 </span><span class="lineCov">         36 :   if(doscale_)  ene += jeffreys;</span>
+<span class="lineNum">     864 </span><span class="lineCov">         36 :   if(dooffset_) ene += jeffreys;</span>
+<span class="lineNum">     865 </span>            : 
+<span class="lineNum">     866 </span><span class="lineCov">         36 :   return kbt_ * ene;</span>
+<a name="867"><span class="lineNum">     867 </span>            : }</a>
+<span class="lineNum">     868 </span>            : 
+<span class="lineNum">     869 </span><span class="lineCov">        152 : double Metainference::getEnergyGJE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;sigma,</span>
+<span class="lineNum">     870 </span>            :                                    const double scale, const double offset)
+<span class="lineNum">     871 </span>            : {
+<span class="lineNum">     872 </span><span class="lineCov">        152 :   const double scale2 = scale*scale;</span>
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span>            :   double ene = 0.0;
+<span class="lineNum">     875 </span><span class="lineCov">        456 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene)</span>
+<span class="lineNum">     876 </span>            :   {
+<span class="lineNum">     877 </span><span class="lineCov">        304 :     #pragma omp for reduction( + : ene)</span>
+<span class="lineNum">     878 </span><span class="lineCov">        304 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     879 </span><span class="lineCov">      15864 :       const double inv_s2  = 1./(sigma[i]*sigma[i] + scale2*sigma_mean2_[i]);</span>
+<span class="lineNum">     880 </span><span class="lineCov">       5288 :       const double inv_sss = 1./(sigma[i]*sigma[i] + sigma_mean2_[i]);</span>
+<span class="lineNum">     881 </span><span class="lineCov">      15864 :       double dev = scale*mean[i]-parameters[i]+offset;</span>
+<span class="lineNum">     882 </span>            :       // deviation + normalisation + jeffrey
+<span class="lineNum">     883 </span><span class="lineCov">       5288 :       const double normalisation = -0.5*std::log(0.5/M_PI*inv_s2);</span>
+<span class="lineNum">     884 </span><span class="lineCov">       5288 :       const double jeffreys      = -0.5*std::log(2.*inv_sss);</span>
+<span class="lineNum">     885 </span><span class="lineCov">       5288 :       ene += 0.5*dev*dev*inv_s2 + normalisation + jeffreys;</span>
+<span class="lineNum">     886 </span><span class="lineCov">       5864 :       if(doscale_)  ene += jeffreys;</span>
+<span class="lineNum">     887 </span><span class="lineCov">       5288 :       if(dooffset_) ene += jeffreys;</span>
+<span class="lineNum">     888 </span>            :     }
+<span class="lineNum">     889 </span>            :   }
+<span class="lineNum">     890 </span><span class="lineCov">        152 :   return kbt_ * ene;</span>
+<span class="lineNum">     891 </span>            : }
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span><span class="lineCov">        178 : void Metainference::doMonteCarlo(const vector&lt;double&gt; &amp;mean_)</span>
+<span class="lineNum">     894 </span>            : {
+<span class="lineNum">     895 </span>            :   // calculate old energy with the updated coordinates
+<span class="lineNum">     896 </span>            :   double old_energy=0.;
+<span class="lineNum">     897 </span>            : 
+<span class="lineNum">     898 </span><span class="lineCov">        178 :   switch(noise_type_) {</span>
+<span class="lineNum">     899 </span><span class="lineCov">         12 :   case GAUSS:</span>
+<span class="lineNum">     900 </span><span class="lineCov">         12 :     old_energy = getEnergyGJ(mean_,sigma_,scale_,offset_);</span>
+<span class="lineNum">     901 </span>            :     break;
+<span class="lineNum">     902 </span><span class="lineCov">         52 :   case MGAUSS:</span>
+<span class="lineNum">     903 </span><span class="lineCov">         52 :     old_energy = getEnergyGJE(mean_,sigma_,scale_,offset_);</span>
+<span class="lineNum">     904 </span>            :     break;
+<span class="lineNum">     905 </span><span class="lineCov">         54 :   case OUTLIERS:</span>
+<span class="lineNum">     906 </span><span class="lineCov">         54 :     old_energy = getEnergySP(mean_,sigma_,scale_,offset_);</span>
+<span class="lineNum">     907 </span>            :     break;
+<span class="lineNum">     908 </span><span class="lineCov">         48 :   case MOUTLIERS:</span>
+<span class="lineNum">     909 </span><span class="lineCov">         48 :     old_energy = getEnergySPE(mean_,sigma_,scale_,offset_);</span>
+<span class="lineNum">     910 </span>            :     break;
+<span class="lineNum">     911 </span><span class="lineCov">         12 :   case GENERIC:</span>
+<span class="lineNum">     912 </span><span class="lineCov">         12 :     old_energy = getEnergyMIGEN(mean_,ftilde_,sigma_,scale_,offset_);</span>
+<span class="lineNum">     913 </span>            :     break;
+<span class="lineNum">     914 </span>            :   }
+<span class="lineNum">     915 </span>            : 
+<span class="lineNum">     916 </span>            :   // Create vector of random sigma indices
+<span class="lineNum">     917 </span>            :   vector&lt;unsigned&gt; indices;
+<span class="lineNum">     918 </span><span class="lineCov">        178 :   if (MCchunksize_ &gt; 0) {</span>
+<span class="lineNum">     919 </span><span class="lineNoCov">          0 :     for (unsigned j=0; j&lt;sigma_.size(); j++) {</span>
+<span class="lineNum">     920 </span><span class="lineNoCov">          0 :       indices.push_back(j);</span>
+<span class="lineNum">     921 </span>            :     }
+<span class="lineNum">     922 </span><span class="lineNoCov">          0 :     random[2].Shuffle(indices);</span>
+<span class="lineNum">     923 </span>            :   }
+<span class="lineNum">     924 </span>            :   bool breaknow = false;
+<span class="lineNum">     925 </span>            : 
+<span class="lineNum">     926 </span>            :   // cycle on MC steps
+<span class="lineNum">     927 </span><span class="lineCov">        534 :   for(unsigned i=0; i&lt;MCsteps_; ++i) {</span>
+<span class="lineNum">     928 </span>            : 
+<span class="lineNum">     929 </span><span class="lineCov">        178 :     MCtrial_++;</span>
+<span class="lineNum">     930 </span>            : 
+<span class="lineNum">     931 </span>            :     // propose move for ftilde
+<span class="lineNum">     932 </span><span class="lineCov">        178 :     vector&lt;double&gt; new_ftilde(sigma_.size());</span>
+<span class="lineNum">     933 </span><span class="lineCov">        178 :     new_ftilde = ftilde_;</span>
+<span class="lineNum">     934 </span>            : 
+<span class="lineNum">     935 </span><span class="lineCov">        178 :     if(noise_type_==GENERIC) {</span>
+<span class="lineNum">     936 </span>            :       // change all sigmas
+<span class="lineNum">     937 </span><span class="lineCov">         96 :       for(unsigned j=0; j&lt;sigma_.size(); j++) {</span>
+<span class="lineNum">     938 </span><span class="lineCov">         24 :         const double r3 = random[0].Gaussian();</span>
+<span class="lineNum">     939 </span><span class="lineCov">         48 :         const double ds3 = Dftilde_*sqrt(sigma_mean2_[j])*r3;</span>
+<span class="lineNum">     940 </span><span class="lineCov">         48 :         new_ftilde[j] = ftilde_[j] + ds3;</span>
+<span class="lineNum">     941 </span>            :       }
+<span class="lineNum">     942 </span>            :       // calculate new energy
+<span class="lineNum">     943 </span><span class="lineCov">         12 :       double new_energy = getEnergyMIGEN(mean_,new_ftilde,sigma_,scale_,offset_);</span>
+<span class="lineNum">     944 </span>            : 
+<span class="lineNum">     945 </span>            :       // accept or reject
+<span class="lineNum">     946 </span><span class="lineCov">         12 :       const double delta = ( new_energy - old_energy ) / kbt_;</span>
+<span class="lineNum">     947 </span>            :       // if delta is negative always accept move
+<span class="lineNum">     948 </span><span class="lineCov">         12 :       if( delta &lt;= 0.0 ) {</span>
+<span class="lineNum">     949 </span>            :         old_energy = new_energy;
+<span class="lineNum">     950 </span><span class="lineNoCov">          0 :         ftilde_ = new_ftilde;</span>
+<span class="lineNum">     951 </span><span class="lineNoCov">          0 :         MCacceptFT_++;</span>
+<span class="lineNum">     952 </span>            :         // otherwise extract random number
+<span class="lineNum">     953 </span>            :       } else {
+<span class="lineNum">     954 </span><span class="lineCov">         12 :         const double s = random[0].RandU01();</span>
+<span class="lineNum">     955 </span><span class="lineCov">         12 :         if( s &lt; exp(-delta) ) {</span>
+<span class="lineNum">     956 </span>            :           old_energy = new_energy;
+<span class="lineNum">     957 </span><span class="lineNoCov">          0 :           ftilde_ = new_ftilde;</span>
+<span class="lineNum">     958 </span><span class="lineNoCov">          0 :           MCacceptFT_++;</span>
+<span class="lineNum">     959 </span>            :         }
+<span class="lineNum">     960 </span>            :       }
+<span class="lineNum">     961 </span>            :     }
+<span class="lineNum">     962 </span>            : 
+<span class="lineNum">     963 </span>            :     // propose move for scale and/or offset
+<span class="lineNum">     964 </span><span class="lineCov">        178 :     double new_scale = scale_;</span>
+<span class="lineNum">     965 </span><span class="lineCov">        178 :     double new_offset = offset_;</span>
+<span class="lineNum">     966 </span><span class="lineCov">        178 :     if(doscale_||dooffset_) {</span>
+<span class="lineNum">     967 </span><span class="lineCov">        168 :       if(doscale_) {</span>
+<span class="lineNum">     968 </span><span class="lineCov">        144 :         if(scale_prior_==SC_FLAT) {</span>
+<span class="lineNum">     969 </span><span class="lineCov">        144 :           const double r1 = random[1].Gaussian();</span>
+<span class="lineNum">     970 </span><span class="lineCov">        144 :           const double ds1 = Dscale_*r1;</span>
+<span class="lineNum">     971 </span><span class="lineCov">        144 :           new_scale += ds1;</span>
+<span class="lineNum">     972 </span>            :           // check boundaries
+<span class="lineNum">     973 </span><span class="lineCov">        144 :           if(new_scale &gt; scale_max_) {new_scale = 2.0 * scale_max_ - new_scale;}</span>
+<span class="lineNum">     974 </span><span class="lineCov">        144 :           if(new_scale &lt; scale_min_) {new_scale = 2.0 * scale_min_ - new_scale;}</span>
+<span class="lineNum">     975 </span>            :         } else {
+<span class="lineNum">     976 </span><span class="lineNoCov">          0 :           const double r1 = random[1].Gaussian();</span>
+<span class="lineNum">     977 </span><span class="lineNoCov">          0 :           const double ds1 = 0.5*(scale_mu_-new_scale)+Dscale_*exp(1)/M_PI*r1;</span>
+<span class="lineNum">     978 </span><span class="lineNoCov">          0 :           new_scale += ds1;</span>
+<span class="lineNum">     979 </span>            :         }
+<span class="lineNum">     980 </span>            :       }
+<span class="lineNum">     981 </span>            : 
+<span class="lineNum">     982 </span><span class="lineCov">        168 :       if(dooffset_) {</span>
+<span class="lineNum">     983 </span><span class="lineCov">         24 :         if(offset_prior_==SC_FLAT) {</span>
+<span class="lineNum">     984 </span><span class="lineCov">         24 :           const double r1 = random[1].Gaussian();</span>
+<span class="lineNum">     985 </span><span class="lineCov">         24 :           const double ds1 = Doffset_*r1;</span>
+<span class="lineNum">     986 </span><span class="lineCov">         24 :           new_offset += ds1;</span>
+<span class="lineNum">     987 </span>            :           // check boundaries
+<span class="lineNum">     988 </span><span class="lineCov">         24 :           if(new_offset &gt; offset_max_) {new_offset = 2.0 * offset_max_ - new_offset;}</span>
+<span class="lineNum">     989 </span><span class="lineCov">         24 :           if(new_offset &lt; offset_min_) {new_offset = 2.0 * offset_min_ - new_offset;}</span>
+<span class="lineNum">     990 </span>            :         } else {
+<span class="lineNum">     991 </span><span class="lineNoCov">          0 :           const double r1 = random[1].Gaussian();</span>
+<span class="lineNum">     992 </span><span class="lineNoCov">          0 :           const double ds1 = 0.5*(offset_mu_-new_offset)+Doffset_*exp(1)/M_PI*r1;</span>
+<span class="lineNum">     993 </span><span class="lineNoCov">          0 :           new_offset += ds1;</span>
+<span class="lineNum">     994 </span>            :         }
+<span class="lineNum">     995 </span>            :       }
+<span class="lineNum">     996 </span>            : 
+<span class="lineNum">     997 </span>            :       // calculate new energy
+<span class="lineNum">     998 </span>            :       double new_energy = 0.;
+<span class="lineNum">     999 </span>            : 
+<span class="lineNum">    1000 </span><span class="lineCov">        168 :       switch(noise_type_) {</span>
+<span class="lineNum">    1001 </span><span class="lineCov">         12 :       case GAUSS:</span>
+<span class="lineNum">    1002 </span><span class="lineCov">         12 :         new_energy = getEnergyGJ(mean_,sigma_,new_scale,new_offset);</span>
+<span class="lineNum">    1003 </span>            :         break;
+<span class="lineNum">    1004 </span><span class="lineCov">         48 :       case MGAUSS:</span>
+<span class="lineNum">    1005 </span><span class="lineCov">         48 :         new_energy = getEnergyGJE(mean_,sigma_,new_scale,new_offset);</span>
+<span class="lineNum">    1006 </span>            :         break;
+<span class="lineNum">    1007 </span><span class="lineCov">         48 :       case OUTLIERS:</span>
+<span class="lineNum">    1008 </span><span class="lineCov">         48 :         new_energy = getEnergySP(mean_,sigma_,new_scale,new_offset);</span>
+<span class="lineNum">    1009 </span>            :         break;
+<span class="lineNum">    1010 </span><span class="lineCov">         48 :       case MOUTLIERS:</span>
+<span class="lineNum">    1011 </span><span class="lineCov">         48 :         new_energy = getEnergySPE(mean_,sigma_,new_scale,new_offset);</span>
+<span class="lineNum">    1012 </span>            :         break;
+<span class="lineNum">    1013 </span><span class="lineCov">         12 :       case GENERIC:</span>
+<span class="lineNum">    1014 </span><span class="lineCov">         12 :         new_energy = getEnergyMIGEN(mean_,ftilde_,sigma_,new_scale,new_offset);</span>
+<span class="lineNum">    1015 </span>            :         break;
+<span class="lineNum">    1016 </span>            :       }
+<span class="lineNum">    1017 </span>            :       // for the scale we need to consider the total energy
+<span class="lineNum">    1018 </span><span class="lineCov">        168 :       vector&lt;double&gt; totenergies(2);</span>
+<span class="lineNum">    1019 </span><span class="lineCov">        168 :       if(master) {</span>
+<span class="lineNum">    1020 </span><span class="lineCov">         96 :         totenergies[0] = old_energy;</span>
+<span class="lineNum">    1021 </span><span class="lineCov">         96 :         totenergies[1] = new_energy;</span>
+<span class="lineNum">    1022 </span><span class="lineCov">         96 :         if(nrep_&gt;1) multi_sim_comm.Sum(totenergies);</span>
+<span class="lineNum">    1023 </span>            :       } else {
+<span class="lineNum">    1024 </span><span class="lineCov">         72 :         totenergies[0] = 0;</span>
+<span class="lineNum">    1025 </span><span class="lineCov">         72 :         totenergies[1] = 0;</span>
+<span class="lineNum">    1026 </span>            :       }
+<span class="lineNum">    1027 </span><span class="lineCov">        168 :       comm.Sum(totenergies);</span>
+<span class="lineNum">    1028 </span>            : 
+<span class="lineNum">    1029 </span>            :       // accept or reject
+<span class="lineNum">    1030 </span><span class="lineCov">        168 :       const double delta = ( totenergies[1] - totenergies[0] ) / kbt_;</span>
+<span class="lineNum">    1031 </span>            :       // if delta is negative always accept move
+<span class="lineNum">    1032 </span><span class="lineCov">        168 :       if( delta &lt;= 0.0 ) {</span>
+<span class="lineNum">    1033 </span>            :         old_energy = new_energy;
+<span class="lineNum">    1034 </span><span class="lineCov">        156 :         scale_ = new_scale;</span>
+<span class="lineNum">    1035 </span><span class="lineCov">        156 :         offset_ = new_offset;</span>
+<span class="lineNum">    1036 </span><span class="lineCov">        156 :         MCacceptScale_++;</span>
+<span class="lineNum">    1037 </span>            :         // otherwise extract random number
+<span class="lineNum">    1038 </span>            :       } else {
+<span class="lineNum">    1039 </span><span class="lineCov">         12 :         double s = random[1].RandU01();</span>
+<span class="lineNum">    1040 </span><span class="lineCov">         12 :         if( s &lt; exp(-delta) ) {</span>
+<span class="lineNum">    1041 </span>            :           old_energy = new_energy;
+<span class="lineNum">    1042 </span><span class="lineNoCov">          0 :           scale_ = new_scale;</span>
+<span class="lineNum">    1043 </span><span class="lineNoCov">          0 :           offset_ = new_offset;</span>
+<span class="lineNum">    1044 </span><span class="lineNoCov">          0 :           MCacceptScale_++;</span>
+<span class="lineNum">    1045 </span>            :         }
+<span class="lineNum">    1046 </span>            :       }
+<span class="lineNum">    1047 </span>            :     }
+<span class="lineNum">    1048 </span>            : 
+<span class="lineNum">    1049 </span>            :     // propose move for sigma
+<span class="lineNum">    1050 </span><span class="lineCov">        178 :     vector&lt;double&gt; new_sigma(sigma_.size());</span>
+<span class="lineNum">    1051 </span><span class="lineCov">        178 :     new_sigma = sigma_;</span>
+<span class="lineNum">    1052 </span>            : 
+<span class="lineNum">    1053 </span>            :     // change MCchunksize_ sigmas
+<span class="lineNum">    1054 </span><span class="lineCov">        178 :     if (MCchunksize_ &gt; 0) {</span>
+<span class="lineNum">    1055 </span><span class="lineNoCov">          0 :       if ((MCchunksize_ * i) &gt;= sigma_.size()) {</span>
+<span class="lineNum">    1056 </span>            :         // This means we are not moving any sigma, so we should break immediately
+<span class="lineNum">    1057 </span>            :         breaknow = true;
+<span class="lineNum">    1058 </span>            :       }
+<span class="lineNum">    1059 </span>            : 
+<span class="lineNum">    1060 </span>            :       // change random sigmas
+<span class="lineNum">    1061 </span><span class="lineNoCov">          0 :       for(unsigned j=0; j&lt;MCchunksize_; j++) {</span>
+<span class="lineNum">    1062 </span><span class="lineNoCov">          0 :         const unsigned shuffle_index = j + MCchunksize_ * i;</span>
+<span class="lineNum">    1063 </span><span class="lineNoCov">          0 :         if (shuffle_index &gt;= sigma_.size()) {</span>
+<span class="lineNum">    1064 </span>            :           // Going any further will segfault but we should still evaluate the sigmas we changed
+<span class="lineNum">    1065 </span>            :           break;
+<span class="lineNum">    1066 </span>            :         }
+<span class="lineNum">    1067 </span><span class="lineNoCov">          0 :         const unsigned index = indices[shuffle_index];</span>
+<span class="lineNum">    1068 </span><span class="lineNoCov">          0 :         const double r2 = random[0].Gaussian();</span>
+<span class="lineNum">    1069 </span><span class="lineNoCov">          0 :         const double ds2 = Dsigma_[index]*r2;</span>
+<span class="lineNum">    1070 </span><span class="lineNoCov">          0 :         new_sigma[index] = sigma_[index] + ds2;</span>
+<span class="lineNum">    1071 </span>            :         // check boundaries
+<span class="lineNum">    1072 </span><span class="lineNoCov">          0 :         if(new_sigma[index] &gt; sigma_max_[index]) {new_sigma[index] = 2.0 * sigma_max_[index] - new_sigma[index];}</span>
+<span class="lineNum">    1073 </span><span class="lineNoCov">          0 :         if(new_sigma[index] &lt; sigma_min_[index]) {new_sigma[index] = 2.0 * sigma_min_[index] - new_sigma[index];}</span>
+<span class="lineNum">    1074 </span>            :       }
+<span class="lineNum">    1075 </span>            :     } else {
+<span class="lineNum">    1076 </span>            :       // change all sigmas
+<span class="lineNum">    1077 </span><span class="lineCov">       8846 :       for(unsigned j=0; j&lt;sigma_.size(); j++) {</span>
+<span class="lineNum">    1078 </span><span class="lineCov">       2830 :         const double r2 = random[0].Gaussian();</span>
+<span class="lineNum">    1079 </span><span class="lineCov">       2830 :         const double ds2 = Dsigma_[j]*r2;</span>
+<span class="lineNum">    1080 </span><span class="lineCov">       5660 :         new_sigma[j] = sigma_[j] + ds2;</span>
+<span class="lineNum">    1081 </span>            :         // check boundaries
+<span class="lineNum">    1082 </span><span class="lineCov">       5660 :         if(new_sigma[j] &gt; sigma_max_[j]) {new_sigma[j] = 2.0 * sigma_max_[j] - new_sigma[j];}</span>
+<span class="lineNum">    1083 </span><span class="lineCov">       5660 :         if(new_sigma[j] &lt; sigma_min_[j]) {new_sigma[j] = 2.0 * sigma_min_[j] - new_sigma[j];}</span>
+<span class="lineNum">    1084 </span>            :       }
+<span class="lineNum">    1085 </span>            :     }
+<span class="lineNum">    1086 </span>            : 
+<span class="lineNum">    1087 </span><span class="lineCov">        178 :     if (breaknow) {</span>
+<span class="lineNum">    1088 </span>            :       // We didnt move any sigmas, so no sense in evaluating anything
+<span class="lineNum">    1089 </span>            :       break;
+<span class="lineNum">    1090 </span>            :     }
+<span class="lineNum">    1091 </span>            : 
+<span class="lineNum">    1092 </span>            :     // calculate new energy
+<span class="lineNum">    1093 </span>            :     double new_energy = 0.;
+<span class="lineNum">    1094 </span><span class="lineCov">        178 :     switch(noise_type_) {</span>
+<span class="lineNum">    1095 </span><span class="lineCov">         12 :     case GAUSS:</span>
+<span class="lineNum">    1096 </span><span class="lineCov">         12 :       new_energy = getEnergyGJ(mean_,new_sigma,scale_,offset_);</span>
+<span class="lineNum">    1097 </span>            :       break;
+<span class="lineNum">    1098 </span><span class="lineCov">         52 :     case MGAUSS:</span>
+<span class="lineNum">    1099 </span><span class="lineCov">         52 :       new_energy = getEnergyGJE(mean_,new_sigma,scale_,offset_);</span>
+<span class="lineNum">    1100 </span>            :       break;
+<span class="lineNum">    1101 </span><span class="lineCov">         54 :     case OUTLIERS:</span>
+<span class="lineNum">    1102 </span><span class="lineCov">         54 :       new_energy = getEnergySP(mean_,new_sigma,scale_,offset_);</span>
+<span class="lineNum">    1103 </span>            :       break;
+<span class="lineNum">    1104 </span><span class="lineCov">         48 :     case MOUTLIERS:</span>
+<span class="lineNum">    1105 </span><span class="lineCov">         48 :       new_energy = getEnergySPE(mean_,new_sigma,scale_,offset_);</span>
+<span class="lineNum">    1106 </span>            :       break;
+<span class="lineNum">    1107 </span><span class="lineCov">         12 :     case GENERIC:</span>
+<span class="lineNum">    1108 </span><span class="lineCov">         12 :       new_energy = getEnergyMIGEN(mean_,ftilde_,new_sigma,scale_,offset_);</span>
+<span class="lineNum">    1109 </span>            :       break;
+<span class="lineNum">    1110 </span>            :     }
+<span class="lineNum">    1111 </span>            : 
+<span class="lineNum">    1112 </span>            :     // accept or reject
+<span class="lineNum">    1113 </span><span class="lineCov">        178 :     const double delta = ( new_energy - old_energy ) / kbt_;</span>
+<span class="lineNum">    1114 </span>            :     // if delta is negative always accept move
+<span class="lineNum">    1115 </span><span class="lineCov">        178 :     if( delta &lt;= 0.0 ) {</span>
+<span class="lineNum">    1116 </span>            :       old_energy = new_energy;
+<span class="lineNum">    1117 </span><span class="lineCov">        166 :       sigma_ = new_sigma;</span>
+<span class="lineNum">    1118 </span><span class="lineCov">        166 :       MCaccept_++;</span>
+<span class="lineNum">    1119 </span>            :       // otherwise extract random number
+<span class="lineNum">    1120 </span>            :     } else {
+<span class="lineNum">    1121 </span><span class="lineCov">         12 :       const double s = random[0].RandU01();</span>
+<span class="lineNum">    1122 </span><span class="lineCov">         12 :       if( s &lt; exp(-delta) ) {</span>
+<span class="lineNum">    1123 </span>            :         old_energy = new_energy;
+<span class="lineNum">    1124 </span><span class="lineNoCov">          0 :         sigma_ = new_sigma;</span>
+<span class="lineNum">    1125 </span><span class="lineNoCov">          0 :         MCaccept_++;</span>
+<span class="lineNum">    1126 </span>            :       }
+<span class="lineNum">    1127 </span>            :     }
+<span class="lineNum">    1128 </span>            : 
+<span class="lineNum">    1129 </span>            :   }
+<span class="lineNum">    1130 </span>            :   /* save the result of the sampling */
+<span class="lineNum">    1131 </span><span class="lineCov">        178 :   double accept = static_cast&lt;double&gt;(MCaccept_) / static_cast&lt;double&gt;(MCtrial_);</span>
+<span class="lineNum">    1132 </span><span class="lineCov">        178 :   valueAccept-&gt;set(accept);</span>
+<span class="lineNum">    1133 </span><span class="lineCov">        178 :   if(doscale_) valueScale-&gt;set(scale_);</span>
+<span class="lineNum">    1134 </span><span class="lineCov">        178 :   if(dooffset_) valueOffset-&gt;set(offset_);</span>
+<span class="lineNum">    1135 </span><span class="lineCov">        178 :   if(doscale_||dooffset_) {</span>
+<span class="lineNum">    1136 </span><span class="lineCov">        168 :     accept = static_cast&lt;double&gt;(MCacceptScale_) / static_cast&lt;double&gt;(MCtrial_);</span>
+<span class="lineNum">    1137 </span><span class="lineCov">        168 :     valueAcceptScale-&gt;set(accept);</span>
+<span class="lineNum">    1138 </span>            :   }
+<span class="lineNum">    1139 </span><span class="lineCov">      14506 :   for(unsigned i=0; i&lt;sigma_.size(); i++) valueSigma[i]-&gt;set(sigma_[i]);</span>
+<span class="lineNum">    1140 </span><span class="lineCov">        178 :   if(noise_type_==GENERIC) {</span>
+<span class="lineNum">    1141 </span><span class="lineCov">         12 :     accept = static_cast&lt;double&gt;(MCacceptFT_) / static_cast&lt;double&gt;(MCtrial_);</span>
+<span class="lineNum">    1142 </span><span class="lineCov">         12 :     valueAcceptFT-&gt;set(accept);</span>
+<span class="lineNum">    1143 </span><span class="lineCov">        144 :     for(unsigned i=0; i&lt;sigma_.size(); i++) valueFtilde[i]-&gt;set(ftilde_[i]);</span>
+<span class="lineNum">    1144 </span>            :   }
+<span class="lineNum">    1145 </span><span class="lineCov">        178 : }</span>
+<span class="lineNum">    1146 </span>            : 
+<span class="lineNum">    1147 </span>            : /*
+<span class="lineNum">    1148 </span>            :    In the following energy-force functions we don't add the normalisation and the jeffreys priors
+<span class="lineNum">    1149 </span>            :    because they are not needed for the forces, the correct MetaInference energy is the one calculated
+<span class="lineNum">    1150 </span>            :    in the Monte-Carlo
+<span class="lineNum">    1151 </span>            : */
+<span class="lineNum">    1152 </span>            : 
+<span class="lineNum">    1153 </span><span class="lineCov">         54 : double Metainference::getEnergyForceSP(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x,</span>
+<span class="lineNum">    1154 </span>            :                                        const vector&lt;double&gt; &amp;dmean_b)
+<span class="lineNum">    1155 </span>            : {
+<span class="lineNum">    1156 </span><span class="lineCov">         54 :   const double scale2 = scale_*scale_;</span>
+<span class="lineNum">    1157 </span><span class="lineCov">         54 :   const double sm2    = sigma_mean2_[0];</span>
+<span class="lineNum">    1158 </span><span class="lineCov">         54 :   const double ss2    = sigma_[0]*sigma_[0] + scale2*sm2;</span>
+<span class="lineNum">    1159 </span><span class="lineCov">         54 :   vector&lt;double&gt; f(narg+1,0);</span>
+<span class="lineNum">    1160 </span>            : 
+<span class="lineNum">    1161 </span><span class="lineCov">         54 :   if(master) {</span>
+<span class="lineNum">    1162 </span>            :     double omp_ene=0.;
+<span class="lineNum">    1163 </span><span class="lineCov">         90 :     #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(omp_ene)</span>
+<span class="lineNum">    1164 </span>            :     {
+<span class="lineNum">    1165 </span><span class="lineCov">         60 :       #pragma omp for reduction( + : omp_ene)</span>
+<span class="lineNum">    1166 </span><span class="lineCov">         60 :       for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1167 </span><span class="lineCov">        414 :         const double dev = scale_*mean[i]-parameters[i]+offset_;</span>
+<span class="lineNum">    1168 </span><span class="lineCov">        138 :         const double a2 = 0.5*dev*dev + ss2;</span>
+<span class="lineNum">    1169 </span><span class="lineCov">        138 :         const double t = exp(-a2/sm2);</span>
+<span class="lineNum">    1170 </span><span class="lineCov">        138 :         const double dt = 1./t;</span>
+<span class="lineNum">    1171 </span><span class="lineCov">        138 :         const double it = 1./(1.-t);</span>
+<span class="lineNum">    1172 </span><span class="lineCov">        138 :         const double dit = 1./(1.-dt);</span>
+<span class="lineNum">    1173 </span><span class="lineCov">        138 :         omp_ene += std::log(2.*a2*it);</span>
+<span class="lineNum">    1174 </span><span class="lineCov">        276 :         f[i] = -scale_*dev*(dit/sm2 + 1./a2);</span>
+<span class="lineNum">    1175 </span>            :       }
+<span class="lineNum">    1176 </span>            :     }
+<span class="lineNum">    1177 </span><span class="lineCov">         60 :     f[narg] = omp_ene;</span>
+<span class="lineNum">    1178 </span>            :     // collect contribution to forces and energy from other replicas
+<span class="lineNum">    1179 </span><span class="lineCov">         54 :     if(nrep_&gt;1) multi_sim_comm.Sum(&amp;f[0],narg+1);</span>
+<span class="lineNum">    1180 </span>            :   }
+<span class="lineNum">    1181 </span>            :   // intra-replica summation
+<span class="lineNum">    1182 </span><span class="lineCov">        108 :   comm.Sum(&amp;f[0],narg+1);</span>
+<span class="lineNum">    1183 </span>            : 
+<span class="lineNum">    1184 </span><span class="lineCov">        108 :   const double ene = f[narg];</span>
+<span class="lineNum">    1185 </span>            :   double w_tmp = 0.;
+<span class="lineNum">    1186 </span><span class="lineCov">        522 :   for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1187 </span><span class="lineCov">        702 :     setOutputForce(i, kbt_*f[i]*dmean_x[i]);</span>
+<span class="lineNum">    1188 </span><span class="lineCov">        702 :     w_tmp += kbt_*f[i]*dmean_b[i];</span>
+<span class="lineNum">    1189 </span>            :   }
+<span class="lineNum">    1190 </span>            : 
+<span class="lineNum">    1191 </span><span class="lineCov">         54 :   if(do_reweight_) {</span>
+<span class="lineNum">    1192 </span><span class="lineCov">         48 :     setOutputForce(narg, w_tmp);</span>
+<span class="lineNum">    1193 </span><span class="lineCov">         96 :     getPntrToComponent(&quot;biasDer&quot;)-&gt;set(-w_tmp);</span>
+<span class="lineNum">    1194 </span>            :   }
+<span class="lineNum">    1195 </span>            : 
+<span class="lineNum">    1196 </span><span class="lineCov">        108 :   return kbt_*ene;</span>
+<span class="lineNum">    1197 </span>            : }
+<span class="lineNum">    1198 </span>            : 
+<span class="lineNum">    1199 </span><span class="lineCov">         48 : double Metainference::getEnergyForceSPE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x,</span>
+<span class="lineNum">    1200 </span>            :                                         const vector&lt;double&gt; &amp;dmean_b)
+<span class="lineNum">    1201 </span>            : {
+<span class="lineNum">    1202 </span><span class="lineCov">         48 :   const double scale2 = scale_*scale_;</span>
+<span class="lineNum">    1203 </span><span class="lineCov">         48 :   vector&lt;double&gt; f(narg+1,0);</span>
+<span class="lineNum">    1204 </span>            : 
+<span class="lineNum">    1205 </span><span class="lineCov">         48 :   if(master) {</span>
+<span class="lineNum">    1206 </span>            :     double omp_ene = 0;
+<span class="lineNum">    1207 </span><span class="lineCov">         72 :     #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(omp_ene)</span>
+<span class="lineNum">    1208 </span>            :     {
+<span class="lineNum">    1209 </span><span class="lineCov">         48 :       #pragma omp for reduction( + : omp_ene)</span>
+<span class="lineNum">    1210 </span><span class="lineCov">         48 :       for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1211 </span><span class="lineCov">        192 :         const double sm2 = sigma_mean2_[i];</span>
+<span class="lineNum">    1212 </span><span class="lineCov">         96 :         const double ss2 = sigma_[i]*sigma_[i] + scale2*sm2;</span>
+<span class="lineNum">    1213 </span><span class="lineCov">        288 :         const double dev = scale_*mean[i]-parameters[i]+offset_;</span>
+<span class="lineNum">    1214 </span><span class="lineCov">         96 :         const double a2  = 0.5*dev*dev + ss2;</span>
+<span class="lineNum">    1215 </span><span class="lineCov">         96 :         const double t   = exp(-a2/sm2);</span>
+<span class="lineNum">    1216 </span><span class="lineCov">         96 :         const double dt  = 1./t;</span>
+<span class="lineNum">    1217 </span><span class="lineCov">         96 :         const double it  = 1./(1.-t);</span>
+<span class="lineNum">    1218 </span><span class="lineCov">         96 :         const double dit = 1./(1.-dt);</span>
+<span class="lineNum">    1219 </span><span class="lineCov">         96 :         omp_ene += std::log(2.*a2*it);</span>
+<span class="lineNum">    1220 </span><span class="lineCov">        192 :         f[i] = -scale_*dev*(dit/sm2 + 1./a2);</span>
+<span class="lineNum">    1221 </span>            :       }
+<span class="lineNum">    1222 </span>            :     }
+<span class="lineNum">    1223 </span><span class="lineCov">         48 :     f[narg] = omp_ene;</span>
+<span class="lineNum">    1224 </span>            :     // collect contribution to forces and energy from other replicas
+<span class="lineNum">    1225 </span><span class="lineCov">         48 :     if(nrep_&gt;1) multi_sim_comm.Sum(&amp;f[0],narg+1);</span>
+<span class="lineNum">    1226 </span>            :   }
+<span class="lineNum">    1227 </span><span class="lineCov">         96 :   comm.Sum(&amp;f[0],narg+1);</span>
+<span class="lineNum">    1228 </span>            : 
+<span class="lineNum">    1229 </span><span class="lineCov">         96 :   const double ene = f[narg];</span>
+<span class="lineNum">    1230 </span>            :   double w_tmp = 0.;
+<span class="lineNum">    1231 </span><span class="lineCov">        432 :   for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1232 </span><span class="lineCov">        576 :     setOutputForce(i, kbt_ * dmean_x[i] * f[i]);</span>
+<span class="lineNum">    1233 </span><span class="lineCov">        576 :     w_tmp += kbt_ * dmean_b[i] *f[i];</span>
+<span class="lineNum">    1234 </span>            :   }
+<span class="lineNum">    1235 </span>            : 
+<span class="lineNum">    1236 </span><span class="lineCov">         48 :   if(do_reweight_) {</span>
+<span class="lineNum">    1237 </span><span class="lineCov">         48 :     setOutputForce(narg, w_tmp);</span>
+<span class="lineNum">    1238 </span><span class="lineCov">         96 :     getPntrToComponent(&quot;biasDer&quot;)-&gt;set(-w_tmp);</span>
+<span class="lineNum">    1239 </span>            :   }
+<span class="lineNum">    1240 </span>            : 
+<span class="lineNum">    1241 </span><span class="lineCov">         96 :   return kbt_*ene;</span>
+<span class="lineNum">    1242 </span>            : }
+<span class="lineNum">    1243 </span>            : 
+<span class="lineNum">    1244 </span><span class="lineCov">         12 : double Metainference::getEnergyForceGJ(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x,</span>
+<span class="lineNum">    1245 </span>            :                                        const vector&lt;double&gt; &amp;dmean_b)
+<span class="lineNum">    1246 </span>            : {
+<span class="lineNum">    1247 </span><span class="lineCov">         12 :   const double scale2 = scale_*scale_;</span>
+<span class="lineNum">    1248 </span><span class="lineCov">         12 :   double inv_s2=0.;</span>
+<span class="lineNum">    1249 </span>            : 
+<span class="lineNum">    1250 </span><span class="lineCov">         12 :   if(master) {</span>
+<span class="lineNum">    1251 </span><span class="lineCov">         24 :     inv_s2 = 1./(sigma_[0]*sigma_[0] + scale2*sigma_mean2_[0]);</span>
+<span class="lineNum">    1252 </span><span class="lineCov">         12 :     if(nrep_&gt;1) multi_sim_comm.Sum(inv_s2);</span>
+<span class="lineNum">    1253 </span>            :   }
+<span class="lineNum">    1254 </span><span class="lineCov">         12 :   comm.Sum(inv_s2);</span>
+<span class="lineNum">    1255 </span>            : 
+<span class="lineNum">    1256 </span>            :   double ene   = 0.;
+<span class="lineNum">    1257 </span>            :   double w_tmp = 0.;
+<span class="lineNum">    1258 </span><span class="lineCov">         36 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene,w_tmp)</span>
+<span class="lineNum">    1259 </span>            :   {
+<span class="lineNum">    1260 </span><span class="lineCov">         24 :     #pragma omp for reduction( + : ene,w_tmp)</span>
+<span class="lineNum">    1261 </span><span class="lineCov">         24 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1262 </span><span class="lineCov">         72 :       const double dev = scale_*mean[i]-parameters[i]+offset_;</span>
+<span class="lineNum">    1263 </span><span class="lineCov">         24 :       const double mult = dev*scale_*inv_s2;</span>
+<span class="lineNum">    1264 </span><span class="lineCov">         24 :       ene += 0.5*dev*dev*inv_s2;</span>
+<span class="lineNum">    1265 </span><span class="lineCov">         48 :       setOutputForce(i, -kbt_*dmean_x[i]*mult);</span>
+<span class="lineNum">    1266 </span><span class="lineCov">         48 :       w_tmp += kbt_*dmean_b[i]*mult;</span>
+<span class="lineNum">    1267 </span>            :     }
+<span class="lineNum">    1268 </span>            :   }
+<span class="lineNum">    1269 </span>            : 
+<span class="lineNum">    1270 </span><span class="lineCov">         12 :   if(do_reweight_) {</span>
+<span class="lineNum">    1271 </span><span class="lineNoCov">          0 :     setOutputForce(narg, -w_tmp);</span>
+<span class="lineNum">    1272 </span><span class="lineNoCov">          0 :     getPntrToComponent(&quot;biasDer&quot;)-&gt;set(w_tmp);</span>
+<span class="lineNum">    1273 </span>            :   }
+<span class="lineNum">    1274 </span>            : 
+<span class="lineNum">    1275 </span><span class="lineCov">         12 :   return kbt_*ene;</span>
+<span class="lineNum">    1276 </span>            : }
+<span class="lineNum">    1277 </span>            : 
+<span class="lineNum">    1278 </span><span class="lineCov">         52 : double Metainference::getEnergyForceGJE(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x,</span>
+<span class="lineNum">    1279 </span>            :                                         const vector&lt;double&gt; &amp;dmean_b)
+<span class="lineNum">    1280 </span>            : {
+<span class="lineNum">    1281 </span><span class="lineCov">         52 :   const double scale2 = scale_*scale_;</span>
+<span class="lineNum">    1282 </span><span class="lineCov">        104 :   vector&lt;double&gt; inv_s2(sigma_.size(),0.);</span>
+<span class="lineNum">    1283 </span>            : 
+<span class="lineNum">    1284 </span><span class="lineCov">         52 :   if(master) {</span>
+<span class="lineNum">    1285 </span><span class="lineCov">       6422 :     for(unsigned i=0; i&lt;sigma_.size(); ++i) inv_s2[i] = 1./(sigma_[i]*sigma_[i] + scale2*sigma_mean2_[i]);</span>
+<span class="lineNum">    1286 </span><span class="lineCov">         52 :     if(nrep_&gt;1) multi_sim_comm.Sum(&amp;inv_s2[0],sigma_.size());</span>
+<span class="lineNum">    1287 </span>            :   }
+<span class="lineNum">    1288 </span><span class="lineCov">        156 :   comm.Sum(&amp;inv_s2[0],sigma_.size());</span>
+<span class="lineNum">    1289 </span>            : 
+<span class="lineNum">    1290 </span>            :   double ene   = 0.;
+<span class="lineNum">    1291 </span>            :   double w_tmp = 0.;
+<span class="lineNum">    1292 </span><span class="lineCov">        156 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene,w_tmp)</span>
+<span class="lineNum">    1293 </span>            :   {
+<span class="lineNum">    1294 </span><span class="lineCov">        104 :     #pragma omp for reduction( + : ene,w_tmp)</span>
+<span class="lineNum">    1295 </span><span class="lineCov">        104 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1296 </span><span class="lineCov">       7644 :       const double dev  = scale_*mean[i]-parameters[i]+offset_;</span>
+<span class="lineNum">    1297 </span><span class="lineCov">       5096 :       const double mult = dev*scale_*inv_s2[i];</span>
+<span class="lineNum">    1298 </span><span class="lineCov">       2548 :       ene += 0.5*dev*dev*inv_s2[i];</span>
+<span class="lineNum">    1299 </span><span class="lineCov">       5096 :       setOutputForce(i, -kbt_*dmean_x[i]*mult);</span>
+<span class="lineNum">    1300 </span><span class="lineCov">       5096 :       w_tmp += kbt_*dmean_b[i]*mult;</span>
+<span class="lineNum">    1301 </span>            :     }
+<span class="lineNum">    1302 </span>            :   }
+<span class="lineNum">    1303 </span>            : 
+<span class="lineNum">    1304 </span><span class="lineCov">         52 :   if(do_reweight_) {</span>
+<span class="lineNum">    1305 </span><span class="lineCov">         52 :     setOutputForce(narg, -w_tmp);</span>
+<span class="lineNum">    1306 </span><span class="lineCov">        104 :     getPntrToComponent(&quot;biasDer&quot;)-&gt;set(w_tmp);</span>
+<span class="lineNum">    1307 </span>            :   }
+<span class="lineNum">    1308 </span>            : 
+<span class="lineNum">    1309 </span><span class="lineCov">        104 :   return kbt_*ene;</span>
+<span class="lineNum">    1310 </span>            : }
+<span class="lineNum">    1311 </span>            : 
+<span class="lineNum">    1312 </span><span class="lineCov">         12 : double Metainference::getEnergyForceMIGEN(const vector&lt;double&gt; &amp;mean, const vector&lt;double&gt; &amp;dmean_x, const vector&lt;double&gt; &amp;dmean_b)</span>
+<span class="lineNum">    1313 </span>            : {
+<span class="lineNum">    1314 </span><span class="lineCov">         24 :   vector&lt;double&gt; inv_s2(sigma_.size(),0.);</span>
+<span class="lineNum">    1315 </span><span class="lineCov">         24 :   vector&lt;double&gt; dev(sigma_.size(),0.);</span>
+<span class="lineNum">    1316 </span><span class="lineCov">         24 :   vector&lt;double&gt; dev2(sigma_.size(),0.);</span>
+<span class="lineNum">    1317 </span>            : 
+<span class="lineNum">    1318 </span><span class="lineCov">         96 :   for(unsigned i=0; i&lt;sigma_.size(); ++i) {</span>
+<span class="lineNum">    1319 </span><span class="lineCov">         48 :     inv_s2[i]   = 1./sigma_mean2_[i];</span>
+<span class="lineNum">    1320 </span><span class="lineCov">         24 :     if(master) {</span>
+<span class="lineNum">    1321 </span><span class="lineCov">         72 :       dev[i]  = (mean[i]-ftilde_[i]);</span>
+<span class="lineNum">    1322 </span><span class="lineCov">         48 :       dev2[i] = dev[i]*dev[i];</span>
+<span class="lineNum">    1323 </span>            :     }
+<span class="lineNum">    1324 </span>            :   }
+<span class="lineNum">    1325 </span><span class="lineCov">         12 :   if(master&amp;&amp;nrep_&gt;1) {</span>
+<span class="lineNum">    1326 </span><span class="lineNoCov">          0 :     multi_sim_comm.Sum(&amp;dev[0],dev.size());</span>
+<span class="lineNum">    1327 </span><span class="lineNoCov">          0 :     multi_sim_comm.Sum(&amp;dev2[0],dev2.size());</span>
+<span class="lineNum">    1328 </span>            :   }
+<span class="lineNum">    1329 </span><span class="lineCov">         24 :   comm.Sum(&amp;dev[0],dev.size());</span>
+<span class="lineNum">    1330 </span><span class="lineCov">         24 :   comm.Sum(&amp;dev2[0],dev2.size());</span>
+<span class="lineNum">    1331 </span>            : 
+<span class="lineNum">    1332 </span>            :   double dene_b = 0.;
+<span class="lineNum">    1333 </span>            :   double ene    = 0.;
+<span class="lineNum">    1334 </span><span class="lineCov">         36 :   #pragma omp parallel num_threads(OpenMP::getNumThreads()) shared(ene,dene_b)</span>
+<span class="lineNum">    1335 </span>            :   {
+<span class="lineNum">    1336 </span><span class="lineCov">         24 :     #pragma omp for reduction( + : ene,dene_b)</span>
+<span class="lineNum">    1337 </span><span class="lineCov">         24 :     for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1338 </span><span class="lineCov">         96 :       const double dene_x  = kbt_*inv_s2[i]*dmean_x[i]*dev[i];</span>
+<span class="lineNum">    1339 </span><span class="lineCov">         48 :       dene_b += kbt_*inv_s2[i]*dmean_b[i]*dev[i];</span>
+<span class="lineNum">    1340 </span><span class="lineCov">         48 :       ene += 0.5*dev2[i]*inv_s2[i];</span>
+<span class="lineNum">    1341 </span><span class="lineCov">         24 :       setOutputForce(i, -dene_x);</span>
+<span class="lineNum">    1342 </span>            :     }
+<span class="lineNum">    1343 </span>            :   }
+<span class="lineNum">    1344 </span>            : 
+<span class="lineNum">    1345 </span><span class="lineCov">         12 :   if(do_reweight_) {</span>
+<span class="lineNum">    1346 </span><span class="lineNoCov">          0 :     setOutputForce(narg, -dene_b);</span>
+<span class="lineNum">    1347 </span><span class="lineNoCov">          0 :     getPntrToComponent(&quot;biasDer&quot;)-&gt;set(dene_b);</span>
+<span class="lineNum">    1348 </span>            :   }
+<span class="lineNum">    1349 </span>            : 
+<span class="lineNum">    1350 </span><span class="lineCov">         24 :   return kbt_*ene;</span>
+<span class="lineNum">    1351 </span>            : }
+<span class="lineNum">    1352 </span>            : 
+<span class="lineNum">    1353 </span><span class="lineCov">        178 : void Metainference::get_weights(const unsigned iselect, double &amp;fact, double &amp;var_fact)</span>
+<span class="lineNum">    1354 </span>            : {
+<span class="lineNum">    1355 </span><span class="lineCov">        178 :   const double dnrep    = static_cast&lt;double&gt;(nrep_);</span>
+<span class="lineNum">    1356 </span><span class="lineCov">        178 :   const double ave_fact = 1.0/dnrep;</span>
+<span class="lineNum">    1357 </span>            : 
+<span class="lineNum">    1358 </span>            :   double norm = 0.0;
+<span class="lineNum">    1359 </span>            : 
+<span class="lineNum">    1360 </span>            :   // calculate the weights either from BIAS
+<span class="lineNum">    1361 </span><span class="lineCov">        178 :   if(do_reweight_) {</span>
+<span class="lineNum">    1362 </span><span class="lineCov">        148 :     vector&lt;double&gt; bias(nrep_,0);</span>
+<span class="lineNum">    1363 </span><span class="lineCov">        148 :     if(master) {</span>
+<span class="lineNum">    1364 </span><span class="lineCov">        148 :       bias[replica_] = getArgument(narg);</span>
+<span class="lineNum">    1365 </span><span class="lineCov">        148 :       if(nrep_&gt;1) multi_sim_comm.Sum(&amp;bias[0], nrep_);</span>
+<span class="lineNum">    1366 </span>            :     }
+<span class="lineNum">    1367 </span><span class="lineCov">        296 :     comm.Sum(&amp;bias[0], nrep_);</span>
+<span class="lineNum">    1368 </span>            : 
+<span class="lineNum">    1369 </span><span class="lineCov">        148 :     const double maxbias = *(std::max_element(bias.begin(), bias.end()));</span>
+<span class="lineNum">    1370 </span><span class="lineCov">        740 :     for(unsigned i=0; i&lt;nrep_; ++i) {</span>
+<span class="lineNum">    1371 </span><span class="lineCov">        592 :       bias[i] = exp((bias[i]-maxbias)/kbt_);</span>
+<span class="lineNum">    1372 </span><span class="lineCov">        296 :       norm   += bias[i];</span>
+<span class="lineNum">    1373 </span>            :     }
+<span class="lineNum">    1374 </span>            : 
+<span class="lineNum">    1375 </span>            :     // accumulate weights
+<span class="lineNum">    1376 </span><span class="lineCov">        148 :     const double decay = 1./static_cast&lt;double&gt; (average_weights_stride_);</span>
+<span class="lineNum">    1377 </span><span class="lineCov">        296 :     if(!firstTimeW[iselect]) {</span>
+<span class="lineNum">    1378 </span><span class="lineCov">        660 :       for(unsigned i=0; i&lt;nrep_; ++i) {</span>
+<span class="lineNum">    1379 </span><span class="lineCov">        792 :         const double delta=bias[i]/norm-average_weights_[iselect][i];</span>
+<span class="lineNum">    1380 </span><span class="lineCov">        264 :         average_weights_[iselect][i]+=decay*delta;</span>
+<span class="lineNum">    1381 </span>            :       }
+<span class="lineNum">    1382 </span>            :     } else {
+<span class="lineNum">    1383 </span>            :       firstTimeW[iselect] = false;
+<span class="lineNum">    1384 </span><span class="lineCov">         80 :       for(unsigned i=0; i&lt;nrep_; ++i) {</span>
+<span class="lineNum">    1385 </span><span class="lineCov">         96 :         average_weights_[iselect][i] = bias[i]/norm;</span>
+<span class="lineNum">    1386 </span>            :       }
+<span class="lineNum">    1387 </span>            :     }
+<span class="lineNum">    1388 </span>            : 
+<span class="lineNum">    1389 </span>            :     // set average back into bias and set norm to one
+<span class="lineNum">    1390 </span><span class="lineCov">        740 :     for(unsigned i=0; i&lt;nrep_; ++i) bias[i] = average_weights_[iselect][i];</span>
+<span class="lineNum">    1391 </span>            :     // set local weight, norm and weight variance
+<span class="lineNum">    1392 </span><span class="lineCov">        296 :     fact = bias[replica_];</span>
+<span class="lineNum">    1393 </span>            :     norm = 1.0;
+<span class="lineNum">    1394 </span><span class="lineCov">        740 :     for(unsigned i=0; i&lt;nrep_; ++i) var_fact += (bias[i]/norm-ave_fact)*(bias[i]/norm-ave_fact);</span>
+<span class="lineNum">    1395 </span><span class="lineCov">        296 :     getPntrToComponent(&quot;weight&quot;)-&gt;set(fact);</span>
+<span class="lineNum">    1396 </span>            :   } else {
+<span class="lineNum">    1397 </span>            :     // or arithmetic ones
+<span class="lineNum">    1398 </span>            :     norm = dnrep;
+<span class="lineNum">    1399 </span><span class="lineCov">         30 :     fact = 1.0/norm;</span>
+<span class="lineNum">    1400 </span>            :   }
+<span class="lineNum">    1401 </span><span class="lineCov">        178 : }</span>
+<span class="lineNum">    1402 </span>            : 
+<span class="lineNum">    1403 </span><span class="lineCov">        178 : void Metainference::get_sigma_mean(const unsigned iselect, const double fact, const double var_fact, const vector&lt;double&gt; &amp;mean)</span>
+<span class="lineNum">    1404 </span>            : {
+<span class="lineNum">    1405 </span><span class="lineCov">        178 :   const double dnrep    = static_cast&lt;double&gt;(nrep_);</span>
+<span class="lineNum">    1406 </span><span class="lineCov">        178 :   const double ave_fact = 1.0/dnrep;</span>
+<span class="lineNum">    1407 </span>            : 
+<span class="lineNum">    1408 </span><span class="lineCov">        356 :   vector&lt;double&gt; sigma_mean2_tmp(sigma_mean2_.size(), 0.);</span>
+<span class="lineNum">    1409 </span>            : 
+<span class="lineNum">    1410 </span><span class="lineCov">        178 :   if(do_optsigmamean_&gt;0) {</span>
+<span class="lineNum">    1411 </span>            :     // remove first entry of the history vector
+<span class="lineNum">    1412 </span><span class="lineNoCov">          0 :     if(sigma_mean2_last_[iselect][0].size()==optsigmamean_stride_&amp;&amp;optsigmamean_stride_&gt;0)</span>
+<span class="lineNum">    1413 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) sigma_mean2_last_[iselect][i].erase(sigma_mean2_last_[iselect][i].begin());</span>
+<span class="lineNum">    1414 </span>            :     /* this is the current estimate of sigma mean for each argument
+<span class="lineNum">    1415 </span>            :        there is one of this per argument in any case  because it is
+<span class="lineNum">    1416 </span>            :        the maximum among these to be used in case of GAUSS/OUTLIER */
+<span class="lineNum">    1417 </span><span class="lineNoCov">          0 :     vector&lt;double&gt; sigma_mean2_now(narg,0);</span>
+<span class="lineNum">    1418 </span><span class="lineNoCov">          0 :     if(do_reweight_) {</span>
+<span class="lineNum">    1419 </span><span class="lineNoCov">          0 :       if(master) {</span>
+<span class="lineNum">    1420 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1421 </span><span class="lineNoCov">          0 :           double tmp1 = (fact*getArgument(i)-ave_fact*mean[i])*(fact*getArgument(i)-ave_fact*mean[i]);</span>
+<span class="lineNum">    1422 </span><span class="lineNoCov">          0 :           double tmp2 = -2.*mean[i]*(fact-ave_fact)*(fact*getArgument(i)-ave_fact*mean[i]);</span>
+<span class="lineNum">    1423 </span><span class="lineNoCov">          0 :           sigma_mean2_now[i] = tmp1 + tmp2;</span>
+<span class="lineNum">    1424 </span>            :         }
+<span class="lineNum">    1425 </span><span class="lineNoCov">          0 :         if(nrep_&gt;1) multi_sim_comm.Sum(&amp;sigma_mean2_now[0], narg);</span>
+<span class="lineNum">    1426 </span>            :       }
+<span class="lineNum">    1427 </span><span class="lineNoCov">          0 :       comm.Sum(&amp;sigma_mean2_now[0], narg);</span>
+<span class="lineNum">    1428 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) sigma_mean2_now[i] = dnrep/(dnrep-1.)*(sigma_mean2_now[i] + mean[i]*mean[i]*var_fact);</span>
+<span class="lineNum">    1429 </span>            :     } else {
+<span class="lineNum">    1430 </span><span class="lineNoCov">          0 :       if(master) {</span>
+<span class="lineNum">    1431 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1432 </span><span class="lineNoCov">          0 :           double tmp  = getArgument(i)-mean[i];</span>
+<span class="lineNum">    1433 </span><span class="lineNoCov">          0 :           sigma_mean2_now[i] = fact*tmp*tmp;</span>
+<span class="lineNum">    1434 </span>            :         }
+<span class="lineNum">    1435 </span><span class="lineNoCov">          0 :         if(nrep_&gt;1) multi_sim_comm.Sum(&amp;sigma_mean2_now[0], narg);</span>
+<span class="lineNum">    1436 </span>            :       }
+<span class="lineNum">    1437 </span><span class="lineNoCov">          0 :       comm.Sum(&amp;sigma_mean2_now[0], narg);</span>
+<span class="lineNum">    1438 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) sigma_mean2_now[i] /= dnrep;</span>
+<span class="lineNum">    1439 </span>            :     }
+<span class="lineNum">    1440 </span>            : 
+<span class="lineNum">    1441 </span>            :     // add sigma_mean2 to history
+<span class="lineNum">    1442 </span><span class="lineNoCov">          0 :     if(optsigmamean_stride_&gt;0) {</span>
+<span class="lineNum">    1443 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) sigma_mean2_last_[iselect][i].push_back(sigma_mean2_now[i]);</span>
+<span class="lineNum">    1444 </span>            :     } else {
+<span class="lineNum">    1445 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) if(sigma_mean2_now[i] &gt; sigma_mean2_last_[iselect][i][0]) sigma_mean2_last_[iselect][i][0] = sigma_mean2_now[i];</span>
+<span class="lineNum">    1446 </span>            :     }
+<span class="lineNum">    1447 </span>            : 
+<span class="lineNum">    1448 </span><span class="lineNoCov">          0 :     if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">    1449 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1450 </span>            :         /* set to the maximum in history vector */
+<span class="lineNum">    1451 </span><span class="lineNoCov">          0 :         sigma_mean2_tmp[i] = *max_element(sigma_mean2_last_[iselect][i].begin(), sigma_mean2_last_[iselect][i].end());</span>
+<span class="lineNum">    1452 </span>            :         /* the standard error of the mean */
+<span class="lineNum">    1453 </span><span class="lineNoCov">          0 :         valueSigmaMean[i]-&gt;set(sqrt(sigma_mean2_tmp[i]));</span>
+<span class="lineNum">    1454 </span><span class="lineNoCov">          0 :         if(noise_type_==GENERIC) {</span>
+<span class="lineNum">    1455 </span><span class="lineNoCov">          0 :           sigma_min_[i] = sqrt(sigma_mean2_tmp[i]);</span>
+<span class="lineNum">    1456 </span><span class="lineNoCov">          0 :           if(sigma_[i] &lt; sigma_min_[i]) sigma_[i] = sigma_min_[i];</span>
+<span class="lineNum">    1457 </span>            :         }
+<span class="lineNum">    1458 </span>            :       }
+<span class="lineNum">    1459 </span><span class="lineNoCov">          0 :     } else if(noise_type_==GAUSS||noise_type_==OUTLIERS) {</span>
+<span class="lineNum">    1460 </span>            :       // find maximum for each data point
+<span class="lineNum">    1461 </span>            :       vector &lt;double&gt; max_values;
+<span class="lineNum">    1462 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;narg; ++i) max_values.push_back(*max_element(sigma_mean2_last_[iselect][i].begin(), sigma_mean2_last_[iselect][i].end()));</span>
+<span class="lineNum">    1463 </span>            :       // find maximum across data points
+<span class="lineNum">    1464 </span><span class="lineNoCov">          0 :       const double max_now = *max_element(max_values.begin(), max_values.end());</span>
+<span class="lineNum">    1465 </span>            :       // set new value
+<span class="lineNum">    1466 </span><span class="lineNoCov">          0 :       sigma_mean2_tmp[0] = max_now;</span>
+<span class="lineNum">    1467 </span><span class="lineNoCov">          0 :       valueSigmaMean[0]-&gt;set(sqrt(sigma_mean2_tmp[0]));</span>
+<span class="lineNum">    1468 </span>            :     }
+<span class="lineNum">    1469 </span>            :     // endif sigma optimization
+<span class="lineNum">    1470 </span>            :   } else {
+<span class="lineNum">    1471 </span><span class="lineCov">        178 :     if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">    1472 </span><span class="lineCov">       5640 :       for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">    1473 </span><span class="lineCov">       5528 :         sigma_mean2_tmp[i] = sigma_mean2_last_[iselect][i][0];</span>
+<span class="lineNum">    1474 </span><span class="lineCov">       5528 :         valueSigmaMean[i]-&gt;set(sqrt(sigma_mean2_tmp[i]));</span>
+<span class="lineNum">    1475 </span>            :       }
+<span class="lineNum">    1476 </span><span class="lineCov">         66 :     } else if(noise_type_==GAUSS||noise_type_==OUTLIERS) {</span>
+<span class="lineNum">    1477 </span><span class="lineCov">        132 :       sigma_mean2_tmp[0] = sigma_mean2_last_[iselect][0][0];</span>
+<span class="lineNum">    1478 </span><span class="lineCov">        132 :       valueSigmaMean[0]-&gt;set(sqrt(sigma_mean2_tmp[0]));</span>
+<span class="lineNum">    1479 </span>            :     }
+<span class="lineNum">    1480 </span>            :   }
+<span class="lineNum">    1481 </span>            : 
+<span class="lineNum">    1482 </span><span class="lineCov">        178 :   sigma_mean2_ = sigma_mean2_tmp;</span>
+<span class="lineNum">    1483 </span><span class="lineCov">        178 : }</span>
+<span class="lineNum">    1484 </span>            : 
+<span class="lineNum">    1485 </span><span class="lineCov">        178 : void Metainference::replica_averaging(const double fact, vector&lt;double&gt; &amp;mean, vector&lt;double&gt; &amp;dmean_b)</span>
+<span class="lineNum">    1486 </span>            : {
+<span class="lineNum">    1487 </span><span class="lineCov">        178 :   if(master) {</span>
+<span class="lineNum">    1488 </span><span class="lineCov">       3216 :     for(unsigned i=0; i&lt;narg; ++i) mean[i] = fact*getArgument(i);</span>
+<span class="lineNum">    1489 </span><span class="lineCov">        178 :     if(nrep_&gt;1) multi_sim_comm.Sum(&amp;mean[0], narg);</span>
+<span class="lineNum">    1490 </span>            :   }
+<span class="lineNum">    1491 </span><span class="lineCov">        356 :   comm.Sum(&amp;mean[0], narg);</span>
+<span class="lineNum">    1492 </span>            :   // set the derivative of the mean with respect to the bias
+<span class="lineNum">    1493 </span><span class="lineCov">       9244 :   for(unsigned i=0; i&lt;narg; ++i) dmean_b[i] = fact/kbt_*(getArgument(i)-mean[i])/static_cast&lt;double&gt;(average_weights_stride_);</span>
+<span class="lineNum">    1494 </span>            : 
+<span class="lineNum">    1495 </span>            :   // this is only for generic metainference
+<span class="lineNum">    1496 </span><span class="lineCov">        178 :   if(firstTime) {ftilde_ = mean; firstTime = false;}</span>
+<span class="lineNum">    1497 </span><span class="lineCov">        178 : }</span>
+<span class="lineNum">    1498 </span>            : 
+<span class="lineNum">    1499 </span><span class="lineCov">        178 : void Metainference::calculate()</span>
+<span class="lineNum">    1500 </span>            : {
+<span class="lineNum">    1501 </span>            :   unsigned iselect = 0;
+<span class="lineNum">    1502 </span>            :   // set the value of selector for  REM-like stuff
+<span class="lineNum">    1503 </span><span class="lineCov">        178 :   if(selector_.length()&gt;0) iselect = static_cast&lt;unsigned&gt;(plumed.passMap[selector_]);</span>
+<span class="lineNum">    1504 </span>            : 
+<span class="lineNum">    1505 </span><span class="lineCov">        178 :   double       fact     = 0.0;</span>
+<span class="lineNum">    1506 </span><span class="lineCov">        178 :   double       var_fact = 0.0;</span>
+<span class="lineNum">    1507 </span>            : 
+<span class="lineNum">    1508 </span><span class="lineCov">        178 :   get_weights(iselect, fact, var_fact);</span>
+<span class="lineNum">    1509 </span>            : 
+<span class="lineNum">    1510 </span>            :   // calculate the mean
+<span class="lineNum">    1511 </span><span class="lineCov">        178 :   vector&lt;double&gt; mean(narg,0);</span>
+<span class="lineNum">    1512 </span>            :   // this is the derivative of the mean with respect to the argument
+<span class="lineNum">    1513 </span><span class="lineCov">        178 :   vector&lt;double&gt; dmean_x(narg,fact);</span>
+<span class="lineNum">    1514 </span>            :   // this is the derivative of the mean with respect to the bias
+<span class="lineNum">    1515 </span><span class="lineCov">        178 :   vector&lt;double&gt; dmean_b(narg,0);</span>
+<span class="lineNum">    1516 </span>            :   // calculate it
+<span class="lineNum">    1517 </span><span class="lineCov">        178 :   replica_averaging(fact, mean, dmean_b);</span>
+<span class="lineNum">    1518 </span>            : 
+<span class="lineNum">    1519 </span><span class="lineCov">        178 :   get_sigma_mean(iselect, fact, var_fact, mean);</span>
+<span class="lineNum">    1520 </span>            : 
+<span class="lineNum">    1521 </span>            : 
+<span class="lineNum">    1522 </span>            :   /* MONTE CARLO */
+<span class="lineNum">    1523 </span><span class="lineCov">        178 :   const long int step = getStep();</span>
+<span class="lineNum">    1524 </span><span class="lineCov">        178 :   if(step%MCstride_==0&amp;&amp;!getExchangeStep()) doMonteCarlo(mean);</span>
+<span class="lineNum">    1525 </span>            : 
+<span class="lineNum">    1526 </span>            :   // calculate bias and forces
+<span class="lineNum">    1527 </span>            :   double ene = 0;
+<span class="lineNum">    1528 </span><span class="lineCov">        178 :   switch(noise_type_) {</span>
+<span class="lineNum">    1529 </span><span class="lineCov">         12 :   case GAUSS:</span>
+<span class="lineNum">    1530 </span><span class="lineCov">         12 :     ene = getEnergyForceGJ(mean, dmean_x, dmean_b);</span>
+<span class="lineNum">    1531 </span>            :     break;
+<span class="lineNum">    1532 </span><span class="lineCov">         52 :   case MGAUSS:</span>
+<span class="lineNum">    1533 </span><span class="lineCov">         52 :     ene = getEnergyForceGJE(mean, dmean_x, dmean_b);</span>
+<span class="lineNum">    1534 </span>            :     break;
+<span class="lineNum">    1535 </span><span class="lineCov">         54 :   case OUTLIERS:</span>
+<span class="lineNum">    1536 </span><span class="lineCov">         54 :     ene = getEnergyForceSP(mean, dmean_x, dmean_b);</span>
+<span class="lineNum">    1537 </span>            :     break;
+<span class="lineNum">    1538 </span><span class="lineCov">         48 :   case MOUTLIERS:</span>
+<span class="lineNum">    1539 </span><span class="lineCov">         48 :     ene = getEnergyForceSPE(mean, dmean_x, dmean_b);</span>
+<span class="lineNum">    1540 </span>            :     break;
+<span class="lineNum">    1541 </span><span class="lineCov">         12 :   case GENERIC:</span>
+<span class="lineNum">    1542 </span><span class="lineCov">         12 :     ene = getEnergyForceMIGEN(mean, dmean_x, dmean_b);</span>
+<span class="lineNum">    1543 </span>            :     break;
+<span class="lineNum">    1544 </span>            :   }
+<span class="lineNum">    1545 </span>            : 
+<span class="lineNum">    1546 </span>            :   // set value of the bias
+<span class="lineNum">    1547 </span>            :   setBias(ene);
+<span class="lineNum">    1548 </span><span class="lineCov">        178 : }</span>
+<span class="lineNum">    1549 </span>            : 
+<span class="lineNum">    1550 </span><span class="lineCov">         19 : void Metainference::writeStatus()</span>
+<span class="lineNum">    1551 </span>            : {
+<span class="lineNum">    1552 </span><span class="lineCov">         19 :   sfile_.rewind();</span>
+<span class="lineNum">    1553 </span><span class="lineCov">         38 :   sfile_.printField(&quot;time&quot;,getTimeStep()*getStep());</span>
+<span class="lineNum">    1554 </span>            :   //nsel
+<span class="lineNum">    1555 </span><span class="lineCov">         95 :   for(unsigned i=0; i&lt;sigma_mean2_last_.size(); i++) {</span>
+<span class="lineNum">    1556 </span>            :     std::string msg_i,msg_j;
+<span class="lineNum">    1557 </span><span class="lineCov">         19 :     Tools::convert(i,msg_i);</span>
+<span class="lineNum">    1558 </span>            :     vector &lt;double&gt; max_values;
+<span class="lineNum">    1559 </span>            :     //narg
+<span class="lineNum">    1560 </span><span class="lineCov">       4849 :     for(unsigned j=0; j&lt;narg; ++j) {</span>
+<span class="lineNum">    1561 </span><span class="lineCov">       2415 :       Tools::convert(j,msg_j);</span>
+<span class="lineNum">    1562 </span><span class="lineCov">       4830 :       std::string msg = msg_i+&quot;_&quot;+msg_j;</span>
+<span class="lineNum">    1563 </span><span class="lineCov">       2415 :       if(noise_type_==MGAUSS||noise_type_==MOUTLIERS||noise_type_==GENERIC) {</span>
+<span class="lineNum">    1564 </span><span class="lineCov">       7170 :         sfile_.printField(&quot;sigma_mean_&quot;+msg,sqrt(*max_element(sigma_mean2_last_[i][j].begin(), sigma_mean2_last_[i][j].end())));</span>
+<span class="lineNum">    1565 </span>            :       } else {
+<span class="lineNum">    1566 </span>            :         // find maximum for each data point
+<span class="lineNum">    1567 </span><span class="lineCov">         50 :         max_values.push_back(*max_element(sigma_mean2_last_[i][j].begin(), sigma_mean2_last_[i][j].end()));</span>
+<span class="lineNum">    1568 </span>            :       }
+<span class="lineNum">    1569 </span>            :     }
+<span class="lineNum">    1570 </span><span class="lineCov">         19 :     if(noise_type_==GAUSS||noise_type_==OUTLIERS) {</span>
+<span class="lineNum">    1571 </span>            :       // find maximum across data points
+<span class="lineNum">    1572 </span><span class="lineCov">          6 :       const double max_now = sqrt(*max_element(max_values.begin(), max_values.end()));</span>
+<span class="lineNum">    1573 </span><span class="lineCov">         12 :       sfile_.printField(&quot;sigma_mean_0_&quot;+msg_i,max_now);</span>
+<span class="lineNum">    1574 </span>            :     }
+<span class="lineNum">    1575 </span>            :   }
+<span class="lineNum">    1576 </span><span class="lineCov">       7226 :   for(unsigned i=0; i&lt;sigma_.size(); ++i) {</span>
+<span class="lineNum">    1577 </span>            :     std::string msg;
+<span class="lineNum">    1578 </span><span class="lineCov">       2396 :     Tools::convert(i,msg);</span>
+<span class="lineNum">    1579 </span><span class="lineCov">       4792 :     sfile_.printField(&quot;sigma_&quot;+msg,sigma_[i]);</span>
+<span class="lineNum">    1580 </span>            :   }
+<span class="lineNum">    1581 </span><span class="lineCov">         19 :   if(noise_type_==GENERIC) {</span>
+<span class="lineNum">    1582 </span><span class="lineCov">          8 :     for(unsigned i=0; i&lt;ftilde_.size(); ++i) {</span>
+<span class="lineNum">    1583 </span>            :       std::string msg;
+<span class="lineNum">    1584 </span><span class="lineCov">          2 :       Tools::convert(i,msg);</span>
+<span class="lineNum">    1585 </span><span class="lineCov">          4 :       sfile_.printField(&quot;ftilde_&quot;+msg,ftilde_[i]);</span>
+<span class="lineNum">    1586 </span>            :     }
+<span class="lineNum">    1587 </span>            :   }
+<span class="lineNum">    1588 </span><span class="lineCov">         38 :   sfile_.printField(&quot;scale0_&quot;,scale_);</span>
+<span class="lineNum">    1589 </span><span class="lineCov">         38 :   sfile_.printField(&quot;offset0_&quot;,offset_);</span>
+<span class="lineNum">    1590 </span><span class="lineCov">         95 :   for(unsigned i=0; i&lt;average_weights_.size(); i++) {</span>
+<span class="lineNum">    1591 </span>            :     std::string msg_i;
+<span class="lineNum">    1592 </span><span class="lineCov">         19 :     Tools::convert(i,msg_i);</span>
+<span class="lineNum">    1593 </span><span class="lineCov">         57 :     sfile_.printField(&quot;weight_&quot;+msg_i,average_weights_[i][replica_]);</span>
+<span class="lineNum">    1594 </span>            :   }
+<span class="lineNum">    1595 </span><span class="lineCov">         19 :   sfile_.printField();</span>
+<span class="lineNum">    1596 </span><span class="lineCov">         19 :   sfile_.flush();</span>
+<a name="1597"><span class="lineNum">    1597 </span><span class="lineCov">         19 : }</span></a>
+<span class="lineNum">    1598 </span>            : 
+<span class="lineNum">    1599 </span><span class="lineCov">        178 : void Metainference::update() {</span>
+<span class="lineNum">    1600 </span>            :   // write status file
+<span class="lineNum">    1601 </span><span class="lineCov">        178 :   if(write_stride_&gt;0&amp;&amp; (getStep()%write_stride_==0 || getCPT()) ) writeStatus();</span>
+<span class="lineNum">    1602 </span><span class="lineCov">        178 : }</span>
+<a name="1603"><span class="lineNum">    1603 </span>            : </a>
+<span class="lineNum">    1604 </span>            : }
+<span class="lineNum">    1605 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">    1606 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

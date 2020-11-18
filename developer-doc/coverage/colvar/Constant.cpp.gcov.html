@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/Constant.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - Constant.cpp<span style="font-size: 80%;"> (source / <a href="Constant.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntryHi">95.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace colvar {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC COLVAR CONSTANT
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Return one or more constant quantities
+<span class="lineNum">      36 </span>            : with or without derivatives.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : Useful in combination with functions that
+<span class="lineNum">      39 </span>            : takes in input constants or parameters.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \par Examples
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The following input instructs plumed to compute the distance
+<span class="lineNum">      44 </span>            : between atoms 1 and 2. If this distance is between 1.0 and 2.0, it is
+<span class="lineNum">      45 </span>            : printed. If it is lower than 1.0 (larger than 2.0), 1.0 (2.0) is printed
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \plumedfile
+<span class="lineNum">      48 </span>            : cn: CONSTANT VALUES=1.0,2.0
+<span class="lineNum">      49 </span>            : dis: DISTANCE ATOMS=1,2
+<span class="lineNum">      50 </span>            : sss: SORT ARG=cn.v_0,dis,cn.v_1
+<span class="lineNum">      51 </span>            : PRINT ARG=sss.2
+<span class="lineNum">      52 </span>            : \endplumedfile
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : In case you want to pass a single value you can use VALUE:
+<span class="lineNum">      55 </span>            : \plumedfile
+<span class="lineNum">      56 </span>            : cn: CONSTANT VALUE=1.0
+<span class="lineNum">      57 </span>            : dis: DISTANCE ATOMS=1
+<span class="lineNum">      58 </span>            : sss: SORT ARG=cn,dis
+<span class="lineNum">      59 </span>            : PRINT ARG=sss.1
+<span class="lineNum">      60 </span>            : \endplumedfile
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : */
+<span class="lineNum">      63 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      64 </span>            : 
+<a name="65"><span class="lineNum">      65 </span>            : using namespace std;</a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">        102 : class Constant : public Colvar {</span>
+<span class="lineNum">      68 </span>            :   vector&lt;double&gt; values;
+<span class="lineNum">      69 </span>            : public:
+<span class="lineNum">      70 </span>            :   explicit Constant(const ActionOptions&amp;);
+<span class="lineNum">      71 </span>            :   virtual void calculate();
+<span class="lineNum">      72 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="73"><span class="lineNum">      73 </span>            : };</a>
+<span class="lineNum">      74 </span>            : 
+<a name="75"><span class="lineNum">      75 </span><span class="lineCov">       6486 : PLUMED_REGISTER_ACTION(Constant,&quot;CONSTANT&quot;)</span></a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">         34 : Constant::Constant(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      78 </span><span class="lineCov">         34 :   PLUMED_COLVAR_INIT(ao)</span>
+<span class="lineNum">      79 </span>            : {
+<span class="lineNum">      80 </span><span class="lineCov">         34 :   bool noderiv=false;</span>
+<span class="lineNum">      81 </span><span class="lineCov">         68 :   parseFlag(&quot;NODERIV&quot;,noderiv);</span>
+<span class="lineNum">      82 </span><span class="lineCov">         68 :   parseVector(&quot;VALUES&quot;,values);</span>
+<span class="lineNum">      83 </span>            :   vector&lt;double&gt; value;
+<span class="lineNum">      84 </span><span class="lineCov">         68 :   parseVector(&quot;VALUE&quot;,value);</span>
+<span class="lineNum">      85 </span><span class="lineCov">         40 :   if(values.size()==0&amp;&amp;value.size()==0) error(&quot;One should use either VALUE or VALUES&quot;);</span>
+<span class="lineNum">      86 </span><span class="lineCov">         62 :   if(values.size()!=0&amp;&amp;value.size()!=0) error(&quot;One should use either VALUE or VALUES&quot;);</span>
+<span class="lineNum">      87 </span><span class="lineCov">         34 :   if(value.size()&gt;1) error(&quot;VALUE cannot take more than one number&quot;);</span>
+<span class="lineNum">      88 </span><span class="lineCov">         34 :   if(values.size()==0) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">          6 :     values.resize(1);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          6 :     values[0]=value[0];</span>
+<span class="lineNum">      91 </span>            :   }
+<span class="lineNum">      92 </span><span class="lineCov">         34 :   checkRead();</span>
+<span class="lineNum">      93 </span><span class="lineCov">         34 :   if(values.size()==1) {</span>
+<span class="lineNum">      94 </span><span class="lineCov">         33 :     if(!noderiv) addValueWithDerivatives();</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     else addValue();</span>
+<span class="lineNum">      96 </span><span class="lineCov">         33 :     setNotPeriodic();</span>
+<span class="lineNum">      97 </span><span class="lineCov">         33 :     setValue(values[0]);</span>
+<span class="lineNum">      98 </span><span class="lineCov">          1 :   } else if(values.size()&gt;1) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">          8 :     for(unsigned i=0; i&lt;values.size(); i++) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">          2 :       std::string num; Tools::convert(i,num);</span>
+<span class="lineNum">     101 </span><span class="lineCov">          4 :       if(!noderiv) addComponentWithDerivatives(&quot;v_&quot;+num);</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :       else addComponent(&quot;v_&quot;+num);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          4 :       componentIsNotPeriodic(&quot;v_&quot;+num);</span>
+<span class="lineNum">     104 </span><span class="lineCov">          4 :       Value* comp=getPntrToComponent(&quot;v_&quot;+num);</span>
+<span class="lineNum">     105 </span><span class="lineCov">          2 :       comp-&gt;set(values[i]);</span>
+<span class="lineNum">     106 </span>            :     }
+<span class="lineNum">     107 </span>            :   }
+<span class="lineNum">     108 </span>            : // fake request to avoid errors:
+<span class="lineNum">     109 </span>            :   std::vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     110 </span><span class="lineCov">         34 :   requestAtoms(atoms);</span>
+<a name="111"><span class="lineNum">     111 </span><span class="lineCov">         34 : }</span></a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">         35 : void Constant::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     114 </span><span class="lineCov">         35 :   Colvar::registerKeywords( keys );</span>
+<span class="lineNum">     115 </span><span class="lineCov">         35 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     116 </span><span class="lineCov">         35 :   useCustomisableComponents(keys);</span>
+<span class="lineNum">     117 </span><span class="lineCov">         70 :   keys.remove(&quot;NUMERICAL_DERIVATIVES&quot;);</span>
+<span class="lineNum">     118 </span><span class="lineCov">        140 :   keys.add(&quot;optional&quot;,&quot;VALUES&quot;,&quot;The values of the constants&quot;);</span>
+<span class="lineNum">     119 </span><span class="lineCov">        140 :   keys.add(&quot;optional&quot;,&quot;VALUE&quot;,&quot;The value of the constant&quot;);</span>
+<span class="lineNum">     120 </span><span class="lineCov">        105 :   keys.addFlag(&quot;NODERIV&quot;,false,&quot;Set to TRUE if you want values without derivatives.&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">        140 :   keys.addOutputComponent(&quot;v&quot;,&quot;default&quot;,&quot;the # value&quot;);</span>
+<span class="lineNum">     122 </span><span class="lineCov">         35 : }</span>
+<a name="123"><span class="lineNum">     123 </span>            : </a>
+<span class="lineNum">     124 </span>            : // calculator
+<span class="lineNum">     125 </span><span class="lineCov">       2455 : void Constant::calculate() {</span>
+<span class="lineNum">     126 </span><span class="lineCov">       2455 :   if(values.size()==1) {</span>
+<span class="lineNum">     127 </span><span class="lineCov">       2450 :     setValue(values[0]);</span>
+<span class="lineNum">     128 </span><span class="lineCov">       2450 :     return;</span>
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span><span class="lineCov">         40 :   for(unsigned i=0; i&lt;values.size(); i++) {</span>
+<span class="lineNum">     131 </span><span class="lineCov">         10 :     Value* comp=getPntrToComponent(i);</span>
+<span class="lineNum">     132 </span><span class="lineCov">         10 :     comp-&gt;set(values[i]);</span>
+<span class="lineNum">     133 </span>            :   }
+<span class="lineNum">     134 </span>            : }
+<a name="135"><span class="lineNum">     135 </span>            : </a>
+<span class="lineNum">     136 </span>            : }
+<span class="lineNum">     137 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

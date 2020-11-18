@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/DRMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - DRMSD.cpp<span style="font-size: 80%;"> (source / <a href="DRMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;reference/DRMSD.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;reference/MetricRegister.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace colvar {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC DCOLVAR DRMSD
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Calculate the distance RMSD with respect to a reference structure.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : To calculate the root-mean-square deviation between the atoms in two configurations
+<span class="lineNum">      40 </span>            : you must first superimpose the two structures in some ways.  Obviously, it is the internal vibrational
+<span class="lineNum">      41 </span>            : motions of the structure - i.e. not the translations and rotations - that are interesting. However,
+<span class="lineNum">      42 </span>            : aligning two structures by removing the translational and rotational motions is not easy.  Furthermore,
+<span class="lineNum">      43 </span>            : in some cases there can be alignment issues caused by so-called frame-fitting problems. It is thus
+<span class="lineNum">      44 </span>            : often cheaper and easier to calculate the distances between all the pairs of atoms.  The distance
+<span class="lineNum">      45 </span>            : between the two structures, \f$\mathbf{X}^a\f$ and \f$\mathbf{X}^b\f$ can then be measured as:
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \f[
+<span class="lineNum">      48 </span>            : d(\mathbf{X}^A, \mathbf{X}^B) = \sqrt{\frac{1}{N(N-1)} \sum_{i \ne j} [ d(\mathbf{x}_i^a,\mathbf{x}_j^a) - d(\mathbf{x}_i^b,\mathbf{x}_j^b) ]^2}
+<span class="lineNum">      49 </span>            : \f]
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : where \f$N\f$ is the number of atoms and \f$d(\mathbf{x}_i,\mathbf{x}_j)\f$ represents the distance between
+<span class="lineNum">      52 </span>            : atoms \f$i\f$ and \f$j\f$.  Clearly, this representation of the configuration is invariant to translation and rotation.
+<span class="lineNum">      53 </span>            : However, it can become expensive to calculate when the number of atoms is large.  This can be resolved
+<span class="lineNum">      54 </span>            : within the DRMSD colvar by setting LOWER_CUTOFF and UPPER_CUTOFF.  These keywords ensure that only
+<span class="lineNum">      55 </span>            : pairs of atoms that are within a certain range are incorporated into the above sum.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : In PDB files the atomic coordinates and box lengths should be in Angstroms unless
+<span class="lineNum">      58 </span>            : you are working with natural units.  If you are working with natural units then the coordinates
+<span class="lineNum">      59 </span>            : should be in your natural length unit.  For more details on the PDB file format visit http://www.wwpdb.org/docs.html
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : \par Examples
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : The following tells plumed to calculate the distance RMSD between
+<span class="lineNum">      64 </span>            : the positions of the atoms in the reference file and their instantaneous
+<span class="lineNum">      65 </span>            : position. Only pairs of atoms whose distance in the reference structure is within
+<span class="lineNum">      66 </span>            : 0.1 and 0.8 nm are considered.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : \plumedfile
+<span class="lineNum">      69 </span>            : DRMSD REFERENCE=file.pdb LOWER_CUTOFF=0.1 UPPER_CUTOFF=0.8
+<span class="lineNum">      70 </span>            : \endplumedfile
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : The following tells plumed to calculate a DRMSD value for a pair of molecules.
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : \plumedfile
+<span class="lineNum">      75 </span>            : DRMSD REFERENCE=file.pdb LOWER_CUTOFF=0.1 UPPER_CUTOFF=0.8 TYPE=INTER-DRMSD
+<span class="lineNum">      76 </span>            : \endplumedfile
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : In the input reference file (file.pdb) the atoms in each of the two molecules are separated by a TER
+<span class="lineNum">      79 </span>            : command as shown below.
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : \verbatim
+<span class="lineNum">      82 </span>            : ATOM      8  HT3 ALA     2      -1.480  -1.560   1.212  1.00  1.00      DIA  H
+<span class="lineNum">      83 </span>            : ATOM      9  CAY ALA     2      -0.096   2.144  -0.669  1.00  1.00      DIA  C
+<span class="lineNum">      84 </span>            : ATOM     10  HY1 ALA     2       0.871   2.385  -0.588  1.00  1.00      DIA  H
+<span class="lineNum">      85 </span>            : TER
+<span class="lineNum">      86 </span>            : ATOM     12  HY3 ALA     2      -0.520   2.679  -1.400  1.00  1.00      DIA  H
+<span class="lineNum">      87 </span>            : ATOM     14  OY  ALA     2      -1.139   0.931  -0.973  1.00  1.00      DIA  O
+<span class="lineNum">      88 </span>            : END
+<span class="lineNum">      89 </span>            : \endverbatim
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : In this example the INTER-DRMSD type ensures that the set of distances from which the final
+<span class="lineNum">      92 </span>            : quantity is computed involve one atom from each of the two molecules.  If this is replaced
+<span class="lineNum">      93 </span>            : by INTRA-DRMSD then only those distances involving pairs of atoms that are both in the same
+<span class="lineNum">      94 </span>            : molecule are computed.
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : */
+<span class="lineNum">      97 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : class DRMSD : public Colvar {
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   bool pbc_;
+<span class="lineNum">     103 </span>            :   MultiValue myvals;
+<span class="lineNum">     104 </span>            :   ReferenceValuePack mypack;
+<span class="lineNum">     105 </span>            :   PLMD::DRMSD* drmsd_;
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : public:
+<span class="lineNum">     108 </span>            :   explicit DRMSD(const ActionOptions&amp;);
+<span class="lineNum">     109 </span>            :   ~DRMSD();
+<span class="lineNum">     110 </span>            :   virtual void calculate();
+<span class="lineNum">     111 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="112"><span class="lineNum">     112 </span>            : };</a>
+<span class="lineNum">     113 </span>            : 
+<a name="114"><span class="lineNum">     114 </span><span class="lineCov">       6464 : PLUMED_REGISTER_ACTION(DRMSD,&quot;DRMSD&quot;)</span></a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         13 : void DRMSD::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">         13 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         52 :   keys.add(&quot;compulsory&quot;,&quot;REFERENCE&quot;,&quot;a file in pdb format containing the reference structure and the atoms involved in the CV.&quot;);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         52 :   keys.add(&quot;compulsory&quot;,&quot;LOWER_CUTOFF&quot;,&quot;only pairs of atoms further than LOWER_CUTOFF are considered in the calculation.&quot;);</span>
+<span class="lineNum">     120 </span><span class="lineCov">         52 :   keys.add(&quot;compulsory&quot;,&quot;UPPER_CUTOFF&quot;,&quot;only pairs of atoms closer than UPPER_CUTOFF are considered in the calculation.&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">         65 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;DRMSD&quot;,&quot;what kind of DRMSD would you like to calculate.  You can use either the normal DRMSD involving all the distances between &quot;</span>
+<span class="lineNum">     122 </span>            :            &quot;the atoms in your molecule.  Alternatively, if you have multiple molecules you can use the type INTER-DRMSD &quot;
+<span class="lineNum">     123 </span>            :            &quot;to compute DRMSD values involving only those distances between the atoms at least two molecules or the type INTRA-DRMSD &quot;
+<span class="lineNum">     124 </span>            :            &quot;to compute DRMSD values involving only those distances between atoms in the same molecule&quot;);
+<a name="125"><span class="lineNum">     125 </span><span class="lineCov">         13 : }</span></a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">         12 : DRMSD::DRMSD(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     128 </span><span class="lineCov">         13 :   PLUMED_COLVAR_INIT(ao), pbc_(true), myvals(1,0), mypack(0,0,myvals)</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span>            :   string reference;
+<span class="lineNum">     131 </span><span class="lineCov">         24 :   parse(&quot;REFERENCE&quot;,reference);</span>
+<span class="lineNum">     132 </span>            :   double lcutoff;
+<span class="lineNum">     133 </span><span class="lineCov">         24 :   parse(&quot;LOWER_CUTOFF&quot;,lcutoff);</span>
+<span class="lineNum">     134 </span>            :   double ucutoff;
+<span class="lineNum">     135 </span><span class="lineCov">         24 :   parse(&quot;UPPER_CUTOFF&quot;,ucutoff);</span>
+<span class="lineNum">     136 </span><span class="lineCov">         12 :   bool nopbc(false);</span>
+<span class="lineNum">     137 </span><span class="lineCov">         24 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     138 </span><span class="lineCov">         12 :   pbc_=!nopbc;</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">         12 :   addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :   // read everything in ang and transform to nm if we are not in natural units
+<span class="lineNum">     143 </span><span class="lineCov">         24 :   PDB pdb;</span>
+<span class="lineNum">     144 </span><span class="lineCov">         24 :   if( !pdb.read(reference,plumed.getAtoms().usingNaturalUnits(),0.1/atoms.getUnits().getLength()) )</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :     error(&quot;missing input file &quot; + reference );</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :   // store target_ distance
+<span class="lineNum">     148 </span><span class="lineCov">         22 :   std::string type; parse(&quot;TYPE&quot;,type);</span>
+<span class="lineNum">     149 </span><span class="lineCov">         11 :   drmsd_= metricRegister().create&lt;PLMD::DRMSD&gt;( type );</span>
+<span class="lineNum">     150 </span><span class="lineCov">         11 :   drmsd_-&gt;setBoundsOnDistances( !nopbc, lcutoff, ucutoff );</span>
+<span class="lineNum">     151 </span><span class="lineCov">         11 :   drmsd_-&gt;set( pdb );</span>
+<span class="lineNum">     152 </span><span class="lineCov">         11 :   checkRead();</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :   std::vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     155 </span><span class="lineCov">         11 :   drmsd_-&gt;getAtomRequests( atoms );</span>
+<span class="lineNum">     156 </span>            : //   drmsd_-&gt;setNumberOfAtoms( atoms.size() );
+<span class="lineNum">     157 </span><span class="lineCov">         11 :   requestAtoms( atoms );</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   // Setup the derivative pack
+<span class="lineNum">     160 </span><span class="lineCov">         22 :   myvals.resize( 1, 3*atoms.size()+9 ); mypack.resize( 0, atoms.size() );</span>
+<span class="lineNum">     161 </span><span class="lineCov">        376 :   for(unsigned i=0; i&lt;atoms.size(); ++i) mypack.setAtomIndex( i, i );</span>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">         22 :   log.printf(&quot;  reference from file %s\n&quot;,reference.c_str());</span>
+<span class="lineNum">     164 </span><span class="lineCov">         22 :   log.printf(&quot;  which contains %d atoms\n&quot;,getNumberOfAtoms());</span>
+<span class="lineNum">     165 </span>            : 
+<a name="166"><span class="lineNum">     166 </span><span class="lineCov">         11 : }</span></a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">         33 : DRMSD::~DRMSD() {</span>
+<span class="lineNum">     169 </span><span class="lineCov">         11 :   delete drmsd_;</span>
+<span class="lineNum">     170 </span><span class="lineCov">         22 : }</span>
+<a name="171"><span class="lineNum">     171 </span>            : </a>
+<span class="lineNum">     172 </span>            : // calculator
+<span class="lineNum">     173 </span><span class="lineCov">        595 : void DRMSD::calculate() {</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">        595 :   double drmsd; Tensor virial; mypack.clear();</span>
+<span class="lineNum">     176 </span><span class="lineCov">       1190 :   drmsd=drmsd_-&gt;calculate(getPositions(), getPbc(), mypack, false);</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">        595 :   setValue(drmsd);</span>
+<span class="lineNum">     179 </span><span class="lineCov">      27185 :   for(unsigned i=0; i&lt;getNumberOfAtoms(); ++i) { if( myvals.isActive(3*i) ) setAtomsDerivatives( i, mypack.getAtomDerivative(i) ); }</span>
+<span class="lineNum">     180 </span><span class="lineCov">       1190 :   setBoxDerivatives( mypack.getBoxDerivatives() );</span>
+<span class="lineNum">     181 </span><span class="lineCov">        595 : }</span>
+<a name="182"><span class="lineNum">     182 </span>            : </a>
+<span class="lineNum">     183 </span>            : }
+<span class="lineNum">     184 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

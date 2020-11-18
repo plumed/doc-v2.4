@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/MatrixSquareBracketsAccess.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - MatrixSquareBracketsAccess.h<span style="font-size: 80%;"> (source / <a href="MatrixSquareBracketsAccess.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_MatrixSquareBracketsAccess_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_MatrixSquareBracketsAccess_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace PLMD {
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : /**
+<span class="lineNum">      28 </span>            : Utility class to add [][] access
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : \tparam T The type of the matrix class.
+<span class="lineNum">      31 </span>            : \tparam C The type of the returned value.
+<span class="lineNum">      32 </span>            : \tparam I The type of the first index (default unsigned).
+<span class="lineNum">      33 </span>            : \tparam J The type of the second index (default unsigned).
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : It implements the trick described in C++ FAQ 13.12 to allow [][] access
+<span class="lineNum">      36 </span>            : to matrix-like classes, based on the (,) syntax, thus translating
+<span class="lineNum">      37 </span>            : [i][j] into (i,j).  In practice, one only needs to implement the (,) syntax and to inherit from
+<span class="lineNum">      38 </span>            : MatrixSquareBracketsAccess.
+<span class="lineNum">      39 </span>            : The first template parameter (T) should be the
+<span class="lineNum">      40 </span>            : class itself, the second (C) is the type of the returned value,
+<span class="lineNum">      41 </span>            : and the third (I) and fourth (J) are the types of the two indexes (unsigned by default).
+<span class="lineNum">      42 </span>            : As everything is inlined, no overhead is expected.
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : \verbatim
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : class MyMatrixClass:
+<span class="lineNum">      47 </span>            :   public MatrixSquareBracketsAccess&lt;MyMatrixClass,double&gt;
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            :   double data[16];
+<span class="lineNum">      50 </span>            : public:
+<span class="lineNum">      51 </span>            :   double &amp; operator ()(unsigned i,unsigned j){
+<span class="lineNum">      52 </span>            :     return data[4*i+j];
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span>            :   const double &amp; operator ()(unsigned i,unsigned j)const{
+<span class="lineNum">      55 </span>            :     return data[4*i+j];
+<span class="lineNum">      56 </span>            :   }
+<span class="lineNum">      57 </span>            : };
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : int main(){
+<span class="lineNum">      60 </span>            :   MyMatrixClass m;
+<span class="lineNum">      61 </span>            :   m[0][1]=3.0;
+<span class="lineNum">      62 </span>            :   return 0;
+<span class="lineNum">      63 </span>            : }
+<span class="lineNum">      64 </span>            : \endverbatim
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : */
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : template&lt;class T,class C,class I=unsigned,class J=unsigned&gt;
+<span class="lineNum">      69 </span>            : class MatrixSquareBracketsAccess {
+<span class="lineNum">      70 </span>            : /// Small utility class which just contains a pointer to the T and the row number
+<span class="lineNum">      71 </span>            :   class Const_row {
+<span class="lineNum">      72 </span>            :     friend class MatrixSquareBracketsAccess; // this so as to allow only T to instantiate Const_row
+<span class="lineNum">      73 </span>            :     // the user should not manipulate it directly
+<span class="lineNum">      74 </span>            :     const MatrixSquareBracketsAccess&amp; t;
+<span class="lineNum">      75 </span>            :     const I i;
+<span class="lineNum">      76 </span>            :     Const_row(const MatrixSquareBracketsAccess&amp;t,I i); // constructor is private and cannot be manipulated by the user
+<span class="lineNum">      77 </span>            :   public:
+<span class="lineNum">      78 </span>            :     /// access element
+<span class="lineNum">      79 </span>            :     const C &amp; operator[] (J j)const;
+<span class="lineNum">      80 </span>            :   };
+<span class="lineNum">      81 </span>            : /// Small utility class which just contains a pointer to the T and the row number
+<span class="lineNum">      82 </span>            :   class Row {
+<span class="lineNum">      83 </span>            :     friend class MatrixSquareBracketsAccess; // this so as to allow only T to instantiate Const_row
+<span class="lineNum">      84 </span>            :     // the user should not manipulate it directly
+<span class="lineNum">      85 </span>            :     MatrixSquareBracketsAccess&amp; t;
+<span class="lineNum">      86 </span>            :     const I i;
+<span class="lineNum">      87 </span>            :     Row(MatrixSquareBracketsAccess&amp;t,I i); // constructor is private and cannot be manipulated by the user
+<span class="lineNum">      88 </span>            :   public:
+<span class="lineNum">      89 </span>            :     /// access element
+<span class="lineNum">      90 </span>            :     C &amp; operator[] (J j);
+<span class="lineNum">      91 </span>            :   };
+<span class="lineNum">      92 </span>            : public:
+<span class="lineNum">      93 </span>            : /// access element (with [][] syntax)
+<span class="lineNum">      94 </span>            :   Row operator[] (I i);
+<span class="lineNum">      95 </span>            : /// access element (with [][] syntax)
+<span class="lineNum">      96 </span>            :   Const_row operator[] (I i)const;
+<span class="lineNum">      97 </span>            : };
+<a name="98"><span class="lineNum">      98 </span>            : </a>
+<span class="lineNum">      99 </span>            : template&lt;class T,class C,class I,class J&gt;
+<span class="lineNum">     100 </span><span class="lineCov">       5400 : MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::Const_row::Const_row(const MatrixSquareBracketsAccess&amp;t,I i):</span>
+<span class="lineNum">     101 </span><span class="lineCov">       5400 :   t(t),i(i) {}</span>
+<a name="102"><span class="lineNum">     102 </span>            : </a>
+<span class="lineNum">     103 </span>            : template&lt;class T,class C,class I,class J&gt;
+<span class="lineNum">     104 </span><span class="lineCov">   39353979 : MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::Row::Row(MatrixSquareBracketsAccess&amp;t,I i):</span>
+<span class="lineNum">     105 </span><span class="lineCov">   39353979 :   t(t),i(i) {}</span>
+<a name="106"><span class="lineNum">     106 </span>            : </a>
+<span class="lineNum">     107 </span>            : template&lt;class T,class C,class I,class J&gt;
+<span class="lineNum">     108 </span><span class="lineCov">       5400 : const C &amp; MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::Const_row::operator[] (J j)const {</span>
+<span class="lineNum">     109 </span><span class="lineCov">       5400 :   return (*static_cast&lt;const T*&gt;(&amp;t))(i,j);</span>
+<span class="lineNum">     110 </span>            : }
+<a name="111"><span class="lineNum">     111 </span>            : </a>
+<span class="lineNum">     112 </span>            : template&lt;class T,class C,class I,class J&gt;
+<span class="lineNum">     113 </span><span class="lineCov">   39353979 : C &amp; MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::Row::operator[] (J j) {</span>
+<span class="lineNum">     114 </span><span class="lineCov">   60137309 :   return (*static_cast&lt;T*&gt;(&amp;t))(i,j);</span>
+<span class="lineNum">     115 </span>            : }
+<a name="116"><span class="lineNum">     116 </span>            : </a>
+<span class="lineNum">     117 </span>            : template&lt;class T,class C,class I,class J&gt;
+<span class="lineNum">     118 </span><span class="lineCov">   39353979 : typename MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::Row MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::operator[] (I i) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">   39353979 :   return Row(*this,i);</span>
+<span class="lineNum">     120 </span>            : }
+<a name="121"><span class="lineNum">     121 </span>            : </a>
+<span class="lineNum">     122 </span>            : template&lt;class T,class C,class I,class J&gt;
+<span class="lineNum">     123 </span><span class="lineCov">       5400 : typename MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::Const_row MatrixSquareBracketsAccess&lt;T,C,I,J&gt;::operator[] (I i)const {</span>
+<span class="lineNum">     124 </span><span class="lineCov">       5400 :   return Const_row(*this,i);</span>
+<span class="lineNum">     125 </span>            : }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : #endif
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

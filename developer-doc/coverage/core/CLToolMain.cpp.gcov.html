@@ -1,0 +1,379 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/CLToolMain.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - CLToolMain.cpp<span style="font-size: 80%;"> (source / <a href="CLToolMain.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">99</td>
+            <td class="headerCovTableEntry">150</td>
+            <td class="headerCovTableEntryLo">66.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CLToolMain.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;config/Config.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;CLTool.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;CLToolRegister.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/DLLoader.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;string&gt;
+<span class="lineNum">      31 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      32 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      33 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      34 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      35 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : using namespace std;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #include &quot;CLToolMainEnum.inc&quot;
+<span class="lineNum">      40 </span>            : 
+<a name="41"><span class="lineNum">      41 </span>            : namespace PLMD {</a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">      10292 : const std::unordered_map&lt;std::string, int&gt; &amp; clToolMainWordMap() {</span>
+<span class="lineNum">      44 </span><span class="lineCov">      11889 :   static std::unordered_map&lt;std::string, int&gt; word_map;</span>
+<span class="lineNum">      45 </span>            :   static bool init=false;
+<span class="lineNum">      46 </span><span class="lineCov">      10292 :   if(!init) {</span>
+<span class="lineNum">      47 </span>            : #include &quot;CLToolMainMap.inc&quot;
+<span class="lineNum">      48 </span>            :   }
+<span class="lineNum">      49 </span><span class="lineCov">      10292 :   init=true;</span>
+<span class="lineNum">      50 </span><span class="lineCov">      10292 :   return word_map;</span>
+<a name="51"><span class="lineNum">      51 </span>            : }</a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">       1597 : CLToolMain::CLToolMain():</span>
+<span class="lineNum">      54 </span>            :   argc(0),
+<span class="lineNum">      55 </span>            :   in(stdin),
+<span class="lineNum">      56 </span>            :   out(stdout),
+<span class="lineNum">      57 </span><span class="lineCov">       3194 :   comm(*new Communicator)</span>
+<span class="lineNum">      58 </span>            : {
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">       1597 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">       4791 : CLToolMain::~CLToolMain() {</span>
+<span class="lineNum">      62 </span><span class="lineCov">       1597 :   delete &amp;comm;</span>
+<span class="lineNum">      63 </span><span class="lineCov">       3194 : }</span>
+<span class="lineNum">      64 </span>            : 
+<a name="65"><span class="lineNum">      65 </span>            : #define CHECK_NULL(val,word) plumed_massert(val,&quot;NULL pointer received in cmd(\&quot;CLTool &quot; + word + &quot;\&quot;)&quot;);</a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">       5146 : void CLToolMain::cmd(const std::string&amp; word,void*val) {</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">      10292 :   std::vector&lt;std::string&gt; words=Tools::getWords(word);</span>
+<span class="lineNum">      70 </span><span class="lineCov">       5146 :   unsigned nw=words.size();</span>
+<span class="lineNum">      71 </span><span class="lineCov">       5146 :   if(nw==0) {</span>
+<span class="lineNum">      72 </span>            :     // do nothing
+<span class="lineNum">      73 </span>            :   } else {
+<span class="lineNum">      74 </span>            :     int iword=-1;
+<span class="lineNum">      75 </span>            :     char**v;
+<span class="lineNum">      76 </span>            :     char*vv;
+<span class="lineNum">      77 </span><span class="lineCov">       5146 :     const auto it=clToolMainWordMap().find(words[0]);</span>
+<span class="lineNum">      78 </span><span class="lineCov">       5146 :     if(it!=clToolMainWordMap().end()) iword=it-&gt;second;</span>
+<span class="lineNum">      79 </span><span class="lineCov">       5146 :     switch(iword) {</span>
+<span class="lineNum">      80 </span><span class="lineCov">       1597 :     case cmd_setArgc:</span>
+<span class="lineNum">      81 </span><span class="lineCov">       1597 :       CHECK_NULL(val,word);</span>
+<span class="lineNum">      82 </span><span class="lineCov">       1597 :       argc=*static_cast&lt;int*&gt;(val);</span>
+<span class="lineNum">      83 </span><span class="lineCov">       1597 :       break;</span>
+<span class="lineNum">      84 </span><span class="lineCov">       1597 :     case cmd_setArgv:</span>
+<span class="lineNum">      85 </span><span class="lineCov">       1597 :       CHECK_NULL(val,word);</span>
+<span class="lineNum">      86 </span>            :       v=static_cast&lt;char**&gt;(val);
+<span class="lineNum">      87 </span><span class="lineCov">      24159 :       for(int i=0; i&lt;argc; ++i) argv.push_back(string(v[i]));</span>
+<span class="lineNum">      88 </span>            :       break;
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :     case cmd_setArgvLine:</span>
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :       CHECK_NULL(val,word);</span>
+<span class="lineNum">      91 </span>            :       vv=static_cast&lt;char*&gt;(val);
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :       argv=Tools::getWords(vv);</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :     case cmd_setIn:</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :       CHECK_NULL(val,word);</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :       in=static_cast&lt;FILE*&gt;(val);</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     case cmd_setOut:</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :       CHECK_NULL(val,word);</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :       out=static_cast&lt;FILE*&gt;(val);</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     102 </span><span class="lineCov">        355 :     case cmd_setMPIComm:</span>
+<span class="lineNum">     103 </span><span class="lineCov">        355 :       comm.Set_comm(val);</span>
+<span class="lineNum">     104 </span>            :       break;
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     case cmd_setMPIFComm:</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :       comm.Set_fcomm(val);</span>
+<span class="lineNum">     107 </span>            :       break;
+<span class="lineNum">     108 </span><span class="lineCov">       1597 :     case cmd_run:</span>
+<span class="lineNum">     109 </span><span class="lineCov">       1597 :       CHECK_NULL(val,word);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       1597 :       argc=argv.size();</span>
+<span class="lineNum">     111 </span>            :       {
+<span class="lineNum">     112 </span><span class="lineCov">      24159 :         int n=0; for(int i=0; i&lt;argc; ++i) n+=argv[i].length()+1;</span>
+<span class="lineNum">     113 </span><span class="lineCov">       1597 :         std::vector&lt;char&gt; args(n);</span>
+<span class="lineNum">     114 </span><span class="lineCov">       1597 :         std::vector&lt;char*&gt; vvv(argc);</span>
+<span class="lineNum">     115 </span>            :         char* ptr=&amp;args[0];
+<span class="lineNum">     116 </span><span class="lineCov">      24159 :         for(int i=0; i&lt;argc; ++i) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">      22562 :           vvv[i]=ptr;</span>
+<span class="lineNum">     118 </span><span class="lineCov">     290798 :           for(unsigned c=0; c&lt;argv[i].length(); ++c) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">      89412 :             *ptr=argv[i][c]; ptr++;</span>
+<span class="lineNum">     120 </span>            :           }
+<span class="lineNum">     121 </span><span class="lineCov">      11281 :           *ptr=0; ptr++;</span>
+<span class="lineNum">     122 </span>            :         }
+<span class="lineNum">     123 </span><span class="lineCov">       3194 :         int ret=run(argc,&amp;vvv[0],in,out,comm);</span>
+<span class="lineNum">     124 </span><span class="lineCov">       1597 :         *static_cast&lt;int*&gt;(val)=ret;</span>
+<span class="lineNum">     125 </span>            :       }
+<span class="lineNum">     126 </span><span class="lineCov">       1597 :       break;</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :     default:</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;cannot interpret cmd(\&quot;CLTool &quot; + word + &quot;\&quot;). check plumed developers manual to see the available commands.&quot;);</span>
+<span class="lineNum">     129 </span>            :       break;
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            :   }
+<span class="lineNum">     132 </span><span class="lineCov">       5146 : }</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : /**
+<span class="lineNum">     135 </span>            : This is the entry point to the command line tools
+<span class="lineNum">     136 </span>            : included in the plumed library.
+<a name="137"><span class="lineNum">     137 </span>            : */</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">       1597 : int CLToolMain::run(int argc, char **argv,FILE*in,FILE*out,Communicator&amp; pc) {</span>
+<span class="lineNum">     140 </span>            :   int i;
+<span class="lineNum">     141 </span>            :   bool printhelp=false;
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">       3194 :   DLLoader dlloader;</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineCov">       1597 :   string root=config::getPlumedRoot();</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :   bool standalone_executable=false;
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : // Start parsing options
+<span class="lineNum">     150 </span><span class="lineCov">       1597 :   string prefix(&quot;&quot;);</span>
+<span class="lineNum">     151 </span><span class="lineCov">       1597 :   string a(&quot;&quot;);</span>
+<span class="lineNum">     152 </span><span class="lineCov">       4081 :   for(i=1; i&lt;argc; i++) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">       5678 :     a=prefix+argv[i];</span>
+<span class="lineNum">     154 </span><span class="lineCov">       2839 :     if(a.length()==0) continue;</span>
+<span class="lineNum">     155 </span><span class="lineCov">       8517 :     if(a==&quot;help&quot; || a==&quot;-h&quot; || a==&quot;--help&quot;) {</span>
+<span class="lineNum">     156 </span>            :       printhelp=true;
+<span class="lineNum">     157 </span>            :       break;
+<span class="lineNum">     158 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-mpi&quot;) {</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :       if(Communicator::initialized()) return 0;</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :       else return 1;</span>
+<span class="lineNum">     161 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-matheval&quot;) {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :       return (config::hasMatheval()?0:1);</span>
+<span class="lineNum">     163 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-cregex&quot;) {</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :       return (config::hasCregex()?0:1);</span>
+<span class="lineNum">     165 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-dlopen&quot;) {</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :       return (config::hasDlopen()?0:1);</span>
+<span class="lineNum">     167 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-molfile&quot;) {</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :       return (config::hasMolfile()?0:1);</span>
+<span class="lineNum">     169 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-external-molfile&quot;) {</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :       return (config::hasExternalMolfile()?0:1);</span>
+<span class="lineNum">     171 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-zlib&quot;) {</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :       return (config::hasZlib()?0:1);</span>
+<span class="lineNum">     173 </span><span class="lineCov">       2839 :     } else if(a==&quot;--has-xdrfile&quot;) {</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :       return (config::hasXdrfile()?0:1);</span>
+<span class="lineNum">     175 </span><span class="lineCov">       2839 :     } else if(a==&quot;--is-installed&quot;) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">         13 :       return (config::isInstalled()?0:1);</span>
+<span class="lineNum">     177 </span><span class="lineCov">       2826 :     } else if(a==&quot;--no-mpi&quot;) {</span>
+<span class="lineNum">     178 </span>            : // this is ignored, as it is parsed in main
+<span class="lineNum">     179 </span><span class="lineCov">       1242 :       if(i&gt;1) {</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :         fprintf(stderr,&quot;--no-mpi option can only be used as the first option&quot;);</span>
+<span class="lineNum">     181 </span>            :         return 1;
+<span class="lineNum">     182 </span>            :       }
+<span class="lineNum">     183 </span><span class="lineCov">       1584 :     } else if(a==&quot;--mpi&quot;) {</span>
+<span class="lineNum">     184 </span>            : // this is ignored, as it is parsed in main
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :       if(i&gt;1) {</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         fprintf(stderr,&quot;--mpi option can only be used as the first option&quot;);</span>
+<span class="lineNum">     187 </span>            :         return 1;
+<span class="lineNum">     188 </span>            :       }
+<span class="lineNum">     189 </span><span class="lineCov">       1584 :     } else if(a==&quot;--standalone-executable&quot;) {</span>
+<span class="lineNum">     190 </span>            :       standalone_executable=true;
+<span class="lineNum">     191 </span><span class="lineCov">       3168 :     } else if(Tools::startWith(a,&quot;--load=&quot;)) {</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :       a.erase(0,a.find(&quot;=&quot;)+1);</span>
+<span class="lineNum">     193 </span>            :       prefix=&quot;&quot;;
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :       void *p=dlloader.load(a);</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :       if(!p) {</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :         fprintf(stderr,&quot;ERROR: cannot load library %s\n&quot;,a.c_str());</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :         fprintf(stderr,&quot;ERROR: %s\n&quot;,dlloader.error().c_str());</span>
+<span class="lineNum">     198 </span>            :         return 1;
+<span class="lineNum">     199 </span>            :       }
+<span class="lineNum">     200 </span><span class="lineCov">       1584 :     } else if(a==&quot;--load&quot;) {</span>
+<span class="lineNum">     201 </span>            :       prefix=&quot;--load=&quot;;
+<span class="lineNum">     202 </span><span class="lineCov">       1584 :     } else if(a[0]=='-') {</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :       string msg=&quot;ERROR: Unknown option &quot; +a;</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;%s\n&quot;,msg.c_str());</span>
+<span class="lineNum">     205 </span>            :       return 1;
+<span class="lineNum">     206 </span>            :     } else break;
+<span class="lineNum">     207 </span>            :   }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            : // Check if plumedRoot/patches/ directory exists (as a further check)
+<span class="lineNum">     210 </span><span class="lineCov">       1584 :   if(!standalone_executable) {</span>
+<span class="lineNum">     211 </span><span class="lineCov">       3168 :     vector&lt;string&gt; files=Tools::ls(root);</span>
+<span class="lineNum">     212 </span><span class="lineCov">       3168 :     if(find(files.begin(),files.end(),&quot;patches&quot;)==files.end()) {</span>
+<span class="lineNum">     213 </span>            :       string msg=
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         &quot;WARNING: I cannot find &quot;+root+&quot;/patches/ directory. Set PLUMED_ROOT or reinstall PLUMED\n\n&quot;;</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;%s&quot;,msg.c_str());</span>
+<span class="lineNum">     216 </span>            :     }
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : // Build list of available C++ tools:
+<span class="lineNum">     220 </span><span class="lineCov">       3168 :   vector&lt;string&gt; availableCxx=cltoolRegister().list();</span>
+<span class="lineNum">     221 </span>            : // Build list of available shell tools:
+<span class="lineNum">     222 </span><span class="lineCov">       1584 :   vector&lt;string&gt; availableShell;</span>
+<span class="lineNum">     223 </span><span class="lineCov">       1584 :   if(!standalone_executable) {</span>
+<span class="lineNum">     224 </span><span class="lineCov">       1584 :     vector&lt;string&gt; tmp;</span>
+<span class="lineNum">     225 </span><span class="lineCov">       4752 :     tmp=Tools::ls(string(root+&quot;/scripts&quot;));</span>
+<span class="lineNum">     226 </span><span class="lineCov">      36432 :     for(unsigned j=0; j&lt;tmp.size(); ++j) {</span>
+<span class="lineNum">     227 </span>            :       size_t ff=tmp[j].find(&quot;.sh&quot;);
+<span class="lineNum">     228 </span><span class="lineCov">      12672 :       if(ff==string::npos) tmp[j].erase();</span>
+<span class="lineNum">     229 </span><span class="lineCov">       9504 :       else                 tmp[j].erase(ff);</span>
+<span class="lineNum">     230 </span>            :     }
+<span class="lineNum">     231 </span><span class="lineCov">      36432 :     for(unsigned j=0; j&lt;tmp.size(); ++j) if(tmp[j].length()&gt;0) availableShell.push_back(tmp[j]);</span>
+<span class="lineNum">     232 </span>            :   }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineCov">       1584 :   if(printhelp) {</span>
+<span class="lineNum">     235 </span>            :     string msg=
+<span class="lineNum">     236 </span>            :       &quot;Usage: plumed [options] [command] [command options]\n&quot;
+<span class="lineNum">     237 </span>            :       &quot;  plumed [command] -h|--help: to print help for a specific command\n&quot;
+<span class="lineNum">     238 </span>            :       &quot;Options:\n&quot;
+<span class="lineNum">     239 </span>            :       &quot;  [help|-h|--help]          : to print this help\n&quot;
+<span class="lineNum">     240 </span>            :       &quot;  [--is-installed]          : fails if plumed is not installed\n&quot;
+<span class="lineNum">     241 </span>            :       &quot;  [--has-mpi]               : fails if plumed is running without MPI\n&quot;
+<span class="lineNum">     242 </span>            :       &quot;  [--has-matheval]          : fails if plumed is compiled without matheval\n&quot;
+<span class="lineNum">     243 </span>            :       &quot;  [--has-dlopen]            : fails if plumed is compiled without dlopen\n&quot;
+<span class="lineNum">     244 </span>            :       &quot;  [--load LIB]              : loads a shared object (typically a plugin library)\n&quot;
+<span class="lineNum">     245 </span>            :       &quot;  [--standalone-executable] : tells plumed not to look for commands implemented as scripts\n&quot;
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :       &quot;Commands:\n&quot;;</span>
+<span class="lineNum">     247 </span>            :     fprintf(out,&quot;%s&quot;,msg.c_str());
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;availableCxx.size(); ++j) {</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :       CLTool *cl=cltoolRegister().create(CLToolOptions(availableCxx[j]));</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :       plumed_assert(cl);</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :       string manual=availableCxx[j]+&quot; : &quot;+cl-&gt;description();</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :       delete cl;</span>
+<span class="lineNum">     253 </span>            :       fprintf(out,&quot;  plumed %s\n&quot;, manual.c_str());
+<span class="lineNum">     254 </span>            :     }
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;availableShell.size(); ++j) {</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :       string cmd=config::getEnvCommand()+&quot; \&quot;&quot;+root+&quot;/scripts/&quot;+availableShell[j]+&quot;.sh\&quot; --description&quot;;</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :       FILE *fp=popen(cmd.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     258 </span>            :       string line,manual;
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :       while(Tools::getline(fp,line))manual+=line;</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :       pclose(fp);</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :       manual= availableShell[j]+&quot; : &quot;+manual;</span>
+<span class="lineNum">     262 </span>            :       fprintf(out,&quot;  plumed %s\n&quot;, manual.c_str());
+<span class="lineNum">     263 </span>            :     }
+<span class="lineNum">     264 </span>            :     return 0;
+<span class="lineNum">     265 </span>            :   }
+<span class="lineNum">     266 </span><span class="lineCov">       1584 :   if(i==argc) {</span>
+<span class="lineNum">     267 </span>            :     fprintf(out,&quot;%s&quot;,&quot;Nothing to do. Use 'plumed help' for help\n&quot;);
+<span class="lineNum">     268 </span>            :     return 0;
+<span class="lineNum">     269 </span>            :   }
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : // this is the command to be executed:
+<span class="lineNum">     272 </span><span class="lineCov">       1584 :   string command(argv[i]);</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span><span class="lineCov">       3168 :   if(find(availableCxx.begin(),availableCxx.end(),command)!=availableCxx.end()) {</span>
+<span class="lineNum">     275 </span><span class="lineCov">       2490 :     CLTool *cl=cltoolRegister().create(CLToolOptions(command));</span>
+<span class="lineNum">     276 </span><span class="lineCov">       1245 :     plumed_assert(cl);</span>
+<span class="lineNum">     277 </span>            :     // Read the command line options (returns false if we are just printing help)
+<span class="lineNum">     278 </span><span class="lineCov">       1245 :     if( !cl-&gt;readInput( argc-i,&amp;argv[i],in,out ) ) { delete cl; return 0; }</span>
+<span class="lineNum">     279 </span><span class="lineCov">       1245 :     int ret=cl-&gt;main(in,out,pc);</span>
+<span class="lineNum">     280 </span><span class="lineCov">       1245 :     delete cl;</span>
+<span class="lineNum">     281 </span><span class="lineCov">       1245 :     return ret;</span>
+<span class="lineNum">     282 </span>            :   }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">        678 :   if(find(availableShell.begin(),availableShell.end(),command)!=availableShell.end()) {</span>
+<span class="lineNum">     285 </span><span class="lineCov">        339 :     plumed_massert(in==stdin,&quot;shell tools can only work on stdin&quot;);</span>
+<span class="lineNum">     286 </span><span class="lineCov">        339 :     plumed_massert(out==stdout,&quot;shell tools can only work on stdin&quot;);</span>
+<span class="lineNum">     287 </span><span class="lineCov">       2034 :     string cmd=config::getEnvCommand()+&quot; \&quot;&quot;+root+&quot;/scripts/&quot;+command+&quot;.sh\&quot;&quot;;</span>
+<span class="lineNum">     288 </span><span class="lineCov">       2229 :     for(int j=i+1; j&lt;argc; j++) cmd+=string(&quot; &quot;)+argv[j];</span>
+<span class="lineNum">     289 </span><span class="lineCov">        339 :     int r=system(cmd.c_str());</span>
+<span class="lineNum">     290 </span>            : // this is necessary since system seems to return numbers which are multiple
+<span class="lineNum">     291 </span>            : // of 256. this would make the interpretation by the shell wrong
+<span class="lineNum">     292 </span>            : // I just return 1 in case of failure and 0 in case of success
+<span class="lineNum">     293 </span><span class="lineCov">        339 :     if(r!=0) return 1;</span>
+<span class="lineNum">     294 </span><span class="lineCov">        267 :     else return 0;</span>
+<span class="lineNum">     295 </span>            :   }
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :   string msg=&quot;ERROR: unknown command &quot; + command + &quot;. Use 'plumed help' for help&quot;;</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :   fprintf(stderr,&quot;%s\n&quot;,msg.c_str());</span>
+<span class="lineNum">     299 </span>            :   return 1;
+<a name="300"><span class="lineNum">     300 </span>            : </a>
+<span class="lineNum">     301 </span>            : }
+<span class="lineNum">     302 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

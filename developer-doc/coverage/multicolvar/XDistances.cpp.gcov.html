@@ -1,0 +1,323 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/XDistances.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - XDistances.cpp<span style="font-size: 80%;"> (source / <a href="XDistances.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryLo">42.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<span class="lineNum">      32 </span>            : namespace multicolvar {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //+PLUMEDOC MCOLVAR XDISTANCES
+<span class="lineNum">      35 </span>            : /*
+<span class="lineNum">      36 </span>            : Calculate the x components of the vectors connecting one or many pairs of atoms.
+<span class="lineNum">      37 </span>            : You can then calculate functions of the distribution of
+<span class="lineNum">      38 </span>            : values such as the minimum, the number less than a certain quantity and so on.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \par Examples
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : The following input tells plumed to calculate the x-component of the vector connecting atom 3 to atom 5 and
+<span class="lineNum">      43 </span>            : the x-component of the vector connecting atom 1 to atom 2.  The minimum of these two quantities is then
+<span class="lineNum">      44 </span>            : printed
+<span class="lineNum">      45 </span>            : \plumedfile
+<span class="lineNum">      46 </span>            : XDISTANCES ATOMS1=3,5 ATOMS2=1,2 MIN={BETA=0.1} LABEL=d1
+<span class="lineNum">      47 </span>            : PRINT ARG=d1.min
+<span class="lineNum">      48 </span>            : \endplumedfile
+<span class="lineNum">      49 </span>            : (See also \ref PRINT).
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The following input tells plumed to calculate the x-component of the vector connecting atom 3 to atom 5 and
+<span class="lineNum">      53 </span>            : the x-component of the vector connecting atom 1 to atom 2.  The number of values that are
+<span class="lineNum">      54 </span>            : less than 0.1nm is then printed to a file.
+<span class="lineNum">      55 </span>            : \plumedfile
+<span class="lineNum">      56 </span>            : XDISTANCES ATOMS1=3,5 ATOMS2=1,2 LABEL=d1 LESS_THAN={RATIONAL R_0=0.1}
+<span class="lineNum">      57 </span>            : PRINT ARG=d1.lt0.1
+<span class="lineNum">      58 </span>            : \endplumedfile
+<span class="lineNum">      59 </span>            : (See also \ref PRINT \ref switchingfunction).
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : The following input tells plumed to calculate the x-components of all the distinct vectors that can be created
+<span class="lineNum">      62 </span>            : between atoms 1, 2 and 3 (i.e. the vectors between atoms 1 and 2, atoms 1 and 3 and atoms 2 and 3).
+<span class="lineNum">      63 </span>            : The average of these quantities is then calculated.
+<span class="lineNum">      64 </span>            : \plumedfile
+<span class="lineNum">      65 </span>            : XDISTANCES GROUP=1-3 AVERAGE LABEL=d1
+<span class="lineNum">      66 </span>            : PRINT ARG=d1.average
+<span class="lineNum">      67 </span>            : \endplumedfile
+<span class="lineNum">      68 </span>            : (See also \ref PRINT)
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : The following input tells plumed to calculate all the vectors connecting the the atoms in GROUPA to the atoms in GROUPB.
+<span class="lineNum">      71 </span>            : In other words the vector between atoms 1 and 2 and the vector between atoms 1 and 3.  The number of values
+<span class="lineNum">      72 </span>            : more than 0.1 is then printed to a file.
+<span class="lineNum">      73 </span>            : \plumedfile
+<span class="lineNum">      74 </span>            : XDISTANCES GROUPA=1 GROUPB=2,3 MORE_THAN={RATIONAL R_0=0.1}
+<span class="lineNum">      75 </span>            : PRINT ARG=d1.gt0.1
+<span class="lineNum">      76 </span>            : \endplumedfile
+<span class="lineNum">      77 </span>            : (See also \ref PRINT \ref switchingfunction)
+<span class="lineNum">      78 </span>            : */
+<span class="lineNum">      79 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : //+PLUMEDOC MCOLVAR YDISTANCES
+<span class="lineNum">      82 </span>            : /*
+<span class="lineNum">      83 </span>            : Calculate the y components of the vectors connecting one or many pairs of atoms.
+<span class="lineNum">      84 </span>            : You can then calculate functions of the distribution of
+<span class="lineNum">      85 </span>            : values such as the minimum, the number less than a certain quantity and so on.
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : \par Examples
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : The following input tells plumed to calculate the y-component of the vector connecting atom 3 to atom 5 and
+<span class="lineNum">      90 </span>            : the y-component of the vector connecting atom 1 to atom 2.  The minimum of these two quantities is then
+<span class="lineNum">      91 </span>            : printed
+<span class="lineNum">      92 </span>            : \plumedfile
+<span class="lineNum">      93 </span>            : YDISTANCES ATOMS1=3,5 ATOMS2=1,2 MIN={BETA=0.1} LABEL=d1
+<span class="lineNum">      94 </span>            : PRINT ARG=d1.min
+<span class="lineNum">      95 </span>            : \endplumedfile
+<span class="lineNum">      96 </span>            : (See also \ref PRINT).
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : The following input tells plumed to calculate the y-component of the vector connecting atom 3 to atom 5 and
+<span class="lineNum">     100 </span>            : the y-component of the vector connecting atom 1 to atom 2.  The number of values that are
+<span class="lineNum">     101 </span>            : less than 0.1nm is then printed to a file.
+<span class="lineNum">     102 </span>            : \plumedfile
+<span class="lineNum">     103 </span>            : YDISTANCES ATOMS1=3,5 ATOMS2=1,2 LABEL=d1 LESS_THAN={RATIONAL R_0=0.1}
+<span class="lineNum">     104 </span>            : PRINT ARG=d1.lt0.1
+<span class="lineNum">     105 </span>            : \endplumedfile
+<span class="lineNum">     106 </span>            : (See also \ref PRINT \ref switchingfunction).
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : The following input tells plumed to calculate the y-components of all the distinct vectors that can be created
+<span class="lineNum">     109 </span>            : between atoms 1, 2 and 3 (i.e. the vectors between atoms 1 and 2, atoms 1 and 3 and atoms 2 and 3).
+<span class="lineNum">     110 </span>            : The average of these quantities is then calculated.
+<span class="lineNum">     111 </span>            : \plumedfile
+<span class="lineNum">     112 </span>            : YDISTANCES GROUP=1-3 AVERAGE LABEL=d1
+<span class="lineNum">     113 </span>            : PRINT ARG=d1.average
+<span class="lineNum">     114 </span>            : \endplumedfile
+<span class="lineNum">     115 </span>            : (See also \ref PRINT)
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : The following input tells plumed to calculate all the vectors connecting the the atoms in GROUPA to the atoms in GROUPB.
+<span class="lineNum">     118 </span>            : In other words the vector between atoms 1 and 2 and the vector between atoms 1 and 3.  The number of values
+<span class="lineNum">     119 </span>            : more than 0.1 is then printed to a file.
+<span class="lineNum">     120 </span>            : \plumedfile
+<span class="lineNum">     121 </span>            : YDISTANCES GROUPA=1 GROUPB=2,3 MORE_THAN={RATIONAL R_0=0.1}
+<span class="lineNum">     122 </span>            : PRINT ARG=d1.gt0.1
+<span class="lineNum">     123 </span>            : \endplumedfile
+<span class="lineNum">     124 </span>            : (See also \ref PRINT \ref switchingfunction)
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : */
+<span class="lineNum">     127 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : //+PLUMEDOC MCOLVAR ZDISTANCES
+<span class="lineNum">     130 </span>            : /*
+<span class="lineNum">     131 </span>            : Calculate the z components of the vectors connecting one or many pairs of atoms.
+<span class="lineNum">     132 </span>            : You can then calculate functions of the distribution of
+<span class="lineNum">     133 </span>            : values such as the minimum, the number less than a certain quantity and so on.
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : \par Examples
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : The following input tells plumed to calculate the z-component of the vector connecting atom 3 to atom 5 and
+<span class="lineNum">     138 </span>            : the z-component of the vector connecting atom 1 to atom 2.  The minimum of these two quantities is then
+<span class="lineNum">     139 </span>            : printed
+<span class="lineNum">     140 </span>            : \plumedfile
+<span class="lineNum">     141 </span>            : ZDISTANCES ATOMS1=3,5 ATOMS2=1,2 MIN={BETA=0.1} LABEL=d1
+<span class="lineNum">     142 </span>            : PRINT ARG=d1.min
+<span class="lineNum">     143 </span>            : \endplumedfile
+<span class="lineNum">     144 </span>            : (See also \ref PRINT).
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : The following input tells plumed to calculate the z-component of the vector connecting atom 3 to atom 5 and
+<span class="lineNum">     148 </span>            : the z-component of the vector connecting atom 1 to atom 2.  The number of values that are
+<span class="lineNum">     149 </span>            : less than 0.1nm is then printed to a file.
+<span class="lineNum">     150 </span>            : \plumedfile
+<span class="lineNum">     151 </span>            : ZDISTANCES ATOMS1=3,5 ATOMS2=1,2 LABEL=d1 LESS_THAN={RATIONAL R_0=0.1}
+<span class="lineNum">     152 </span>            : PRINT ARG=d1.lt0.1
+<span class="lineNum">     153 </span>            : \endplumedfile
+<span class="lineNum">     154 </span>            : (See also \ref PRINT \ref switchingfunction).
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : The following input tells plumed to calculate the z-components of all the distinct vectors that can be created
+<span class="lineNum">     157 </span>            : between atoms 1, 2 and 3 (i.e. the vectors between atoms 1 and 2, atoms 1 and 3 and atoms 2 and 3).
+<span class="lineNum">     158 </span>            : The average of these quantities is then calculated.
+<span class="lineNum">     159 </span>            : \plumedfile
+<span class="lineNum">     160 </span>            : ZDISTANCES GROUP=1-3 AVERAGE LABEL=d1
+<span class="lineNum">     161 </span>            : PRINT ARG=d1.average
+<span class="lineNum">     162 </span>            : \endplumedfile
+<span class="lineNum">     163 </span>            : (See also \ref PRINT)
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : The following input tells plumed to calculate all the vectors connecting the the atoms in GROUPA to the atoms in GROUPB.
+<span class="lineNum">     166 </span>            : In other words the vector between atoms 1 and 2 and the vector between atoms 1 and 3.  The number of values
+<span class="lineNum">     167 </span>            : more than 0.1 is then printed to a file.
+<span class="lineNum">     168 </span>            : \plumedfile
+<span class="lineNum">     169 </span>            : ZDISTANCES GROUPA=1 GROUPB=2,3 MORE_THAN={RATIONAL R_0=0.1}
+<span class="lineNum">     170 </span>            : PRINT ARG=d1.gt0.1
+<span class="lineNum">     171 </span>            : \endplumedfile
+<span class="lineNum">     172 </span>            : (See also \ref PRINT \ref switchingfunction)
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : */
+<span class="lineNum">     175 </span>            : //+ENDPLUMEDOC
+<a name="176"><span class="lineNum">     176 </span>            : </a>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 : class XDistances : public MultiColvarBase {</span>
+<span class="lineNum">     179 </span>            : private:
+<span class="lineNum">     180 </span>            :   unsigned myc;
+<span class="lineNum">     181 </span>            : public:
+<span class="lineNum">     182 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     183 </span>            :   explicit XDistances(const ActionOptions&amp;);
+<span class="lineNum">     184 </span>            : // active methods:
+<a name="185"><span class="lineNum">     185 </span>            :   virtual double compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const ;</a>
+<span class="lineNum">     186 </span>            : /// Returns the number of coordinates of the field
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<a name="188"><span class="lineNum">     188 </span>            : };</a>
+<a name="189"><span class="lineNum">     189 </span>            : </a>
+<a name="190"><span class="lineNum">     190 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(XDistances,&quot;XDISTANCES&quot;)</span></a>
+<span class="lineNum">     191 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(XDistances,&quot;YDISTANCES&quot;)</span>
+<a name="192"><span class="lineNum">     192 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(XDistances,&quot;ZDISTANCES&quot;)</span></a>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">          3 : void XDistances::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     195 </span><span class="lineCov">          3 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">     196 </span><span class="lineCov">          9 :   keys.use(&quot;MAX&quot;); keys.use(&quot;ALT_MIN&quot;);</span>
+<span class="lineNum">     197 </span><span class="lineCov">         12 :   keys.use(&quot;MEAN&quot;); keys.use(&quot;MIN&quot;); keys.use(&quot;LESS_THAN&quot;);</span>
+<span class="lineNum">     198 </span><span class="lineCov">          9 :   keys.use(&quot;LOWEST&quot;); keys.use(&quot;HIGHEST&quot;);</span>
+<span class="lineNum">     199 </span><span class="lineCov">         15 :   keys.use(&quot;MORE_THAN&quot;); keys.use(&quot;BETWEEN&quot;); keys.use(&quot;HISTOGRAM&quot;); keys.use(&quot;MOMENTS&quot;);</span>
+<span class="lineNum">     200 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;,&quot;ATOMS&quot;,&quot;the atoms involved in each of the distances you wish to calculate. &quot;</span>
+<span class="lineNum">     201 </span>            :            &quot;Keywords like ATOMS1, ATOMS2, ATOMS3,... should be listed and one distance will be &quot;
+<span class="lineNum">     202 </span>            :            &quot;calculated for each ATOM keyword you specify (all ATOM keywords should &quot;
+<span class="lineNum">     203 </span>            :            &quot;specify the indices of two atoms).  The eventual number of quantities calculated by this &quot;
+<span class="lineNum">     204 </span>            :            &quot;action will depend on what functions of the distribution you choose to calculate.&quot;);
+<span class="lineNum">     205 </span><span class="lineCov">          9 :   keys.reset_style(&quot;ATOMS&quot;,&quot;atoms&quot;);</span>
+<span class="lineNum">     206 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-1&quot;,&quot;GROUP&quot;,&quot;Calculate the distance between each distinct pair of atoms in the group&quot;);</span>
+<span class="lineNum">     207 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-2&quot;,&quot;GROUPA&quot;,&quot;Calculate the distances between all the atoms in GROUPA and all &quot;</span>
+<span class="lineNum">     208 </span>            :            &quot;the atoms in GROUPB. This must be used in conjuction with GROUPB.&quot;);
+<span class="lineNum">     209 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-2&quot;,&quot;GROUPB&quot;,&quot;Calculate the distances between all the atoms in GROUPA and all the atoms &quot;</span>
+<span class="lineNum">     210 </span>            :            &quot;in GROUPB. This must be used in conjuction with GROUPA.&quot;);
+<a name="211"><span class="lineNum">     211 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 : XDistances::XDistances(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     214 </span>            :   Action(ao),
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :   MultiColvarBase(ao)</span>
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :   if( getName().find(&quot;X&quot;)!=std::string::npos) myc=0;</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :   else if( getName().find(&quot;Y&quot;)!=std::string::npos) myc=1;</span>
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :   else if( getName().find(&quot;Z&quot;)!=std::string::npos) myc=2;</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :   else plumed_error();</span>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :   // Read in the atoms
+<span class="lineNum">     223 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :   readTwoGroups( &quot;GROUP&quot;, &quot;GROUPA&quot;, &quot;GROUPB&quot;, all_atoms );</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :   if( atom_lab.size()==0 ) readAtomsLikeKeyword( &quot;ATOMS&quot;, 2, all_atoms );</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :   setupMultiColvarBase( all_atoms );</span>
+<span class="lineNum">     227 </span>            :   // And check everything has been read in correctly
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :   checkRead();</span>
+<a name="229"><span class="lineNum">     229 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 : double XDistances::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :   Vector distance;</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :   distance=getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) );</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :   const double value=distance[myc];</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :   Vector myvec; myvec.zero();</span>
+<span class="lineNum">     237 </span>            :   // And finish the calculation
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :   myvec[myc]=+1; addAtomDerivatives( 1, 1, myvec, myatoms );</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :   myvec[myc]=-1; addAtomDerivatives( 1, 0, myvec, myatoms );</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :   myatoms.addBoxDerivatives( 1, Tensor(distance,myvec) );</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :   return value;</span>
+<span class="lineNum">     242 </span>            : }
+<a name="243"><span class="lineNum">     243 </span>            : </a>
+<span class="lineNum">     244 </span>            : }
+<span class="lineNum">     245 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     246 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

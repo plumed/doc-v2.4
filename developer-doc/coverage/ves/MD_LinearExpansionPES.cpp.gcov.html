@@ -1,0 +1,737 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/MD_LinearExpansionPES.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - MD_LinearExpansionPES.cpp<span style="font-size: 80%;"> (source / <a href="MD_LinearExpansionPES.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">310</td>
+            <td class="headerCovTableEntry">327</td>
+            <td class="headerCovTableEntryHi">94.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryMed">84.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;LinearBasisSetExpansion.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;CoeffsVector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;GridIntegrationWeights.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &quot;cltools/CLTool.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;cltools/CLToolRegister.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;tools/FileBase.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      37 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #include &lt;string&gt;
+<span class="lineNum">      40 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      41 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      42 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      43 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : #ifdef __PLUMED_HAS_MPI
+<span class="lineNum">      46 </span>            : #include &lt;mpi.h&gt;
+<span class="lineNum">      47 </span>            : #endif
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : namespace PLMD {
+<span class="lineNum">      51 </span>            : namespace ves {
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : //+PLUMEDOC VES_TOOLS ves_md_linearexpansion
+<span class="lineNum">      54 </span>            : /*
+<span class="lineNum">      55 </span>            : Simple MD code for dynamics on a potential energy surface given by a linear basis set expansion.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : This is simple MD code that allows running dynamics of a single particle on a
+<span class="lineNum">      58 </span>            : potential energy surface given by some linear basis set expansion in one to three
+<span class="lineNum">      59 </span>            : dimensions.
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : It is possible to run more than one replica of the system in parallel.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : \par Examples
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : In the following example we perform dynamics on the
+<span class="lineNum">      66 </span>            : Wolfe-Quapp potential that is defined as
+<span class="lineNum">      67 </span>            : \f[
+<span class="lineNum">      68 </span>            : U(x,y) = x^4 + y^4 - 2 x^2 - 4 y^2 + xy + 0.3 x + 0.1 y
+<span class="lineNum">      69 </span>            : \f]
+<span class="lineNum">      70 </span>            : To define the potential we employ polynomial power basis
+<span class="lineNum">      71 </span>            : functions (\ref BF_POWERS). The input file is given as
+<span class="lineNum">      72 </span>            : \verbatim
+<span class="lineNum">      73 </span>            : nstep             10000
+<span class="lineNum">      74 </span>            : tstep             0.005
+<span class="lineNum">      75 </span>            : temperature       1.0
+<span class="lineNum">      76 </span>            : friction          10.0
+<span class="lineNum">      77 </span>            : random_seed       4525
+<span class="lineNum">      78 </span>            : plumed_input      plumed.dat
+<span class="lineNum">      79 </span>            : dimension         2
+<span class="lineNum">      80 </span>            : replicas          1
+<span class="lineNum">      81 </span>            : basis_functions_1 BF_POWERS ORDER=4 MINIMUM=-3.0 MAXIMUM=+3.0
+<span class="lineNum">      82 </span>            : basis_functions_2 BF_POWERS ORDER=4 MINIMUM=-3.0 MAXIMUM=+3.0
+<span class="lineNum">      83 </span>            : input_coeffs       pot_coeffs_input.data
+<span class="lineNum">      84 </span>            : initial_position   -1.174,+1.477
+<span class="lineNum">      85 </span>            : output_potential        potential.data
+<span class="lineNum">      86 </span>            : output_potential_grid   150
+<span class="lineNum">      87 </span>            : output_histogram        histogram.data
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : # Wolfe-Quapp potential given by the equation
+<span class="lineNum">      90 </span>            : # U(x,y) = x**4 + y**4 - 2.0*x**2 - 4.0*y**2 + x*y + 0.3*x + 0.1*y
+<span class="lineNum">      91 </span>            : # Minima around (-1.174,1.477); (-0.831,-1.366); (1.124,-1.486)
+<span class="lineNum">      92 </span>            : # Maxima around (0.100,0.050)
+<span class="lineNum">      93 </span>            : # Saddle points around (-1.013,-0.036); (0.093,0.174); (-0.208,-1.407)
+<span class="lineNum">      94 </span>            : \endverbatim
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : This input is then run by using the following command.
+<span class="lineNum">      97 </span>            : \verbatim
+<span class="lineNum">      98 </span>            : plumed ves_md_linearexpansion input
+<span class="lineNum">      99 </span>            : \endverbatim
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : The corresponding pot_coeffs_input.data file is
+<span class="lineNum">     102 </span>            : \verbatim
+<span class="lineNum">     103 </span>            : #! FIELDS idx_dim1 idx_dim2 pot.coeffs index description
+<span class="lineNum">     104 </span>            : #! SET type LinearBasisSet
+<span class="lineNum">     105 </span>            : #! SET ndimensions  2
+<span class="lineNum">     106 </span>            : #! SET ncoeffs_total  25
+<span class="lineNum">     107 </span>            : #! SET shape_dim1  5
+<span class="lineNum">     108 </span>            : #! SET shape_dim2  5
+<span class="lineNum">     109 </span>            :        0       0         0.0000000000000000e+00       0  1*1
+<span class="lineNum">     110 </span>            :        1       0         0.3000000000000000e+00       1  s^1*1
+<span class="lineNum">     111 </span>            :        2       0        -2.0000000000000000e+00       2  s^2*1
+<span class="lineNum">     112 </span>            :        4       0         1.0000000000000000e+00       4  s^4*1
+<span class="lineNum">     113 </span>            :        0       1         0.1000000000000000e+00       5  1*s^1
+<span class="lineNum">     114 </span>            :        1       1        +1.0000000000000000e+00       6  s^1*s^1
+<span class="lineNum">     115 </span>            :        0       2        -4.0000000000000000e+00      10  1*s^2
+<span class="lineNum">     116 </span>            :        0       4         1.0000000000000000e+00      20  1*s^4
+<span class="lineNum">     117 </span>            : #!-------------------
+<span class="lineNum">     118 </span>            : \endverbatim
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : One then uses the (x,y) postion of the particle as CVs by using the \ref POSITION
+<span class="lineNum">     121 </span>            : action as shown in the following PLUMED input
+<span class="lineNum">     122 </span>            : \plumedfile
+<span class="lineNum">     123 </span>            : p: POSITION ATOM=1
+<span class="lineNum">     124 </span>            : ene: ENERGY
+<span class="lineNum">     125 </span>            : PRINT ARG=p.x,p.y,ene FILE=colvar.data FMT=%8.4f
+<span class="lineNum">     126 </span>            : \endplumedfile
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : */
+<a name="131"><span class="lineNum">     131 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     132 </span>            : 
+<a name="133"><span class="lineNum">     133 </span><span class="lineCov">         37 : class MD_LinearExpansionPES : public PLMD::CLTool {</span></a>
+<span class="lineNum">     134 </span>            : public:
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :   std::string description() const {return &quot;MD of a one particle on a linear expansion PES&quot;;}</span>
+<span class="lineNum">     136 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     137 </span>            :   explicit MD_LinearExpansionPES( const CLToolOptions&amp; co );
+<span class="lineNum">     138 </span>            :   int main( FILE* in, FILE* out, PLMD::Communicator&amp; pc);
+<span class="lineNum">     139 </span>            : private:
+<span class="lineNum">     140 </span>            :   unsigned int dim;
+<span class="lineNum">     141 </span>            :   LinearBasisSetExpansion* potential_expansion_pntr;
+<span class="lineNum">     142 </span>            :   //
+<span class="lineNum">     143 </span>            :   double calc_energy( const std::vector&lt;Vector&gt;&amp;, std::vector&lt;Vector&gt;&amp; );
+<span class="lineNum">     144 </span>            :   double calc_temp( const std::vector&lt;Vector&gt;&amp; );
+<a name="145"><span class="lineNum">     145 </span>            : };</a>
+<span class="lineNum">     146 </span>            : 
+<a name="147"><span class="lineNum">     147 </span><span class="lineCov">       6489 : PLUMED_REGISTER_CLTOOL(MD_LinearExpansionPES,&quot;ves_md_linearexpansion&quot;)</span></a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">       1613 : void MD_LinearExpansionPES::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">       1613 :   CLTool::registerKeywords( keys );</span>
+<span class="lineNum">     151 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;nstep&quot;,&quot;10&quot;,&quot;The number of steps of dynamics you want to run.&quot;);</span>
+<span class="lineNum">     152 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;tstep&quot;,&quot;0.005&quot;,&quot;The integration timestep.&quot;);</span>
+<span class="lineNum">     153 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;temperature&quot;,&quot;1.0&quot;,&quot;The temperature to perform the simulation at. For multiple replica you can give a seperate value for each replica.&quot;);</span>
+<span class="lineNum">     154 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;friction&quot;,&quot;10.&quot;,&quot;The friction of the Langevin thermostat. For multiple replica you can give a seperate value for each replica.&quot;);</span>
+<span class="lineNum">     155 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;random_seed&quot;,&quot;5293818&quot;,&quot;Value of random number seed.&quot;);</span>
+<span class="lineNum">     156 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;plumed_input&quot;,&quot;plumed.dat&quot;,&quot;The name of the plumed input file(s). For multiple replica you can give a seperate value for each replica.&quot;);</span>
+<span class="lineNum">     157 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;dimension&quot;,&quot;1&quot;,&quot;Number of dimensions, supports 1 to 3.&quot;);</span>
+<span class="lineNum">     158 </span><span class="lineCov">       6452 :   keys.add(&quot;compulsory&quot;,&quot;initial_position&quot;,&quot;Initial position of the particle. For multiple replica you can give a seperate value for each replica.&quot;);</span>
+<span class="lineNum">     159 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;replicas&quot;,&quot;1&quot;,&quot;Number of replicas.&quot;);</span>
+<span class="lineNum">     160 </span><span class="lineCov">       6452 :   keys.add(&quot;compulsory&quot;,&quot;basis_functions_1&quot;,&quot;Basis functions for dimension 1.&quot;);</span>
+<span class="lineNum">     161 </span><span class="lineCov">       6452 :   keys.add(&quot;optional&quot;,&quot;basis_functions_2&quot;,&quot;Basis functions for dimension 2 if needed.&quot;);</span>
+<span class="lineNum">     162 </span><span class="lineCov">       6452 :   keys.add(&quot;optional&quot;,&quot;basis_functions_3&quot;,&quot;Basis functions for dimension 3 if needed.&quot;);</span>
+<span class="lineNum">     163 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;input_coeffs&quot;,&quot;potential-coeffs.in.data&quot;,&quot;Filename of the input coefficent file for the potential. For multiple replica you can give a seperate value for each replica.&quot;);</span>
+<span class="lineNum">     164 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;output_coeffs&quot;,&quot;potential-coeffs.out.data&quot;,&quot;Filename of the output coefficent file for the potential.&quot;);</span>
+<span class="lineNum">     165 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;output_coeffs_fmt&quot;,&quot;%30.16e&quot;,&quot;Format of the output coefficent file for the potential. Useful for regtests.&quot;);</span>
+<span class="lineNum">     166 </span><span class="lineCov">       6452 :   keys.add(&quot;optional&quot;,&quot;coeffs_prefactor&quot;,&quot;prefactor for multiplying the coefficents with. For multiple replica you can give a seperate value for each replica.&quot;);</span>
+<span class="lineNum">     167 </span><span class="lineCov">       6452 :   keys.add(&quot;optional&quot;,&quot;template_coeffs_file&quot;,&quot;only generate a template coefficent file with the filename given and exit.&quot;);</span>
+<span class="lineNum">     168 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;output_potential_grid&quot;,&quot;100&quot;,&quot;The number of grid points used for the potential and histogram output files.&quot;);</span>
+<span class="lineNum">     169 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;output_potential&quot;,&quot;potential.data&quot;,&quot;Filename of the potential output file.&quot;);</span>
+<span class="lineNum">     170 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;output_histogram&quot;,&quot;histogram.data&quot;,&quot;Filename of the histogram output file.&quot;);</span>
+<span class="lineNum">     171 </span><span class="lineCov">       1613 : }</span>
+<a name="172"><span class="lineNum">     172 </span>            : </a>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">         37 : MD_LinearExpansionPES::MD_LinearExpansionPES( const CLToolOptions&amp; co ):</span>
+<span class="lineNum">     175 </span>            :   CLTool(co),
+<span class="lineNum">     176 </span>            :   dim(0),
+<span class="lineNum">     177 </span><span class="lineCov">         37 :   potential_expansion_pntr(NULL)</span>
+<span class="lineNum">     178 </span>            : {
+<span class="lineNum">     179 </span><span class="lineCov">         37 :   inputdata=ifile; //commandline;</span>
+<span class="lineNum">     180 </span><span class="lineCov">         37 : }</span>
+<a name="181"><span class="lineNum">     181 </span>            : </a>
+<span class="lineNum">     182 </span>            : inline
+<span class="lineNum">     183 </span><span class="lineCov">       3737 : double MD_LinearExpansionPES::calc_energy( const std::vector&lt;Vector&gt;&amp; pos, std::vector&lt;Vector&gt;&amp; forces) {</span>
+<span class="lineNum">     184 </span><span class="lineCov">       3737 :   std::vector&lt;double&gt; pos_tmp(dim);</span>
+<span class="lineNum">     185 </span><span class="lineCov">       3737 :   std::vector&lt;double&gt; forces_tmp(dim,0.0);</span>
+<span class="lineNum">     186 </span><span class="lineCov">      12423 :   for(unsigned int j=0; j&lt;dim; ++j) {</span>
+<span class="lineNum">     187 </span><span class="lineCov">       8686 :     pos_tmp[j]=pos[0][j];</span>
+<span class="lineNum">     188 </span>            :   }
+<span class="lineNum">     189 </span><span class="lineCov">       3737 :   bool all_inside = true;</span>
+<span class="lineNum">     190 </span><span class="lineCov">       3737 :   double potential = potential_expansion_pntr-&gt;getBiasAndForces(pos_tmp,all_inside,forces_tmp);</span>
+<span class="lineNum">     191 </span><span class="lineCov">      12423 :   for(unsigned int j=0; j&lt;dim; ++j) {</span>
+<span class="lineNum">     192 </span><span class="lineCov">       8686 :     forces[0][j] = forces_tmp[j];</span>
+<span class="lineNum">     193 </span>            :   }
+<span class="lineNum">     194 </span><span class="lineCov">       3737 :   return potential;</span>
+<span class="lineNum">     195 </span>            : }
+<span class="lineNum">     196 </span>            : 
+<a name="197"><span class="lineNum">     197 </span>            : </a>
+<span class="lineNum">     198 </span>            : inline
+<span class="lineNum">     199 </span><span class="lineCov">       3737 : double MD_LinearExpansionPES::calc_temp( const std::vector&lt;Vector&gt;&amp; vel) {</span>
+<span class="lineNum">     200 </span>            :   double total_KE=0.0;
+<span class="lineNum">     201 </span>            :   //! Double the total kinetic energy of the system
+<span class="lineNum">     202 </span><span class="lineCov">      12423 :   for(unsigned int j=0; j&lt;dim; ++j) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">       4343 :     total_KE+=vel[0][j]*vel[0][j];</span>
+<span class="lineNum">     204 </span>            :   }
+<span class="lineNum">     205 </span><span class="lineCov">       3737 :   return total_KE / (double) dim; // total_KE is actually 2*KE</span>
+<a name="206"><span class="lineNum">     206 </span>            : }</a>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">         37 : int MD_LinearExpansionPES::main( FILE* in, FILE* out, PLMD::Communicator&amp; pc) {</span>
+<span class="lineNum">     209 </span>            :   int plumedWantsToStop;
+<span class="lineNum">     210 </span><span class="lineCov">         37 :   Random random;</span>
+<span class="lineNum">     211 </span>            :   unsigned int stepWrite=1000;
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :   PLMD::PlumedMain* plumed=NULL;
+<span class="lineNum">     214 </span>            :   PLMD::PlumedMain* plumed_bf=NULL;
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :   unsigned int replicas;
+<span class="lineNum">     217 </span>            :   unsigned int coresPerReplica;
+<span class="lineNum">     218 </span><span class="lineCov">         74 :   parse(&quot;replicas&quot;,replicas);</span>
+<span class="lineNum">     219 </span><span class="lineCov">         37 :   if(replicas==1) {</span>
+<span class="lineNum">     220 </span><span class="lineCov">          6 :     coresPerReplica = pc.Get_size();</span>
+<span class="lineNum">     221 </span>            :   } else {
+<span class="lineNum">     222 </span><span class="lineCov">         31 :     if(pc.Get_size()%replicas!=0) {</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :       error(&quot;the number of MPI processes is not a multiple of the number of replicas.&quot;);</span>
+<span class="lineNum">     224 </span>            :     }
+<span class="lineNum">     225 </span><span class="lineCov">         31 :     coresPerReplica = pc.Get_size()/replicas;</span>
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span>            :   // create intra and inter communicators
+<span class="lineNum">     228 </span><span class="lineCov">         74 :   Communicator intra, inter;</span>
+<span class="lineNum">     229 </span><span class="lineCov">         37 :   if(Communicator::initialized()) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">         33 :     int iworld=(pc.Get_rank() / coresPerReplica);</span>
+<span class="lineNum">     231 </span><span class="lineCov">         33 :     pc.Split(iworld,0,intra);</span>
+<span class="lineNum">     232 </span><span class="lineCov">         33 :     pc.Split(intra.Get_rank(),0,inter);</span>
+<span class="lineNum">     233 </span>            :   }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :   unsigned int nsteps;
+<span class="lineNum">     236 </span><span class="lineCov">         74 :   parse(&quot;nstep&quot;,nsteps);</span>
+<span class="lineNum">     237 </span>            :   double tstep;
+<span class="lineNum">     238 </span><span class="lineCov">         74 :   parse(&quot;tstep&quot;,tstep);</span>
+<span class="lineNum">     239 </span>            :   // initialize to solve a cppcheck 1.86 warning
+<span class="lineNum">     240 </span><span class="lineCov">         37 :   double temp=0.0;</span>
+<span class="lineNum">     241 </span><span class="lineCov">         37 :   std::vector&lt;double&gt; temps_vec(0);</span>
+<span class="lineNum">     242 </span><span class="lineCov">         74 :   parseVector(&quot;temperature&quot;,temps_vec);</span>
+<span class="lineNum">     243 </span><span class="lineCov">         37 :   if(temps_vec.size()==1) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">         33 :     temp = temps_vec[0];</span>
+<span class="lineNum">     245 </span>            :   }
+<span class="lineNum">     246 </span><span class="lineCov">          4 :   else if(replicas &gt; 1 &amp;&amp; temps_vec.size()==replicas) {</span>
+<span class="lineNum">     247 </span><span class="lineCov">         12 :     temp = temps_vec[inter.Get_rank()];</span>
+<span class="lineNum">     248 </span>            :   }
+<span class="lineNum">     249 </span>            :   else {
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :     error(&quot;problem with temperature keyword, you need to give either one value or a value for each replica.&quot;);</span>
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span>            :   //
+<span class="lineNum">     253 </span>            :   double friction;
+<span class="lineNum">     254 </span><span class="lineCov">         37 :   std::vector&lt;double&gt; frictions_vec(0);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         74 :   parseVector(&quot;friction&quot;,frictions_vec);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         37 :   if(frictions_vec.size()==1) {</span>
+<span class="lineNum">     257 </span><span class="lineCov">         33 :     friction = frictions_vec[0];</span>
+<span class="lineNum">     258 </span>            :   }
+<span class="lineNum">     259 </span><span class="lineCov">          4 :   else if(frictions_vec.size()==replicas) {</span>
+<span class="lineNum">     260 </span><span class="lineCov">          8 :     friction = frictions_vec[inter.Get_rank()];</span>
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span>            :   else {
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :     error(&quot;problem with friction keyword, you need to give either one value or a value for each replica.&quot;);</span>
+<span class="lineNum">     264 </span>            :   }
+<span class="lineNum">     265 </span>            :   //
+<span class="lineNum">     266 </span>            :   int seed;
+<span class="lineNum">     267 </span><span class="lineCov">         37 :   std::vector&lt;int&gt; seeds_vec(0);</span>
+<span class="lineNum">     268 </span><span class="lineCov">         74 :   parseVector(&quot;random_seed&quot;,seeds_vec);</span>
+<span class="lineNum">     269 </span><span class="lineCov">        221 :   for(unsigned int i=0; i&lt;seeds_vec.size(); i++) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">         49 :     if(seeds_vec[i]&gt;0) {seeds_vec[i] = -seeds_vec[i];}</span>
+<span class="lineNum">     271 </span>            :   }
+<span class="lineNum">     272 </span><span class="lineCov">         37 :   if(replicas==1) {</span>
+<span class="lineNum">     273 </span><span class="lineCov">          6 :     if(seeds_vec.size()&gt;1) {error(&quot;problem with random_seed keyword, for a single replica you should only give one value&quot;);}</span>
+<span class="lineNum">     274 </span><span class="lineCov">          6 :     seed = seeds_vec[0];</span>
+<span class="lineNum">     275 </span>            :   }
+<span class="lineNum">     276 </span>            :   else {
+<span class="lineNum">     277 </span><span class="lineCov">         31 :     if(seeds_vec.size()!=1 &amp;&amp; seeds_vec.size()!=replicas) {</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :       error(&quot;problem with random_seed keyword, for multiple replicas you should give either one value or a seperate value for each replica&quot;);</span>
+<span class="lineNum">     279 </span>            :     }
+<span class="lineNum">     280 </span><span class="lineCov">         31 :     if(seeds_vec.size()==1) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">         27 :       seeds_vec.resize(replicas);</span>
+<span class="lineNum">     282 </span><span class="lineCov">        300 :       for(unsigned int i=1; i&lt;seeds_vec.size(); i++) {seeds_vec[i] = seeds_vec[0] + i;}</span>
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span><span class="lineCov">         62 :     seed = seeds_vec[inter.Get_rank()];</span>
+<span class="lineNum">     285 </span>            :   }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :   //
+<span class="lineNum">     288 </span><span class="lineCov">         74 :   parse(&quot;dimension&quot;,dim);</span>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineCov">         37 :   std::vector&lt;std::string&gt; plumed_inputfiles;</span>
+<span class="lineNum">     291 </span><span class="lineCov">         74 :   parseVector(&quot;plumed_input&quot;,plumed_inputfiles);</span>
+<span class="lineNum">     292 </span><span class="lineCov">         37 :   if(plumed_inputfiles.size()!=1 &amp;&amp; plumed_inputfiles.size()!=replicas) {</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :     error(&quot;in plumed_input you should either give one file or separate files for each replica.&quot;);</span>
+<span class="lineNum">     294 </span>            :   }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">         37 :   std::vector&lt;Vector&gt; initPos(replicas);</span>
+<span class="lineNum">     297 </span>            :   std::vector&lt;double&gt; initPosTmp;
+<span class="lineNum">     298 </span><span class="lineCov">         74 :   parseVector(&quot;initial_position&quot;,initPosTmp);</span>
+<span class="lineNum">     299 </span><span class="lineCov">         37 :   if(initPosTmp.size()==dim) {</span>
+<span class="lineNum">     300 </span><span class="lineCov">         73 :     for(unsigned int i=0; i&lt;replicas; i++) {</span>
+<span class="lineNum">     301 </span><span class="lineCov">         97 :       for(unsigned int k=0; k&lt;dim; k++) {</span>
+<span class="lineNum">     302 </span><span class="lineCov">         99 :         initPos[i][k]=initPosTmp[k];</span>
+<span class="lineNum">     303 </span>            :       }
+<span class="lineNum">     304 </span>            :     }
+<span class="lineNum">     305 </span>            :   }
+<span class="lineNum">     306 </span><span class="lineCov">         26 :   else if(initPosTmp.size()==dim*replicas) {</span>
+<span class="lineNum">     307 </span><span class="lineCov">        226 :     for(unsigned int i=0; i&lt;replicas; i++) {</span>
+<span class="lineNum">     308 </span><span class="lineCov">        332 :       for(unsigned int k=0; k&lt;dim; k++) {</span>
+<span class="lineNum">     309 </span><span class="lineCov">        348 :         initPos[i][k]=initPosTmp[i*dim+k];</span>
+<span class="lineNum">     310 </span>            :       }
+<span class="lineNum">     311 </span>            :     }
+<span class="lineNum">     312 </span>            :   }
+<span class="lineNum">     313 </span>            :   else {
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :     error(&quot;problem with initial_position keyword, you need to give either one value or a value for each replica.&quot;);</span>
+<span class="lineNum">     315 </span>            :   }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineCov">         37 :   plumed_bf = new PLMD::PlumedMain;</span>
+<span class="lineNum">     319 </span><span class="lineCov">         37 :   unsigned int nn=1;</span>
+<span class="lineNum">     320 </span><span class="lineCov">         37 :   FILE* file_dummy = fopen(&quot;/dev/null&quot;,&quot;w+&quot;);</span>
+<span class="lineNum">     321 </span><span class="lineCov">         74 :   plumed_bf-&gt;cmd(&quot;setNatoms&quot;,&amp;nn);</span>
+<span class="lineNum">     322 </span><span class="lineCov">         74 :   plumed_bf-&gt;cmd(&quot;setLog&quot;,file_dummy);</span>
+<span class="lineNum">     323 </span><span class="lineCov">         74 :   plumed_bf-&gt;cmd(&quot;init&quot;,&amp;nn);</span>
+<span class="lineNum">     324 </span><span class="lineCov">         37 :   std::vector&lt;BasisFunctions*&gt; basisf_pntrs(dim);</span>
+<span class="lineNum">     325 </span><span class="lineCov">         74 :   std::vector&lt;std::string&gt; basisf_keywords(dim);</span>
+<span class="lineNum">     326 </span><span class="lineCov">         37 :   std::vector&lt;Value*&gt; args(dim);</span>
+<span class="lineNum">     327 </span><span class="lineCov">         74 :   std::vector&lt;bool&gt; periodic(dim);</span>
+<span class="lineNum">     328 </span><span class="lineCov">         37 :   std::vector&lt;double&gt; interval_min(dim);</span>
+<span class="lineNum">     329 </span><span class="lineCov">         37 :   std::vector&lt;double&gt; interval_max(dim);</span>
+<span class="lineNum">     330 </span><span class="lineCov">         37 :   std::vector&lt;double&gt; interval_range(dim);</span>
+<span class="lineNum">     331 </span><span class="lineCov">        123 :   for(unsigned int i=0; i&lt;dim; i++) {</span>
+<span class="lineNum">     332 </span>            :     std::string bf_keyword;
+<span class="lineNum">     333 </span><span class="lineCov">         43 :     std::string is; Tools::convert(i+1,is);</span>
+<span class="lineNum">     334 </span><span class="lineCov">         86 :     parse(&quot;basis_functions_&quot;+is,bf_keyword);</span>
+<span class="lineNum">     335 </span><span class="lineCov">         43 :     if(bf_keyword.size()==0) {</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :       error(&quot;basis_functions_&quot;+is+&quot; is needed&quot;);</span>
+<span class="lineNum">     337 </span>            :     }
+<span class="lineNum">     338 </span><span class="lineCov">         45 :     if(bf_keyword.at(0)=='{' &amp;&amp; bf_keyword.at(bf_keyword.size()-1)=='}') {</span>
+<span class="lineNum">     339 </span><span class="lineCov">          4 :       bf_keyword = bf_keyword.substr(1,bf_keyword.size()-2);</span>
+<span class="lineNum">     340 </span>            :     }
+<span class="lineNum">     341 </span><span class="lineCov">         43 :     basisf_keywords[i] = bf_keyword;</span>
+<span class="lineNum">     342 </span><span class="lineCov">        129 :     plumed_bf-&gt;readInputLine(bf_keyword+&quot; LABEL=dim&quot;+is);</span>
+<span class="lineNum">     343 </span><span class="lineCov">        129 :     basisf_pntrs[i] = plumed_bf-&gt;getActionSet().selectWithLabel&lt;BasisFunctions*&gt;(&quot;dim&quot;+is);</span>
+<span class="lineNum">     344 </span><span class="lineCov">        129 :     args[i] = new Value(NULL,&quot;dim&quot;+is,false);</span>
+<span class="lineNum">     345 </span><span class="lineCov">         43 :     args[i]-&gt;setNotPeriodic();</span>
+<span class="lineNum">     346 </span><span class="lineCov">         43 :     periodic[i] = basisf_pntrs[i]-&gt;arePeriodic();</span>
+<span class="lineNum">     347 </span><span class="lineCov">         86 :     interval_min[i] = basisf_pntrs[i]-&gt;intervalMin();</span>
+<span class="lineNum">     348 </span><span class="lineCov">         86 :     interval_max[i] = basisf_pntrs[i]-&gt;intervalMax();</span>
+<span class="lineNum">     349 </span><span class="lineCov">         86 :     interval_range[i] = basisf_pntrs[i]-&gt;intervalMax()-basisf_pntrs[i]-&gt;intervalMin();</span>
+<span class="lineNum">     350 </span>            :   }
+<span class="lineNum">     351 </span><span class="lineCov">         74 :   Communicator comm_dummy;</span>
+<span class="lineNum">     352 </span><span class="lineCov">         74 :   CoeffsVector* coeffs_pntr = new CoeffsVector(&quot;pot.coeffs&quot;,args,basisf_pntrs,comm_dummy,false);</span>
+<span class="lineNum">     353 </span><span class="lineCov">         74 :   potential_expansion_pntr = new LinearBasisSetExpansion(&quot;potential&quot;,1.0/temp,comm_dummy,args,basisf_pntrs,coeffs_pntr);</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span><span class="lineCov">         37 :   std::string template_coeffs_fname=&quot;&quot;;</span>
+<span class="lineNum">     356 </span><span class="lineCov">         74 :   parse(&quot;template_coeffs_file&quot;,template_coeffs_fname);</span>
+<span class="lineNum">     357 </span><span class="lineCov">         37 :   if(template_coeffs_fname.size()&gt;0) {</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :     OFile ofile_coeffstmpl;</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :     ofile_coeffstmpl.link(pc);</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :     ofile_coeffstmpl.open(template_coeffs_fname);</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :     coeffs_pntr-&gt;writeToFile(ofile_coeffstmpl,true);</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :     ofile_coeffstmpl.close();</span>
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :     error(&quot;Only generating a template coefficent file - Should stop now.&quot;);</span>
+<span class="lineNum">     364 </span>            :   }
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span><span class="lineCov">         74 :   std::vector&lt;std::string&gt; input_coeffs_fnames(0);</span>
+<span class="lineNum">     367 </span><span class="lineCov">         74 :   parseVector(&quot;input_coeffs&quot;,input_coeffs_fnames);</span>
+<span class="lineNum">     368 </span>            :   std::string input_coeffs_fname;
+<span class="lineNum">     369 </span>            :   bool diff_input_coeffs = false;
+<span class="lineNum">     370 </span><span class="lineCov">         37 :   if(input_coeffs_fnames.size()==1) {</span>
+<span class="lineNum">     371 </span>            :     input_coeffs_fname = input_coeffs_fnames[0];
+<span class="lineNum">     372 </span>            :   }
+<span class="lineNum">     373 </span><span class="lineCov">          9 :   else if(replicas &gt; 1 &amp;&amp; input_coeffs_fnames.size()==replicas) {</span>
+<span class="lineNum">     374 </span>            :     diff_input_coeffs = true;
+<span class="lineNum">     375 </span><span class="lineCov">          9 :     input_coeffs_fname = input_coeffs_fnames[inter.Get_rank()];</span>
+<span class="lineNum">     376 </span>            :   }
+<span class="lineNum">     377 </span>            :   else {
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :     error(&quot;problem with coeffs_file keyword, you need to give either one value or a value for each replica.&quot;);</span>
+<span class="lineNum">     379 </span>            :   }
+<span class="lineNum">     380 </span><span class="lineCov">         37 :   coeffs_pntr-&gt;readFromFile(input_coeffs_fname,true,true);</span>
+<span class="lineNum">     381 </span><span class="lineCov">         37 :   std::vector&lt;double&gt; coeffs_prefactors(0);</span>
+<span class="lineNum">     382 </span><span class="lineCov">         74 :   parseVector(&quot;coeffs_prefactor&quot;,coeffs_prefactors);</span>
+<span class="lineNum">     383 </span><span class="lineCov">         37 :   if(coeffs_prefactors.size()&gt;0) {</span>
+<span class="lineNum">     384 </span>            :     double coeffs_prefactor = 1.0;
+<span class="lineNum">     385 </span><span class="lineCov">          6 :     if(coeffs_prefactors.size()==1) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">          2 :       coeffs_prefactor = coeffs_prefactors[0];</span>
+<span class="lineNum">     387 </span>            :     }
+<span class="lineNum">     388 </span><span class="lineCov">          4 :     else if(replicas &gt; 1 &amp;&amp; coeffs_prefactors.size()==replicas) {</span>
+<span class="lineNum">     389 </span>            :       diff_input_coeffs = true;
+<span class="lineNum">     390 </span><span class="lineCov">          8 :       coeffs_prefactor = coeffs_prefactors[inter.Get_rank()];</span>
+<span class="lineNum">     391 </span>            :     }
+<span class="lineNum">     392 </span>            :     else {
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :       error(&quot;problem with coeffs_prefactor keyword, you need to give either one value or a value for each replica.&quot;);</span>
+<span class="lineNum">     394 </span>            :     }
+<span class="lineNum">     395 </span><span class="lineCov">          6 :     coeffs_pntr-&gt;scaleAllValues(coeffs_prefactor);</span>
+<span class="lineNum">     396 </span>            :   }
+<span class="lineNum">     397 </span>            :   unsigned int pot_grid_bins;
+<span class="lineNum">     398 </span><span class="lineCov">         74 :   parse(&quot;output_potential_grid&quot;,pot_grid_bins);</span>
+<span class="lineNum">     399 </span><span class="lineCov">         37 :   potential_expansion_pntr-&gt;setGridBins(pot_grid_bins);</span>
+<span class="lineNum">     400 </span><span class="lineCov">         37 :   potential_expansion_pntr-&gt;setupBiasGrid(false);</span>
+<span class="lineNum">     401 </span><span class="lineCov">         37 :   potential_expansion_pntr-&gt;updateBiasGrid();</span>
+<span class="lineNum">     402 </span><span class="lineCov">         37 :   potential_expansion_pntr-&gt;setBiasMinimumToZero();</span>
+<span class="lineNum">     403 </span><span class="lineCov">         37 :   potential_expansion_pntr-&gt;updateBiasGrid();</span>
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span><span class="lineCov">         74 :   OFile ofile_potential;</span>
+<span class="lineNum">     406 </span><span class="lineCov">         37 :   ofile_potential.link(pc);</span>
+<span class="lineNum">     407 </span>            :   std::string output_potential_fname;
+<span class="lineNum">     408 </span><span class="lineCov">         74 :   parse(&quot;output_potential&quot;,output_potential_fname);</span>
+<span class="lineNum">     409 </span><span class="lineCov">         37 :   if(diff_input_coeffs) {</span>
+<span class="lineNum">     410 </span><span class="lineCov">         13 :     ofile_potential.link(intra);</span>
+<span class="lineNum">     411 </span>            :     std::string suffix;
+<span class="lineNum">     412 </span><span class="lineCov">         13 :     Tools::convert(inter.Get_rank(),suffix);</span>
+<span class="lineNum">     413 </span><span class="lineCov">         39 :     output_potential_fname = FileBase::appendSuffix(output_potential_fname,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     414 </span>            :   }
+<span class="lineNum">     415 </span><span class="lineCov">         37 :   ofile_potential.open(output_potential_fname);</span>
+<span class="lineNum">     416 </span><span class="lineCov">         37 :   potential_expansion_pntr-&gt;writeBiasGridToFile(ofile_potential);</span>
+<span class="lineNum">     417 </span><span class="lineCov">         37 :   ofile_potential.close();</span>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineCov">        111 :   Grid histo_grid(*potential_expansion_pntr-&gt;getPntrToBiasGrid());</span>
+<span class="lineNum">     420 </span><span class="lineCov">        111 :   std::vector&lt;double&gt; integration_weights = GridIntegrationWeights::getIntegrationWeights(&amp;histo_grid);</span>
+<span class="lineNum">     421 </span>            :   double norm=0.0;
+<span class="lineNum">     422 </span><span class="lineCov">     292311 :   for(Grid::index_t i=0; i&lt;histo_grid.getSize(); i++) {</span>
+<span class="lineNum">     423 </span><span class="lineCov">     146137 :     double value = integration_weights[i]*exp(-histo_grid.getValue(i)/temp);</span>
+<span class="lineNum">     424 </span><span class="lineCov">     146137 :     norm += value;</span>
+<span class="lineNum">     425 </span><span class="lineCov">     146137 :     histo_grid.setValue(i,value);</span>
+<span class="lineNum">     426 </span>            :   }
+<span class="lineNum">     427 </span><span class="lineCov">         37 :   histo_grid.scaleAllValuesAndDerivatives(1.0/norm);</span>
+<span class="lineNum">     428 </span><span class="lineCov">         74 :   OFile ofile_histogram;</span>
+<span class="lineNum">     429 </span><span class="lineCov">         37 :   ofile_histogram.link(pc);</span>
+<span class="lineNum">     430 </span>            :   std::string output_histogram_fname;
+<span class="lineNum">     431 </span><span class="lineCov">         74 :   parse(&quot;output_histogram&quot;,output_histogram_fname);</span>
+<span class="lineNum">     432 </span><span class="lineCov">         61 :   if(diff_input_coeffs || temps_vec.size()&gt;1) {</span>
+<span class="lineNum">     433 </span><span class="lineCov">         17 :     ofile_histogram.link(intra);</span>
+<span class="lineNum">     434 </span>            :     std::string suffix;
+<span class="lineNum">     435 </span><span class="lineCov">         17 :     Tools::convert(inter.Get_rank(),suffix);</span>
+<span class="lineNum">     436 </span><span class="lineCov">         51 :     output_histogram_fname = FileBase::appendSuffix(output_histogram_fname,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     437 </span>            :   }
+<span class="lineNum">     438 </span><span class="lineCov">         37 :   ofile_histogram.open(output_histogram_fname);</span>
+<span class="lineNum">     439 </span><span class="lineCov">         37 :   histo_grid.writeToFile(ofile_histogram);</span>
+<span class="lineNum">     440 </span><span class="lineCov">         37 :   ofile_histogram.close();</span>
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            :   std::string output_coeffs_fname;
+<span class="lineNum">     443 </span><span class="lineCov">         74 :   parse(&quot;output_coeffs&quot;,output_coeffs_fname);</span>
+<span class="lineNum">     444 </span>            :   std::string output_coeffs_fmt;
+<span class="lineNum">     445 </span><span class="lineCov">         74 :   parse(&quot;output_coeffs_fmt&quot;,output_coeffs_fmt);</span>
+<span class="lineNum">     446 </span>            :   coeffs_pntr-&gt;setOutputFmt(output_coeffs_fmt);
+<span class="lineNum">     447 </span><span class="lineCov">         74 :   OFile ofile_coeffsout;</span>
+<span class="lineNum">     448 </span><span class="lineCov">         37 :   ofile_coeffsout.link(pc);</span>
+<span class="lineNum">     449 </span><span class="lineCov">         37 :   if(diff_input_coeffs) {</span>
+<span class="lineNum">     450 </span><span class="lineCov">         13 :     ofile_coeffsout.link(intra);</span>
+<span class="lineNum">     451 </span>            :     std::string suffix;
+<span class="lineNum">     452 </span><span class="lineCov">         13 :     Tools::convert(inter.Get_rank(),suffix);</span>
+<span class="lineNum">     453 </span><span class="lineCov">         39 :     output_coeffs_fname = FileBase::appendSuffix(output_coeffs_fname,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     454 </span>            :   }
+<span class="lineNum">     455 </span><span class="lineCov">         37 :   ofile_coeffsout.open(output_coeffs_fname);</span>
+<span class="lineNum">     456 </span><span class="lineCov">         37 :   coeffs_pntr-&gt;writeToFile(ofile_coeffsout,true);</span>
+<span class="lineNum">     457 </span><span class="lineCov">         37 :   ofile_coeffsout.close();</span>
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span><span class="lineCov">         37 :   if(pc.Get_rank() == 0) {</span>
+<span class="lineNum">     460 </span><span class="lineCov">         13 :     fprintf(out,&quot;Replicas                              %u\n&quot;,replicas);</span>
+<span class="lineNum">     461 </span>            :     fprintf(out,&quot;Cores per replica                     %u\n&quot;,coresPerReplica);
+<span class="lineNum">     462 </span><span class="lineCov">         13 :     fprintf(out,&quot;Number of steps                       %u\n&quot;,nsteps);</span>
+<span class="lineNum">     463 </span><span class="lineCov">         13 :     fprintf(out,&quot;Timestep                              %f\n&quot;,tstep);</span>
+<span class="lineNum">     464 </span><span class="lineCov">         13 :     fprintf(out,&quot;Temperature                           %f&quot;,temps_vec[0]);</span>
+<span class="lineNum">     465 </span><span class="lineCov">         38 :     for(unsigned int i=1; i&lt;temps_vec.size(); i++) {fprintf(out,&quot;,%f&quot;,temps_vec[i]);}</span>
+<span class="lineNum">     466 </span>            :     fprintf(out,&quot;\n&quot;);
+<span class="lineNum">     467 </span><span class="lineCov">         13 :     fprintf(out,&quot;Friction                              %f&quot;,frictions_vec[0]);</span>
+<span class="lineNum">     468 </span><span class="lineCov">         38 :     for(unsigned int i=1; i&lt;frictions_vec.size(); i++) {fprintf(out,&quot;,%f&quot;,frictions_vec[i]);}</span>
+<span class="lineNum">     469 </span>            :     fprintf(out,&quot;\n&quot;);
+<span class="lineNum">     470 </span><span class="lineCov">         13 :     fprintf(out,&quot;Random seed                           %d&quot;,seeds_vec[0]);</span>
+<span class="lineNum">     471 </span><span class="lineCov">        118 :     for(unsigned int i=1; i&lt;seeds_vec.size(); i++) {fprintf(out,&quot;,%d&quot;,seeds_vec[i]);}</span>
+<span class="lineNum">     472 </span>            :     fprintf(out,&quot;\n&quot;);
+<span class="lineNum">     473 </span><span class="lineCov">         13 :     fprintf(out,&quot;Dimensions                            %u\n&quot;,dim);</span>
+<span class="lineNum">     474 </span><span class="lineCov">         29 :     for(unsigned int i=0; i&lt;dim; i++) {</span>
+<span class="lineNum">     475 </span><span class="lineCov">         32 :       fprintf(out,&quot;Basis Function %u                      %s\n&quot;,i+1,basisf_keywords[i].c_str());</span>
+<span class="lineNum">     476 </span>            :     }
+<span class="lineNum">     477 </span>            :     fprintf(out,&quot;PLUMED input                          %s&quot;,plumed_inputfiles[0].c_str());
+<span class="lineNum">     478 </span><span class="lineCov">         29 :     for(unsigned int i=1; i&lt;plumed_inputfiles.size(); i++) {fprintf(out,&quot;,%s&quot;,plumed_inputfiles[i].c_str());}</span>
+<span class="lineNum">     479 </span>            :     fprintf(out,&quot;\n&quot;);
+<span class="lineNum">     480 </span>            :     fprintf(out,&quot;kBoltzmann taken as 1, use NATURAL_UNITS in the plumed input\n&quot;);
+<span class="lineNum">     481 </span><span class="lineCov">         13 :     if(diff_input_coeffs) {fprintf(out,&quot;using different coefficients for each replica\n&quot;);}</span>
+<span class="lineNum">     482 </span>            :   }
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineCov">         37 :   plumed=new PLMD::PlumedMain;</span>
+<span class="lineNum">     486 </span>            : 
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span><span class="lineCov">         37 :   if(plumed) {</span>
+<span class="lineNum">     490 </span><span class="lineCov">         37 :     int s=sizeof(double);</span>
+<span class="lineNum">     491 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setRealPrecision&quot;,&amp;s);</span>
+<span class="lineNum">     492 </span><span class="lineCov">         37 :     if(replicas&gt;1) {</span>
+<span class="lineNum">     493 </span><span class="lineCov">         31 :       if (Communicator::initialized()) {</span>
+<span class="lineNum">     494 </span><span class="lineCov">         62 :         plumed-&gt;cmd(&quot;GREX setMPIIntracomm&quot;,&amp;intra.Get_comm());</span>
+<span class="lineNum">     495 </span><span class="lineCov">         31 :         if (intra.Get_rank()==0) {</span>
+<span class="lineNum">     496 </span><span class="lineCov">         62 :           plumed-&gt;cmd(&quot;GREX setMPIIntercomm&quot;,&amp;inter.Get_comm());</span>
+<span class="lineNum">     497 </span>            :         }
+<span class="lineNum">     498 </span><span class="lineCov">         62 :         plumed-&gt;cmd(&quot;GREX init&quot;);</span>
+<span class="lineNum">     499 </span><span class="lineCov">         62 :         plumed-&gt;cmd(&quot;setMPIComm&quot;,&amp;intra.Get_comm());</span>
+<span class="lineNum">     500 </span>            :       } else {
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 :         error(&quot;More than 1 replica but no MPI&quot;);</span>
+<span class="lineNum">     502 </span>            :       }
+<span class="lineNum">     503 </span>            :     } else {
+<span class="lineNum">     504 </span><span class="lineCov">          8 :       if(Communicator::initialized()) plumed-&gt;cmd(&quot;setMPIComm&quot;,&amp;pc.Get_comm());</span>
+<span class="lineNum">     505 </span>            :     }
+<span class="lineNum">     506 </span>            :   }
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span><span class="lineCov">         37 :   std::string plumed_logfile = &quot;plumed.log&quot;;</span>
+<span class="lineNum">     509 </span><span class="lineCov">         37 :   std::string stats_filename = &quot;stats.out&quot;;</span>
+<span class="lineNum">     510 </span>            :   std::string plumed_input = plumed_inputfiles[0];
+<span class="lineNum">     511 </span><span class="lineCov">         37 :   if(inter.Get_size()&gt;1) {</span>
+<span class="lineNum">     512 </span>            :     std::string suffix;
+<span class="lineNum">     513 </span><span class="lineCov">         31 :     Tools::convert(inter.Get_rank(),suffix);</span>
+<span class="lineNum">     514 </span><span class="lineCov">         93 :     plumed_logfile = FileBase::appendSuffix(plumed_logfile,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     515 </span><span class="lineCov">         93 :     stats_filename = FileBase::appendSuffix(stats_filename,&quot;.&quot;+suffix);</span>
+<span class="lineNum">     516 </span><span class="lineCov">         31 :     if(plumed_inputfiles.size()&gt;1) {</span>
+<span class="lineNum">     517 </span><span class="lineCov">          2 :       plumed_input = plumed_inputfiles[inter.Get_rank()];</span>
+<span class="lineNum">     518 </span>            :     }
+<span class="lineNum">     519 </span>            :   }
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineCov">         37 :   if(plumed) {</span>
+<span class="lineNum">     522 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setNoVirial&quot;);</span>
+<span class="lineNum">     523 </span><span class="lineCov">         37 :     int natoms=1;</span>
+<span class="lineNum">     524 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setNatoms&quot;,&amp;natoms);</span>
+<span class="lineNum">     525 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setMDEngine&quot;,&quot;mdrunner_linearexpansion&quot;);</span>
+<span class="lineNum">     526 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setTimestep&quot;,&amp;tstep);</span>
+<span class="lineNum">     527 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setPlumedDat&quot;,plumed_input.c_str());</span>
+<span class="lineNum">     528 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setLogFile&quot;,plumed_logfile.c_str());</span>
+<span class="lineNum">     529 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setKbT&quot;,&amp;temp);</span>
+<span class="lineNum">     530 </span><span class="lineCov">         37 :     double energyunits=1.0;</span>
+<span class="lineNum">     531 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setMDEnergyUnits&quot;,&amp;energyunits);</span>
+<span class="lineNum">     532 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;init&quot;);</span>
+<span class="lineNum">     533 </span>            :   }
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span>            :   // Setup random number generator
+<span class="lineNum">     536 </span><span class="lineCov">         37 :   random.setSeed(seed);</span>
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span><span class="lineCov">         37 :   double potential, therm_eng=0; std::vector&lt;double&gt; masses(1,1);</span>
+<span class="lineNum">     539 </span><span class="lineCov">         37 :   std::vector&lt;Vector&gt; positions(1), velocities(1), forces(1);</span>
+<span class="lineNum">     540 </span><span class="lineCov">        123 :   for(unsigned int k=0; k&lt;dim; k++) {</span>
+<span class="lineNum">     541 </span><span class="lineCov">        129 :     positions[0][k] = initPos[inter.Get_rank()][k];</span>
+<span class="lineNum">     542 </span><span class="lineCov">         86 :     if(periodic[k]) {</span>
+<span class="lineNum">     543 </span><span class="lineCov">          6 :       positions[0][k] = positions[0][k] - floor(positions[0][k]/interval_range[k]+0.5)*interval_range[k];</span>
+<span class="lineNum">     544 </span>            :     }
+<span class="lineNum">     545 </span>            :     else {
+<span class="lineNum">     546 </span><span class="lineCov">         80 :       if(positions[0][k]&gt;interval_max[k]) {positions[0][k]=interval_max[k];}</span>
+<span class="lineNum">     547 </span><span class="lineCov">         80 :       if(positions[0][k]&lt;interval_min[k]) {positions[0][k]=interval_min[k];}</span>
+<span class="lineNum">     548 </span>            :     }
+<span class="lineNum">     549 </span>            :   }
+<span class="lineNum">     550 </span>            : 
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span><span class="lineCov">        123 :   for(unsigned k=0; k&lt;dim; ++k) {</span>
+<span class="lineNum">     553 </span><span class="lineCov">         86 :     velocities[0][k]=random.Gaussian() * sqrt( temp );</span>
+<span class="lineNum">     554 </span>            :   }
+<span class="lineNum">     555 </span>            : 
+<span class="lineNum">     556 </span><span class="lineCov">         37 :   potential=calc_energy(positions,forces); double ttt=calc_temp(velocities);</span>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineCov">         37 :   FILE* fp=fopen(stats_filename.c_str(),&quot;w+&quot;);</span>
+<span class="lineNum">     559 </span><span class="lineCov">         37 :   double conserved = potential+1.5*ttt+therm_eng;</span>
+<span class="lineNum">     560 </span>            :   //fprintf(fp,&quot;%d %f %f %f %f %f %f %f %f \n&quot;, 0, 0., positions[0][0], positions[0][1], positions[0][2], conserved, ttt, potential, therm_eng );
+<span class="lineNum">     561 </span><span class="lineCov">         37 :   if( intra.Get_rank()==0 ) {</span>
+<span class="lineNum">     562 </span><span class="lineCov">         72 :     fprintf(fp,&quot;%d %f %f %f %f %f %f %f %f \n&quot;, 0, 0., positions[0][0], positions[0][1], positions[0][2], conserved, ttt, potential, therm_eng );</span>
+<span class="lineNum">     563 </span>            :   }
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span><span class="lineCov">         37 :   if(plumed) {</span>
+<span class="lineNum">     566 </span><span class="lineCov">         37 :     int step_tmp = 0;</span>
+<span class="lineNum">     567 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setStep&quot;,&amp;step_tmp);</span>
+<span class="lineNum">     568 </span><span class="lineCov">        111 :     plumed-&gt;cmd(&quot;setMasses&quot;,&amp;masses[0]);</span>
+<span class="lineNum">     569 </span><span class="lineCov">        111 :     plumed-&gt;cmd(&quot;setForces&quot;,&amp;forces[0]);</span>
+<span class="lineNum">     570 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;setEnergy&quot;,&amp;potential);</span>
+<span class="lineNum">     571 </span><span class="lineCov">        111 :     plumed-&gt;cmd(&quot;setPositions&quot;,&amp;positions[0]);</span>
+<span class="lineNum">     572 </span><span class="lineCov">         74 :     plumed-&gt;cmd(&quot;calc&quot;);</span>
+<span class="lineNum">     573 </span>            :   }
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span><span class="lineCov">       7437 :   for(unsigned int istep=0; istep&lt;nsteps; ++istep) {</span>
+<span class="lineNum">     576 </span>            :     //if( istep%20==0 &amp;&amp; pc.Get_rank()==0 ) printf(&quot;Doing step %d\n&quot;,istep);
+<span class="lineNum">     577 </span>            : 
+<span class="lineNum">     578 </span>            :     // Langevin thermostat
+<span class="lineNum">     579 </span><span class="lineCov">       3700 :     double lscale=exp(-0.5*tstep*friction); //exp(-0.5*tstep/friction);</span>
+<span class="lineNum">     580 </span><span class="lineCov">       3700 :     double lrand=sqrt((1.-lscale*lscale)*temp);</span>
+<span class="lineNum">     581 </span><span class="lineCov">      12300 :     for(unsigned k=0; k&lt;dim; ++k) {</span>
+<span class="lineNum">     582 </span><span class="lineCov">       4300 :       therm_eng=therm_eng+0.5*velocities[0][k]*velocities[0][k];</span>
+<span class="lineNum">     583 </span><span class="lineCov">       8600 :       velocities[0][k]=lscale*velocities[0][k]+lrand*random.Gaussian();</span>
+<span class="lineNum">     584 </span><span class="lineCov">       4300 :       therm_eng=therm_eng-0.5*velocities[0][k]*velocities[0][k];</span>
+<span class="lineNum">     585 </span>            :     }
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span>            :     // First step of velocity verlet
+<span class="lineNum">     588 </span><span class="lineCov">      12300 :     for(unsigned k=0; k&lt;dim; ++k) {</span>
+<span class="lineNum">     589 </span><span class="lineCov">       8600 :       velocities[0][k] = velocities[0][k] + 0.5*tstep*forces[0][k];</span>
+<span class="lineNum">     590 </span><span class="lineCov">       8600 :       positions[0][k] = positions[0][k] + tstep*velocities[0][k];</span>
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span><span class="lineCov">       8600 :       if(periodic[k]) {</span>
+<span class="lineNum">     593 </span><span class="lineCov">        600 :         positions[0][k] = positions[0][k] - floor(positions[0][k]/interval_range[k]+0.5)*interval_range[k];</span>
+<span class="lineNum">     594 </span>            :       }
+<span class="lineNum">     595 </span>            :       else {
+<span class="lineNum">     596 </span><span class="lineCov">       8000 :         if(positions[0][k]&gt;interval_max[k]) {</span>
+<span class="lineNum">     597 </span><span class="lineCov">          7 :           positions[0][k]=interval_max[k];</span>
+<span class="lineNum">     598 </span><span class="lineCov">         14 :           velocities[0][k]=-std::abs(velocities[0][k]);</span>
+<span class="lineNum">     599 </span>            :         }
+<span class="lineNum">     600 </span><span class="lineCov">       8000 :         if(positions[0][k]&lt;interval_min[k]) {</span>
+<span class="lineNum">     601 </span><span class="lineCov">          2 :           positions[0][k]=interval_min[k];</span>
+<span class="lineNum">     602 </span><span class="lineCov">          4 :           velocities[0][k]=-std::abs(velocities[0][k]);</span>
+<span class="lineNum">     603 </span>            :         }
+<span class="lineNum">     604 </span>            :       }
+<span class="lineNum">     605 </span>            :     }
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span><span class="lineCov">       3700 :     potential=calc_energy(positions,forces);</span>
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span><span class="lineCov">       3700 :     if(plumed) {</span>
+<span class="lineNum">     610 </span><span class="lineCov">       3700 :       int istepplusone=istep+1;</span>
+<span class="lineNum">     611 </span><span class="lineCov">       3700 :       plumedWantsToStop=0;</span>
+<span class="lineNum">     612 </span><span class="lineCov">       7400 :       plumed-&gt;cmd(&quot;setStep&quot;,&amp;istepplusone);</span>
+<span class="lineNum">     613 </span><span class="lineCov">      11100 :       plumed-&gt;cmd(&quot;setMasses&quot;,&amp;masses[0]);</span>
+<span class="lineNum">     614 </span><span class="lineCov">      11100 :       plumed-&gt;cmd(&quot;setForces&quot;,&amp;forces[0]);</span>
+<span class="lineNum">     615 </span><span class="lineCov">       7400 :       plumed-&gt;cmd(&quot;setEnergy&quot;,&amp;potential);</span>
+<span class="lineNum">     616 </span><span class="lineCov">      11100 :       plumed-&gt;cmd(&quot;setPositions&quot;,&amp;positions[0]);</span>
+<span class="lineNum">     617 </span><span class="lineCov">       7400 :       plumed-&gt;cmd(&quot;setStopFlag&quot;,&amp;plumedWantsToStop);</span>
+<span class="lineNum">     618 </span><span class="lineCov">       7400 :       plumed-&gt;cmd(&quot;calc&quot;);</span>
+<span class="lineNum">     619 </span>            :       //if(istep%2000==0) plumed-&gt;cmd(&quot;writeCheckPointFile&quot;);
+<span class="lineNum">     620 </span><span class="lineCov">       3700 :       if(plumedWantsToStop) nsteps=istep;</span>
+<span class="lineNum">     621 </span>            :     }
+<span class="lineNum">     622 </span>            : 
+<span class="lineNum">     623 </span>            :     // Second step of velocity verlet
+<span class="lineNum">     624 </span><span class="lineCov">      12300 :     for(unsigned k=0; k&lt;dim; ++k) {</span>
+<span class="lineNum">     625 </span><span class="lineCov">       8600 :       velocities[0][k] = velocities[0][k] + 0.5*tstep*forces[0][k];</span>
+<span class="lineNum">     626 </span>            :     }
+<span class="lineNum">     627 </span>            : 
+<span class="lineNum">     628 </span>            :     // Langevin thermostat
+<span class="lineNum">     629 </span><span class="lineCov">       3700 :     lscale=exp(-0.5*tstep*friction); //exp(-0.5*tstep/friction);</span>
+<span class="lineNum">     630 </span><span class="lineCov">       3700 :     lrand=sqrt((1.-lscale*lscale)*temp);</span>
+<span class="lineNum">     631 </span><span class="lineCov">      12300 :     for(unsigned k=0; k&lt;dim; ++k) {</span>
+<span class="lineNum">     632 </span><span class="lineCov">       4300 :       therm_eng=therm_eng+0.5*velocities[0][k]*velocities[0][k];</span>
+<span class="lineNum">     633 </span><span class="lineCov">       8600 :       velocities[0][k]=lscale*velocities[0][k]+lrand*random.Gaussian();</span>
+<span class="lineNum">     634 </span><span class="lineCov">       4300 :       therm_eng=therm_eng-0.5*velocities[0][k]*velocities[0][k];</span>
+<span class="lineNum">     635 </span>            :     }
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span>            :     // Print everything
+<span class="lineNum">     638 </span><span class="lineCov">       3700 :     ttt = calc_temp( velocities );</span>
+<span class="lineNum">     639 </span><span class="lineCov">       3700 :     conserved = potential+1.5*ttt+therm_eng;</span>
+<span class="lineNum">     640 </span><span class="lineCov">       3700 :     if( (intra.Get_rank()==0) &amp;&amp; ((istep % stepWrite)==0) ) {</span>
+<span class="lineNum">     641 </span><span class="lineCov">         72 :       fprintf(fp,&quot;%u %f %f %f %f %f %f %f %f \n&quot;, istep, istep*tstep, positions[0][0], positions[0][1], positions[0][2], conserved, ttt, potential, therm_eng );</span>
+<span class="lineNum">     642 </span>            :     }
+<span class="lineNum">     643 </span>            :   }
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span><span class="lineCov">         37 :   if(plumed) {delete plumed;}</span>
+<span class="lineNum">     646 </span><span class="lineCov">         37 :   if(plumed_bf) {delete plumed_bf;}</span>
+<span class="lineNum">     647 </span><span class="lineCov">         37 :   if(potential_expansion_pntr) {delete potential_expansion_pntr;}</span>
+<span class="lineNum">     648 </span><span class="lineCov">         37 :   if(coeffs_pntr) {delete coeffs_pntr;}</span>
+<span class="lineNum">     649 </span><span class="lineCov">        203 :   for(unsigned int i=0; i&lt;args.size(); i++) {delete args[i];}</span>
+<span class="lineNum">     650 </span>            :   args.clear();
+<span class="lineNum">     651 </span>            :   //printf(&quot;Rank: %d, Size: %d \n&quot;, pc.Get_rank(), pc.Get_size() );
+<span class="lineNum">     652 </span>            :   //printf(&quot;Rank: %d, Size: %d, MultiSimCommRank: %d, MultiSimCommSize: %d \n&quot;, pc.Get_rank(), pc.Get_size(), multi_sim_comm.Get_rank(), multi_sim_comm.Get_size() );
+<span class="lineNum">     653 </span><span class="lineCov">         37 :   fclose(fp);</span>
+<span class="lineNum">     654 </span><span class="lineCov">         37 :   fclose(file_dummy);</span>
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span><span class="lineCov">         37 :   return 0;</span>
+<span class="lineNum">     657 </span>            : }
+<a name="658"><span class="lineNum">     658 </span>            : </a>
+<span class="lineNum">     659 </span>            : }
+<span class="lineNum">     660 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

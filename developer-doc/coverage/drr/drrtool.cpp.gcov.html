@@ -1,0 +1,282 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - drr/drrtool.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">drr</a> - drrtool.cpp<span style="font-size: 80%;"> (source / <a href="drrtool.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">71</td>
+            <td class="headerCovTableEntry">75</td>
+            <td class="headerCovTableEntryHi">94.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryHi">93.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2017 of Haochuan Chen (excluding colvar_UIestimator.h)
+<span class="lineNum">       3 </span>            :     Copyright (c) 2017 of Haohao Fu (colvar_UIestimator.h)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       6 </span>            :     it under the terms of the GNU Lesser General Public License as published
+<span class="lineNum">       7 </span>            :     by the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       8 </span>            :     (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      13 </span>            :     GNU Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :     You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      16 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      17 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      18 </span>            : #ifdef __PLUMED_HAS_BOOST_SERIALIZATION
+<span class="lineNum">      19 </span>            : #include &quot;cltools/CLTool.h&quot;
+<span class="lineNum">      20 </span>            : #include &quot;cltools/CLToolRegister.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;config/Config.h&quot;
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;DRR.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Units.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;boost/archive/binary_iarchive.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/archive/binary_oarchive.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/serialization/vector.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      30 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      31 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      32 </span>            : #include &lt;string&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : using namespace PLMD;
+<span class="lineNum">      35 </span>            : using namespace cltools;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace PLMD {
+<span class="lineNum">      38 </span>            : namespace drr {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : //+PLUMEDOC EABFMOD_TOOLS drr_tool
+<span class="lineNum">      41 </span>            : /*
+<span class="lineNum">      42 </span>            :  - Extract .grad and .count files from the binary output .drrstate
+<span class="lineNum">      43 </span>            :  - Merge windows
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \par Examples
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : The following command will extract .grad and .count files.
+<span class="lineNum">      48 </span>            : \verbatim
+<span class="lineNum">      49 </span>            : plumed drr_tool --extract eabf.drrstate
+<span class="lineNum">      50 </span>            : \endverbatim
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The following command will merge windows of two .drrstate file, and output the
+<span class="lineNum">      53 </span>            : .grad and .count files.
+<span class="lineNum">      54 </span>            : \verbatim
+<span class="lineNum">      55 </span>            : plumed drr_tool --merge win1.drrstate,win2.drrstate
+<span class="lineNum">      56 </span>            : \endverbatim
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : After getting the .grad and .count file, you can do numerical integration by
+<span class="lineNum">      59 </span>            : using abf_integrate tool from
+<span class="lineNum">      60 </span>            : https://github.com/Colvars/colvars/tree/master/colvartools
+<span class="lineNum">      61 </span>            : \verbatim
+<span class="lineNum">      62 </span>            : abf_integrate eabf.czar.grad
+<span class="lineNum">      63 </span>            : \endverbatim
+<span class="lineNum">      64 </span>            : \note
+<span class="lineNum">      65 </span>            : The abf_integrate in colvartools is in kcal/mol, so it may be better to use --units kcal/mol when running drr_tool
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : */
+<a name="68"><span class="lineNum">      68 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">          9 : class drrtool : public CLTool {</span>
+<span class="lineNum">      71 </span>            : public:
+<span class="lineNum">      72 </span>            :   static void registerKeywords(Keywords &amp;keys);
+<span class="lineNum">      73 </span>            :   explicit drrtool(const CLToolOptions &amp;co);
+<span class="lineNum">      74 </span>            :   int main(FILE *in, FILE *out, Communicator &amp;pc);
+<a name="75"><span class="lineNum">      75 </span>            :   void extractdrr(const std::vector&lt;std::string&gt; &amp;filename);</a>
+<span class="lineNum">      76 </span>            :   void mergewindows(const std::vector&lt;std::string&gt; &amp;filename);
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :   std::string description() const { return &quot;Extract or merge the drrstate files.&quot;; }</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : private:
+<span class="lineNum">      80 </span>            :   bool verbosity;
+<span class="lineNum">      81 </span>            :   Units units;
+<span class="lineNum">      82 </span>            :   const std::string suffix{&quot;.drrstate&quot;};
+<a name="83"><span class="lineNum">      83 </span>            : };</a>
+<span class="lineNum">      84 </span>            : 
+<a name="85"><span class="lineNum">      85 </span><span class="lineCov">       6455 : PLUMED_REGISTER_CLTOOL(drrtool, &quot;drr_tool&quot;)</span></a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">       1613 : void drrtool::registerKeywords(Keywords &amp;keys) {</span>
+<span class="lineNum">      88 </span><span class="lineCov">       1613 :   CLTool::registerKeywords(keys);</span>
+<span class="lineNum">      89 </span><span class="lineCov">       6452 :   keys.add(&quot;optional&quot;, &quot;--extract&quot;, &quot;Extract drrstate file(s)&quot;);</span>
+<span class="lineNum">      90 </span><span class="lineCov">       6452 :   keys.add(&quot;optional&quot;, &quot;--merge&quot;, &quot;Merge eABF windows&quot;);</span>
+<span class="lineNum">      91 </span><span class="lineCov">       8065 :   keys.add(&quot;compulsory&quot;,&quot;--units&quot;,&quot;kj/mol&quot;,&quot;the units of energy can be kj/mol, kcal/mol, j/mol, eV or the conversion factor from kj/mol&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">       4839 :   keys.addFlag(&quot;-v&quot;, false, &quot;Verbose output&quot;);</span>
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">       1613 : }</span></a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">          3 : drrtool::drrtool(const CLToolOptions &amp;co) : CLTool(co) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">          3 :   inputdata = commandline;</span>
+<span class="lineNum">      97 </span><span class="lineCov">          3 :   verbosity = false;</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          3 : int drrtool::main(FILE *in, FILE *out, Communicator &amp;pc) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">          6 :   parseFlag(&quot;-v&quot;, verbosity);</span>
+<span class="lineNum">     102 </span><span class="lineCov">          3 :   std::vector&lt;std::string&gt; stateFilesToExtract;</span>
+<span class="lineNum">     103 </span>            :   std::string unitname;
+<span class="lineNum">     104 </span><span class="lineCov">          6 :   parse(&quot;--units&quot;,unitname);</span>
+<span class="lineNum">     105 </span><span class="lineCov">          3 :   units.setEnergy( unitname );</span>
+<span class="lineNum">     106 </span><span class="lineCov">          6 :   bool doextract = parseVector(&quot;--extract&quot;, stateFilesToExtract);</span>
+<span class="lineNum">     107 </span><span class="lineCov">          3 :   if (doextract) {</span>
+<span class="lineNum">     108 </span><span class="lineCov">          2 :     extractdrr(stateFilesToExtract);</span>
+<span class="lineNum">     109 </span>            :   }
+<span class="lineNum">     110 </span><span class="lineCov">          3 :   std::vector&lt;std::string&gt; stateFilesToMerge;</span>
+<span class="lineNum">     111 </span><span class="lineCov">          6 :   bool domerge = parseVector(&quot;--merge&quot;, stateFilesToMerge);</span>
+<span class="lineNum">     112 </span><span class="lineCov">          3 :   if (domerge) {</span>
+<span class="lineNum">     113 </span><span class="lineCov">          1 :     mergewindows(stateFilesToMerge);</span>
+<span class="lineNum">     114 </span>            :   }
+<span class="lineNum">     115 </span><span class="lineCov">          3 :   return 0;</span>
+<a name="116"><span class="lineNum">     116 </span>            : }</a>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">          2 : void drrtool::extractdrr(const std::vector&lt;std::string&gt; &amp;filename) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">          6 :   #pragma omp parallel for</span>
+<span class="lineNum">     120 </span><span class="lineCov">          4 :   for (size_t j = 0; j &lt; filename.size(); ++j) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">          4 :     std::ifstream in;</span>
+<span class="lineNum">     122 </span><span class="lineCov">          4 :     in.open(filename[j]);</span>
+<span class="lineNum">     123 </span>            :     boost::archive::binary_iarchive ia(in);
+<span class="lineNum">     124 </span>            :     long long int step;
+<span class="lineNum">     125 </span>            :     std::vector&lt;double&gt; fict;
+<span class="lineNum">     126 </span>            :     std::vector&lt;double&gt; vfict;
+<span class="lineNum">     127 </span>            :     std::vector&lt;double&gt; vfict_laststep;
+<span class="lineNum">     128 </span>            :     std::vector&lt;double&gt; ffict;
+<span class="lineNum">     129 </span>            :     ABF abfgrid;
+<span class="lineNum">     130 </span>            :     CZAR czarestimator;
+<span class="lineNum">     131 </span>            :     ia &gt;&gt; step &gt;&gt; fict &gt;&gt; vfict &gt;&gt; vfict_laststep &gt;&gt; ffict &gt;&gt; abfgrid &gt;&gt;
+<span class="lineNum">     132 </span>            :        czarestimator;
+<span class="lineNum">     133 </span><span class="lineCov">          2 :     in.close();</span>
+<span class="lineNum">     134 </span><span class="lineCov">          2 :     abfgrid.setOutputUnit(units.getEnergy());</span>
+<span class="lineNum">     135 </span>            :     czarestimator.setOutputUnit(units.getEnergy());
+<span class="lineNum">     136 </span><span class="lineCov">          2 :     if (verbosity) {</span>
+<span class="lineNum">     137 </span><span class="lineCov">          1 :       std::cout &lt;&lt; &quot;Output units factor: &quot; &lt;&lt; units.getEnergy() &lt;&lt; '\n';</span>
+<span class="lineNum">     138 </span>            :       std::cout &lt;&lt; &quot;Dumping information of extended variables...&quot; &lt;&lt; '\n';
+<span class="lineNum">     139 </span><span class="lineCov">          1 :       std::cout &lt;&lt; &quot;Step: &quot; &lt;&lt; step &lt;&lt; '\n';</span>
+<span class="lineNum">     140 </span><span class="lineCov">          3 :       for (size_t i = 0; i &lt; fict.size(); ++i) {</span>
+<span class="lineNum">     141 </span><span class="lineCov">          1 :         std::cout &lt;&lt; &quot;Dimension[&quot; &lt;&lt; i + 1 &lt;&lt; &quot;]:\n&quot;</span>
+<span class="lineNum">     142 </span><span class="lineCov">          1 :                   &lt;&lt; &quot;  Coordinate: &quot; &lt;&lt; fict[i] &lt;&lt; '\n'</span>
+<span class="lineNum">     143 </span><span class="lineCov">          1 :                   &lt;&lt; &quot;  Velocity: &quot; &lt;&lt; vfict[i] &lt;&lt; '\n'</span>
+<span class="lineNum">     144 </span><span class="lineCov">          1 :                   &lt;&lt; &quot;  Velocity(laststep): &quot; &lt;&lt; vfict_laststep[i] &lt;&lt; '\n'</span>
+<span class="lineNum">     145 </span><span class="lineCov">          1 :                   &lt;&lt; &quot;  Force: &quot; &lt;&lt; ffict[i] &lt;&lt; '\n';</span>
+<span class="lineNum">     146 </span>            :       }
+<span class="lineNum">     147 </span>            :       std::cout &lt;&lt; &quot;Dumping counts and gradients from grids...&quot; &lt;&lt; '\n';
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span><span class="lineCov">          2 :     std::string outputname(filename[j]);</span>
+<span class="lineNum">     150 </span><span class="lineCov">          4 :     outputname = outputname.substr(0, outputname.length() - suffix.length());</span>
+<span class="lineNum">     151 </span><span class="lineCov">          2 :     if (verbosity)</span>
+<span class="lineNum">     152 </span>            :       std::cout &lt;&lt; &quot;Writing ABF(naive) estimator files...&quot; &lt;&lt; '\n';
+<span class="lineNum">     153 </span><span class="lineCov">          2 :     abfgrid.writeAll(outputname);</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :     if (verbosity)</span>
+<span class="lineNum">     155 </span>            :       std::cout &lt;&lt; &quot;Writing CZAR estimator files...&quot; &lt;&lt; '\n';
+<span class="lineNum">     156 </span><span class="lineCov">          2 :     czarestimator.writeAll(outputname);</span>
+<span class="lineNum">     157 </span>            :   }
+<span class="lineNum">     158 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">          1 : void drrtool::mergewindows(const std::vector&lt;std::string&gt; &amp;filename) {</span>
+<span class="lineNum">     161 </span><span class="lineCov">          1 :   if (filename.size() &lt; 2) {</span>
+<span class="lineNum">     162 </span>            :     std::cerr &lt;&lt; &quot;ERROR! You need at least two .drrstate file to merge windows!&quot; &lt;&lt; std::endl;
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     std::abort();</span>
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span>            :   // Read grid into abfs and czars;
+<span class="lineNum">     166 </span><span class="lineCov">          1 :   std::vector&lt;ABF&gt; abfs;</span>
+<span class="lineNum">     167 </span><span class="lineCov">          1 :   std::vector&lt;CZAR&gt; czars;</span>
+<span class="lineNum">     168 </span><span class="lineCov">          3 :   for (auto it_fn = filename.begin(); it_fn != filename.end(); ++it_fn) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">          4 :     std::ifstream in;</span>
+<span class="lineNum">     170 </span><span class="lineCov">          2 :     in.open((*it_fn));</span>
+<span class="lineNum">     171 </span>            :     boost::archive::binary_iarchive ia(in);
+<span class="lineNum">     172 </span>            :     long long int step;
+<span class="lineNum">     173 </span>            :     std::vector&lt;double&gt; fict;
+<span class="lineNum">     174 </span>            :     std::vector&lt;double&gt; vfict;
+<span class="lineNum">     175 </span>            :     std::vector&lt;double&gt; vfict_laststep;
+<span class="lineNum">     176 </span>            :     std::vector&lt;double&gt; ffict;
+<span class="lineNum">     177 </span>            :     ABF abfgrid;
+<span class="lineNum">     178 </span>            :     CZAR czarestimator;
+<span class="lineNum">     179 </span>            :     ia &gt;&gt; step &gt;&gt; fict &gt;&gt; vfict &gt;&gt; vfict_laststep &gt;&gt; ffict &gt;&gt; abfgrid &gt;&gt;
+<span class="lineNum">     180 </span>            :        czarestimator;
+<span class="lineNum">     181 </span><span class="lineCov">          2 :     abfgrid.setOutputUnit(units.getEnergy());</span>
+<span class="lineNum">     182 </span>            :     czarestimator.setOutputUnit(units.getEnergy());
+<span class="lineNum">     183 </span><span class="lineCov">          2 :     abfs.push_back(abfgrid);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          2 :     czars.push_back(czarestimator);</span>
+<span class="lineNum">     185 </span><span class="lineCov">          2 :     in.close();</span>
+<span class="lineNum">     186 </span>            :   }
+<span class="lineNum">     187 </span><span class="lineCov">          1 :   CZAR cmerged = CZAR::mergewindow(czars[0], czars[1]);</span>
+<span class="lineNum">     188 </span><span class="lineCov">          1 :   ABF amerged = ABF::mergewindow(abfs[0], abfs[1]);</span>
+<span class="lineNum">     189 </span><span class="lineCov">          1 :   for (size_t i = 2; i &lt; czars.size(); ++i) {</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :     cmerged = CZAR::mergewindow(cmerged, czars[i]);</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     amerged = ABF::mergewindow(amerged, abfs[i]);</span>
+<span class="lineNum">     192 </span>            :   }
+<a name="193"><span class="lineNum">     193 </span>            :   // Generate new file name for merged grad and count</a>
+<a name="194"><span class="lineNum">     194 </span><span class="lineCov">          2 :   std::vector&lt;std::string&gt; tmp_name = filename;</span></a>
+<span class="lineNum">     195 </span><span class="lineCov">          6 :   std::transform(std::begin(tmp_name), std::end(tmp_name), std::begin(tmp_name), [&amp;](std::string s) {return s.substr(0, s.find(suffix));});</span>
+<span class="lineNum">     196 </span><span class="lineCov">          7 :   std::string mergename = std::accumulate(std::begin(tmp_name), std::end(tmp_name), std::string(&quot;&quot;), [](std::string a, std::string b) {return a + b + &quot;+&quot;;});</span>
+<span class="lineNum">     197 </span><span class="lineCov">          2 :   mergename = mergename.substr(0, mergename.size() - 1);</span>
+<span class="lineNum">     198 </span><span class="lineCov">          1 :   cmerged.writeAll(mergename);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          1 :   amerged.writeAll(mergename);</span>
+<span class="lineNum">     200 </span><span class="lineCov">          1 : }</span>
+<a name="201"><span class="lineNum">     201 </span>            : </a>
+<span class="lineNum">     202 </span>            : } // End of namespace
+<span class="lineNum">     203 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/ActionAtomistic.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - ActionAtomistic.h<span style="font-size: 80%;"> (source / <a href="ActionAtomistic.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_core_ActionAtomistic_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_core_ActionAtomistic_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;Action.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Tensor.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Atoms.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      29 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      30 </span>            : #include &lt;set&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : class Pbc;
+<span class="lineNum">      35 </span>            : class PDB;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /// \ingroup MULTIINHERIT
+<span class="lineNum">      38 </span>            : /// Action used to create objects that access the positions of the atoms from the MD code
+<span class="lineNum">      39 </span>            : class ActionAtomistic :
+<span class="lineNum">      40 </span>            :   virtual public Action
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :   std::vector&lt;AtomNumber&gt; indexes;         // the set of needed atoms
+<span class="lineNum">      44 </span>            : /// unique should be an ordered set since we later create a vector containing the corresponding indexes
+<span class="lineNum">      45 </span>            :   std::set&lt;AtomNumber&gt;  unique;
+<span class="lineNum">      46 </span>            : /// unique_local should be an ordered set since we later create a vector containing the corresponding indexes
+<span class="lineNum">      47 </span>            :   std::set&lt;AtomNumber&gt;  unique_local;
+<span class="lineNum">      48 </span>            :   std::vector&lt;Vector&gt;   positions;       // positions of the needed atoms
+<span class="lineNum">      49 </span>            :   double                energy;
+<span class="lineNum">      50 </span>            :   Pbc&amp;                  pbc;
+<span class="lineNum">      51 </span>            :   Tensor                virial;
+<span class="lineNum">      52 </span>            :   std::vector&lt;double&gt;   masses;
+<span class="lineNum">      53 </span>            :   bool                  chargesWereSet;
+<span class="lineNum">      54 </span>            :   std::vector&lt;double&gt;   charges;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :   std::vector&lt;Vector&gt;   forces;          // forces on the needed atoms
+<span class="lineNum">      57 </span>            :   double                forceOnEnergy;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :   bool                  lockRequestAtoms; // forbid changes to request atoms
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :   bool                  donotretrieve;
+<span class="lineNum">      62 </span>            :   bool                  donotforce;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : protected:
+<span class="lineNum">      65 </span>            :   Atoms&amp;                atoms;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : public:
+<span class="lineNum">      68 </span>            : /// Request an array of atoms.
+<span class="lineNum">      69 </span>            : /// This method is used to ask for a list of atoms. Atoms
+<span class="lineNum">      70 </span>            : /// should be asked for by number. If this routine is called
+<span class="lineNum">      71 </span>            : /// during the simulation, atoms will be available at the next step
+<span class="lineNum">      72 </span>            : /// MAYBE WE HAVE TO FIND SOMETHING MORE CLEAR FOR DYNAMIC
+<span class="lineNum">      73 </span>            : /// LISTS OF ATOMS
+<span class="lineNum">      74 </span>            :   void requestAtoms(const std::vector&lt;AtomNumber&gt; &amp; a);
+<span class="lineNum">      75 </span>            : /// Get position of i-th atom (access by relative index)
+<span class="lineNum">      76 </span>            :   const Vector &amp; getPosition(int)const;
+<span class="lineNum">      77 </span>            : /// Get position of i-th atom (access by absolute AtomNumber).
+<span class="lineNum">      78 </span>            : /// With direct access to the global atom array
+<span class="lineNum">      79 </span>            :   const Vector &amp; getPosition(AtomNumber)const;
+<span class="lineNum">      80 </span>            : /// Get modifiable position of i-th atom (access by absolute AtomNumber).
+<span class="lineNum">      81 </span>            : /// Should be used by action that need to modify the stored atomic coordinates
+<span class="lineNum">      82 </span>            :   Vector &amp; modifyPosition(AtomNumber);
+<span class="lineNum">      83 </span>            : /// Get total number of atoms, including virtual ones.
+<span class="lineNum">      84 </span>            : /// Can be used to make a loop on modifyPosition or getPosition(AtomNumber)
+<span class="lineNum">      85 </span>            :   unsigned getTotAtoms()const;
+<span class="lineNum">      86 </span>            : /// Get modifiable force of i-th atom (access by absolute AtomNumber).
+<span class="lineNum">      87 </span>            : /// \warning  Should be used by action that need to modify the stored atomic forces.
+<span class="lineNum">      88 </span>            : ///           This should be used with great care since the plumed core does
+<span class="lineNum">      89 </span>            : ///           not usually keep all these forces up to date. In particular,
+<span class="lineNum">      90 </span>            : ///           if an action require this, one should during constructor
+<span class="lineNum">      91 </span>            : ///           call allowToAccessGlobalForces().
+<span class="lineNum">      92 </span>            : ///           Notice that for efficiency reason plumed does not check if this is done!
+<span class="lineNum">      93 </span>            :   Vector &amp; modifyGlobalForce(AtomNumber);
+<span class="lineNum">      94 </span>            : /// Get modifiable virial
+<span class="lineNum">      95 </span>            : /// Should be used by action that need to modify the stored virial
+<span class="lineNum">      96 </span>            :   Tensor &amp; modifyGlobalVirial();
+<span class="lineNum">      97 </span>            : /// Get modifiable PBC
+<span class="lineNum">      98 </span>            : /// Should be used by action that need to modify the stored box
+<span class="lineNum">      99 </span>            :   Pbc &amp; modifyGlobalPbc();
+<span class="lineNum">     100 </span>            : /// Get box shape
+<span class="lineNum">     101 </span>            :   const Tensor &amp; getBox()const;
+<span class="lineNum">     102 </span>            : /// Get the array of all positions
+<span class="lineNum">     103 </span>            :   const std::vector&lt;Vector&gt; &amp; getPositions()const;
+<span class="lineNum">     104 </span>            : /// Get energy
+<span class="lineNum">     105 </span>            :   const double &amp; getEnergy()const;
+<span class="lineNum">     106 </span>            : /// Get mass of i-th atom
+<span class="lineNum">     107 </span>            :   double getMass(int i)const;
+<span class="lineNum">     108 </span>            : /// Get charge of i-th atom
+<span class="lineNum">     109 </span>            :   double getCharge(int i)const;
+<span class="lineNum">     110 </span>            : /// Get a reference to forces array
+<span class="lineNum">     111 </span>            :   std::vector&lt;Vector&gt; &amp; modifyForces();
+<span class="lineNum">     112 </span>            : /// Get a reference to virial array
+<span class="lineNum">     113 </span>            :   Tensor &amp; modifyVirial();
+<span class="lineNum">     114 </span>            : /// Get a reference to force on energy
+<span class="lineNum">     115 </span>            :   double &amp; modifyForceOnEnergy();
+<span class="lineNum">     116 </span>            : /// Get number of available atoms
+<span class="lineNum">     117 </span><span class="lineCov"> 4185379809 :   unsigned getNumberOfAtoms()const {return indexes.size();}</span>
+<span class="lineNum">     118 </span>            : /// Compute the pbc distance between two positions
+<span class="lineNum">     119 </span>            :   Vector pbcDistance(const Vector&amp;,const Vector&amp;)const;
+<span class="lineNum">     120 </span>            : /// Applies  PBCs to a seriens of positions or distances
+<span class="lineNum">     121 </span>            :   void pbcApply(std::vector&lt;Vector&gt;&amp; dlist, unsigned max_index=0) const;
+<span class="lineNum">     122 </span>            : /// Get the vector of absolute indexes
+<span class="lineNum">     123 </span>            :   virtual const std::vector&lt;AtomNumber&gt; &amp; getAbsoluteIndexes()const;
+<span class="lineNum">     124 </span>            : /// Get the absolute index of an atom
+<span class="lineNum">     125 </span>            :   AtomNumber getAbsoluteIndex(int i)const;
+<span class="lineNum">     126 </span>            : /// Parse a list of atoms without a numbered keyword
+<span class="lineNum">     127 </span>            :   void parseAtomList(const std::string&amp;key,std::vector&lt;AtomNumber&gt; &amp;t);
+<span class="lineNum">     128 </span>            : /// Parse an list of atom with a numbred keyword
+<span class="lineNum">     129 </span>            :   void parseAtomList(const std::string&amp;key,const int num, std::vector&lt;AtomNumber&gt; &amp;t);
+<span class="lineNum">     130 </span>            : /// Convert a set of read in strings into an atom list (this is used in parseAtomList)
+<span class="lineNum">     131 </span>            :   void interpretAtomList( std::vector&lt;std::string&gt;&amp; strings, std::vector&lt;AtomNumber&gt; &amp;t);
+<span class="lineNum">     132 </span>            : /// Change the box shape
+<span class="lineNum">     133 </span>            :   void changeBox( const Tensor&amp; newbox );
+<span class="lineNum">     134 </span>            : /// Get reference to Pbc
+<span class="lineNum">     135 </span>            :   const Pbc &amp; getPbc() const;
+<span class="lineNum">     136 </span>            : /// Add the forces to the atoms
+<span class="lineNum">     137 </span>            :   void setForcesOnAtoms( const std::vector&lt;double&gt;&amp; forcesToApply, unsigned ind=0 );
+<span class="lineNum">     138 </span>            : /// Skip atom retrieval - use with care.
+<span class="lineNum">     139 </span>            : /// If this function is called during initialization, then atoms are
+<span class="lineNum">     140 </span>            : /// not going to be retrieved. Can be used for optimization. Notice that
+<span class="lineNum">     141 </span>            : /// calling getPosition(int) in an Action where DoNotRetrieve() was called might
+<span class="lineNum">     142 </span>            : /// lead to undefined behavior.
+<span class="lineNum">     143 </span><span class="lineCov">         25 :   void doNotRetrieve() {donotretrieve=true;}</span>
+<span class="lineNum">     144 </span>            : /// Skip atom forces - use with care.
+<span class="lineNum">     145 </span>            : /// If this function is called during initialization, then forces are
+<span class="lineNum">     146 </span>            : /// not going to be propagated. Can be used for optimization.
+<span class="lineNum">     147 </span><span class="lineCov">         17 :   void doNotForce() {donotforce=true;}</span>
+<span class="lineNum">     148 </span>            : /// Make atoms whole, assuming they are in the proper order
+<span class="lineNum">     149 </span>            :   void makeWhole();
+<span class="lineNum">     150 </span>            : /// Allow calls to modifyGlobalForce()
+<span class="lineNum">     151 </span><span class="lineCov">          8 :   void allowToAccessGlobalForces() {atoms.zeroallforces=true;}</span>
+<span class="lineNum">     152 </span>            : /// updates local unique atoms
+<span class="lineNum">     153 </span>            :   void updateUniqueLocal();
+<span class="lineNum">     154 </span>            : public:
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : // virtual functions:
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :   explicit ActionAtomistic(const ActionOptions&amp;ao);
+<span class="lineNum">     159 </span>            :   ~ActionAtomistic();
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :   void clearOutputForces();
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : /// N.B. only pass an ActionWithValue to this routine if you know exactly what you
+<span class="lineNum">     166 </span>            : /// are doing.  The default will be correct for the vast majority of cases
+<span class="lineNum">     167 </span>            :   virtual void   calculateNumericalDerivatives( ActionWithValue* a=NULL );
+<span class="lineNum">     168 </span>            : /// Numerical derivative routine to use when using Actions that inherit from BOTH
+<span class="lineNum">     169 </span>            : /// ActionWithArguments and ActionAtomistic
+<span class="lineNum">     170 </span>            :   void calculateAtomicNumericalDerivatives( ActionWithValue* a, const unsigned&amp; startnum );
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :   virtual void retrieveAtoms();
+<span class="lineNum">     173 </span>            :   void applyForces();
+<span class="lineNum">     174 </span>            :   void lockRequests();
+<span class="lineNum">     175 </span>            :   void unlockRequests();
+<span class="lineNum">     176 </span>            :   const std::set&lt;AtomNumber&gt; &amp; getUnique()const;
+<span class="lineNum">     177 </span>            :   const std::set&lt;AtomNumber&gt; &amp; getUniqueLocal()const;
+<span class="lineNum">     178 </span>            : /// Read in an input file containing atom positions and calculate the action for the atomic
+<span class="lineNum">     179 </span>            : /// configuration therin
+<span class="lineNum">     180 </span>            :   void readAtomsFromPDB( const PDB&amp; pdb );
+<span class="lineNum">     181 </span>            : };
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : inline
+<span class="lineNum">     184 </span>            : const Vector &amp; ActionAtomistic::getPosition(int i)const {
+<span class="lineNum">     185 </span><span class="lineCov">  972797160 :   return positions[i];</span>
+<span class="lineNum">     186 </span>            : }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : inline
+<span class="lineNum">     189 </span>            : const Vector &amp; ActionAtomistic::getPosition(AtomNumber i)const {
+<span class="lineNum">     190 </span><span class="lineCov">      11478 :   return atoms.positions[i.index()];</span>
+<span class="lineNum">     191 </span>            : }
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : inline
+<span class="lineNum">     194 </span>            : Vector &amp; ActionAtomistic::modifyPosition(AtomNumber i) {
+<span class="lineNum">     195 </span><span class="lineCov">      29186 :   return atoms.positions[i.index()];</span>
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : inline
+<span class="lineNum">     199 </span>            : Vector &amp; ActionAtomistic::modifyGlobalForce(AtomNumber i) {
+<span class="lineNum">     200 </span><span class="lineCov">      14638 :   return atoms.forces[i.index()];</span>
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : inline
+<span class="lineNum">     204 </span>            : Tensor &amp; ActionAtomistic::modifyGlobalVirial() {
+<span class="lineNum">     205 </span><span class="lineCov">        113 :   return atoms.virial;</span>
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : inline
+<span class="lineNum">     209 </span>            : double ActionAtomistic::getMass(int i)const {
+<span class="lineNum">     210 </span><span class="lineCov">      91026 :   return masses[i];</span>
+<span class="lineNum">     211 </span>            : }
+<a name="212"><span class="lineNum">     212 </span>            : </a>
+<span class="lineNum">     213 </span>            : inline
+<span class="lineNum">     214 </span><span class="lineCov">      19683 : double ActionAtomistic::getCharge(int i) const {</span>
+<span class="lineNum">     215 </span><span class="lineCov">      19683 :   if( !chargesWereSet ) error(&quot;charges were not passed to plumed&quot;);</span>
+<span class="lineNum">     216 </span><span class="lineCov">      39366 :   return charges[i];</span>
+<span class="lineNum">     217 </span>            : }
+<a name="218"><span class="lineNum">     218 </span>            : </a>
+<span class="lineNum">     219 </span>            : inline
+<span class="lineNum">     220 </span><span class="lineCov">       1234 : const std::vector&lt;AtomNumber&gt; &amp; ActionAtomistic::getAbsoluteIndexes()const {</span>
+<span class="lineNum">     221 </span><span class="lineCov">       1337 :   return indexes;</span>
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : inline
+<span class="lineNum">     225 </span>            : AtomNumber ActionAtomistic::getAbsoluteIndex(int i)const {
+<span class="lineNum">     226 </span><span class="lineCov">  260418353 :   return indexes[i];</span>
+<span class="lineNum">     227 </span>            : }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : inline
+<span class="lineNum">     230 </span>            : const std::vector&lt;Vector&gt; &amp; ActionAtomistic::getPositions()const {
+<span class="lineNum">     231 </span><span class="lineCov">     550286 :   return positions;</span>
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : inline
+<span class="lineNum">     235 </span>            : const double &amp; ActionAtomistic::getEnergy()const {
+<span class="lineNum">     236 </span><span class="lineCov">       3787 :   return energy;</span>
+<span class="lineNum">     237 </span>            : }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : inline
+<span class="lineNum">     240 </span>            : const Tensor &amp; ActionAtomistic::getBox()const {
+<span class="lineNum">     241 </span><span class="lineCov">      24523 :   return pbc.getBox();</span>
+<span class="lineNum">     242 </span>            : }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : inline
+<span class="lineNum">     245 </span>            : std::vector&lt;Vector&gt; &amp; ActionAtomistic::modifyForces() {
+<span class="lineNum">     246 </span><span class="lineCov">      77295 :   return forces;</span>
+<span class="lineNum">     247 </span>            : }
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            : inline
+<span class="lineNum">     250 </span>            : Tensor &amp; ActionAtomistic::modifyVirial() {
+<span class="lineNum">     251 </span><span class="lineCov">      80640 :   return virial;</span>
+<span class="lineNum">     252 </span>            : }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : inline
+<span class="lineNum">     255 </span>            : double &amp; ActionAtomistic::modifyForceOnEnergy() {
+<span class="lineNum">     256 </span>            :   return forceOnEnergy;
+<span class="lineNum">     257 </span>            : }
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            : inline
+<span class="lineNum">     260 </span>            : const Pbc &amp; ActionAtomistic::getPbc() const {
+<span class="lineNum">     261 </span><span class="lineCov">     310284 :   return pbc;</span>
+<span class="lineNum">     262 </span>            : }
+<a name="263"><span class="lineNum">     263 </span>            : </a>
+<span class="lineNum">     264 </span>            : inline
+<span class="lineNum">     265 </span><span class="lineCov">      86038 : void ActionAtomistic::lockRequests() {</span>
+<span class="lineNum">     266 </span><span class="lineCov">      93190 :   lockRequestAtoms=true;</span>
+<span class="lineNum">     267 </span><span class="lineCov">      86038 : }</span>
+<a name="268"><span class="lineNum">     268 </span>            : </a>
+<span class="lineNum">     269 </span>            : inline
+<span class="lineNum">     270 </span><span class="lineCov">      86038 : void ActionAtomistic::unlockRequests() {</span>
+<span class="lineNum">     271 </span><span class="lineCov">      93190 :   lockRequestAtoms=false;</span>
+<span class="lineNum">     272 </span><span class="lineCov">      86038 : }</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : inline
+<span class="lineNum">     275 </span>            : const std::set&lt;AtomNumber&gt; &amp; ActionAtomistic::getUnique()const {
+<span class="lineNum">     276 </span>            :   return unique;
+<span class="lineNum">     277 </span>            : }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : inline
+<span class="lineNum">     280 </span>            : const std::set&lt;AtomNumber&gt; &amp; ActionAtomistic::getUniqueLocal()const {
+<span class="lineNum">     281 </span>            :   return unique_local;
+<span class="lineNum">     282 </span>            : }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : inline
+<span class="lineNum">     285 </span>            : unsigned ActionAtomistic::getTotAtoms()const {
+<span class="lineNum">     286 </span><span class="lineCov">      57662 :   return atoms.positions.size();</span>
+<span class="lineNum">     287 </span>            : }
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            : inline
+<span class="lineNum">     290 </span>            : Pbc &amp; ActionAtomistic::modifyGlobalPbc() {
+<span class="lineNum">     291 </span><span class="lineCov">         65 :   return atoms.pbc;</span>
+<span class="lineNum">     292 </span>            : }
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

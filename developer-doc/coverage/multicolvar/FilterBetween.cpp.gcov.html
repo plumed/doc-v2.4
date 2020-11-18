@@ -1,0 +1,272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/FilterBetween.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - FilterBetween.cpp<span style="font-size: 80%;"> (source / <a href="FilterBetween.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryMed">83.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/HistogramBead.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;MultiColvarFilter.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC MTRANSFORMS MTRANSFORM_BETWEEN
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : This action can be useed to transform the colvar values calculated by a multicolvar using a \ref histogrambead
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : In this action each colvar, \f$s_i\f$, calculated by multicolvar is transformed by a \ref histogrambead function that
+<span class="lineNum">      31 </span>            : is equal to one if the colvar is within a certain range and which is equal to zero otherwise.  In other words, we
+<span class="lineNum">      32 </span>            : compute:
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : \f[
+<span class="lineNum">      35 </span>            : f_i = \int_a^b K\left( \frac{s-s_i}{w} \right)
+<span class="lineNum">      36 </span>            : \f]
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : where \f$a, b\f$ and \f$w\f$ are parameters.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : It is important to understand the distinction between what is done here and what is done by \ref MFILTER_BETWEEN.
+<span class="lineNum">      41 </span>            : In \ref MFILTER_BETWEEN a weight, \f$w_i\f$ for the colvar is calculated using the \ref histogrambead.  If one calculates the
+<span class="lineNum">      42 </span>            : MEAN for \ref MFILTER_BETWEEN one is thus calculating:
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : \f[
+<span class="lineNum">      45 </span>            : \mu = \frac{ \sum_i f_i s_i }{ \sum_i f_i}
+<span class="lineNum">      46 </span>            : \f]
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : In this action by contrast the colvar is being transformed by the \ref histogrambead.  If one thus calculates a MEAN for
+<span class="lineNum">      49 </span>            : thia action one computes:
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \f[
+<span class="lineNum">      52 </span>            : \mu = \frac{ \sum_{i=1}^N f_i }{ N }
+<span class="lineNum">      53 </span>            : \f]
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : In other words, you are calculating the mean for the transformed colvar.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \par Examples
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : The following input gives an example of how a MTRANSFORM_BETWEEN action can be used to duplicate
+<span class="lineNum">      60 </span>            : functionality that is elsehwere in PLUMED.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : \plumedfile
+<span class="lineNum">      63 </span>            : DISTANCES ...
+<span class="lineNum">      64 </span>            :  GROUPA=1-10 GROUPB=11-20
+<span class="lineNum">      65 </span>            :  LABEL=d1
+<span class="lineNum">      66 </span>            : ... DISTANCES
+<span class="lineNum">      67 </span>            : MTRANSFORM_BETWEEN DATA=d1 LOWER=1.0 UPPER=2.0 SMEAR=0.5
+<span class="lineNum">      68 </span>            : \endplumedfile
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : In this case you can achieve the same result by using:
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : \plumedfile
+<span class="lineNum">      73 </span>            : DISTANCES ...
+<span class="lineNum">      74 </span>            :  GROUPA=1-10 GROUPB=11-20
+<span class="lineNum">      75 </span>            :  BETWEEN={GAUSSIAN LOWER=1.0 UPPER=2.0}
+<span class="lineNum">      76 </span>            : ... DISTANCES
+<span class="lineNum">      77 </span>            : \endplumedfile
+<span class="lineNum">      78 </span>            : (see \ref DISTANCES)
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : The advantage of MTRANSFORM_BETWEEN comes, however, if you want to use transformed colvars as input
+<span class="lineNum">      81 </span>            : for \ref MULTICOLVARDENS
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : */
+<span class="lineNum">      84 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : //+PLUMEDOC MFILTERS MFILTER_BETWEEN
+<span class="lineNum">      87 </span>            : /*
+<span class="lineNum">      88 </span>            : This action can be used to filter the colvar values calculated by a multicolvar
+<span class="lineNum">      89 </span>            : so that one can compute the mean and so on for only those multicolvars within a certain range.
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : This action can be used to create a dynamic group of atom based on the value of a multicolvar.
+<span class="lineNum">      92 </span>            : In this action a multicolvar is within the dynamic group if its value lies in a particular range.
+<span class="lineNum">      93 </span>            : In practise a weight, \f$w_i\f$  is ascribed to each colvar, \f$s_i\f$ calculated by a multicolvar
+<span class="lineNum">      94 </span>            : and this weight measures the degree to which a colvar is a member of the group.  This weight is
+<span class="lineNum">      95 </span>            : calculated using a \ref histogrambead so it is given by:
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : \f[
+<span class="lineNum">      98 </span>            : w_i = \int_a^b K\left( \frac{s - s_i}{w} \right)
+<span class="lineNum">      99 </span>            : \f]
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : where \f$a, b\f$ and \f$w\f$ are parameters.  If one calculates a function of the set of multicolvars
+<span class="lineNum">     102 </span>            : these weights are included in the calculation.  As such if one calculates the MEAN, \f$\mu\f$ of a filtered
+<span class="lineNum">     103 </span>            : multicolvar what is computed is the following:
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : \f[
+<span class="lineNum">     106 </span>            : \mu = \frac{ \sum_i w_i s_i }{ \sum_i w_i}
+<span class="lineNum">     107 </span>            : \f]
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : One is thus calculating the mean for those colvars that are within the range of interest.
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : \par Examples
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : The example shown below calculates the mean for those distances that are between 0 and 3 nm in length
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : \plumedfile
+<span class="lineNum">     116 </span>            : DISTANCES GROUPA=1 GROUPB=2-50 MEAN LABEL=d1
+<span class="lineNum">     117 </span>            : MFILTER_BETWEEN DATA=d1 LOWER=0 UPPER=3.0 SMEAR=0.0001 MEAN LABEL=d4
+<span class="lineNum">     118 </span>            : \endplumedfile
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : More complicated things can be done by using the label of a filter as input to a new multicolvar as shown
+<span class="lineNum">     121 </span>            : in the example below.  Here the coordination numbers of all atoms are computed.  The atoms with a coordination
+<span class="lineNum">     122 </span>            : number between 4 and 6 are then identified using the filter.  This reduced list of atoms is then used as input
+<span class="lineNum">     123 </span>            : to a second coordination number calculation.  This second coordination number thus measures the number of atoms
+<span class="lineNum">     124 </span>            : 4-6 coordinated atoms each of the 4-6 coordination atoms is bound to.
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : \plumedfile
+<span class="lineNum">     127 </span>            : c1: COORDINATIONNUMBER SPECIES=1-150 SWITCH={EXP D_0=4.0 R_0=0.5 D_MAX=6.0}
+<span class="lineNum">     128 </span>            : cf: MFILTER_BETWEEN DATA=c1 LOWER=4 UPPER=6 SMEAR=0.5 LOWMEM
+<span class="lineNum">     129 </span>            : c2: COORDINATIONNUMBER SPECIES=cf SWITCH={EXP D_0=4.0 R_0=0.5 D_MAX=6.0} MORE_THAN={RATIONAL D_0=2.0 R_0=0.1}
+<span class="lineNum">     130 </span>            : \endplumedfile
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : */
+<span class="lineNum">     133 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : namespace PLMD {
+<a name="136"><span class="lineNum">     136 </span>            : namespace multicolvar {</a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">          6 : class FilterBetween : public MultiColvarFilter {</span>
+<span class="lineNum">     139 </span>            : private:
+<span class="lineNum">     140 </span>            :   HistogramBead hb;
+<span class="lineNum">     141 </span>            : public:
+<span class="lineNum">     142 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     143 </span>            :   explicit FilterBetween(const ActionOptions&amp; ao);
+<span class="lineNum">     144 </span>            :   double applyFilter( const double&amp; val, double&amp; df ) const ;
+<a name="145"><span class="lineNum">     145 </span>            : };</a>
+<a name="146"><span class="lineNum">     146 </span>            : </a>
+<span class="lineNum">     147 </span><span class="lineCov">       6455 : PLUMED_REGISTER_ACTION(FilterBetween,&quot;MFILTER_BETWEEN&quot;)</span>
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(FilterBetween,&quot;MTRANSFORM_BETWEEN&quot;)</span></a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">          5 : void FilterBetween::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">          5 :   MultiColvarFilter::registerKeywords( keys );</span>
+<span class="lineNum">     152 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;LOWER&quot;,&quot;the lower boundary for the range of interest&quot;);</span>
+<span class="lineNum">     153 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;UPPER&quot;,&quot;the upper boundary for the range of interest&quot;);</span>
+<span class="lineNum">     154 </span><span class="lineCov">         25 :   keys.add(&quot;compulsory&quot;,&quot;SMEAR&quot;,&quot;0.5&quot;,&quot;the ammount by which to smear the value for kernel density estimation&quot;);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         20 :   keys.add(&quot;optional&quot;,&quot;BEAD&quot;,&quot;This keywords is used if you want to employ an alternative to the function defeind above. &quot;</span>
+<span class="lineNum">     156 </span>            :            &quot;The following provides information on the \\ref histogrambead that are available. &quot;
+<span class="lineNum">     157 </span>            :            &quot;When this keyword is present you no longer need the LOWER, UPPER and SMEAR keywords.&quot;);
+<a name="158"><span class="lineNum">     158 </span><span class="lineCov">          5 : }</span></a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">          3 : FilterBetween::FilterBetween(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     161 </span>            :   Action(ao),
+<span class="lineNum">     162 </span><span class="lineCov">          3 :   MultiColvarFilter(ao)</span>
+<span class="lineNum">     163 </span>            : {
+<span class="lineNum">     164 </span>            :   // Read in the switching function
+<span class="lineNum">     165 </span><span class="lineCov">          6 :   std::string sw, errors; parse(&quot;BEAD&quot;,sw);</span>
+<span class="lineNum">     166 </span><span class="lineCov">          3 :   if( getPntrToMultiColvar()-&gt;isPeriodic() ) {</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     std::string min, max; getPntrToMultiColvar()-&gt;retrieveDomain( min, max );</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     double mlow, mhigh; Tools::convert( min,mlow ); Tools::convert( max, mhigh);</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     hb.isPeriodic( mlow, mhigh );</span>
+<span class="lineNum">     170 </span>            :   } else {
+<span class="lineNum">     171 </span>            :     hb.isNotPeriodic();
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">          3 :   if(sw.length()&gt;0) {</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :     hb.set(sw,errors);</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :     if( errors.length()!=0 ) error(&quot;problem reading BEAD keyword : &quot; + errors );</span>
+<span class="lineNum">     177 </span>            :   } else {
+<span class="lineNum">     178 </span>            :     double l, u, s; std::string ll, uu, ss;
+<span class="lineNum">     179 </span><span class="lineCov">         12 :     parse(&quot;LOWER&quot;,l); parse(&quot;UPPER&quot;,u); parse(&quot;SMEAR&quot;,s);</span>
+<span class="lineNum">     180 </span><span class="lineCov">          3 :     Tools::convert(l,ll); Tools::convert(u,uu); Tools::convert(s,ss);</span>
+<span class="lineNum">     181 </span><span class="lineCov">         18 :     sw=&quot;GAUSSIAN LOWER=&quot; + ll + &quot; UPPER=&quot; + uu + &quot; SMEAR=&quot; + ss;</span>
+<span class="lineNum">     182 </span><span class="lineCov">          6 :     hb.set(sw,errors); plumed_massert(errors.length()==0,&quot;problems with bead&quot; + errors);</span>
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span><span class="lineCov">          9 :   log.printf(&quot;  filtering colvar values and focussing only on those values in range %s\n&quot;,( hb.description() ).c_str() );</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">          3 :   checkRead();</span>
+<a name="187"><span class="lineNum">     187 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">        735 : double FilterBetween::applyFilter( const double&amp; val, double&amp; df ) const {</span>
+<span class="lineNum">     190 </span><span class="lineCov">        735 :   double f = hb.calculate( val, df );</span>
+<span class="lineNum">     191 </span><span class="lineCov">        735 :   return f;</span>
+<span class="lineNum">     192 </span>            : }
+<a name="193"><span class="lineNum">     193 </span>            : </a>
+<span class="lineNum">     194 </span>            : }
+<span class="lineNum">     195 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

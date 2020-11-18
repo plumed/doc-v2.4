@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - analysis/Committor.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">analysis</a> - Committor.cpp<span style="font-size: 80%;"> (source / <a href="Committor.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">73</td>
+            <td class="headerCovTableEntry">75</td>
+            <td class="headerCovTableEntryHi">97.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionWithArguments.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace analysis {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC PRINTANALYSIS COMMITTOR
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Does a committor analysis.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : \par Examples
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : The following input monitors two torsional angles during a simulation,
+<span class="lineNum">      38 </span>            : defines two basins (A and B) as a function of the two torsions and
+<span class="lineNum">      39 </span>            : stops the simulation when it falls in one of the two. In the log
+<span class="lineNum">      40 </span>            : file will be shown the latest values for the CVs and the basin reached.
+<span class="lineNum">      41 </span>            : \plumedfile
+<span class="lineNum">      42 </span>            : TORSION ATOMS=1,2,3,4 LABEL=r1
+<span class="lineNum">      43 </span>            : TORSION ATOMS=2,3,4,5 LABEL=r2
+<span class="lineNum">      44 </span>            : COMMITTOR ...
+<span class="lineNum">      45 </span>            :   ARG=r1,r2
+<span class="lineNum">      46 </span>            :   STRIDE=10
+<span class="lineNum">      47 </span>            :   BASIN_LL1=0.15,0.20
+<span class="lineNum">      48 </span>            :   BASIN_UL1=0.25,0.40
+<span class="lineNum">      49 </span>            :   BASIN_LL2=-0.25,-0.40
+<span class="lineNum">      50 </span>            :   BASIN_UL2=-0.15,-0.20
+<span class="lineNum">      51 </span>            : ... COMMITTOR
+<span class="lineNum">      52 </span>            : \endplumedfile
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : */
+<a name="55"><span class="lineNum">      55 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">          8 : class Committor :</span>
+<span class="lineNum">      58 </span>            :   public ActionPilot,
+<span class="lineNum">      59 </span>            :   public ActionWithArguments
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span>            : private:
+<span class="lineNum">      62 </span>            :   std::string file;
+<span class="lineNum">      63 </span>            :   OFile ofile;
+<span class="lineNum">      64 </span>            :   std::string fmt;
+<span class="lineNum">      65 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; lowerlimits;
+<span class="lineNum">      66 </span>            :   std::vector&lt; std::vector&lt;double&gt; &gt; upperlimits;
+<span class="lineNum">      67 </span>            :   unsigned nbasins;
+<span class="lineNum">      68 </span>            :   unsigned basin;
+<span class="lineNum">      69 </span>            :   bool doNotStop;
+<span class="lineNum">      70 </span>            : public:
+<span class="lineNum">      71 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="72"><span class="lineNum">      72 </span>            :   explicit Committor(const ActionOptions&amp;ao);</a>
+<span class="lineNum">      73 </span>            :   void calculate();
+<span class="lineNum">      74 </span><span class="lineCov">         24 :   void apply() {}</span>
+<a name="75"><span class="lineNum">      75 </span>            : };</a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(Committor,&quot;COMMITTOR&quot;)</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">          3 : void Committor::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      80 </span><span class="lineCov">          3 :   Action::registerKeywords(keys);</span>
+<span class="lineNum">      81 </span><span class="lineCov">          3 :   ActionPilot::registerKeywords(keys);</span>
+<span class="lineNum">      82 </span><span class="lineCov">          3 :   ActionWithArguments::registerKeywords(keys);</span>
+<span class="lineNum">      83 </span><span class="lineCov">          6 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">      84 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;, &quot;BASIN_LL&quot;,&quot;List of lower limits for basin #&quot;);</span>
+<span class="lineNum">      85 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;, &quot;BASIN_UL&quot;,&quot;List of upper limits for basin #&quot;);</span>
+<span class="lineNum">      86 </span><span class="lineCov">         15 :   keys.reset_style(&quot;BASIN_LL&quot;,&quot;compulsory&quot;); keys.reset_style(&quot;BASIN_UL&quot;,&quot;compulsory&quot;);</span>
+<span class="lineNum">      87 </span><span class="lineCov">         15 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which the CVs are analysed&quot;);</span>
+<span class="lineNum">      88 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;FILE&quot;,&quot;the name of the file on which to output the reached basin&quot;);</span>
+<span class="lineNum">      89 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;FMT&quot;,&quot;the format that should be used to output real numbers&quot;);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          9 :   keys.addFlag(&quot;NOSTOP&quot;,false,&quot;if true do not stop the simulation when reaching a basin but just keep track of it&quot;);</span>
+<span class="lineNum">      91 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          2 : Committor::Committor(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      94 </span>            :   Action(ao),
+<span class="lineNum">      95 </span>            :   ActionPilot(ao),
+<span class="lineNum">      96 </span>            :   ActionWithArguments(ao),
+<span class="lineNum">      97 </span>            :   fmt(&quot;%f&quot;),
+<span class="lineNum">      98 </span>            :   basin(0),
+<span class="lineNum">      99 </span><span class="lineCov">          8 :   doNotStop(false)</span>
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span><span class="lineCov">          2 :   ofile.link(*this);</span>
+<span class="lineNum">     102 </span><span class="lineCov">          4 :   parse(&quot;FILE&quot;,file);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          2 :   if(file.length()&gt;0) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">          2 :     ofile.open(file);</span>
+<span class="lineNum">     105 </span><span class="lineCov">          4 :     log.printf(&quot;  on file %s\n&quot;,file.c_str());</span>
+<span class="lineNum">     106 </span>            :   } else {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :     log.printf(&quot;  on plumed log file\n&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :     ofile.link(log);</span>
+<span class="lineNum">     109 </span>            :   }
+<span class="lineNum">     110 </span><span class="lineCov">          4 :   parse(&quot;FMT&quot;,fmt);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          4 :   fmt=&quot; &quot;+fmt;</span>
+<span class="lineNum">     112 </span><span class="lineCov">          4 :   log.printf(&quot;  with format %s\n&quot;,fmt.c_str());</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">          6 :   for(unsigned b=1;; ++b ) {</span>
+<span class="lineNum">     115 </span>            :     std::vector&lt;double&gt; tmpl, tmpu;
+<span class="lineNum">     116 </span><span class="lineCov">         16 :     parseNumberedVector(&quot;BASIN_LL&quot;, b, tmpl );</span>
+<span class="lineNum">     117 </span><span class="lineCov">         16 :     parseNumberedVector(&quot;BASIN_UL&quot;, b, tmpu );</span>
+<span class="lineNum">     118 </span><span class="lineCov">         10 :     if( tmpl.empty() &amp;&amp; tmpu.empty() ) break;</span>
+<span class="lineNum">     119 </span><span class="lineCov">          6 :     if( tmpl.size()!=getNumberOfArguments()) error(&quot;Wrong number of values for BASIN_LL: they should be equal to the number of arguments&quot;);</span>
+<span class="lineNum">     120 </span><span class="lineCov">          6 :     if( tmpu.size()!=getNumberOfArguments()) error(&quot;Wrong number of values for BASIN_UL: they should be equal to the number of arguments&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">          6 :     lowerlimits.push_back(tmpl);</span>
+<span class="lineNum">     122 </span><span class="lineCov">          6 :     upperlimits.push_back(tmpu);</span>
+<span class="lineNum">     123 </span><span class="lineCov">          6 :     nbasins=b;</span>
+<span class="lineNum">     124 </span><span class="lineCov">          6 :   }</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">          4 :   parseFlag(&quot;NOSTOP&quot;, doNotStop);</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">          8 :   for(unsigned b=0; b&lt;nbasins; b++) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">          6 :     log.printf(&quot;  BASIN %u definition:\n&quot;, b+1);</span>
+<span class="lineNum">     133 </span><span class="lineCov">         30 :     for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     134 </span><span class="lineCov">         36 :       if(lowerlimits[b][i]&gt;upperlimits[b][i]) error(&quot;COMMITTOR: UPPER bounds must always be greater than LOWER bounds&quot;);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         36 :       log.printf(&quot; %f - %f\n&quot;, lowerlimits[b][i], upperlimits[b][i]);</span>
+<span class="lineNum">     136 </span>            :     }
+<span class="lineNum">     137 </span><span class="lineCov">          6 :     if(doNotStop) log.printf(&quot; COMMITOR will keep track of the visited basins without stopping the simulations\n&quot;);</span>
+<span class="lineNum">     138 </span>            :   }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">         10 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) ofile.setupPrintValue( getPntrToArgument(i) );</span>
+<span class="lineNum">     141 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">         24 : void Committor::calculate() {</span>
+<span class="lineNum">     144 </span>            :   std::vector&lt;unsigned&gt; inbasin;
+<span class="lineNum">     145 </span><span class="lineCov">         48 :   inbasin.assign (nbasins,1);</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :   // check if current configuration belongs to a basin
+<span class="lineNum">     148 </span><span class="lineCov">        168 :   for(unsigned b=0; b&lt;nbasins; ++b) {</span>
+<span class="lineNum">     149 </span><span class="lineCov">        360 :     for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">        372 :       if(getArgument(i)&gt;lowerlimits[b][i]&amp;&amp;getArgument(i)&lt;upperlimits[b][i]) {</span>
+<span class="lineNum">     151 </span>            :         inbasin[b]*=1;
+<span class="lineNum">     152 </span>            :       } else {
+<span class="lineNum">     153 </span><span class="lineCov">         86 :         inbasin[b]*=0;</span>
+<span class="lineNum">     154 </span>            :       }
+<span class="lineNum">     155 </span>            :     }
+<span class="lineNum">     156 </span>            :   }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :   // check in which basin we are if any and if this is the same or a new one
+<span class="lineNum">     159 </span>            :   bool inonebasin = false;
+<span class="lineNum">     160 </span><span class="lineCov">        112 :   for(unsigned b=0; b&lt;nbasins; ++b) {</span>
+<span class="lineNum">     161 </span><span class="lineCov">        114 :     if(inbasin[b]==1) {</span>
+<span class="lineNum">     162 </span><span class="lineCov">         13 :       if(basin!=(b+1)) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">          8 :         basin = b+1;</span>
+<span class="lineNum">     164 </span><span class="lineCov">         16 :         ofile.fmtField(&quot; %f&quot;);</span>
+<span class="lineNum">     165 </span><span class="lineCov">         16 :         ofile.printField(&quot;time&quot;,getTime());</span>
+<span class="lineNum">     166 </span><span class="lineCov">         40 :         for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     167 </span><span class="lineCov">         16 :           ofile.fmtField(fmt);</span>
+<span class="lineNum">     168 </span><span class="lineCov">         32 :           ofile.printField( getPntrToArgument(i), getArgument(i) );</span>
+<span class="lineNum">     169 </span>            :         }
+<span class="lineNum">     170 </span><span class="lineCov">         16 :         ofile.printField(&quot;basin&quot;, static_cast&lt;int&gt; (b+1));</span>
+<span class="lineNum">     171 </span><span class="lineCov">          8 :         ofile.printField();</span>
+<span class="lineNum">     172 </span>            :       }
+<span class="lineNum">     173 </span>            :       inonebasin = true;
+<span class="lineNum">     174 </span>            :       break;
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span>            :   }
+<span class="lineNum">     177 </span><span class="lineCov">         11 :   if(!inonebasin) basin = 0;</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :   // then check if the simulation should be stopped
+<span class="lineNum">     180 </span><span class="lineCov">         24 :   if(inonebasin&amp;&amp;(!doNotStop)) {</span>
+<span class="lineNum">     181 </span><span class="lineCov">          1 :     std::string num; Tools::convert( basin, num );</span>
+<span class="lineNum">     182 </span><span class="lineCov">          1 :     std::string str = &quot;COMMITED TO BASIN &quot; + num;</span>
+<span class="lineNum">     183 </span><span class="lineCov">          1 :     ofile.addConstantField(str);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          1 :     ofile.printField();</span>
+<span class="lineNum">     185 </span><span class="lineCov">          1 :     ofile.flush();</span>
+<span class="lineNum">     186 </span><span class="lineCov">          1 :     plumed.stop();</span>
+<span class="lineNum">     187 </span>            :   }
+<span class="lineNum">     188 </span><span class="lineCov">         24 : }</span>
+<a name="189"><span class="lineNum">     189 </span>            : </a>
+<span class="lineNum">     190 </span>            : }
+<span class="lineNum">     191 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

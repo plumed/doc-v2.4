@@ -1,0 +1,949 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/CoeffsVector.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - CoeffsVector.cpp<span style="font-size: 80%;"> (source / <a href="CoeffsVector.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">213</td>
+            <td class="headerCovTableEntry">435</td>
+            <td class="headerCovTableEntryLo">49.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntry">97</td>
+            <td class="headerCovTableEntryLo">43.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;CoeffsVector.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;CoeffsMatrix.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      35 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      36 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      37 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      38 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      39 </span>            : #include &lt;cfloat&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : namespace PLMD {
+<a name="43"><span class="lineNum">      43 </span>            : namespace ves {</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 : CoeffsVector::CoeffsVector(</span>
+<span class="lineNum">      46 </span>            :   const std::string&amp; label,
+<span class="lineNum">      47 </span>            :   const std::vector&lt;std::string&gt;&amp; dimension_labels,
+<span class="lineNum">      48 </span>            :   const std::vector&lt;unsigned int&gt;&amp; indices_shape,
+<span class="lineNum">      49 </span>            :   Communicator&amp; cc,
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :   const bool use_iteration_counter):</span>
+<span class="lineNum">      51 </span>            :   CoeffsBase(label,dimension_labels,indices_shape,use_iteration_counter),
+<span class="lineNum">      52 </span>            :   data(0),
+<span class="lineNum">      53 </span>            :   averaging_counter(0),
+<span class="lineNum">      54 </span>            :   averaging_exp_decay_(0),
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :   mycomm(cc)</span>
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :   clear();</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 : }</span>
+<a name="59"><span class="lineNum">      59 </span>            : </a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">        294 : CoeffsVector::CoeffsVector(</span>
+<span class="lineNum">      62 </span>            :   const std::string&amp; label,
+<span class="lineNum">      63 </span>            :   std::vector&lt;Value*&gt;&amp; args,
+<span class="lineNum">      64 </span>            :   std::vector&lt;BasisFunctions*&gt;&amp; basisf,
+<span class="lineNum">      65 </span>            :   Communicator&amp; cc,
+<span class="lineNum">      66 </span><span class="lineCov">        294 :   const bool use_iteration_counter):</span>
+<span class="lineNum">      67 </span>            :   CoeffsBase(label,args,basisf,use_iteration_counter),
+<span class="lineNum">      68 </span>            :   data(0),
+<span class="lineNum">      69 </span>            :   averaging_counter(0),
+<span class="lineNum">      70 </span>            :   averaging_exp_decay_(0),
+<span class="lineNum">      71 </span><span class="lineCov">        294 :   mycomm(cc)</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineCov">        294 :   clear();</span>
+<span class="lineNum">      74 </span><span class="lineCov">        294 : }</span>
+<a name="75"><span class="lineNum">      75 </span>            : </a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 : CoeffsVector::CoeffsVector(</span>
+<span class="lineNum">      78 </span>            :   const std::string&amp; label,
+<span class="lineNum">      79 </span>            :   std::vector&lt;std::vector&lt;Value*&gt; &gt;&amp; argsv,
+<span class="lineNum">      80 </span>            :   std::vector&lt;std::vector&lt;BasisFunctions*&gt; &gt;&amp; basisfv,
+<span class="lineNum">      81 </span>            :   Communicator&amp; cc,
+<span class="lineNum">      82 </span>            :   const bool use_iteration_counter,
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :   const std::string&amp; multicoeffs_label):</span>
+<span class="lineNum">      84 </span>            :   CoeffsBase(label,argsv,basisfv,use_iteration_counter,multicoeffs_label),
+<span class="lineNum">      85 </span>            :   data(0),
+<span class="lineNum">      86 </span>            :   averaging_counter(0),
+<span class="lineNum">      87 </span>            :   averaging_exp_decay_(0),
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :   mycomm(cc)</span>
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :   clear();</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 : }</span>
+<a name="92"><span class="lineNum">      92 </span>            : </a>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 : CoeffsVector::CoeffsVector(</span>
+<span class="lineNum">      95 </span>            :   const std::string&amp; label,
+<span class="lineNum">      96 </span>            :   CoeffsMatrix* coeffsMat,
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :   Communicator&amp; cc):</span>
+<span class="lineNum">      98 </span>            :   CoeffsBase( *(static_cast&lt;CoeffsBase*&gt;(coeffsMat)) ),
+<span class="lineNum">      99 </span>            :   data(0),
+<span class="lineNum">     100 </span>            :   averaging_counter(0),
+<span class="lineNum">     101 </span>            :   averaging_exp_decay_(0),
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :   mycomm(cc)</span>
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :   clear();</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 : }</span>
+<a name="106"><span class="lineNum">     106 </span>            : </a>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">      22576 : CoeffsVector::~CoeffsVector() {}</span>
+<a name="109"><span class="lineNum">     109 </span>            : </a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">       1116 : void CoeffsVector::clear() {</span>
+<span class="lineNum">     112 </span><span class="lineCov">       2232 :   data.resize(getSize());</span>
+<span class="lineNum">     113 </span><span class="lineCov">      74988 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     114 </span><span class="lineCov">      36936 :     data[i]=0.0;</span>
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span><span class="lineCov">       1116 : }</span>
+<a name="117"><span class="lineNum">     117 </span>            : </a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 : void CoeffsVector::setAllValuesToZero() {</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :     data[i]=0.0;</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 : }</span>
+<a name="124"><span class="lineNum">     124 </span>            : </a>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">          6 : bool CoeffsVector::sameShape(CoeffsVector&amp; coeffsvector_in) const {</span>
+<span class="lineNum">     127 </span><span class="lineCov">          6 :   return CoeffsBase::sameShape( *(static_cast&lt;CoeffsBase*&gt;(&amp;coeffsvector_in)) );</span>
+<span class="lineNum">     128 </span>            : }
+<a name="129"><span class="lineNum">     129 </span>            : </a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 : bool CoeffsVector::sameShape(CoeffsMatrix&amp; coeffsmat_in) const {</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   return CoeffsBase::sameShape( *(static_cast&lt;CoeffsBase*&gt;(&amp;coeffsmat_in)) );</span>
+<span class="lineNum">     133 </span>            : }
+<a name="134"><span class="lineNum">     134 </span>            : </a>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 : bool CoeffsVector::sameShape(CoeffsVector&amp; coeffsvec0, CoeffsVector&amp; coeffsvec1) {</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :   return coeffsvec0.sameShape(coeffsvec1);</span>
+<span class="lineNum">     138 </span>            : }
+<a name="139"><span class="lineNum">     139 </span>            : </a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 : void CoeffsVector::resizeCoeffs(const std::vector&lt;unsigned int&gt;&amp; indices_shape_new) {</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   CoeffsVector coeffsVecOld(*this);</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :   resizeIndices(indices_shape_new);</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :   clear();</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :   setValuesFromDifferentShape(coeffsVecOld);</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 : }</span>
+<a name="147"><span class="lineNum">     147 </span>            : </a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 : void CoeffsVector::resizeCoeffs(std::vector&lt;BasisFunctions*&gt;&amp; basisf_new) {</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :   CoeffsVector coeffsVecOld(*this);</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :   resizeIndices(basisf_new);</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :   clear();</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :   setValuesFromDifferentShape(coeffsVecOld);</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 : }</span>
+<a name="155"><span class="lineNum">     155 </span>            : </a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 : void CoeffsVector::sumCommMPI() {</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :   mycomm.Sum(data);</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 : }</span>
+<a name="160"><span class="lineNum">     160 </span>            : </a>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 : void CoeffsVector::sumCommMPI(Communicator&amp; cc) {</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :   cc.Sum(data);</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 : }</span>
+<a name="165"><span class="lineNum">     165 </span>            : </a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 : void CoeffsVector::sumMultiSimCommMPI(Communicator&amp; multi_sim_cc) {</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :   if(mycomm.Get_rank()==0) {</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     double nwalkers = static_cast&lt;double&gt;(multi_sim_cc.Get_size());</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     multi_sim_cc.Sum(data);</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     scaleAllValues(1.0/nwalkers);</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :   mycomm.Bcast(data,0);</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 : }</span>
+<a name="175"><span class="lineNum">     175 </span>            : </a>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">         81 : double&amp; CoeffsVector::operator[](const size_t index) {</span>
+<span class="lineNum">     178 </span>            :   plumed_dbg_assert(index&lt;data.size());
+<span class="lineNum">     179 </span><span class="lineCov">         81 :   return data[index];</span>
+<span class="lineNum">     180 </span>            : }
+<a name="181"><span class="lineNum">     181 </span>            : </a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 : const double&amp; CoeffsVector::operator[](const size_t index) const {</span>
+<span class="lineNum">     184 </span>            :   plumed_dbg_assert(index&lt;data.size());
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :   return data[index];</span>
+<span class="lineNum">     186 </span>            : }
+<a name="187"><span class="lineNum">     187 </span>            : </a>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 : double&amp; CoeffsVector::operator[](const std::vector&lt;unsigned int&gt;&amp; indices) {</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :   return data[getIndex(indices)];</span>
+<span class="lineNum">     191 </span>            : }
+<a name="192"><span class="lineNum">     192 </span>            : </a>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 : const double&amp; CoeffsVector::operator[](const std::vector&lt;unsigned int&gt;&amp; indices) const {</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :   return data[getIndex(indices)];</span>
+<span class="lineNum">     196 </span>            : }
+<a name="197"><span class="lineNum">     197 </span>            : </a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">      20350 : double&amp; CoeffsVector::operator()(const size_t index) {</span>
+<span class="lineNum">     200 </span>            :   plumed_dbg_assert(index&lt;data.size());
+<span class="lineNum">     201 </span><span class="lineCov">      20350 :   return data[index];</span>
+<span class="lineNum">     202 </span>            : }
+<a name="203"><span class="lineNum">     203 </span>            : </a>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">      20350 : const double&amp; CoeffsVector::operator()(const size_t index) const {</span>
+<span class="lineNum">     206 </span>            :   plumed_dbg_assert(index&lt;data.size());
+<span class="lineNum">     207 </span><span class="lineCov">      20350 :   return data[index];</span>
+<span class="lineNum">     208 </span>            : }
+<a name="209"><span class="lineNum">     209 </span>            : </a>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 : double&amp; CoeffsVector::operator()(const std::vector&lt;unsigned int&gt;&amp; indices) {</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :   return data[getIndex(indices)];</span>
+<span class="lineNum">     213 </span>            : }
+<a name="214"><span class="lineNum">     214 </span>            : </a>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 : const double&amp; CoeffsVector::operator()(const std::vector&lt;unsigned int&gt;&amp; indices) const {</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :   return data[getIndex(indices)];</span>
+<span class="lineNum">     218 </span>            : }
+<a name="219"><span class="lineNum">     219 </span>            : </a>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 : void CoeffsVector::setValue(const size_t index, const double value) {</span>
+<span class="lineNum">     222 </span>            :   plumed_dbg_assert(index&lt;data.size());
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :   data[index]=value;</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 : }</span>
+<a name="225"><span class="lineNum">     225 </span>            : </a>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 : void CoeffsVector::setValue(const std::vector&lt;unsigned int&gt;&amp; indices, const double value) {</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :   setValue(getIndex(indices),value);</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 : }</span>
+<a name="230"><span class="lineNum">     230 </span>            : </a>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 : void CoeffsVector::addToValue(const size_t index, const double value) {</span>
+<span class="lineNum">     233 </span>            :   plumed_dbg_assert(index&lt;data.size());
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :   data[index]+=value;</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 : }</span>
+<a name="236"><span class="lineNum">     236 </span>            : </a>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 : void CoeffsVector::addToValue(const std::vector&lt;unsigned int&gt;&amp; indices, const double value) {</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :   addToValue(getIndex(indices),value);</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 : }</span>
+<a name="241"><span class="lineNum">     241 </span>            : </a>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span><span class="lineCov">       1346 : void CoeffsVector::scaleAllValues(const double scalef) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">      80426 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     245 </span><span class="lineCov">      39540 :     data[i]*=scalef;</span>
+<span class="lineNum">     246 </span>            :   }
+<span class="lineNum">     247 </span><span class="lineCov">       1346 : }</span>
+<a name="248"><span class="lineNum">     248 </span>            : </a>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineCov">       1340 : CoeffsVector&amp; CoeffsVector::operator*=(const double scalef) {</span>
+<span class="lineNum">     251 </span><span class="lineCov">       1340 :   scaleAllValues(scalef);</span>
+<span class="lineNum">     252 </span><span class="lineCov">       1340 :   return *this;</span>
+<span class="lineNum">     253 </span>            : }
+<a name="254"><span class="lineNum">     254 </span>            : </a>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">       1340 : CoeffsVector operator*(const double scalef, const CoeffsVector&amp; coeffsvector) {</span>
+<span class="lineNum">     257 </span><span class="lineCov">       1340 :   return CoeffsVector(coeffsvector)*=scalef;</span>
+<span class="lineNum">     258 </span>            : }
+<a name="259"><span class="lineNum">     259 </span>            : </a>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 : CoeffsVector operator*(const CoeffsVector&amp; coeffsvector, const double scalef) {</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :   return scalef*coeffsvector;</span>
+<span class="lineNum">     263 </span>            : }
+<a name="264"><span class="lineNum">     264 </span>            : </a>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineCov">        670 : CoeffsVector&amp; CoeffsVector::operator*=(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">        670 :   plumed_massert(data.size()==other_coeffsvector.getSize(),&quot;Coeffs vectors do not have the same size&quot;);</span>
+<span class="lineNum">     268 </span><span class="lineCov">      40050 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">      39380 :     data[i]*=other_coeffsvector.data[i];</span>
+<span class="lineNum">     270 </span>            :   }
+<span class="lineNum">     271 </span><span class="lineCov">        670 :   return *this;</span>
+<span class="lineNum">     272 </span>            : }
+<a name="273"><span class="lineNum">     273 </span>            : </a>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineCov">        670 : CoeffsVector CoeffsVector::operator*(const CoeffsVector&amp; other_coeffsvector) const {</span>
+<span class="lineNum">     276 </span><span class="lineCov">        670 :   return CoeffsVector(*this)*=other_coeffsvector;</span>
+<span class="lineNum">     277 </span>            : }
+<a name="278"><span class="lineNum">     278 </span>            : </a>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">        158 : void CoeffsVector::setValues(const double value) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">      12562 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     282 </span><span class="lineCov">       6202 :     data[i]=value;</span>
+<span class="lineNum">     283 </span>            :   }
+<span class="lineNum">     284 </span><span class="lineCov">        158 : }</span>
+<a name="285"><span class="lineNum">     285 </span>            : </a>
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span><span class="lineCov">        596 : void CoeffsVector::setValues(const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     288 </span><span class="lineCov">        596 :   plumed_massert( data.size()==values.size(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     289 </span><span class="lineCov">      36792 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     290 </span><span class="lineCov">      18098 :     data[i]=values[i];</span>
+<span class="lineNum">     291 </span>            :   }
+<span class="lineNum">     292 </span><span class="lineCov">        596 : }</span>
+<a name="293"><span class="lineNum">     293 </span>            : </a>
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">       1330 : void CoeffsVector::setValues(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     296 </span><span class="lineCov">       1330 :   plumed_massert( data.size()==other_coeffsvector.getSize(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     297 </span><span class="lineCov">     100842 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     298 </span><span class="lineCov">      49756 :     data[i]=other_coeffsvector.data[i];</span>
+<span class="lineNum">     299 </span>            :   }
+<span class="lineNum">     300 </span><span class="lineCov">       1330 : }</span>
+<a name="301"><span class="lineNum">     301 </span>            : </a>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 : CoeffsVector&amp; CoeffsVector::operator=(const double value) {</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :   setValues(value);</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :   return *this;</span>
+<span class="lineNum">     306 </span>            : }
+<a name="307"><span class="lineNum">     307 </span>            : </a>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineCov">        421 : CoeffsVector&amp; CoeffsVector::operator=(const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     310 </span><span class="lineCov">        421 :   setValues(values);</span>
+<span class="lineNum">     311 </span><span class="lineCov">        421 :   return *this;</span>
+<span class="lineNum">     312 </span>            : }
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            : // CoeffsVector&amp; CoeffsVector::operator=(const CoeffsVector&amp; other_coeffsvector) {
+<span class="lineNum">     316 </span>            : //   setValues(other_coeffsvector);
+<span class="lineNum">     317 </span>            : //   return *this;
+<span class="lineNum">     318 </span>            : // }
+<a name="319"><span class="lineNum">     319 </span>            : </a>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 : CoeffsVector CoeffsVector::operator+() const {</span>
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :   return *this;</span>
+<span class="lineNum">     323 </span>            : }
+<a name="324"><span class="lineNum">     324 </span>            : </a>
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 : CoeffsVector CoeffsVector::operator-() const {</span>
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :   return CoeffsVector(*this)*=-1.0;</span>
+<span class="lineNum">     328 </span>            : }
+<a name="329"><span class="lineNum">     329 </span>            : </a>
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 : void CoeffsVector::addToValues(const double value) {</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :     data[i]+=value;</span>
+<span class="lineNum">     334 </span>            :   }
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 : }</span>
+<a name="336"><span class="lineNum">     336 </span>            : </a>
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 : void CoeffsVector::addToValues(const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :   plumed_massert( data.size()==values.size(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :     data[i]+=values[i];</span>
+<span class="lineNum">     342 </span>            :   }
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 : }</span>
+<a name="344"><span class="lineNum">     344 </span>            : </a>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">       2070 : void CoeffsVector::addToValues(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     347 </span><span class="lineCov">       2070 :   plumed_massert( data.size()==other_coeffsvector.getSize(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     348 </span><span class="lineCov">     121530 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     349 </span><span class="lineCov">     119460 :     data[i]+=other_coeffsvector.data[i];</span>
+<span class="lineNum">     350 </span>            :   }
+<span class="lineNum">     351 </span><span class="lineCov">       2070 : }</span>
+<a name="352"><span class="lineNum">     352 </span>            : </a>
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 : void CoeffsVector::subtractFromValues(const double value) {</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :     data[i]-=value;</span>
+<span class="lineNum">     357 </span>            :   }
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 : }</span>
+<a name="359"><span class="lineNum">     359 </span>            : </a>
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineCov">        770 : void CoeffsVector::subtractFromValues(const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     362 </span><span class="lineCov">        770 :   plumed_massert( data.size()==values.size(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     363 </span><span class="lineCov">      61430 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     364 </span><span class="lineCov">      60660 :     data[i]-=values[i];</span>
+<span class="lineNum">     365 </span>            :   }
+<span class="lineNum">     366 </span><span class="lineCov">        770 : }</span>
+<a name="367"><span class="lineNum">     367 </span>            : </a>
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span><span class="lineCov">       1400 : void CoeffsVector::subtractFromValues(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     370 </span><span class="lineCov">       1400 :   plumed_massert( data.size()==other_coeffsvector.getSize(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     371 </span><span class="lineCov">      81480 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     372 </span><span class="lineCov">      80080 :     data[i]-=other_coeffsvector.data[i];</span>
+<span class="lineNum">     373 </span>            :   }
+<span class="lineNum">     374 </span><span class="lineCov">       1400 : }</span>
+<a name="375"><span class="lineNum">     375 </span>            : </a>
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : CoeffsVector&amp; CoeffsVector::operator+=(const double value) {</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :   addToValues(value);</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :   return *this;</span>
+<span class="lineNum">     380 </span>            : }
+<a name="381"><span class="lineNum">     381 </span>            : </a>
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 : CoeffsVector operator+(const double value, const CoeffsVector&amp; coeffsvector) {</span>
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :   return coeffsvector+value;</span>
+<span class="lineNum">     385 </span>            : }
+<a name="386"><span class="lineNum">     386 </span>            : </a>
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 : CoeffsVector operator+(const CoeffsVector&amp; coeffsvector, const double value) {</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :   return CoeffsVector(coeffsvector)+=value;</span>
+<span class="lineNum">     390 </span>            : }
+<a name="391"><span class="lineNum">     391 </span>            : </a>
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 : CoeffsVector&amp; CoeffsVector::operator+=(const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :   addToValues(values);</span>
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :   return *this;</span>
+<span class="lineNum">     396 </span>            : }
+<a name="397"><span class="lineNum">     397 </span>            : </a>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 : CoeffsVector operator+(const std::vector&lt;double&gt;&amp; values, const CoeffsVector&amp; coeffsvector) {</span>
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :   return coeffsvector+values;</span>
+<span class="lineNum">     401 </span>            : }
+<a name="402"><span class="lineNum">     402 </span>            : </a>
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 : CoeffsVector operator+(const CoeffsVector&amp; coeffsvector, const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :   return CoeffsVector(coeffsvector)+=values;</span>
+<span class="lineNum">     406 </span>            : }
+<a name="407"><span class="lineNum">     407 </span>            : </a>
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 : CoeffsVector&amp; CoeffsVector::operator-=(const double value) {</span>
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :   subtractFromValues(value);</span>
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :   return *this;</span>
+<span class="lineNum">     412 </span>            : }
+<a name="413"><span class="lineNum">     413 </span>            : </a>
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 : CoeffsVector operator-(const double value, const CoeffsVector&amp; coeffsvector) {</span>
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :   return -1.0*coeffsvector+value;</span>
+<span class="lineNum">     417 </span>            : }
+<a name="418"><span class="lineNum">     418 </span>            : </a>
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 : CoeffsVector operator-(const CoeffsVector&amp; coeffsvector, const double value) {</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :   return CoeffsVector(coeffsvector)-=value;</span>
+<span class="lineNum">     422 </span>            : }
+<a name="423"><span class="lineNum">     423 </span>            : </a>
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span><span class="lineCov">        770 : CoeffsVector&amp; CoeffsVector::operator-=(const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     426 </span><span class="lineCov">        770 :   subtractFromValues(values);</span>
+<span class="lineNum">     427 </span><span class="lineCov">        770 :   return *this;</span>
+<span class="lineNum">     428 </span>            : }
+<a name="429"><span class="lineNum">     429 </span>            : </a>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 : CoeffsVector operator-(const std::vector&lt;double&gt;&amp; values, const CoeffsVector&amp; coeffsvector) {</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :   return -1.0*coeffsvector+values;</span>
+<span class="lineNum">     433 </span>            : }
+<a name="434"><span class="lineNum">     434 </span>            : </a>
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span><span class="lineCov">        770 : CoeffsVector operator-(const CoeffsVector&amp; coeffsvector, const std::vector&lt;double&gt;&amp; values) {</span>
+<span class="lineNum">     437 </span><span class="lineCov">        770 :   return CoeffsVector(coeffsvector)-=values;</span>
+<span class="lineNum">     438 </span>            : }
+<a name="439"><span class="lineNum">     439 </span>            : </a>
+<span class="lineNum">     440 </span>            : 
+<span class="lineNum">     441 </span><span class="lineCov">       2070 : CoeffsVector&amp; CoeffsVector::operator+=(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     442 </span><span class="lineCov">       2070 :   addToValues(other_coeffsvector);</span>
+<span class="lineNum">     443 </span><span class="lineCov">       2070 :   return *this;</span>
+<span class="lineNum">     444 </span>            : }
+<a name="445"><span class="lineNum">     445 </span>            : </a>
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span><span class="lineCov">        730 : CoeffsVector CoeffsVector::operator+(const CoeffsVector&amp; other_coeffsvector) const {</span>
+<span class="lineNum">     448 </span><span class="lineCov">        730 :   return CoeffsVector(*this)+=other_coeffsvector;</span>
+<span class="lineNum">     449 </span>            : }
+<a name="450"><span class="lineNum">     450 </span>            : </a>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineCov">       1400 : CoeffsVector&amp; CoeffsVector::operator-=(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     453 </span><span class="lineCov">       1400 :   subtractFromValues(other_coeffsvector);</span>
+<span class="lineNum">     454 </span><span class="lineCov">       1400 :   return *this;</span>
+<span class="lineNum">     455 </span>            : }
+<a name="456"><span class="lineNum">     456 </span>            : </a>
+<span class="lineNum">     457 </span>            : 
+<span class="lineNum">     458 </span><span class="lineCov">       1400 : CoeffsVector CoeffsVector::operator-(const CoeffsVector&amp; other_coeffsvector) const {</span>
+<span class="lineNum">     459 </span><span class="lineCov">       1400 :   return CoeffsVector(*this)-=other_coeffsvector;</span>
+<span class="lineNum">     460 </span>            : }
+<a name="461"><span class="lineNum">     461 </span>            : </a>
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 : void CoeffsVector::setValuesFromDifferentShape(const CoeffsVector&amp; other_coeffsvector) {</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :   plumed_massert(numberOfDimensions()==other_coeffsvector.numberOfDimensions(),&quot;both coeffs vector need to have the same dimension&quot;);</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :     std::vector&lt;unsigned int&gt; indices=getIndices(i);</span>
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :     if(other_coeffsvector.indicesExist(indices)) {</span>
+<span class="lineNum">     468 </span>            :       size_t oidx = other_coeffsvector.getIndex(indices);
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :       data[i] = other_coeffsvector.data[oidx];</span>
+<span class="lineNum">     470 </span>            :     }
+<span class="lineNum">     471 </span>            :   }
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 : }</span>
+<a name="473"><span class="lineNum">     473 </span>            : </a>
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 : void CoeffsVector::averageVectors(CoeffsVector&amp; coeffsvec0, CoeffsVector&amp; coeffsvec1) {</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :   plumed_massert(sameShape(coeffsvec0,coeffsvec1),&quot;both CoeffsVector objects need to have the same shape&quot;);</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;coeffsvec0.getSize(); i++) {</span>
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :     coeffsvec0.data[i] = coeffsvec1.data[i] = 0.5 * (coeffsvec0.data[i]+coeffsvec1.data[i]);</span>
+<span class="lineNum">     479 </span>            :   }
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 : }</span>
+<a name="481"><span class="lineNum">     481 </span>            : </a>
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 : void CoeffsVector::averageVectors(const std::vector&lt;CoeffsVector*&gt;&amp; coeffsvecSet) {</span>
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :   const double norm_factor = 1.0/static_cast&lt;double&gt;(coeffsvecSet.size());</span>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :   for(unsigned int k=1; k&lt;coeffsvecSet.size(); k++) {</span>
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 :     plumed_massert(coeffsvecSet[0]-&gt;sameShape(*coeffsvecSet[k]),&quot;All CoeffsVector objects need to have the same shape&quot;);</span>
+<span class="lineNum">     487 </span>            :   }
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;coeffsvecSet[0]-&gt;getSize(); i++) {</span>
+<span class="lineNum">     489 </span>            :     double value = 0.0;
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 :     for(unsigned int k=0; k&lt;coeffsvecSet.size(); k++) {</span>
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :       value += coeffsvecSet[k]-&gt;data[i];</span>
+<span class="lineNum">     492 </span>            :     }
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :     value *= norm_factor;</span>
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :     for(unsigned int k=0; k&lt;coeffsvecSet.size(); k++) {</span>
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :       coeffsvecSet[k]-&gt;data[i] = value;</span>
+<span class="lineNum">     496 </span>            :     }
+<span class="lineNum">     497 </span>            :   }
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 : }</span>
+<a name="499"><span class="lineNum">     499 </span>            : </a>
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 : double CoeffsVector::getMinValue() const {</span>
+<span class="lineNum">     502 </span><span class="lineNoCov">          0 :   size_t min_index=0;</span>
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :   return getMinValue(min_index);</span>
+<span class="lineNum">     504 </span>            : }
+<a name="505"><span class="lineNum">     505 </span>            : </a>
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span><span class="lineNoCov">          0 : double CoeffsVector::getMinValue(size_t&amp; min_index) const {</span>
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 :   min_index=0;</span>
+<span class="lineNum">     509 </span>            :   double min_value=DBL_MAX;
+<span class="lineNum">     510 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :     if(data[i]&lt;min_value) {</span>
+<span class="lineNum">     512 </span>            :       min_value=data[i];
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :       min_index=i;</span>
+<span class="lineNum">     514 </span>            :     }
+<span class="lineNum">     515 </span>            :   }
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 :   return min_value;</span>
+<span class="lineNum">     517 </span>            : }
+<a name="518"><span class="lineNum">     518 </span>            : </a>
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 : double CoeffsVector::getMinAbsValue() const {</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :   size_t min_index=0;</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :   return getMinAbsValue(min_index);</span>
+<span class="lineNum">     523 </span>            : }
+<a name="524"><span class="lineNum">     524 </span>            : </a>
+<span class="lineNum">     525 </span>            : 
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 : double CoeffsVector::getMinAbsValue(size_t&amp; min_index) const {</span>
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :   min_index=0;</span>
+<span class="lineNum">     528 </span>            :   double min_value=DBL_MAX;
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     530 </span><span class="lineNoCov">          0 :     if(std::abs(data[i])&lt;min_value) {</span>
+<span class="lineNum">     531 </span>            :       min_value=std::abs(data[i]);
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :       min_index=i;</span>
+<span class="lineNum">     533 </span>            :     }
+<span class="lineNum">     534 </span>            :   }
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :   return min_value;</span>
+<span class="lineNum">     536 </span>            : }
+<a name="537"><span class="lineNum">     537 </span>            : </a>
+<span class="lineNum">     538 </span>            : 
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 : double CoeffsVector::getMaxValue() const {</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :   size_t max_index=0;</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :   return getMaxValue(max_index);</span>
+<span class="lineNum">     542 </span>            : }
+<a name="543"><span class="lineNum">     543 </span>            : </a>
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 : double CoeffsVector::getMaxValue(size_t&amp; max_index) const {</span>
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :   max_index=0;</span>
+<span class="lineNum">     547 </span>            :   double max_value=DBL_MIN;
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :     if(data[i]&gt;max_value) {</span>
+<span class="lineNum">     550 </span>            :       max_value=data[i];
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :       max_index=i;</span>
+<span class="lineNum">     552 </span>            :     }
+<span class="lineNum">     553 </span>            :   }
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :   return max_value;</span>
+<span class="lineNum">     555 </span>            : }
+<a name="556"><span class="lineNum">     556 </span>            : </a>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 : double CoeffsVector::getMaxAbsValue() const {</span>
+<span class="lineNum">     559 </span><span class="lineNoCov">          0 :   size_t max_index=0;</span>
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :   return getMaxAbsValue(max_index);</span>
+<span class="lineNum">     561 </span>            : }
+<a name="562"><span class="lineNum">     562 </span>            : </a>
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span><span class="lineCov">         40 : double CoeffsVector::getMaxAbsValue(size_t&amp; max_index) const {</span>
+<span class="lineNum">     565 </span><span class="lineCov">         40 :   max_index=0;</span>
+<span class="lineNum">     566 </span>            :   double max_value=0.0;
+<span class="lineNum">     567 </span><span class="lineCov">        920 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     568 </span><span class="lineCov">        880 :     if(std::abs(data[i])&gt;max_value) {</span>
+<span class="lineNum">     569 </span>            :       max_value=std::abs(data[i]);
+<span class="lineNum">     570 </span><span class="lineCov">         86 :       max_index=i;</span>
+<span class="lineNum">     571 </span>            :     }
+<span class="lineNum">     572 </span>            :   }
+<span class="lineNum">     573 </span><span class="lineCov">         40 :   return max_value;</span>
+<span class="lineNum">     574 </span>            : }
+<a name="575"><span class="lineNum">     575 </span>            : </a>
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span><span class="lineCov">         40 : double CoeffsVector::getNorm() const {</span>
+<span class="lineNum">     578 </span><span class="lineCov">         40 :   return getL2Norm();</span>
+<span class="lineNum">     579 </span>            : }
+<a name="580"><span class="lineNum">     580 </span>            : </a>
+<span class="lineNum">     581 </span>            : 
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 : double CoeffsVector::getL1Norm() const {</span>
+<span class="lineNum">     583 </span>            :   double norm=0.0;
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :     norm+=std::abs(data[i]);</span>
+<span class="lineNum">     586 </span>            :   }
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :   return norm;</span>
+<span class="lineNum">     588 </span>            : }
+<a name="589"><span class="lineNum">     589 </span>            : </a>
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span><span class="lineCov">         40 : double CoeffsVector::getL2Norm() const {</span>
+<span class="lineNum">     592 </span>            :   double norm=0.0;
+<span class="lineNum">     593 </span><span class="lineCov">        920 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     594 </span><span class="lineCov">        440 :     norm+=data[i]*data[i];</span>
+<span class="lineNum">     595 </span>            :   }
+<span class="lineNum">     596 </span><span class="lineCov">         40 :   norm=sqrt(norm);</span>
+<span class="lineNum">     597 </span><span class="lineCov">         40 :   return norm;</span>
+<span class="lineNum">     598 </span>            : }
+<a name="599"><span class="lineNum">     599 </span>            : </a>
+<span class="lineNum">     600 </span>            : 
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 : double CoeffsVector::getLpNorm(const double p) const {</span>
+<span class="lineNum">     602 </span>            :   double norm=0.0;
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :     norm+=pow(data[i],p);</span>
+<span class="lineNum">     605 </span>            :   }
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :   norm=pow(norm,(1.0/p));</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :   return norm;</span>
+<span class="lineNum">     608 </span>            : }
+<a name="609"><span class="lineNum">     609 </span>            : </a>
+<span class="lineNum">     610 </span>            : 
+<span class="lineNum">     611 </span><span class="lineCov">         40 : double CoeffsVector::getRMS() const {</span>
+<span class="lineNum">     612 </span><span class="lineCov">         80 :   return getNorm()/sqrt(numberOfCoeffs());</span>
+<span class="lineNum">     613 </span>            : }
+<a name="614"><span class="lineNum">     614 </span>            : </a>
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span><span class="lineNoCov">          0 : void CoeffsVector::normalizeCoeffs() {</span>
+<span class="lineNum">     617 </span><span class="lineNoCov">          0 :   double norm=getNorm();</span>
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :   scaleAllValues(norm);</span>
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 : }</span>
+<a name="620"><span class="lineNum">     620 </span>            : </a>
+<span class="lineNum">     621 </span>            : 
+<span class="lineNum">     622 </span><span class="lineNoCov">          0 : void CoeffsVector::randomizeValuesGaussian(int randomSeed) {</span>
+<span class="lineNum">     623 </span><span class="lineNoCov">          0 :   Random rnd;</span>
+<span class="lineNum">     624 </span><span class="lineNoCov">          0 :   if (randomSeed&lt;0) {randomSeed = -randomSeed;}</span>
+<span class="lineNum">     625 </span><span class="lineNoCov">          0 :   rnd.setSeed(-randomSeed);</span>
+<span class="lineNum">     626 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     627 </span><span class="lineNoCov">          0 :     data[i]=rnd.Gaussian();</span>
+<span class="lineNum">     628 </span>            :   }
+<span class="lineNum">     629 </span><span class="lineNoCov">          0 : }</span>
+<a name="630"><span class="lineNum">     630 </span>            : </a>
+<span class="lineNum">     631 </span>            : 
+<span class="lineNum">     632 </span><span class="lineNoCov">          0 : void CoeffsVector::resetAveraging() {</span>
+<span class="lineNum">     633 </span><span class="lineNoCov">          0 :   clear();</span>
+<span class="lineNum">     634 </span>            :   resetAveragingCounter();
+<span class="lineNum">     635 </span><span class="lineNoCov">          0 : }</span>
+<a name="636"><span class="lineNum">     636 </span>            : </a>
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span><span class="lineCov">         20 : void CoeffsVector::addToAverage(const CoeffsVector&amp; coeffsvec) {</span>
+<span class="lineNum">     639 </span><span class="lineCov">         20 :   plumed_massert( data.size()==coeffsvec.getSize(), &quot;Incorrect size&quot;);</span>
+<span class="lineNum">     640 </span>            :   //
+<span class="lineNum">     641 </span><span class="lineCov">         20 :   double aver_decay = 1.0 / ( static_cast&lt;double&gt;(averaging_counter) + 1.0 );</span>
+<span class="lineNum">     642 </span><span class="lineCov">         20 :   if(averaging_exp_decay_&gt;0 &amp;&amp;  (averaging_counter+1 &gt; averaging_exp_decay_) ) {</span>
+<span class="lineNum">     643 </span><span class="lineCov">          9 :     aver_decay = 1.0 / static_cast&lt;double&gt;(averaging_exp_decay_);</span>
+<span class="lineNum">     644 </span>            :   }
+<span class="lineNum">     645 </span>            :   //
+<span class="lineNum">     646 </span><span class="lineCov">        460 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     647 </span><span class="lineCov">        440 :     data[i]+=(coeffsvec.data[i]-data[i])*aver_decay;</span>
+<span class="lineNum">     648 </span>            :   }
+<span class="lineNum">     649 </span><span class="lineCov">         20 :   averaging_counter++;</span>
+<span class="lineNum">     650 </span><span class="lineCov">         20 : }</span>
+<a name="651"><span class="lineNum">     651 </span>            : </a>
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span><span class="lineCov">          1 : size_t CoeffsVector::countValues(const double value) const {</span>
+<span class="lineNum">     654 </span>            :   size_t numvalues=0;
+<span class="lineNum">     655 </span><span class="lineCov">         23 :   for(size_t i=0; i&lt;data.size(); i++) {</span>
+<span class="lineNum">     656 </span><span class="lineCov">         11 :     if(data[i]==value) {</span>
+<span class="lineNum">     657 </span><span class="lineCov">          2 :       numvalues++;</span>
+<span class="lineNum">     658 </span>            :     }
+<span class="lineNum">     659 </span>            :   }
+<span class="lineNum">     660 </span><span class="lineCov">          1 :   return numvalues;</span>
+<span class="lineNum">     661 </span>            : }
+<a name="662"><span class="lineNum">     662 </span>            : </a>
+<span class="lineNum">     663 </span>            : 
+<span class="lineNum">     664 </span><span class="lineNoCov">          0 : void CoeffsVector::writeToFile(const std::string&amp; filepath, const bool print_coeffs_descriptions, const bool append_file, Action* action_pntr) {</span>
+<span class="lineNum">     665 </span><span class="lineNoCov">          0 :   OFile file;</span>
+<span class="lineNum">     666 </span><span class="lineNoCov">          0 :   if(action_pntr!=NULL) {</span>
+<span class="lineNum">     667 </span><span class="lineNoCov">          0 :     file.link(*action_pntr);</span>
+<span class="lineNum">     668 </span>            :   }
+<span class="lineNum">     669 </span>            :   else {
+<span class="lineNum">     670 </span><span class="lineNoCov">          0 :     file.link(mycomm);</span>
+<span class="lineNum">     671 </span>            :   }
+<span class="lineNum">     672 </span><span class="lineNoCov">          0 :   if(append_file) { file.enforceRestart(); }</span>
+<span class="lineNum">     673 </span><span class="lineNoCov">          0 :   file.open(filepath);</span>
+<span class="lineNum">     674 </span><span class="lineNoCov">          0 :   writeToFile(file,print_coeffs_descriptions);</span>
+<span class="lineNum">     675 </span><span class="lineNoCov">          0 :   file.close();</span>
+<span class="lineNum">     676 </span><span class="lineNoCov">          0 : }</span>
+<a name="677"><span class="lineNum">     677 </span>            : </a>
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span><span class="lineCov">       1354 : void CoeffsVector::writeToFile(OFile&amp; ofile, const bool print_coeffs_descriptions) {</span>
+<span class="lineNum">     680 </span>            :   std::vector&lt;CoeffsVector*&gt; CoeffsSetTmp;
+<span class="lineNum">     681 </span><span class="lineCov">       2708 :   CoeffsSetTmp.push_back(this);</span>
+<span class="lineNum">     682 </span><span class="lineCov">       1354 :   writeHeaderToFile(ofile);</span>
+<span class="lineNum">     683 </span><span class="lineCov">       1354 :   writeDataToFile(ofile,CoeffsSetTmp,print_coeffs_descriptions);</span>
+<span class="lineNum">     684 </span><span class="lineCov">       1354 : }</span>
+<a name="685"><span class="lineNum">     685 </span>            : </a>
+<span class="lineNum">     686 </span>            : 
+<span class="lineNum">     687 </span><span class="lineCov">        827 : void CoeffsVector::writeToFile(OFile&amp; ofile, CoeffsVector* aux_coeffsvector, const bool print_coeffs_descriptions) {</span>
+<span class="lineNum">     688 </span>            :   std::vector&lt;CoeffsVector*&gt; CoeffsSetTmp;
+<span class="lineNum">     689 </span><span class="lineCov">       1654 :   CoeffsSetTmp.push_back(this);</span>
+<span class="lineNum">     690 </span><span class="lineCov">        827 :   CoeffsSetTmp.push_back(aux_coeffsvector);</span>
+<span class="lineNum">     691 </span><span class="lineCov">        827 :   writeHeaderToFile(ofile);</span>
+<span class="lineNum">     692 </span><span class="lineCov">        827 :   writeDataToFile(ofile,CoeffsSetTmp,print_coeffs_descriptions);</span>
+<span class="lineNum">     693 </span><span class="lineCov">        827 : }</span>
+<a name="694"><span class="lineNum">     694 </span>            : </a>
+<span class="lineNum">     695 </span>            : 
+<span class="lineNum">     696 </span><span class="lineNoCov">          0 : void CoeffsVector::writeToFile(const std::string&amp; filepath, const std::vector&lt;CoeffsVector*&gt;&amp; coeffsvecSet, const bool print_coeffs_descriptions, const bool append_file, Action* action_pntr) {</span>
+<span class="lineNum">     697 </span><span class="lineNoCov">          0 :   OFile file;</span>
+<span class="lineNum">     698 </span><span class="lineNoCov">          0 :   if(action_pntr!=NULL) {</span>
+<span class="lineNum">     699 </span><span class="lineNoCov">          0 :     file.link(*action_pntr);</span>
+<span class="lineNum">     700 </span>            :   }
+<span class="lineNum">     701 </span>            :   else {
+<span class="lineNum">     702 </span><span class="lineNoCov">          0 :     file.link(coeffsvecSet[0]-&gt;getCommunicator());</span>
+<span class="lineNum">     703 </span>            :   }
+<span class="lineNum">     704 </span><span class="lineNoCov">          0 :   if(append_file) { file.enforceRestart(); }</span>
+<span class="lineNum">     705 </span><span class="lineNoCov">          0 :   file.open(filepath);</span>
+<span class="lineNum">     706 </span><span class="lineNoCov">          0 :   writeToFile(file,coeffsvecSet,print_coeffs_descriptions);</span>
+<span class="lineNum">     707 </span><span class="lineNoCov">          0 :   file.close();</span>
+<span class="lineNum">     708 </span><span class="lineNoCov">          0 : }</span>
+<a name="709"><span class="lineNum">     709 </span>            : </a>
+<span class="lineNum">     710 </span>            : 
+<span class="lineNum">     711 </span><span class="lineNoCov">          0 : void CoeffsVector::writeToFile(OFile&amp; ofile, const std::vector&lt;CoeffsVector*&gt;&amp; coeffsvecSet, const bool print_coeffs_descriptions) {</span>
+<span class="lineNum">     712 </span><span class="lineNoCov">          0 :   for(unsigned int k=1; k&lt;coeffsvecSet.size(); k++) {</span>
+<span class="lineNum">     713 </span><span class="lineNoCov">          0 :     plumed_massert(coeffsvecSet[k]-&gt;sameShape(*coeffsvecSet[0]),&quot;Error in writing a set of coeffs to file: The coeffs do not have the same shape and size&quot;);</span>
+<span class="lineNum">     714 </span>            :   }
+<span class="lineNum">     715 </span><span class="lineNoCov">          0 :   coeffsvecSet[0]-&gt;writeHeaderToFile(ofile);</span>
+<span class="lineNum">     716 </span><span class="lineNoCov">          0 :   writeDataToFile(ofile,coeffsvecSet, print_coeffs_descriptions);</span>
+<span class="lineNum">     717 </span><span class="lineNoCov">          0 : }</span>
+<a name="718"><span class="lineNum">     718 </span>            : </a>
+<span class="lineNum">     719 </span>            : 
+<span class="lineNum">     720 </span><span class="lineCov">       2181 : void CoeffsVector::writeHeaderToFile(OFile&amp; ofile) const {</span>
+<span class="lineNum">     721 </span><span class="lineCov">       2181 :   ofile.clearFields();</span>
+<span class="lineNum">     722 </span><span class="lineCov">       2181 :   if(isIterationCounterActive()) {</span>
+<span class="lineNum">     723 </span><span class="lineCov">       1969 :     writeIterationCounterAndTimeToFile(ofile);</span>
+<span class="lineNum">     724 </span>            :   }
+<span class="lineNum">     725 </span><span class="lineCov">       2181 :   writeCoeffsInfoToFile(ofile);</span>
+<span class="lineNum">     726 </span><span class="lineCov">       2181 : }</span>
+<a name="727"><span class="lineNum">     727 </span>            : </a>
+<span class="lineNum">     728 </span>            : 
+<span class="lineNum">     729 </span><span class="lineCov">       2181 : void CoeffsVector::writeDataToFile(OFile&amp; ofile, const std::vector&lt;CoeffsVector*&gt;&amp; coeffsvecSet, const bool print_coeffs_descriptions) {</span>
+<span class="lineNum">     730 </span>            :   //
+<span class="lineNum">     731 </span><span class="lineCov">       2181 :   std::string field_indices_prefix = &quot;idx_&quot;;</span>
+<span class="lineNum">     732 </span><span class="lineCov">       2181 :   std::string field_index = &quot;index&quot;;</span>
+<span class="lineNum">     733 </span><span class="lineCov">       2181 :   std::string field_description = &quot;description&quot;;</span>
+<span class="lineNum">     734 </span>            :   //
+<span class="lineNum">     735 </span><span class="lineCov">       2181 :   std::string int_fmt = &quot;%8d&quot;;</span>
+<span class="lineNum">     736 </span><span class="lineCov">       2181 :   std::string str_separate = &quot;#!-------------------&quot;;</span>
+<span class="lineNum">     737 </span>            :   //
+<span class="lineNum">     738 </span><span class="lineCov">       2181 :   unsigned int numvec = coeffsvecSet.size();</span>
+<span class="lineNum">     739 </span><span class="lineCov">       2181 :   unsigned int numdim = coeffsvecSet[0]-&gt;numberOfDimensions();</span>
+<span class="lineNum">     740 </span>            :   unsigned int numcoeffs = coeffsvecSet[0]-&gt;getSize();
+<span class="lineNum">     741 </span><span class="lineCov">       2181 :   std::vector&lt;std::string&gt; coeffs_descriptions = coeffsvecSet[0]-&gt;getAllCoeffsDescriptions();</span>
+<span class="lineNum">     742 </span><span class="lineCov">       2181 :   std::string output_fmt = coeffsvecSet[0]-&gt;getOutputFmt();</span>
+<span class="lineNum">     743 </span><span class="lineCov">       4362 :   std::vector&lt;std::string&gt; coeffs_datalabels(numvec);</span>
+<span class="lineNum">     744 </span><span class="lineCov">       8197 :   for(unsigned int k=0; k&lt;numvec; k++) {</span>
+<span class="lineNum">     745 </span><span class="lineCov">      12032 :     coeffs_datalabels[k] = coeffsvecSet[k]-&gt;getDataLabel();</span>
+<span class="lineNum">     746 </span>            :   }
+<span class="lineNum">     747 </span>            :   //
+<span class="lineNum">     748 </span><span class="lineCov">       2181 :   char* s1 = new char[20];</span>
+<span class="lineNum">     749 </span><span class="lineCov">       2181 :   std::vector&lt;unsigned int&gt; indices(numdim);</span>
+<span class="lineNum">     750 </span><span class="lineCov">       4362 :   std::vector&lt;std::string&gt; ilabels(numdim);</span>
+<span class="lineNum">     751 </span><span class="lineCov">       7641 :   for(unsigned int k=0; k&lt;numdim; k++) {</span>
+<span class="lineNum">     752 </span><span class="lineCov">      13650 :     ilabels[k]=field_indices_prefix+coeffsvecSet[0]-&gt;getDimensionLabel(k);</span>
+<span class="lineNum">     753 </span>            :   }
+<span class="lineNum">     754 </span>            :   //
+<span class="lineNum">     755 </span><span class="lineCov">     157775 :   for(size_t i=0; i&lt;numcoeffs; i++) {</span>
+<span class="lineNum">     756 </span><span class="lineCov">     155594 :     indices=coeffsvecSet[0]-&gt;getIndices(i);</span>
+<span class="lineNum">     757 </span><span class="lineCov">     352309 :     for(unsigned int k=0; k&lt;numdim; k++) {</span>
+<span class="lineNum">     758 </span><span class="lineCov">     274512 :       sprintf(s1,int_fmt.c_str(),indices[k]);</span>
+<span class="lineNum">     759 </span><span class="lineCov">     411768 :       ofile.printField(ilabels[k],s1);</span>
+<span class="lineNum">     760 </span>            :     }
+<span class="lineNum">     761 </span><span class="lineCov">     297037 :     for(unsigned int l=0; l&lt;numvec; l++) {</span>
+<span class="lineNum">     762 </span><span class="lineCov">     438480 :       ofile.fmtField(&quot; &quot;+output_fmt).printField(coeffs_datalabels[l],coeffsvecSet[l]-&gt;getValue(i));</span>
+<span class="lineNum">     763 </span>            :     }
+<span class="lineNum">     764 </span><span class="lineCov">     155594 :     sprintf(s1,int_fmt.c_str(),i); ofile.printField(field_index,s1);</span>
+<span class="lineNum">     765 </span><span class="lineCov">      83527 :     if(print_coeffs_descriptions) { ofile.printField(field_description,&quot;  &quot;+coeffs_descriptions[i]);}</span>
+<span class="lineNum">     766 </span><span class="lineCov">      77797 :     ofile.printField();</span>
+<span class="lineNum">     767 </span>            :   }
+<span class="lineNum">     768 </span><span class="lineCov">       2181 :   ofile.fmtField();</span>
+<span class="lineNum">     769 </span>            :   // blank line between iterations to allow proper plotting with gnuplot
+<span class="lineNum">     770 </span><span class="lineCov">       2181 :   ofile.printf(&quot;%s\n&quot;,str_separate.c_str());</span>
+<span class="lineNum">     771 </span><span class="lineCov">       2181 :   ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     772 </span><span class="lineCov">       2181 :   ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     773 </span><span class="lineCov">       2181 :   delete [] s1;</span>
+<span class="lineNum">     774 </span><span class="lineCov">       2181 : }</span>
+<a name="775"><span class="lineNum">     775 </span>            : </a>
+<span class="lineNum">     776 </span>            : 
+<span class="lineNum">     777 </span><span class="lineCov">         73 : size_t CoeffsVector::readFromFile(IFile&amp; ifile, const bool ignore_missing_coeffs, const bool ignore_header) {</span>
+<span class="lineNum">     778 </span><span class="lineCov">         73 :   ifile.allowIgnoredFields();</span>
+<span class="lineNum">     779 </span>            :   size_t ncoeffs_read=0;
+<span class="lineNum">     780 </span><span class="lineCov">        514 :   while(ifile) {</span>
+<span class="lineNum">     781 </span><span class="lineCov">        441 :     if(!ignore_header) {readHeaderFromFile(ifile);}</span>
+<span class="lineNum">     782 </span><span class="lineCov">        441 :     if(ifile) {</span>
+<span class="lineNum">     783 </span><span class="lineCov">        406 :       ncoeffs_read=readDataFromFile(ifile,ignore_missing_coeffs);</span>
+<span class="lineNum">     784 </span>            :     }
+<span class="lineNum">     785 </span>            :   }
+<span class="lineNum">     786 </span><span class="lineCov">         73 :   return ncoeffs_read;</span>
+<span class="lineNum">     787 </span>            : }
+<a name="788"><span class="lineNum">     788 </span>            : </a>
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span><span class="lineCov">         36 : size_t CoeffsVector::readOneSetFromFile(IFile&amp; ifile, const bool ignore_header) {</span>
+<span class="lineNum">     791 </span><span class="lineCov">         36 :   ifile.allowIgnoredFields();</span>
+<span class="lineNum">     792 </span>            :   size_t ncoeffs_read=0;
+<span class="lineNum">     793 </span><span class="lineCov">         36 :   if(ifile) {</span>
+<span class="lineNum">     794 </span><span class="lineCov">         36 :     if(!ignore_header) {readHeaderFromFile(ifile);}</span>
+<span class="lineNum">     795 </span><span class="lineCov">         36 :     if(ifile) {ncoeffs_read=readDataFromFile(ifile,false);}</span>
+<span class="lineNum">     796 </span>            :   }
+<span class="lineNum">     797 </span><span class="lineCov">         36 :   return ncoeffs_read;</span>
+<span class="lineNum">     798 </span>            : }
+<a name="799"><span class="lineNum">     799 </span>            : </a>
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span><span class="lineCov">         38 : size_t CoeffsVector::readFromFile(const std::string&amp; filepath, const bool ignore_missing_coeffs, const bool ignore_header) {</span>
+<span class="lineNum">     802 </span><span class="lineCov">         76 :   IFile file;</span>
+<span class="lineNum">     803 </span><span class="lineCov">         38 :   file.link(mycomm);</span>
+<span class="lineNum">     804 </span><span class="lineCov">         38 :   file.open(filepath);</span>
+<span class="lineNum">     805 </span><span class="lineCov">         38 :   size_t ncoeffs_read=readFromFile(file,ignore_missing_coeffs, ignore_header);</span>
+<span class="lineNum">     806 </span><span class="lineCov">         38 :   file.close();</span>
+<span class="lineNum">     807 </span><span class="lineCov">         38 :   return ncoeffs_read;</span>
+<span class="lineNum">     808 </span>            : }
+<a name="809"><span class="lineNum">     809 </span>            : </a>
+<span class="lineNum">     810 </span>            : 
+<span class="lineNum">     811 </span><span class="lineCov">        406 : void CoeffsVector::readHeaderFromFile(IFile&amp; ifile, const bool ignore_coeffs_info) {</span>
+<span class="lineNum">     812 </span><span class="lineCov">        812 :   if(ifile &amp;&amp; isIterationCounterActive()) {</span>
+<span class="lineNum">     813 </span><span class="lineCov">        406 :     getIterationCounterAndTimeFromFile(ifile);</span>
+<span class="lineNum">     814 </span>            :   }
+<span class="lineNum">     815 </span><span class="lineCov">        406 :   if(ifile) {</span>
+<span class="lineNum">     816 </span><span class="lineCov">        368 :     getCoeffsInfoFromFile(ifile,ignore_coeffs_info);</span>
+<span class="lineNum">     817 </span>            :   }
+<span class="lineNum">     818 </span><span class="lineCov">        406 : }</span>
+<a name="819"><span class="lineNum">     819 </span>            : </a>
+<span class="lineNum">     820 </span>            : 
+<span class="lineNum">     821 </span><span class="lineCov">        439 : size_t CoeffsVector::readDataFromFile(IFile&amp; ifile, const bool ignore_missing_coeffs) {</span>
+<span class="lineNum">     822 </span>            :   //
+<span class="lineNum">     823 </span><span class="lineCov">        439 :   std::string field_indices_prefix = &quot;idx_&quot;;</span>
+<span class="lineNum">     824 </span>            :   std::string field_coeffs = getDataLabel();
+<span class="lineNum">     825 </span><span class="lineCov">        439 :   std::string field_index = &quot;index&quot;;</span>
+<span class="lineNum">     826 </span><span class="lineCov">        439 :   std::string field_description = &quot;description&quot;;</span>
+<span class="lineNum">     827 </span>            :   //
+<span class="lineNum">     828 </span><span class="lineCov">        878 :   std::vector&lt;std::string&gt; ilabels(numberOfDimensions());</span>
+<span class="lineNum">     829 </span><span class="lineCov">       1353 :   for(unsigned int k=0; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     830 </span><span class="lineCov">       1828 :     ilabels[k]=field_indices_prefix+getDimensionLabel(k);</span>
+<span class="lineNum">     831 </span>            :   }
+<span class="lineNum">     832 </span>            :   //
+<span class="lineNum">     833 </span><span class="lineCov">        439 :   std::vector&lt;unsigned int&gt; indices(numberOfDimensions());</span>
+<span class="lineNum">     834 </span><span class="lineCov">        439 :   double coeff_tmp=0.0;</span>
+<span class="lineNum">     835 </span>            :   std::string str_tmp;
+<span class="lineNum">     836 </span>            :   size_t ncoeffs_read=0;
+<span class="lineNum">     837 </span>            :   //
+<span class="lineNum">     838 </span><span class="lineCov">      10463 :   while(ifile.scanField(field_coeffs,coeff_tmp)) {</span>
+<span class="lineNum">     839 </span>            :     int idx_tmp;
+<span class="lineNum">     840 </span><span class="lineCov">      18739 :     for(unsigned int k=0; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     841 </span><span class="lineCov">      13326 :       ifile.scanField(ilabels[k],idx_tmp);</span>
+<span class="lineNum">     842 </span><span class="lineCov">      13326 :       indices[k] = static_cast&lt;unsigned int&gt;(idx_tmp);</span>
+<span class="lineNum">     843 </span>            :     }
+<span class="lineNum">     844 </span><span class="lineCov">       5413 :     data[getIndex(indices)] = coeff_tmp;</span>
+<span class="lineNum">     845 </span><span class="lineCov">       5413 :     ifile.scanField(field_index,idx_tmp);</span>
+<span class="lineNum">     846 </span><span class="lineCov">       5413 :     if(getIndex(indices)!=static_cast&lt;unsigned int&gt;(idx_tmp)) {</span>
+<span class="lineNum">     847 </span><span class="lineNoCov">          0 :       std::string is1; Tools::convert(idx_tmp,is1);</span>
+<span class="lineNum">     848 </span><span class="lineNoCov">          0 :       std::string msg=&quot;ERROR: problem with indices at index &quot; + is1 + &quot; when reading coefficients from file&quot;;</span>
+<span class="lineNum">     849 </span><span class="lineNoCov">          0 :       plumed_merror(msg);</span>
+<span class="lineNum">     850 </span>            :     }
+<span class="lineNum">     851 </span><span class="lineCov">       5413 :     if(ifile.FieldExist(field_description)) { ifile.scanField(field_description,str_tmp); }</span>
+<span class="lineNum">     852 </span>            :     //
+<span class="lineNum">     853 </span><span class="lineCov">       5413 :     ifile.scanField();</span>
+<span class="lineNum">     854 </span><span class="lineCov">       5413 :     ncoeffs_read++;</span>
+<span class="lineNum">     855 </span><span class="lineCov">       5413 :     if(ncoeffs_read==numberOfCoeffs()) {</span>
+<span class="lineNum">     856 </span><span class="lineCov">        401 :       if((static_cast&lt;unsigned int&gt;(idx_tmp)+1)!=numberOfCoeffs()) {</span>
+<span class="lineNum">     857 </span><span class="lineNoCov">          0 :         plumed_merror(&quot;something strange about the coefficent file that is being read in, perhaps multiple entries or missing values&quot;);</span>
+<span class="lineNum">     858 </span>            :       }
+<span class="lineNum">     859 </span><span class="lineCov">        401 :       break;</span>
+<span class="lineNum">     860 </span>            :     }
+<span class="lineNum">     861 </span>            :   }
+<span class="lineNum">     862 </span>            :   // checks on the coeffs read
+<span class="lineNum">     863 </span><span class="lineCov">        807 :   if(ncoeffs_read&gt;0 &amp;&amp;!ignore_missing_coeffs &amp;&amp; ncoeffs_read &lt; numberOfCoeffs()) {</span>
+<span class="lineNum">     864 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;ERROR: missing coefficients when reading from file&quot;);</span>
+<span class="lineNum">     865 </span>            :   }
+<span class="lineNum">     866 </span>            :   //
+<span class="lineNum">     867 </span><span class="lineCov">        439 :   return ncoeffs_read;</span>
+<span class="lineNum">     868 </span>            : }
+<span class="lineNum">     869 </span>            : 
+<a name="870"><span class="lineNum">     870 </span>            : </a>
+<span class="lineNum">     871 </span>            : }
+<span class="lineNum">     872 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

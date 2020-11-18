@@ -1,0 +1,477 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - isdb/Jcoupling.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">isdb</a> - Jcoupling.cpp<span style="font-size: 80%;"> (source / <a href="Jcoupling.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">186</td>
+            <td class="headerCovTableEntry">199</td>
+            <td class="headerCovTableEntryHi">93.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MetainferenceBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Torsion.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace isdb {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC ISDB_COLVAR JCOUPLING
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Calculates \f$^3J\f$ coupling constants for a dihedral angle.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : The J-coupling between two atoms is given by the Karplus relation:
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : \f[
+<span class="lineNum">      39 </span>            : ^3J(\theta)=A\cos^2(\theta+\Delta\theta)+B\cos(\theta+\Delta\theta)+C
+<span class="lineNum">      40 </span>            : \f]
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : where \f$A\f$, \f$B\f$ and \f$C\f$ are the Karplus parameters and \f$\Delta\theta\f$ is an additional constant
+<span class="lineNum">      43 </span>            : added on to the dihedral angle \f$\theta\f$. The Karplus parameters are determined empirically and are dependent
+<span class="lineNum">      44 </span>            : on the type of J-coupling.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : This collective variable computes the J-couplings for a set of atoms defining a dihedral angle. You can specify
+<span class="lineNum">      47 </span>            : the atoms involved using the \ref MOLINFO notation. You can also specify the experimental couplings using the
+<span class="lineNum">      48 </span>            : ADDCOUPLINGS flag and COUPLING keywords. These will be included in the output. You must choose the type of
+<span class="lineNum">      49 </span>            : coupling using the type keyword, you can also supply custom Karplus parameters using TYPE=CUSTOM and the A, B, C
+<span class="lineNum">      50 </span>            : and SHIFT keywords. You will need to make sure you are using the correct dihedral angle:
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : - Ha-N: \f$\psi\f$
+<span class="lineNum">      53 </span>            : - Ha-HN: \f$\phi\f$
+<span class="lineNum">      54 </span>            : - N-C\f$\gamma\f$: \f$\chi_1\f$
+<span class="lineNum">      55 </span>            : - CO-C\f$\gamma\f$: \f$\chi_1\f$
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : J-couplings can be used to calculate a Metainference score using the internal keyword DOSCORE and all the options
+<span class="lineNum">      58 </span>            : of \ref METAINFERENCE .
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : \par Examples
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : In the following example we calculate the Ha-N J-coupling from a set of atoms involved in
+<span class="lineNum">      63 </span>            : dihedral \f$\psi\f$ angles in the peptide backbone. We also add the experimental datapoints and compute
+<span class="lineNum">      64 </span>            : the correlation and other measures and finally print the results.
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : \plumedfile
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : MOLINFO MOLTYPE=protein STRUCTURE=peptide.pdb
+<span class="lineNum">      69 </span>            : WHOLEMOLECULES ENTITY0=1-111
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : JCOUPLING ...
+<span class="lineNum">      72 </span>            :     ADDCOUPLINGS
+<span class="lineNum">      73 </span>            :     TYPE=HAN
+<span class="lineNum">      74 </span>            :     ATOMS1=@psi-2 COUPLING1=-0.49
+<span class="lineNum">      75 </span>            :     ATOMS2=@psi-4 COUPLING2=-0.54
+<span class="lineNum">      76 </span>            :     ATOMS3=@psi-5 COUPLING3=-0.53
+<span class="lineNum">      77 </span>            :     ATOMS4=@psi-7 COUPLING4=-0.39
+<span class="lineNum">      78 </span>            :     ATOMS5=@psi-8 COUPLING5=-0.39
+<span class="lineNum">      79 </span>            :     LABEL=jhan
+<span class="lineNum">      80 </span>            : ... JCOUPLING
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : jhanst: STATS ARG=(jhan\.j_.*) PARARG=(jhan\.exp_.*)
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : PRINT ARG=jhanst.*,jhan.* FILE=COLVAR STRIDE=100
+<span class="lineNum">      85 </span>            : \endplumedfile
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : */
+<a name="88"><span class="lineNum">      88 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">         12 : class JCoupling :</span>
+<span class="lineNum">      91 </span>            :   public MetainferenceBase
+<span class="lineNum">      92 </span>            : {
+<span class="lineNum">      93 </span>            : private:
+<span class="lineNum">      94 </span>            :   bool pbc;
+<span class="lineNum">      95 </span>            :   enum { HAN, HAHN, CCG, NCG, CUSTOM };
+<span class="lineNum">      96 </span>            :   unsigned ncoupl_;
+<span class="lineNum">      97 </span>            :   double ka_;
+<span class="lineNum">      98 </span>            :   double kb_;
+<span class="lineNum">      99 </span>            :   double kc_;
+<span class="lineNum">     100 </span>            :   double kshift_;
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : public:
+<span class="lineNum">     103 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">     104 </span>            :   explicit JCoupling(const ActionOptions&amp;);
+<span class="lineNum">     105 </span>            :   void calculate();
+<span class="lineNum">     106 </span>            :   void update();
+<a name="107"><span class="lineNum">     107 </span>            : };</a>
+<span class="lineNum">     108 </span>            : 
+<a name="109"><span class="lineNum">     109 </span><span class="lineCov">       6458 : PLUMED_REGISTER_ACTION(JCoupling, &quot;JCOUPLING&quot;)</span></a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">          7 : void JCoupling::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">          7 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          7 :   useCustomisableComponents(keys);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          7 :   MetainferenceBase::registerKeywords(keys);</span>
+<span class="lineNum">     115 </span><span class="lineCov">         21 :   keys.addFlag(&quot;NOPBC&quot;,false,&quot;ignore the periodic boundary conditions when calculating distances&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;, &quot;ATOMS&quot;, &quot;the 4 atoms involved in each of the bonds for which you wish to calculate the J-coupling. &quot;</span>
+<span class="lineNum">     117 </span>            :            &quot;Keywords like ATOMS1, ATOMS2, ATOMS3,... should be listed and one J-coupling will be &quot;
+<span class="lineNum">     118 </span>            :            &quot;calculated for each ATOMS keyword you specify.&quot;);
+<span class="lineNum">     119 </span><span class="lineCov">         21 :   keys.reset_style(&quot;ATOMS&quot;, &quot;atoms&quot;);</span>
+<span class="lineNum">     120 </span><span class="lineCov">         21 :   keys.addFlag(&quot;ADDCOUPLINGS&quot;, false, &quot;Set this flag if you want to have fixed components with the experimental values.&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">         28 :   keys.add(&quot;compulsory&quot;, &quot;TYPE&quot;, &quot;Type of J-coupling to compute (HAN,HAHN,CCG,NCG,CUSTOM)&quot;);</span>
+<span class="lineNum">     122 </span><span class="lineCov">         28 :   keys.add(&quot;optional&quot;, &quot;A&quot;, &quot;Karplus parameter A&quot;);</span>
+<span class="lineNum">     123 </span><span class="lineCov">         28 :   keys.add(&quot;optional&quot;, &quot;B&quot;, &quot;Karplus parameter B&quot;);</span>
+<span class="lineNum">     124 </span><span class="lineCov">         28 :   keys.add(&quot;optional&quot;, &quot;C&quot;, &quot;Karplus parameter C&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         28 :   keys.add(&quot;optional&quot;, &quot;SHIFT&quot;, &quot;Angle shift in radians&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;, &quot;COUPLING&quot;, &quot;Add an experimental value for each coupling&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         28 :   keys.addOutputComponent(&quot;j&quot;, &quot;default&quot;, &quot;the calculated J-coupling&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">         28 :   keys.addOutputComponent(&quot;exp&quot;, &quot;ADDCOUPLINGS&quot;, &quot;the experimental J-coupling&quot;);</span>
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">          6 : JCoupling::JCoupling(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     132 </span>            :   PLUMED_METAINF_INIT(ao),
+<span class="lineNum">     133 </span><span class="lineCov">          6 :   pbc(true)</span>
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span><span class="lineCov">          6 :   bool nopbc = !pbc;</span>
+<span class="lineNum">     136 </span><span class="lineCov">         12 :   parseFlag(&quot;NOPBC&quot;, nopbc);</span>
+<span class="lineNum">     137 </span><span class="lineCov">          6 :   pbc =! nopbc;</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :   // Read in the atoms
+<span class="lineNum">     140 </span>            :   vector&lt;AtomNumber&gt; t, atoms;
+<span class="lineNum">     141 </span><span class="lineCov">         28 :   for (int i = 1; ; ++i) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">         68 :     parseAtomList(&quot;ATOMS&quot;, i, t );</span>
+<span class="lineNum">     143 </span><span class="lineCov">         34 :     if (t.empty()) {</span>
+<span class="lineNum">     144 </span>            :       break;
+<span class="lineNum">     145 </span>            :     }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">         28 :     if (t.size() != 4) {</span>
+<span class="lineNum">     148 </span>            :       std::string ss;
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :       Tools::convert(i, ss);</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :       error(&quot;ATOMS&quot; + ss + &quot; keyword has the wrong number of atoms&quot;);</span>
+<span class="lineNum">     151 </span>            :     }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :     // This makes the distance calculation easier later on (see Torsion implementation)
+<span class="lineNum">     154 </span><span class="lineCov">         28 :     atoms.push_back(t[0]);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         28 :     atoms.push_back(t[1]);</span>
+<span class="lineNum">     156 </span><span class="lineCov">         28 :     atoms.push_back(t[1]);</span>
+<span class="lineNum">     157 </span><span class="lineCov">         28 :     atoms.push_back(t[2]);</span>
+<span class="lineNum">     158 </span><span class="lineCov">         28 :     atoms.push_back(t[2]);</span>
+<span class="lineNum">     159 </span><span class="lineCov">         28 :     atoms.push_back(t[3]);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         28 :     t.resize(0);</span>
+<span class="lineNum">     161 </span><span class="lineCov">         28 :   }</span>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :   // We now have 6 atoms per datapoint
+<span class="lineNum">     164 </span><span class="lineCov">          6 :   ncoupl_ = atoms.size()/6;</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   // Parse J-Coupling type, this will determine the Karplus parameters
+<span class="lineNum">     167 </span>            :   unsigned jtype_ = CUSTOM;
+<span class="lineNum">     168 </span>            :   string string_type;
+<span class="lineNum">     169 </span><span class="lineCov">         12 :   parse(&quot;TYPE&quot;, string_type);</span>
+<span class="lineNum">     170 </span><span class="lineCov">          6 :   if(string_type == &quot;HAN&quot;) {</span>
+<span class="lineNum">     171 </span>            :     jtype_ = HAN;
+<span class="lineNum">     172 </span><span class="lineCov">          5 :   } else if(string_type == &quot;HAHN&quot;) {</span>
+<span class="lineNum">     173 </span>            :     jtype_ = HAHN;
+<span class="lineNum">     174 </span><span class="lineCov">          2 :   } else if(string_type == &quot;CCG&quot;) {</span>
+<span class="lineNum">     175 </span>            :     jtype_ = CCG;
+<span class="lineNum">     176 </span><span class="lineCov">          1 :   } else if(string_type == &quot;NCG&quot;) {</span>
+<span class="lineNum">     177 </span>            :     jtype_ = NCG;
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :   } else if(string_type == &quot;CUSTOM&quot;) {</span>
+<span class="lineNum">     179 </span>            :     jtype_ = CUSTOM;
+<span class="lineNum">     180 </span>            :   } else {
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     error(&quot;Unknown J-coupling type!&quot;);</span>
+<span class="lineNum">     182 </span>            :   }
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :   // Optionally add an experimental value (like with RDCs)
+<span class="lineNum">     185 </span>            :   vector&lt;double&gt; coupl;
+<span class="lineNum">     186 </span><span class="lineCov">          6 :   bool addcoupling = false;</span>
+<span class="lineNum">     187 </span><span class="lineCov">         12 :   parseFlag(&quot;ADDCOUPLINGS&quot;, addcoupling);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         12 :   if (addcoupling||getDoScore()) {</span>
+<span class="lineNum">     189 </span><span class="lineCov">          1 :     coupl.resize(ncoupl_);</span>
+<span class="lineNum">     190 </span>            :     unsigned ntarget = 0;
+<span class="lineNum">     191 </span><span class="lineCov">          8 :     for (unsigned i = 0; i &lt; ncoupl_; ++i) {</span>
+<span class="lineNum">     192 </span><span class="lineCov">         21 :       if (!parseNumbered(&quot;COUPLING&quot;, i+1, coupl[i])) {</span>
+<span class="lineNum">     193 </span>            :         break;
+<span class="lineNum">     194 </span>            :       }
+<span class="lineNum">     195 </span>            :       ntarget++;
+<span class="lineNum">     196 </span>            :     }
+<span class="lineNum">     197 </span><span class="lineCov">          1 :     if (ntarget != ncoupl_) {</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :       error(&quot;found wrong number of COUPLING values&quot;);</span>
+<span class="lineNum">     199 </span>            :     }
+<span class="lineNum">     200 </span>            :   }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :   // For custom types we allow use of custom Karplus parameters
+<span class="lineNum">     203 </span><span class="lineCov">          6 :   if (jtype_ == CUSTOM) {</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :     parse(&quot;A&quot;, ka_);</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :     parse(&quot;B&quot;, kb_);</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :     parse(&quot;C&quot;, kc_);</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :     parse(&quot;SHIFT&quot;, kshift_);</span>
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">          6 :   log &lt;&lt; &quot;  Bibliography &quot;;</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :   // Set Karplus parameters
+<span class="lineNum">     213 </span><span class="lineCov">          6 :   switch (jtype_) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">          1 :   case HAN:</span>
+<span class="lineNum">     215 </span><span class="lineCov">          1 :     ka_ = -0.88;</span>
+<span class="lineNum">     216 </span><span class="lineCov">          1 :     kb_ = -0.61;</span>
+<span class="lineNum">     217 </span><span class="lineCov">          1 :     kc_ = -0.27;</span>
+<span class="lineNum">     218 </span><span class="lineCov">          1 :     kshift_ = pi / 3.0;</span>
+<span class="lineNum">     219 </span><span class="lineCov">          1 :     log.printf(&quot;J-coupling type is HAN, with A: %f, B: %f, C: %f, angle shift: %f\n&quot;, ka_, kb_, kc_, kshift_);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          3 :     log &lt;&lt; plumed.cite(&quot;Wang A C, Bax A, J. Am. Chem. Soc. 117, 1810 (1995)&quot;);</span>
+<span class="lineNum">     221 </span><span class="lineCov">          1 :     break;</span>
+<span class="lineNum">     222 </span><span class="lineCov">          3 :   case HAHN:</span>
+<span class="lineNum">     223 </span><span class="lineCov">          3 :     ka_ = 7.09;</span>
+<span class="lineNum">     224 </span><span class="lineCov">          3 :     kb_ = -1.42;</span>
+<span class="lineNum">     225 </span><span class="lineCov">          3 :     kc_ = 1.55;</span>
+<span class="lineNum">     226 </span><span class="lineCov">          3 :     kshift_ = -pi / 3.0;</span>
+<span class="lineNum">     227 </span><span class="lineCov">          3 :     log.printf(&quot;J-coupling type is HAHN, with A: %f, B: %f, C: %f, angle shift: %f\n&quot;, ka_, kb_, kc_, kshift_);</span>
+<span class="lineNum">     228 </span><span class="lineCov">          9 :     log &lt;&lt; plumed.cite(&quot;Hu J-S, Bax A, J. Am. Chem. Soc. 119, 6360 (1997)&quot;);</span>
+<span class="lineNum">     229 </span><span class="lineCov">          3 :     break;</span>
+<span class="lineNum">     230 </span><span class="lineCov">          1 :   case CCG:</span>
+<span class="lineNum">     231 </span><span class="lineCov">          1 :     ka_ = 2.31;</span>
+<span class="lineNum">     232 </span><span class="lineCov">          1 :     kb_ = -0.87;</span>
+<span class="lineNum">     233 </span><span class="lineCov">          1 :     kc_ = 0.55;</span>
+<span class="lineNum">     234 </span><span class="lineCov">          1 :     kshift_ = (2.0 * pi) / 3.0;</span>
+<span class="lineNum">     235 </span><span class="lineCov">          1 :     log.printf(&quot;J-coupling type is CCG, with A: %f, B: %f, C: %f, angle shift: %f\n&quot;, ka_, kb_, kc_, kshift_);</span>
+<span class="lineNum">     236 </span><span class="lineCov">          3 :     log &lt;&lt; plumed.cite(&quot;Perez C, Löhr F, Rüterjans H, Schmidt J, J. Am. Chem. Soc. 123, 7081 (2001)&quot;);</span>
+<span class="lineNum">     237 </span><span class="lineCov">          1 :     break;</span>
+<span class="lineNum">     238 </span><span class="lineCov">          1 :   case NCG:</span>
+<span class="lineNum">     239 </span><span class="lineCov">          1 :     ka_ = 1.29;</span>
+<span class="lineNum">     240 </span><span class="lineCov">          1 :     kb_ = -0.49;</span>
+<span class="lineNum">     241 </span><span class="lineCov">          1 :     kc_ = 0.37;</span>
+<span class="lineNum">     242 </span><span class="lineCov">          1 :     kshift_ = 0.0;</span>
+<span class="lineNum">     243 </span><span class="lineCov">          1 :     log.printf(&quot;J-coupling type is NCG, with A: %f, B: %f, C: %f, angle shift: %f\n&quot;, ka_, kb_, kc_, kshift_);</span>
+<span class="lineNum">     244 </span><span class="lineCov">          3 :     log &lt;&lt; plumed.cite(&quot;Perez C, Löhr F, Rüterjans H, Schmidt J, J. Am. Chem. Soc. 123, 7081 (2001)&quot;);</span>
+<span class="lineNum">     245 </span><span class="lineCov">          1 :     break;</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :   case CUSTOM:</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :     log.printf(&quot;J-coupling type is custom, with A: %f, B: %f, C: %f, angle shift: %f\n&quot;, ka_, kb_, kc_, kshift_);</span>
+<span class="lineNum">     248 </span>            :     break;
+<span class="lineNum">     249 </span>            :   }
+<span class="lineNum">     250 </span><span class="lineCov">         18 :   log&lt;&lt;plumed.cite(&quot;Bonomi, Camilloni, Bioinformatics, 33, 3999 (2017)&quot;);</span>
+<span class="lineNum">     251 </span><span class="lineCov">          6 :   log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineCov">         34 :   for (unsigned i = 0; i &lt; ncoupl_; ++i) {</span>
+<span class="lineNum">     254 </span><span class="lineCov">         56 :     log.printf(&quot;  The %uth J-Coupling is calculated from atoms : %d %d %d %d.&quot;,</span>
+<span class="lineNum">     255 </span><span class="lineCov">        112 :                i+1, atoms[6*i].serial(), atoms[6*i+1].serial(), atoms[6*i+3].serial(), atoms[6*i+5].serial());</span>
+<span class="lineNum">     256 </span><span class="lineCov">         28 :     if (addcoupling) {</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :       log.printf(&quot; Experimental J-Coupling is %f.&quot;, coupl[i]);</span>
+<span class="lineNum">     258 </span>            :     }
+<span class="lineNum">     259 </span><span class="lineCov">         28 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     260 </span>            :   }
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span><span class="lineCov">          6 :   if (pbc) {</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :     log.printf(&quot;  using periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     264 </span>            :   } else {
+<span class="lineNum">     265 </span><span class="lineCov">          6 :     log.printf(&quot;  without periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     266 </span>            :   }
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">          6 :   if(!getDoScore()) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">         47 :     for (unsigned i = 0; i &lt; ncoupl_; i++) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">         21 :       std::string num; Tools::convert(i, num);</span>
+<span class="lineNum">     271 </span><span class="lineCov">         42 :       addComponentWithDerivatives(&quot;j_&quot; + num);</span>
+<span class="lineNum">     272 </span><span class="lineCov">         42 :       componentIsNotPeriodic(&quot;j_&quot; + num);</span>
+<span class="lineNum">     273 </span>            :     }
+<span class="lineNum">     274 </span>            :   } else {
+<span class="lineNum">     275 </span><span class="lineCov">         15 :     for (unsigned i = 0; i &lt; ncoupl_; i++) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">          7 :       std::string num; Tools::convert(i, num);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         14 :       addComponent(&quot;j_&quot; + num);</span>
+<span class="lineNum">     278 </span><span class="lineCov">         14 :       componentIsNotPeriodic(&quot;j_&quot; + num);</span>
+<span class="lineNum">     279 </span>            :     }
+<span class="lineNum">     280 </span>            :   }
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">         12 :   if (addcoupling||getDoScore()) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">         15 :     for (unsigned i = 0; i &lt; ncoupl_; i++) {</span>
+<span class="lineNum">     284 </span><span class="lineCov">          7 :       std::string num; Tools::convert(i, num);</span>
+<span class="lineNum">     285 </span><span class="lineCov">         14 :       addComponent(&quot;exp_&quot; + num);</span>
+<span class="lineNum">     286 </span><span class="lineCov">         14 :       componentIsNotPeriodic(&quot;exp_&quot; + num);</span>
+<span class="lineNum">     287 </span><span class="lineCov">         14 :       Value* comp = getPntrToComponent(&quot;exp_&quot; + num);</span>
+<span class="lineNum">     288 </span><span class="lineCov">         14 :       comp-&gt;set(coupl[i]);</span>
+<span class="lineNum">     289 </span>            :     }
+<span class="lineNum">     290 </span>            :   }
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span><span class="lineCov">          6 :   requestAtoms(atoms);</span>
+<span class="lineNum">     293 </span><span class="lineCov">          6 :   if(getDoScore()) {</span>
+<span class="lineNum">     294 </span><span class="lineCov">          1 :     setParameters(coupl);</span>
+<span class="lineNum">     295 </span><span class="lineCov">          1 :     Initialise(ncoupl_);</span>
+<span class="lineNum">     296 </span>            :   }
+<span class="lineNum">     297 </span><span class="lineCov">          6 :   setDerivatives();</span>
+<span class="lineNum">     298 </span><span class="lineCov">          6 :   checkRead();</span>
+<a name="299"><span class="lineNum">     299 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineCov">         16 : void JCoupling::calculate()</span>
+<span class="lineNum">     302 </span>            : {
+<span class="lineNum">     303 </span><span class="lineCov">         16 :   if (pbc) makeWhole();</span>
+<span class="lineNum">     304 </span><span class="lineCov">         16 :   vector&lt;Vector&gt; deriv(ncoupl_*6);</span>
+<a name="305"><span class="lineNum">     305 </span><span class="lineCov">         16 :   vector&lt;double&gt; j(ncoupl_,0.);</span></a>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">         48 :   #pragma omp parallel num_threads(OpenMP::getNumThreads())</span>
+<span class="lineNum">     308 </span>            :   {
+<span class="lineNum">     309 </span>            :     #pragma omp for
+<span class="lineNum">     310 </span>            :     // Loop through atoms, with steps of 6 atoms (one iteration per datapoint)
+<span class="lineNum">     311 </span><span class="lineCov">         32 :     for (unsigned r=0; r&lt;ncoupl_; r++) {</span>
+<span class="lineNum">     312 </span>            :       // Index is the datapoint index
+<span class="lineNum">     313 </span><span class="lineCov">         98 :       unsigned a0 = 6*r;</span>
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :       // 6 atoms -&gt; 3 vectors
+<span class="lineNum">     316 </span><span class="lineCov">        294 :       Vector d0 = delta(getPosition(a0+1), getPosition(a0));</span>
+<span class="lineNum">     317 </span><span class="lineCov">        294 :       Vector d1 = delta(getPosition(a0+3), getPosition(a0+2));</span>
+<span class="lineNum">     318 </span><span class="lineCov">        294 :       Vector d2 = delta(getPosition(a0+5), getPosition(a0+4));</span>
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :       // Calculate dihedral with 3 vectors, get the derivatives
+<span class="lineNum">     321 </span><span class="lineCov">         98 :       Vector dd0, dd1, dd2;</span>
+<span class="lineNum">     322 </span>            :       PLMD::Torsion t;
+<span class="lineNum">     323 </span><span class="lineCov">         98 :       double torsion = t.compute(d0, d1, d2, dd0, dd1, dd2);</span>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :       // Calculate the Karplus relation and its derivative
+<span class="lineNum">     326 </span><span class="lineCov">         98 :       double theta = torsion + kshift_;</span>
+<span class="lineNum">     327 </span><span class="lineCov">         98 :       double cos_theta = cos(theta);</span>
+<span class="lineNum">     328 </span><span class="lineCov">         98 :       double sin_theta = sin(theta);</span>
+<span class="lineNum">     329 </span><span class="lineCov">        196 :       j[r] = ka_*cos_theta*cos_theta + kb_*cos_theta + kc_;</span>
+<span class="lineNum">     330 </span><span class="lineCov">         98 :       double derj = -2.*ka_*sin_theta*cos_theta - kb_*sin_theta;</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineCov">         98 :       dd0 *= derj;</span>
+<span class="lineNum">     333 </span><span class="lineCov">         98 :       dd1 *= derj;</span>
+<span class="lineNum">     334 </span><span class="lineCov">         98 :       dd2 *= derj;</span>
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span><span class="lineCov">        182 :       if(getDoScore()) setCalcData(r, j[r]);</span>
+<span class="lineNum">     337 </span><span class="lineCov">        196 :       deriv[a0] =  dd0;</span>
+<span class="lineNum">     338 </span><span class="lineCov">        196 :       deriv[a0+1] = -dd0;</span>
+<span class="lineNum">     339 </span><span class="lineCov">        196 :       deriv[a0+2] =  dd1;</span>
+<span class="lineNum">     340 </span><span class="lineCov">        196 :       deriv[a0+3] = -dd1;</span>
+<span class="lineNum">     341 </span><span class="lineCov">        196 :       deriv[a0+4] =  dd2;</span>
+<span class="lineNum">     342 </span><span class="lineCov">        196 :       deriv[a0+5] = -dd2;</span>
+<span class="lineNum">     343 </span>            :     }
+<span class="lineNum">     344 </span>            :   }
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">         16 :   if(getDoScore()) {</span>
+<span class="lineNum">     347 </span>            :     /* Metainference */
+<span class="lineNum">     348 </span><span class="lineCov">          6 :     double score = getScore();</span>
+<span class="lineNum">     349 </span>            :     setScore(score);
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            :     /* calculate final derivatives */
+<span class="lineNum">     352 </span><span class="lineCov">          6 :     Tensor virial;</span>
+<span class="lineNum">     353 </span><span class="lineCov">         12 :     Value* val=getPntrToComponent(&quot;score&quot;);</span>
+<span class="lineNum">     354 </span><span class="lineCov">         90 :     for (unsigned r=0; r&lt;ncoupl_; r++) {</span>
+<span class="lineNum">     355 </span><span class="lineCov">         42 :       const unsigned a0 = 6*r;</span>
+<span class="lineNum">     356 </span><span class="lineCov">         84 :       setAtomsDerivatives(val, a0, deriv[a0]*getMetaDer(r));</span>
+<span class="lineNum">     357 </span><span class="lineCov">         84 :       setAtomsDerivatives(val, a0+1, deriv[a0+1]*getMetaDer(r));</span>
+<span class="lineNum">     358 </span><span class="lineCov">         84 :       setAtomsDerivatives(val, a0+2, deriv[a0+2]*getMetaDer(r));</span>
+<span class="lineNum">     359 </span><span class="lineCov">         84 :       setAtomsDerivatives(val, a0+3, deriv[a0+3]*getMetaDer(r));</span>
+<span class="lineNum">     360 </span><span class="lineCov">         84 :       setAtomsDerivatives(val, a0+4, deriv[a0+4]*getMetaDer(r));</span>
+<span class="lineNum">     361 </span><span class="lineCov">         84 :       setAtomsDerivatives(val, a0+5, deriv[a0+5]*getMetaDer(r));</span>
+<span class="lineNum">     362 </span><span class="lineCov">         84 :       virial-=Tensor(getPosition(a0), deriv[a0]*getMetaDer(r));</span>
+<span class="lineNum">     363 </span><span class="lineCov">         84 :       virial-=Tensor(getPosition(a0+1), deriv[a0+1]*getMetaDer(r));</span>
+<span class="lineNum">     364 </span><span class="lineCov">         84 :       virial-=Tensor(getPosition(a0+2), deriv[a0+2]*getMetaDer(r));</span>
+<span class="lineNum">     365 </span><span class="lineCov">         84 :       virial-=Tensor(getPosition(a0+3), deriv[a0+3]*getMetaDer(r));</span>
+<span class="lineNum">     366 </span><span class="lineCov">         84 :       virial-=Tensor(getPosition(a0+4), deriv[a0+4]*getMetaDer(r));</span>
+<span class="lineNum">     367 </span><span class="lineCov">         84 :       virial-=Tensor(getPosition(a0+5), deriv[a0+5]*getMetaDer(r));</span>
+<span class="lineNum">     368 </span>            :     }
+<span class="lineNum">     369 </span><span class="lineCov">          6 :     setBoxDerivatives(val, virial);</span>
+<span class="lineNum">     370 </span>            :   } else {
+<span class="lineNum">     371 </span><span class="lineCov">        122 :     for (unsigned r=0; r&lt;ncoupl_; r++) {</span>
+<span class="lineNum">     372 </span><span class="lineCov">         56 :       const unsigned a0 = 6*r;</span>
+<span class="lineNum">     373 </span><span class="lineCov">         56 :       string num; Tools::convert(r,num);</span>
+<span class="lineNum">     374 </span><span class="lineCov">        112 :       Value* val=getPntrToComponent(&quot;j_&quot;+num);</span>
+<span class="lineNum">     375 </span><span class="lineCov">        112 :       val-&gt;set(j[r]);</span>
+<span class="lineNum">     376 </span><span class="lineCov">        112 :       setAtomsDerivatives(val, a0, deriv[a0]);</span>
+<span class="lineNum">     377 </span><span class="lineCov">        112 :       setAtomsDerivatives(val, a0+1, deriv[a0+1]);</span>
+<span class="lineNum">     378 </span><span class="lineCov">        112 :       setAtomsDerivatives(val, a0+2, deriv[a0+2]);</span>
+<span class="lineNum">     379 </span><span class="lineCov">        112 :       setAtomsDerivatives(val, a0+3, deriv[a0+3]);</span>
+<span class="lineNum">     380 </span><span class="lineCov">        112 :       setAtomsDerivatives(val, a0+4, deriv[a0+4]);</span>
+<span class="lineNum">     381 </span><span class="lineCov">        112 :       setAtomsDerivatives(val, a0+5, deriv[a0+5]);</span>
+<span class="lineNum">     382 </span><span class="lineCov">         56 :       Tensor virial;</span>
+<span class="lineNum">     383 </span><span class="lineCov">        112 :       virial-=Tensor(getPosition(a0), deriv[a0]);</span>
+<span class="lineNum">     384 </span><span class="lineCov">        112 :       virial-=Tensor(getPosition(a0+1), deriv[a0+1]);</span>
+<span class="lineNum">     385 </span><span class="lineCov">        112 :       virial-=Tensor(getPosition(a0+2), deriv[a0+2]);</span>
+<span class="lineNum">     386 </span><span class="lineCov">        112 :       virial-=Tensor(getPosition(a0+3), deriv[a0+3]);</span>
+<span class="lineNum">     387 </span><span class="lineCov">        112 :       virial-=Tensor(getPosition(a0+4), deriv[a0+4]);</span>
+<span class="lineNum">     388 </span><span class="lineCov">        112 :       virial-=Tensor(getPosition(a0+5), deriv[a0+5]);</span>
+<span class="lineNum">     389 </span><span class="lineCov">         56 :       setBoxDerivatives(val, virial);</span>
+<span class="lineNum">     390 </span>            :     }
+<span class="lineNum">     391 </span>            :   }
+<a name="392"><span class="lineNum">     392 </span><span class="lineCov">         16 : }</span></a>
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span><span class="lineCov">         16 : void JCoupling::update() {</span>
+<span class="lineNum">     395 </span>            :   // write status file
+<span class="lineNum">     396 </span><span class="lineCov">         32 :   if(getWstride()&gt;0&amp;&amp; (getStep()%getWstride()==0 || getCPT()) ) writeStatus();</span>
+<span class="lineNum">     397 </span><span class="lineCov">         16 : }</span>
+<a name="398"><span class="lineNum">     398 </span>            : </a>
+<span class="lineNum">     399 </span>            : }
+<span class="lineNum">     400 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

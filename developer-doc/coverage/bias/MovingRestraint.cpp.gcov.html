@@ -1,0 +1,347 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - bias/MovingRestraint.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">bias</a> - MovingRestraint.cpp<span style="font-size: 80%;"> (source / <a href="MovingRestraint.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">103</td>
+            <td class="headerCovTableEntry">103</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Bias.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace bias {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC BIAS MOVINGRESTRAINT
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Add a time-dependent, harmonic restraint on one or more variables.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : This form of bias can be used to performed steered MD \cite Grubmuller3
+<span class="lineNum">      37 </span>            : and Jarzynski sampling \cite jarzynski.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : The harmonic restraint on your system is given by:
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \f[
+<span class="lineNum">      42 </span>            : V(\vec{s},t) = \frac{1}{2} \kappa(t) ( \vec{s} - \vec{s}_0(t) )^2
+<span class="lineNum">      43 </span>            : \f]
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : The time dependence of \f$\kappa\f$ and \f$\vec{s}_0\f$ are specified by a list of
+<span class="lineNum">      46 </span>            : STEP, KAPPA and AT keywords.  These keywords tell plumed what values \f$\kappa\f$ and \f$\vec{s}_0\f$
+<span class="lineNum">      47 </span>            : should have at the time specified by the corresponding STEP keyword.  Inbetween these times
+<span class="lineNum">      48 </span>            : the values of \f$\kappa\f$ and \f$\vec{s}_0\f$ are linearly interpolated.
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : Additional material and examples can be also found in the tutorial \ref belfast-5
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : \par Examples
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : The following input is dragging the distance between atoms 2 and 4
+<span class="lineNum">      55 </span>            : from 1 to 2 in the first 1000 steps, then back in the next 1000 steps.
+<span class="lineNum">      56 </span>            : In the following 500 steps the restraint is progressively switched off.
+<span class="lineNum">      57 </span>            : \plumedfile
+<span class="lineNum">      58 </span>            : DISTANCE ATOMS=2,4 LABEL=d
+<span class="lineNum">      59 </span>            : MOVINGRESTRAINT ...
+<span class="lineNum">      60 </span>            :   ARG=d
+<span class="lineNum">      61 </span>            :   STEP0=0    AT0=1.0 KAPPA0=100.0
+<span class="lineNum">      62 </span>            :   STEP1=1000 AT1=2.0
+<span class="lineNum">      63 </span>            :   STEP2=2000 AT2=1.0
+<span class="lineNum">      64 </span>            :   STEP3=2500         KAPPA3=0.0
+<span class="lineNum">      65 </span>            : ... MOVINGRESTRAINT
+<span class="lineNum">      66 </span>            : \endplumedfile
+<span class="lineNum">      67 </span>            : The following input is progressively building restraints
+<span class="lineNum">      68 </span>            : distances between atoms 1 and 5 and between atoms 2 and 4
+<span class="lineNum">      69 </span>            : in the first 1000 steps. Afterwards, the restraint is kept
+<span class="lineNum">      70 </span>            : static.
+<span class="lineNum">      71 </span>            : \plumedfile
+<span class="lineNum">      72 </span>            : DISTANCE ATOMS=1,5 LABEL=d1
+<span class="lineNum">      73 </span>            : DISTANCE ATOMS=2,4 LABEL=d2
+<span class="lineNum">      74 </span>            : MOVINGRESTRAINT ...
+<span class="lineNum">      75 </span>            :   ARG=d1,d2
+<span class="lineNum">      76 </span>            :   STEP0=0    AT0=1.0,1.5 KAPPA0=0.0,0.0
+<span class="lineNum">      77 </span>            :   STEP1=1000 AT1=1.0,1.5 KAPPA1=1.0,1.0
+<span class="lineNum">      78 </span>            : ... MOVINGRESTRAINT
+<span class="lineNum">      79 </span>            : \endplumedfile
+<span class="lineNum">      80 </span>            : The following input is progressively bringing atoms 1 and 2
+<span class="lineNum">      81 </span>            : close to each other with an upper wall
+<span class="lineNum">      82 </span>            : \plumedfile
+<span class="lineNum">      83 </span>            : DISTANCE ATOMS=1,2 LABEL=d1
+<span class="lineNum">      84 </span>            : MOVINGRESTRAINT ...
+<span class="lineNum">      85 </span>            :   ARG=d1
+<span class="lineNum">      86 </span>            :   VERSE=U
+<span class="lineNum">      87 </span>            :   STEP0=0    AT0=1.0 KAPPA0=10.0
+<span class="lineNum">      88 </span>            :   STEP1=1000 AT1=0.0
+<span class="lineNum">      89 </span>            : ... MOVINGRESTRAINT
+<span class="lineNum">      90 </span>            : \endplumedfile
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : By default the Action is issuing some values which are
+<span class="lineNum">      93 </span>            : the work on each degree of freedom, the center of the harmonic potential,
+<span class="lineNum">      94 </span>            : the total bias deposited
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : (See also \ref DISTANCE).
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : \attention Work is not computed properly when KAPPA is time dependent.
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : */
+<span class="lineNum">     101 </span>            : //+ENDPLUMEDOC
+<a name="102"><span class="lineNum">     102 </span>            : </a>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">         12 : class MovingRestraint : public Bias {</span>
+<span class="lineNum">     105 </span>            :   std::vector&lt;std::vector&lt;double&gt; &gt; at;
+<span class="lineNum">     106 </span>            :   std::vector&lt;std::vector&lt;double&gt; &gt; kappa;
+<span class="lineNum">     107 </span>            :   std::vector&lt;long int&gt; step;
+<span class="lineNum">     108 </span>            :   std::vector&lt;double&gt; oldaa;
+<span class="lineNum">     109 </span>            :   std::vector&lt;double&gt; oldk;
+<span class="lineNum">     110 </span>            :   std::vector&lt;double&gt; olddpotdk;
+<span class="lineNum">     111 </span>            :   std::vector&lt;double&gt; oldf;
+<span class="lineNum">     112 </span>            :   std::vector&lt;string&gt; verse;
+<span class="lineNum">     113 </span>            :   std::vector&lt;double&gt; work;
+<span class="lineNum">     114 </span>            :   double tot_work;
+<span class="lineNum">     115 </span>            : public:
+<span class="lineNum">     116 </span>            :   explicit MovingRestraint(const ActionOptions&amp;);
+<span class="lineNum">     117 </span>            :   void calculate();
+<span class="lineNum">     118 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="119"><span class="lineNum">     119 </span>            : };</a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">       6455 : PLUMED_REGISTER_ACTION(MovingRestraint,&quot;MOVINGRESTRAINT&quot;)</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">          4 : void MovingRestraint::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     124 </span><span class="lineCov">          4 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">     125 </span><span class="lineCov">          8 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;VERSE&quot;,&quot;B&quot;,&quot;Tells plumed whether the restraint is only acting for CV larger (U) or smaller (L) than &quot;</span>
+<span class="lineNum">     127 </span>            :            &quot;the restraint or whether it is acting on both sides (B)&quot;);
+<span class="lineNum">     128 </span><span class="lineCov">         16 :   keys.add(&quot;numbered&quot;,&quot;STEP&quot;,&quot;This keyword appears multiple times as STEPx with x=0,1,2,...,n. Each value given represents &quot;</span>
+<span class="lineNum">     129 </span>            :            &quot;the MD step at which the restraint parameters take the values KAPPAx and ATx.&quot;);
+<span class="lineNum">     130 </span><span class="lineCov">         12 :   keys.reset_style(&quot;STEP&quot;,&quot;compulsory&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineCov">         16 :   keys.add(&quot;numbered&quot;,&quot;AT&quot;,&quot;ATx is equal to the position of the restraint at time STEPx. For intermediate times this parameter &quot;</span>
+<span class="lineNum">     132 </span>            :            &quot;is linearly interpolated. If no ATx is specified for STEPx then the values of AT are kept constant &quot;
+<span class="lineNum">     133 </span>            :            &quot;during the interval of time between STEPx-1 and STEPx.&quot;);
+<span class="lineNum">     134 </span><span class="lineCov">         12 :   keys.reset_style(&quot;AT&quot;,&quot;compulsory&quot;);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         16 :   keys.add(&quot;numbered&quot;,&quot;KAPPA&quot;,&quot;KAPPAx is equal to the value of the force constants at time STEPx. For intermediate times this &quot;</span>
+<span class="lineNum">     136 </span>            :            &quot;parameter is linearly interpolated.  If no KAPPAx is specified for STEPx then the values of KAPPAx &quot;
+<span class="lineNum">     137 </span>            :            &quot;are kept constant during the interval of time between STEPx-1 and STEPx.&quot;);
+<span class="lineNum">     138 </span><span class="lineCov">         12 :   keys.reset_style(&quot;KAPPA&quot;,&quot;compulsory&quot;);</span>
+<span class="lineNum">     139 </span><span class="lineCov">         16 :   keys.addOutputComponent(&quot;work&quot;,&quot;default&quot;,&quot;the total work performed changing this restraint&quot;);</span>
+<span class="lineNum">     140 </span><span class="lineCov">         16 :   keys.addOutputComponent(&quot;force2&quot;,&quot;default&quot;,&quot;the instantaneous value of the squared force due to this bias potential&quot;);</span>
+<span class="lineNum">     141 </span><span class="lineCov">         16 :   keys.addOutputComponent(&quot;_cntr&quot;,&quot;default&quot;,&quot;one or multiple instances of this quantity will be refereceable elsewhere in the input file. &quot;</span>
+<span class="lineNum">     142 </span>            :                           &quot;these quantities will named with  the arguments of the bias followed by &quot;
+<span class="lineNum">     143 </span>            :                           &quot;the character string _cntr. These quantities give the instantaneous position &quot;
+<span class="lineNum">     144 </span>            :                           &quot;of the center of the harmonic potential.&quot;);
+<span class="lineNum">     145 </span><span class="lineCov">         16 :   keys.addOutputComponent(&quot;_work&quot;,&quot;default&quot;,&quot;one or multiple instances of this quantity will be refereceable elsewhere in the input file. &quot;</span>
+<span class="lineNum">     146 </span>            :                           &quot;These quantities will named with the arguments of the bias followed by &quot;
+<span class="lineNum">     147 </span>            :                           &quot;the character string _work. These quantities tell the user how much work has &quot;
+<span class="lineNum">     148 </span>            :                           &quot;been done by the potential in dragging the system along the various colvar axis.&quot;);
+<span class="lineNum">     149 </span><span class="lineCov">         16 :   keys.addOutputComponent(&quot;_kappa&quot;,&quot;default&quot;,&quot;one or multiple instances of this quantity will be refereceable elsewhere in the input file. &quot;</span>
+<span class="lineNum">     150 </span>            :                           &quot;These quantities will named with the arguments of the bias followed by &quot;
+<span class="lineNum">     151 </span>            :                           &quot;the character string _kappa. These quantities tell the user the time dependent value of kappa.&quot;);
+<span class="lineNum">     152 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineCov">          3 : MovingRestraint::MovingRestraint(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     155 </span>            :   PLUMED_BIAS_INIT(ao),
+<span class="lineNum">     156 </span><span class="lineCov">         15 :   verse(getNumberOfArguments())</span>
+<span class="lineNum">     157 </span>            : {
+<span class="lineNum">     158 </span><span class="lineCov">          6 :   parseVector(&quot;VERSE&quot;,verse);</span>
+<span class="lineNum">     159 </span><span class="lineCov">          6 :   vector&lt;long int&gt; ss(1); ss[0]=-1;</span>
+<span class="lineNum">     160 </span><span class="lineCov">          6 :   std::vector&lt;double&gt; kk( getNumberOfArguments() ), aa( getNumberOfArguments() );</span>
+<span class="lineNum">     161 </span><span class="lineCov">          8 :   for(int i=0;; i++) {</span>
+<span class="lineNum">     162 </span>            :     // Read in step
+<span class="lineNum">     163 </span><span class="lineCov">         22 :     if( !parseNumberedVector(&quot;STEP&quot;,i,ss) ) break;</span>
+<span class="lineNum">     164 </span><span class="lineCov">         40 :     for(unsigned j=0; j&lt;step.size(); j++) {</span>
+<span class="lineNum">     165 </span><span class="lineCov">         16 :       if(ss[0]&lt;step[j]) error(&quot;in moving restraint step number must always increase&quot;);</span>
+<span class="lineNum">     166 </span>            :     }
+<span class="lineNum">     167 </span><span class="lineCov">          8 :     step.push_back(ss[0]);</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :     // Try to read kappa
+<span class="lineNum">     170 </span><span class="lineCov">         18 :     if( !parseNumberedVector(&quot;KAPPA&quot;,i,kk) ) kk=kappa[i-1];</span>
+<span class="lineNum">     171 </span><span class="lineCov">          8 :     kappa.push_back(kk);</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :     // Now read AT
+<span class="lineNum">     174 </span><span class="lineCov">         17 :     if( !parseNumberedVector(&quot;AT&quot;,i,aa) ) aa=at[i-1];</span>
+<span class="lineNum">     175 </span><span class="lineCov">          8 :     at.push_back(aa);</span>
+<span class="lineNum">     176 </span><span class="lineCov">          8 :   }</span>
+<span class="lineNum">     177 </span><span class="lineCov">          3 :   checkRead();</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span><span class="lineCov">         30 :   for(unsigned i=0; i&lt;step.size(); i++) {</span>
+<span class="lineNum">     180 </span><span class="lineCov">         16 :     log.printf(&quot;  step%u %ld\n&quot;,i,step[i]);</span>
+<span class="lineNum">     181 </span><span class="lineCov">          8 :     log.printf(&quot;  at&quot;);</span>
+<span class="lineNum">     182 </span><span class="lineCov">         46 :     for(unsigned j=0; j&lt;at[i].size(); j++) log.printf(&quot; %f&quot;,at[i][j]);</span>
+<span class="lineNum">     183 </span><span class="lineCov">          8 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          8 :     log.printf(&quot;  with force constant&quot;);</span>
+<span class="lineNum">     185 </span><span class="lineCov">         46 :     for(unsigned j=0; j&lt;kappa[i].size(); j++) log.printf(&quot; %f&quot;,kappa[i][j]);</span>
+<span class="lineNum">     186 </span><span class="lineCov">          8 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     187 </span>            :   };
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">          9 :   addComponent(&quot;force2&quot;); componentIsNotPeriodic(&quot;force2&quot;);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :   // add the centers of the restraint as additional components that can be retrieved (useful for debug)
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :   std::string comp;
+<span class="lineNum">     194 </span><span class="lineCov">         11 :   for(unsigned i=0; i&lt; getNumberOfArguments() ; i++) {</span>
+<span class="lineNum">     195 </span><span class="lineCov">          8 :     comp=getPntrToArgument(i)-&gt;getName()+&quot;_cntr&quot;; // each spring has its own center</span>
+<span class="lineNum">     196 </span><span class="lineCov">          4 :     addComponent(comp); componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     197 </span><span class="lineCov">          8 :     comp=getPntrToArgument(i)-&gt;getName()+&quot;_work&quot;; // each spring has its own work</span>
+<span class="lineNum">     198 </span><span class="lineCov">          4 :     addComponent(comp); componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          8 :     comp=getPntrToArgument(i)-&gt;getName()+&quot;_kappa&quot;; // each spring has its own kappa</span>
+<span class="lineNum">     200 </span><span class="lineCov">          4 :     addComponent(comp); componentIsNotPeriodic(comp);</span>
+<span class="lineNum">     201 </span><span class="lineCov">          8 :     work.push_back(0.); // initialize the work value</span>
+<span class="lineNum">     202 </span>            :   }
+<span class="lineNum">     203 </span><span class="lineCov">          9 :   addComponent(&quot;work&quot;); componentIsNotPeriodic(&quot;work&quot;);</span>
+<span class="lineNum">     204 </span><span class="lineCov">          3 :   tot_work=0.0;</span>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">          3 :   log&lt;&lt;&quot;  Bibliography &quot;;</span>
+<span class="lineNum">     207 </span><span class="lineCov">          9 :   log&lt;&lt;cite(&quot;Grubmuller, Heymann, and Tavan, Science 271, 997 (1996)&quot;)&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineCov">        561 : void MovingRestraint::calculate() {</span>
+<span class="lineNum">     213 </span>            :   double ene=0.0;
+<span class="lineNum">     214 </span>            :   double totf2=0.0;
+<span class="lineNum">     215 </span><span class="lineCov">        561 :   unsigned narg=getNumberOfArguments();</span>
+<span class="lineNum">     216 </span><span class="lineCov">        561 :   long int now=getStep();</span>
+<span class="lineNum">     217 </span><span class="lineCov">        561 :   std::vector&lt;double&gt; kk(narg),aa(narg),f(narg),dpotdk(narg);</span>
+<span class="lineNum">     218 </span><span class="lineCov">        561 :   if(now&lt;=step[0]) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">          2 :     kk=kappa[0];</span>
+<span class="lineNum">     220 </span><span class="lineCov">          2 :     aa=at[0];</span>
+<span class="lineNum">     221 </span><span class="lineCov">          2 :     oldaa=at[0];</span>
+<span class="lineNum">     222 </span><span class="lineCov">          2 :     oldk=kappa[0];</span>
+<span class="lineNum">     223 </span><span class="lineCov">          2 :     olddpotdk.resize(narg);</span>
+<span class="lineNum">     224 </span><span class="lineCov">          2 :     oldf.resize(narg);</span>
+<span class="lineNum">     225 </span><span class="lineCov">       1118 :   } else if(now&gt;=step[step.size()-1]) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">         47 :     kk=kappa[step.size()-1];</span>
+<span class="lineNum">     227 </span><span class="lineCov">         94 :     aa=at[step.size()-1];</span>
+<span class="lineNum">     228 </span>            :   } else {
+<span class="lineNum">     229 </span>            :     unsigned i=0;
+<span class="lineNum">     230 </span><span class="lineCov">       1034 :     for(i=1; i&lt;step.size(); i++) if(now&lt;step[i]) break;</span>
+<span class="lineNum">     231 </span><span class="lineCov">       1536 :     double c2=(now-step[i-1])/double(step[i]-step[i-1]);</span>
+<span class="lineNum">     232 </span><span class="lineCov">        512 :     double c1=1.0-c2;</span>
+<span class="lineNum">     233 </span><span class="lineCov">       2592 :     for(unsigned j=0; j&lt;narg; j++) kk[j]=(c1*kappa[i-1][j]+c2*kappa[i][j]);</span>
+<span class="lineNum">     234 </span><span class="lineCov">       1552 :     for(unsigned j=0; j&lt;narg; j++) {</span>
+<span class="lineNum">     235 </span><span class="lineCov">       1040 :       const double a1=at[i-1][j];</span>
+<span class="lineNum">     236 </span><span class="lineCov">        520 :       const double a2=at[i][j];</span>
+<span class="lineNum">     237 </span><span class="lineCov">       1560 :       aa[j]=(c1*a1+c2*(a1+difference(j,a1,a2)));</span>
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span>            :   }
+<span class="lineNum">     240 </span><span class="lineCov">        561 :   tot_work=0.0;</span>
+<span class="lineNum">     241 </span><span class="lineCov">       1703 :   for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     242 </span><span class="lineCov">        571 :     const double cv=difference(i,aa[i],getArgument(i)); // this gives: getArgument(i) - aa[i]</span>
+<span class="lineNum">     243 </span><span class="lineCov">       2284 :     getPntrToComponent(getPntrToArgument(i)-&gt;getName()+&quot;_cntr&quot;)-&gt;set(aa[i]);</span>
+<span class="lineNum">     244 </span><span class="lineCov">        571 :     const double k=kk[i];</span>
+<span class="lineNum">     245 </span><span class="lineCov">       1142 :     f[i]=-k*cv;</span>
+<span class="lineNum">     246 </span><span class="lineCov">        571 :     if(verse[i]==&quot;U&quot; &amp;&amp; cv&lt;0) continue;</span>
+<span class="lineNum">     247 </span><span class="lineCov">        571 :     if(verse[i]==&quot;L&quot; &amp;&amp; cv&gt;0) continue;</span>
+<span class="lineNum">     248 </span><span class="lineCov">       1713 :     plumed_assert(verse[i]==&quot;U&quot; || verse[i]==&quot;L&quot; || verse[i]==&quot;B&quot;);</span>
+<span class="lineNum">     249 </span><span class="lineCov">       1142 :     dpotdk[i]=0.5*cv*cv;</span>
+<span class="lineNum">     250 </span><span class="lineCov">       6271 :     if(oldaa.size()==aa.size() &amp;&amp; oldf.size()==f.size()) work[i]+=0.5*(oldf[i]+f[i])*(aa[i]-oldaa[i]) + 0.5*( dpotdk[i]+olddpotdk[i] )*(kk[i]-oldk[i]);</span>
+<span class="lineNum">     251 </span><span class="lineCov">       1713 :     getPntrToComponent(getPntrToArgument(i)-&gt;getName()+&quot;_work&quot;)-&gt;set(work[i]);</span>
+<span class="lineNum">     252 </span><span class="lineCov">       1713 :     getPntrToComponent(getPntrToArgument(i)-&gt;getName()+&quot;_kappa&quot;)-&gt;set(kk[i]);</span>
+<span class="lineNum">     253 </span><span class="lineCov">        571 :     tot_work+=work[i];</span>
+<span class="lineNum">     254 </span><span class="lineCov">        571 :     ene+=0.5*k*cv*cv;</span>
+<span class="lineNum">     255 </span><span class="lineCov">        571 :     setOutputForce(i,f[i]);</span>
+<span class="lineNum">     256 </span><span class="lineCov">        571 :     totf2+=f[i]*f[i];</span>
+<span class="lineNum">     257 </span>            :   };
+<span class="lineNum">     258 </span><span class="lineCov">       1122 :   getPntrToComponent(&quot;work&quot;)-&gt;set(tot_work);</span>
+<span class="lineNum">     259 </span><span class="lineCov">        561 :   oldf=f;</span>
+<span class="lineNum">     260 </span><span class="lineCov">        561 :   oldaa=aa;</span>
+<span class="lineNum">     261 </span><span class="lineCov">        561 :   oldk=kk;</span>
+<span class="lineNum">     262 </span><span class="lineCov">        561 :   olddpotdk=dpotdk;</span>
+<span class="lineNum">     263 </span>            :   setBias(ene);
+<span class="lineNum">     264 </span><span class="lineCov">       1122 :   getPntrToComponent(&quot;force2&quot;)-&gt;set(totf2);</span>
+<span class="lineNum">     265 </span><span class="lineCov">        561 : }</span>
+<a name="266"><span class="lineNum">     266 </span>            : </a>
+<span class="lineNum">     267 </span>            : }
+<span class="lineNum">     268 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

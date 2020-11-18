@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - analysis/PCA.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">analysis</a> - PCA.cpp<span style="font-size: 80%;"> (source / <a href="PCA.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">83</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntryHi">98.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryMed">76.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Analysis.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;reference/Direction.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;reference/MetricRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;reference/ReferenceConfiguration.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;reference/ReferenceValuePack.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //+PLUMEDOC DIMRED PCA
+<span class="lineNum">      31 </span>            : /*
+<span class="lineNum">      32 </span>            : Perform principal component analysis (PCA) using either the positions of the atoms a large number of collective variables as input.
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : Principal component analysis is a statistical technique that uses an orthogonal transformation to convert a set of observations of
+<span class="lineNum">      35 </span>            : poorly correlated variables into a set of linearly uncorrelated variables.  You can read more about the specifics of this technique
+<span class="lineNum">      36 </span>            : here: https://en.wikipedia.org/wiki/Principal_component_analysis
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : When used with molecular dynamics simulations a set of frames taken from the trajectory, \f$\{X_i\}\f$, or the values of
+<span class="lineNum">      39 </span>            : a number of collective variables which are calculated from the trajectory frames are used as input.  In this second instance your
+<span class="lineNum">      40 </span>            : input to the PCA analysis algorithm is thus a set of high-dimensional vectors of collective variables.  However, if
+<span class="lineNum">      41 </span>            : collective variables are calculated from the positions of the atoms or if the positions are used directly the assumption is that
+<span class="lineNum">      42 </span>            : this input trajectory is a set of poorly correlated (high-dimensional) vectors.  After principal component analysis has been
+<span class="lineNum">      43 </span>            : performed the output is a set of orthogonal vectors that describe the directions in which the largest motions have been seen.
+<span class="lineNum">      44 </span>            : In other words, principal component analysis provides a method for lowering the dimensionality of the data contained in a trajectory.
+<span class="lineNum">      45 </span>            : These output directions are some linear combination of the \f$x\f$, \f$y\f$ and \f$z\f$ positions if the positions were used as input
+<span class="lineNum">      46 </span>            : or some linear combination of the input collective variables if a high-dimensional vector of collective variables was used as input.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : As explained on the Wikipedia page you must calculate the average and covariance for each of the input coordinates.  In other words, you must
+<span class="lineNum">      49 </span>            : calculate the average structure and the amount the system fluctuates around this average structure.  The problem in doing so when the
+<span class="lineNum">      50 </span>            : \f$x\f$, \f$y\f$ and \f$z\f$ coordinates of a molecule are used as input is that the majority of the changes in the positions of the
+<span class="lineNum">      51 </span>            : atoms comes from the translational and rotational degrees of freedom of the molecule.  The first six principal components will thus, most likely,
+<span class="lineNum">      52 </span>            : be uninteresting.  Consequently, to remedy this problem PLUMED provides the functionality to perform an RMSD alignment of the all the structures
+<span class="lineNum">      53 </span>            : to be analysed to the first frame in the trajectory.  This can be used to effectively remove translational and/or rotational motions from
+<span class="lineNum">      54 </span>            : consideration.  The resulting principal components thus describe vibrational motions of the molecule.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : If you wish to calculate the projection of a trajectory on a set of principal components calculated from this PCA action then the output can be
+<span class="lineNum">      57 </span>            : used as input for the \ref PCAVARS action.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : \par Examples
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : The following input instructs PLUMED to perform a principal component analysis in which the covariance matrix is calculated from changes in the positions
+<span class="lineNum">      62 </span>            : of the first 22 atoms.  The TYPE=OPTIMAL instruction ensures that translational and rotational degrees of freedom are removed from consideration.
+<span class="lineNum">      63 </span>            : The first two principal components will be output to a file called pca-comp.pdb.  Trajectory frames will be collected on every step and the PCA calculation
+<span class="lineNum">      64 </span>            : will be performed at the end of the simulation.
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : \plumedfile
+<span class="lineNum">      67 </span>            : PCA METRIC=OPTIMAL ATOMS=1-22 STRIDE=1 NLOW_DIM=2 OFILE=pca-comp.pdb
+<span class="lineNum">      68 </span>            : \endplumedfile
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : The following input instructs PLUMED to perform a principal component analysis in which the covariance matrix is calculated from chnages in the six distances
+<span class="lineNum">      71 </span>            : seen in the previous lines.  Notice that here the TYPE=EUCLIDEAN keyword is used to indicate that no alighment has to be done when calculating the various
+<span class="lineNum">      72 </span>            : elements of the covariance matrix from the input vectors.  In this calculation the first two principal components will be output to a file called pca-comp.pdb.
+<span class="lineNum">      73 </span>            : Trajectory frames will be collected every five steps and the PCA calculation is performed every 1000 steps.  Consequently, if you run a 2000 step simulation the
+<span class="lineNum">      74 </span>            : PCA analysis will be performed twice.  The REWEIGHT_BIAS keyword in this input tells PLUMED that rather that ascribing a weight of one to each of the frames
+<span class="lineNum">      75 </span>            : when calculating averages and covariances a reweighting should be performed based and each frames' weight in these calculations should be determined based on
+<span class="lineNum">      76 </span>            : the current value of the instantaneous bias (see \ref REWEIGHT_BIAS).
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : \plumedfile
+<span class="lineNum">      79 </span>            : d1: DISTANCE ATOMS=1,2
+<span class="lineNum">      80 </span>            : d2: DISTANCE ATOMS=1,3
+<span class="lineNum">      81 </span>            : d3: DISTANCE ATOMS=1,4
+<span class="lineNum">      82 </span>            : d4: DISTANCE ATOMS=2,3
+<span class="lineNum">      83 </span>            : d5: DISTANCE ATOMS=2,4
+<span class="lineNum">      84 </span>            : d6: DISTANCE ATOMS=3,4
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : PCA ARG=d1,d2,d3,d4,d5,d6 METRIC=EUCLIDEAN STRIDE=5 RUN=1000 NLOW_DIM=2 REWEIGHT_BIAS OFILE=pca-comp.pdb
+<span class="lineNum">      87 </span>            : \endplumedfile
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : */
+<span class="lineNum">      90 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : namespace PLMD {
+<span class="lineNum">      93 </span>            : namespace analysis {
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : class PCA : public Analysis {
+<span class="lineNum">      96 </span>            : private:
+<span class="lineNum">      97 </span>            :   unsigned ndim;
+<span class="lineNum">      98 </span>            : /// The position of the reference configuration (the one we align to)
+<span class="lineNum">      99 </span>            :   ReferenceConfiguration* myref;
+<span class="lineNum">     100 </span>            : /// The eigenvectors for the atomic displacements
+<span class="lineNum">     101 </span>            :   Matrix&lt;Vector&gt; atom_eigv;
+<span class="lineNum">     102 </span>            : /// The eigenvectors for the displacements in argument space
+<span class="lineNum">     103 </span>            :   Matrix&lt;double&gt; arg_eigv;
+<span class="lineNum">     104 </span>            :   std::string ofilename;
+<span class="lineNum">     105 </span>            : public:
+<span class="lineNum">     106 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     107 </span>            :   explicit PCA(const ActionOptions&amp;ao);
+<a name="108"><span class="lineNum">     108 </span>            :   ~PCA();</a>
+<span class="lineNum">     109 </span>            :   void performAnalysis();
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :   void performTask( const unsigned&amp;, const unsigned&amp;, MultiValue&amp; ) const { plumed_error(); }</span>
+<a name="111"><span class="lineNum">     111 </span>            : };</a>
+<span class="lineNum">     112 </span>            : 
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(PCA,&quot;PCA&quot;)</span></a>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">          3 : void PCA::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">          3 :   Analysis::registerKeywords( keys );</span>
+<span class="lineNum">     117 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;NLOW_DIM&quot;,&quot;number of PCA coordinates required&quot;);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;OFILE&quot;,&quot;the file on which to output the eigenvectors&quot;);</span>
+<a name="119"><span class="lineNum">     119 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">          2 : PCA::PCA(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     122 </span><span class="lineCov">          4 :   PLUMED_ANALYSIS_INIT(ao)</span>
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span>            :   // Setup reference configuration
+<span class="lineNum">     125 </span><span class="lineCov">          6 :   log.printf(&quot;  performing PCA analysis using %s metric \n&quot;, getMetricName().c_str() );</span>
+<span class="lineNum">     126 </span><span class="lineCov">          6 :   myref = metricRegister().create&lt;ReferenceConfiguration&gt;( getMetricName() );</span>
+<span class="lineNum">     127 </span><span class="lineCov">          4 :   std::vector&lt;std::string&gt; argnames( getNumberOfArguments() );</span>
+<span class="lineNum">     128 </span><span class="lineCov">         10 :   for(unsigned i=0; i&lt;argnames.size(); ++i) {</span>
+<span class="lineNum">     129 </span><span class="lineCov">          6 :     if( getArguments()[i]-&gt;isPeriodic() ) error(&quot;cannot run PCA with periodic variables&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">          6 :     argnames[i] = getArguments()[i]-&gt;getName();</span>
+<span class="lineNum">     131 </span>            :   }
+<span class="lineNum">     132 </span><span class="lineCov">          4 :   myref-&gt;setNamesAndAtomNumbers( getAbsoluteIndexes(), argnames );</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">          4 :   parse(&quot;NLOW_DIM&quot;,ndim);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          2 :   if( getNumberOfAtoms()&gt;0 ) atom_eigv.resize( ndim, getNumberOfAtoms() );</span>
+<span class="lineNum">     136 </span><span class="lineCov">          2 :   if( getNumberOfArguments()&gt;0 ) arg_eigv.resize( ndim, getNumberOfArguments() );</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Read stuff for output file
+<span class="lineNum">     139 </span><span class="lineCov">          4 :   parseOutputFile(&quot;OFILE&quot;,ofilename);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          2 :   checkRead();</span>
+<a name="141"><span class="lineNum">     141 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">          6 : PCA::~PCA() {</span>
+<span class="lineNum">     144 </span><span class="lineCov">          2 :   delete myref;</span>
+<a name="145"><span class="lineNum">     145 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">          2 : void PCA::performAnalysis() {</span>
+<span class="lineNum">     148 </span>            :   // Align everything to the first frame
+<span class="lineNum">     149 </span><span class="lineCov">          6 :   MultiValue myval( 1, getNumberOfArguments() + 3*getNumberOfAtoms() + 9 );</span>
+<span class="lineNum">     150 </span><span class="lineCov">          4 :   ReferenceValuePack mypack( getNumberOfArguments(), getNumberOfAtoms(), myval );</span>
+<span class="lineNum">     151 </span><span class="lineCov">         46 :   for(unsigned i=0; i&lt;getNumberOfAtoms(); ++i) mypack.setAtomIndex( i, i );</span>
+<span class="lineNum">     152 </span>            :   // Setup some PCA storage
+<span class="lineNum">     153 </span><span class="lineCov">          4 :   data[0]-&gt;setupPCAStorage ( mypack ); std::vector&lt;double&gt; displace( getNumberOfAtoms() );</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :   if( getNumberOfAtoms()&gt;0 ) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">          1 :     ReferenceAtoms* at = dynamic_cast&lt;ReferenceAtoms*&gt;( data[0] );</span>
+<span class="lineNum">     156 </span><span class="lineCov">          1 :     displace = at-&gt;getDisplace();</span>
+<span class="lineNum">     157 </span>            :   }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   // Create some arrays to store the average position
+<span class="lineNum">     160 </span><span class="lineCov">          2 :   std::vector&lt;double&gt; sarg( getNumberOfArguments(), 0 );</span>
+<span class="lineNum">     161 </span><span class="lineCov">          2 :   std::vector&lt;Vector&gt; spos( getNumberOfAtoms() );</span>
+<span class="lineNum">     162 </span><span class="lineCov">         46 :   for(unsigned i=0; i&lt;getNumberOfAtoms(); ++i) spos[i].zero();</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :   // Calculate the average displacement from the first frame
+<span class="lineNum">     165 </span><span class="lineCov">          2 :   double norm=getWeight(0);</span>
+<span class="lineNum">     166 </span><span class="lineCov">       2184 :   for(unsigned i=1; i&lt;getNumberOfDataPoints(); ++i) {</span>
+<span class="lineNum">     167 </span><span class="lineCov">       5450 :     data[0]-&gt;calc( data[i]-&gt;getReferencePositions(), getPbc(), getArguments(), data[i]-&gt;getReferenceArguments(), mypack, true );</span>
+<span class="lineNum">     168 </span>            :     // Accumulate average displacement of arguments (Here PBC could do fucked up things - really needs Berry Phase ) GAT
+<span class="lineNum">     169 </span><span class="lineCov">       4360 :     for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) sarg[j] += 0.5*getWeight(i)*mypack.getArgumentDerivative(j);</span>
+<span class="lineNum">     170 </span>            :     // Accumulate average displacement of position
+<span class="lineNum">     171 </span><span class="lineCov">      49050 :     for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) spos[j] += getWeight(i)*mypack.getAtomsDisplacementVector()[j] / displace[j];</span>
+<span class="lineNum">     172 </span><span class="lineCov">       1090 :     norm += getWeight(i);</span>
+<span class="lineNum">     173 </span>            :   }
+<span class="lineNum">     174 </span>            :   // Now normalise the displacements to get the average and add these to the first frame
+<span class="lineNum">     175 </span><span class="lineCov">          2 :   double inorm = 1.0 / norm ;</span>
+<span class="lineNum">     176 </span><span class="lineCov">         12 :   for(unsigned j=0; j&lt;getNumberOfArguments(); ++j) sarg[j] = inorm*sarg[j] + data[0]-&gt;getReferenceArguments()[j];</span>
+<span class="lineNum">     177 </span><span class="lineCov">         90 :   for(unsigned j=0; j&lt;getNumberOfAtoms(); ++j) spos[j] = inorm*spos[j] + data[0]-&gt;getReferencePositions()[j];</span>
+<span class="lineNum">     178 </span>            :   // And set the reference configuration
+<span class="lineNum">     179 </span><span class="lineCov">          2 :   std::vector&lt;double&gt; empty( getNumberOfArguments(), 1.0 ); myref-&gt;setReferenceConfig( spos, sarg, empty );</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :   // Now accumulate the covariance
+<span class="lineNum">     182 </span><span class="lineCov">          2 :   unsigned narg=getNumberOfArguments();</span>
+<span class="lineNum">     183 </span><span class="lineCov">          6 :   Matrix&lt;double&gt; covar( getNumberOfArguments()+3*getNumberOfAtoms(), getNumberOfArguments()+3*getNumberOfAtoms() ); covar=0;</span>
+<span class="lineNum">     184 </span><span class="lineCov">       2188 :   for(unsigned i=0; i&lt;getNumberOfDataPoints(); ++i) {</span>
+<span class="lineNum">     185 </span>            :     // double d = data[i]-&gt;calc( spos, getPbc(), getArguments(), sarg, mypack, true );
+<span class="lineNum">     186 </span><span class="lineCov">       5460 :     data[0]-&gt;calc( data[i]-&gt;getReferencePositions(), getPbc(), getArguments(), data[i]-&gt;getReferenceArguments(), mypack, true );</span>
+<span class="lineNum">     187 </span><span class="lineCov">       3276 :     for(unsigned jarg=0; jarg&lt;getNumberOfArguments(); ++jarg) {</span>
+<span class="lineNum">     188 </span>            :       // Need sorting for PBC with GAT
+<span class="lineNum">     189 </span><span class="lineCov">       4368 :       double jarg_d = 0.5*mypack.getArgumentDerivative(jarg) + data[0]-&gt;getReferenceArguments()[jarg] - sarg[jarg];</span>
+<span class="lineNum">     190 </span><span class="lineCov">       5460 :       for(unsigned karg=0; karg&lt;getNumberOfArguments(); ++karg) {</span>
+<span class="lineNum">     191 </span>            :         // Need sorting for PBC with GAT
+<span class="lineNum">     192 </span><span class="lineCov">       8736 :         double karg_d = 0.5*mypack.getArgumentDerivative(karg) + data[0]-&gt;getReferenceArguments()[karg] - sarg[karg];</span>
+<span class="lineNum">     193 </span><span class="lineCov">       4368 :         covar( jarg, karg ) += 0.25*getWeight(i)*jarg_d*karg_d; // mypack.getArgumentDerivative(jarg)*mypack.getArgumentDerivative(karg);</span>
+<span class="lineNum">     194 </span>            :       }
+<span class="lineNum">     195 </span>            :     }
+<span class="lineNum">     196 </span><span class="lineCov">      25116 :     for(unsigned jat=0; jat&lt;getNumberOfAtoms(); ++jat) {</span>
+<span class="lineNum">     197 </span><span class="lineCov">      84084 :       for(unsigned jc=0; jc&lt;3; ++jc) {</span>
+<span class="lineNum">     198 </span><span class="lineCov">     216216 :         double jdisplace = mypack.getAtomsDisplacementVector()[jat][jc] / displace[jat] + data[0]-&gt;getReferencePositions()[jat][jc] - spos[jat][jc];</span>
+<span class="lineNum">     199 </span><span class="lineCov">    1621620 :         for(unsigned kat=0; kat&lt;getNumberOfAtoms(); ++kat) {</span>
+<span class="lineNum">     200 </span><span class="lineCov">    5549544 :           for(unsigned kc=0; kc&lt;3; ++kc) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">   14270256 :             double kdisplace = mypack.getAtomsDisplacementVector()[kat][kc] / displace[kat] + data[0]-&gt;getReferencePositions()[kat][kc] - spos[kat][kc];</span>
+<span class="lineNum">     202 </span><span class="lineCov">    4756752 :             covar( narg+3*jat + jc, narg+3*kat + kc ) += getWeight(i)*jdisplace*kdisplace;</span>
+<span class="lineNum">     203 </span>            :           }
+<span class="lineNum">     204 </span>            :         }
+<span class="lineNum">     205 </span>            :       }
+<span class="lineNum">     206 </span>            :     }
+<span class="lineNum">     207 </span>            :   }
+<span class="lineNum">     208 </span>            :   // Normalise
+<span class="lineNum">     209 </span><span class="lineCov">        138 :   for(unsigned i=0; i&lt;covar.nrows(); ++i) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">       8788 :     for(unsigned j=0; j&lt;covar.ncols(); ++j) covar(i,j) *= inorm;</span>
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :   // Diagonalise the covariance
+<span class="lineNum">     214 </span><span class="lineCov">          4 :   std::vector&lt;double&gt; eigval( getNumberOfArguments()+3*getNumberOfAtoms() );</span>
+<span class="lineNum">     215 </span><span class="lineCov">          6 :   Matrix&lt;double&gt; eigvec( getNumberOfArguments()+3*getNumberOfAtoms(), getNumberOfArguments()+3*getNumberOfAtoms() );</span>
+<span class="lineNum">     216 </span><span class="lineCov">          2 :   diagMat( covar, eigval, eigvec );</span>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :   // Open an output file
+<span class="lineNum">     219 </span><span class="lineCov">          6 :   OFile ofile; ofile.link(*this); ofile.setBackupString(&quot;analysis&quot;);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          2 :   ofile.open( ofilename );</span>
+<span class="lineNum">     221 </span>            :   // Output the reference configuration
+<span class="lineNum">     222 </span><span class="lineCov">          6 :   myref-&gt;print( ofile, getOutputFormat(), atoms.getUnits().getLength()/0.1 );</span>
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :   // Store and print the eigenvectors
+<span class="lineNum">     225 </span><span class="lineCov">          2 :   std::vector&lt;Vector&gt; tmp_atoms( getNumberOfAtoms() );</span>
+<span class="lineNum">     226 </span><span class="lineCov">          2 :   std::vector&lt;double&gt; tmp_args( getNumberOfArguments() );</span>
+<span class="lineNum">     227 </span><span class="lineCov">          4 :   Direction* tref = metricRegister().create&lt;Direction&gt;( &quot;DIRECTION&quot; );</span>
+<span class="lineNum">     228 </span><span class="lineCov">          2 :   tref-&gt;setNamesAndAtomNumbers( getAbsoluteIndexes(), argument_names );</span>
+<span class="lineNum">     229 </span><span class="lineCov">         10 :   for(unsigned dim=0; dim&lt;ndim; ++dim) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">          4 :     unsigned idim = covar.ncols() - 1 - dim;</span>
+<span class="lineNum">     231 </span><span class="lineCov">         16 :     for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) tmp_args[i]=arg_eigv(dim,i)=eigvec(idim,i);</span>
+<span class="lineNum">     232 </span><span class="lineCov">         92 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">     233 </span><span class="lineCov">        440 :       for(unsigned k=0; k&lt;3; ++k) tmp_atoms[i][k]=atom_eigv(dim,i)[k]=eigvec(idim,narg+3*i+k);</span>
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span><span class="lineCov">          4 :     tref-&gt;setDirection( tmp_atoms, tmp_args );</span>
+<span class="lineNum">     236 </span><span class="lineCov">         12 :     tref-&gt;print( ofile, getOutputFormat(), atoms.getUnits().getLength()/0.1 );</span>
+<span class="lineNum">     237 </span>            :   }
+<span class="lineNum">     238 </span>            :   // Close the output file
+<span class="lineNum">     239 </span><span class="lineCov">          2 :   delete tref; ofile.close();</span>
+<span class="lineNum">     240 </span><span class="lineCov">          2 : }</span>
+<a name="241"><span class="lineNum">     241 </span>            : </a>
+<span class="lineNum">     242 </span>            : }
+<span class="lineNum">     243 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

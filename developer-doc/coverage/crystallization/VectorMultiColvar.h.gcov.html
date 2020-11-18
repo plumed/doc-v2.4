@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/VectorMultiColvar.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - VectorMultiColvar.h<span style="font-size: 80%;"> (source / <a href="VectorMultiColvar.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_crystallization_VectorMultiColvar_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_crystallization_VectorMultiColvar_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;multicolvar/MultiColvarBase.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;multicolvar/AtomValuePack.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace crystallization {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : class VectorMultiColvar : public multicolvar::MultiColvarBase {
+<span class="lineNum">      33 </span>            :   friend class OrientationSphere;
+<span class="lineNum">      34 </span>            :   friend class VolumeGradientBase;
+<span class="lineNum">      35 </span>            : private:
+<span class="lineNum">      36 </span>            : /// Are we storing the director of the vector of the vector
+<span class="lineNum">      37 </span>            :   bool store_director;
+<span class="lineNum">      38 </span>            : /// How many components does the vector have
+<span class="lineNum">      39 </span>            :   unsigned ncomponents;
+<span class="lineNum">      40 </span>            : /// These are tempory vectors that are used to store values and directors
+<span class="lineNum">      41 </span>            :   std::vector&lt;double&gt; vv1, vv2;
+<span class="lineNum">      42 </span>            : protected:
+<span class="lineNum">      43 </span>            : /// Set the dimensionality of the vector
+<span class="lineNum">      44 </span>            :   void setVectorDimensionality( const unsigned&amp; );
+<span class="lineNum">      45 </span>            : /// Used in vector average to add forces from vector the the forces from here
+<span class="lineNum">      46 </span>            :   void addForcesOnAtoms( const std::vector&lt;double&gt;&amp; inforces );
+<span class="lineNum">      47 </span>            : public:
+<a name="48"><span class="lineNum">      48 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<span class="lineNum">      49 </span>            :   explicit VectorMultiColvar(const ActionOptions&amp;);
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">         52 :   ~VectorMultiColvar() {}</span></a>
+<span class="lineNum">      51 </span>            : /// The norm of a vector is not periodic
+<span class="lineNum">      52 </span><span class="lineCov">         35 :   virtual bool isPeriodic() { return false; }</span>
+<span class="lineNum">      53 </span>            : /// Calculate the multicolvar
+<span class="lineNum">      54 </span>            : //  double doCalculation( const unsigned&amp; taskIndex, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      55 </span>            : /// This shouldn't do anything
+<span class="lineNum">      56 </span>            :   double compute( const unsigned&amp; tindex, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      57 </span>            : /// Calculate the vector
+<span class="lineNum">      58 </span>            :   virtual void calculateVector( multicolvar::AtomValuePack&amp; myatoms ) const=0;
+<span class="lineNum">      59 </span>            : /// Get the number of components in the vector
+<span class="lineNum">      60 </span>            :   unsigned getNumberOfComponentsInVector() const ;
+<span class="lineNum">      61 </span>            : /// Get the number of quantities we are calculating per step
+<a name="62"><span class="lineNum">      62 </span>            :   unsigned getNumberOfQuantities() const ;</a>
+<span class="lineNum">      63 </span>            : /// Can we differentiate the orientation - yes we can the multicolvar is a vector
+<span class="lineNum">      64 </span><span class="lineCov">          4 :   bool hasDifferentiableOrientation() const { return true; }</span>
+<span class="lineNum">      65 </span>            : ///  This makes sure we are not calculating the director when we do LocalAverage
+<span class="lineNum">      66 </span>            :   virtual void doNotCalculateDirector();
+<span class="lineNum">      67 </span>            : /// This does normalizeing of vectors for storeDataVessel
+<span class="lineNum">      68 </span>            :   virtual void normalizeVector( std::vector&lt;double&gt;&amp; vals ) const ;
+<span class="lineNum">      69 </span>            :   virtual void normalizeVectorDerivatives( MultiValue&amp; myvals ) const ;
+<span class="lineNum">      70 </span>            : };
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : inline
+<span class="lineNum">      73 </span>            : unsigned VectorMultiColvar::getNumberOfComponentsInVector() const {
+<span class="lineNum">      74 </span><span class="lineCov">    1892577 :   return ncomponents;</span>
+<span class="lineNum">      75 </span>            : }
+<a name="76"><span class="lineNum">      76 </span>            : </a>
+<span class="lineNum">      77 </span>            : inline
+<span class="lineNum">      78 </span><span class="lineCov">    1252604 : unsigned VectorMultiColvar::getNumberOfQuantities() const {</span>
+<span class="lineNum">      79 </span><span class="lineCov">    1252604 :   return 2 + ncomponents;</span>
+<span class="lineNum">      80 </span>            : }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : }
+<span class="lineNum">      83 </span>            : }
+<span class="lineNum">      84 </span>            : #endif
+<span class="lineNum">      85 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/VolumeCavity.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - VolumeCavity.cpp<span style="font-size: 80%;"> (source / <a href="VolumeCavity.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">164</td>
+            <td class="headerCovTableEntry">207</td>
+            <td class="headerCovTableEntryMed">79.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Units.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;ActionVolume.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //+PLUMEDOC VOLUMES CAVITY
+<span class="lineNum">      30 </span>            : /*
+<span class="lineNum">      31 </span>            : This quantity can be used to calculate functions of the distribution of collective
+<span class="lineNum">      32 </span>            : variables for the atoms that lie in a box defined by the positions of four atoms.
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : Each of the base quantities calculated by a multicolvar can can be assigned to a particular point in three
+<span class="lineNum">      35 </span>            : dimensional space. For example, if we have the coordination numbers for all the atoms in the
+<span class="lineNum">      36 </span>            : system each coordination number can be assumed to lie on the position of the central atom.
+<span class="lineNum">      37 </span>            : Because each base quantity can be assigned to a particular point in space we can calculate functions of the
+<span class="lineNum">      38 </span>            : distribution of base quantities in a particular part of the box by using:
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \f[
+<span class="lineNum">      41 </span>            : \overline{s}_{\tau} = \frac{ \sum_i f(s_i) w(u_i,v_i,w_i) }{ \sum_i w(u_i,v_i,w_i) }
+<span class="lineNum">      42 </span>            : \f]
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : where the sum is over the collective variables, \f$s_i\f$, each of which can be thought to be at \f$ (u_i,v_i,z_i)\f$.
+<span class="lineNum">      45 </span>            : The function \f$(s_i)\f$ can be any of the usual LESS_THAN, MORE_THAN, WITHIN etc that are used in all other multicolvars.
+<span class="lineNum">      46 </span>            : Notice that here (at variance with what is done in \ref AROUND) we have transformed from the usual \f$(x_i,y_i,z_i)\f$
+<span class="lineNum">      47 </span>            : position to a position in \f$ (u_i,v_i,z_i)\f$.  This is done using a rotation matrix as follows:
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \f[
+<span class="lineNum">      50 </span>            : \left(
+<span class="lineNum">      51 </span>            : \begin{matrix}
+<span class="lineNum">      52 </span>            :  u_i \\
+<span class="lineNum">      53 </span>            :  v_i \\
+<span class="lineNum">      54 </span>            :  w_i
+<span class="lineNum">      55 </span>            : \end{matrix}
+<span class="lineNum">      56 </span>            : \right) = \mathbf{R}
+<span class="lineNum">      57 </span>            : \left(
+<span class="lineNum">      58 </span>            : \begin{matrix}
+<span class="lineNum">      59 </span>            :  x_i - x_o \\
+<span class="lineNum">      60 </span>            :  y_i - y_o \\
+<span class="lineNum">      61 </span>            :  z_i - z_o
+<span class="lineNum">      62 </span>            : \end{matrix}
+<span class="lineNum">      63 </span>            : \right)
+<span class="lineNum">      64 </span>            : \f]
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : where \f$\mathbf{R}\f$ is a rotation matrix that is calculated by constructing a set of three orthonormal vectors from the
+<span class="lineNum">      67 </span>            : refererence positions specified by the user. The first of these unit vectors points from the first reference atom to the second.
+<span class="lineNum">      68 </span>            : The second is then the normal to the plane containing atoms 1,2 and 3 and the the third is the unit vector orthogonal to
+<span class="lineNum">      69 </span>            : these first two vectors.  \f$(x_o,y_o,z_o)\f$, meanwhile, specifies the position of the first reference atom.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : In the previous function \f$ w(u_i,v_i,w_i) \f$ measures whether or not the system is in the subregion of interest. It
+<span class="lineNum">      72 </span>            : is equal to:
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : \f[
+<span class="lineNum">      75 </span>            : w(u_i,v_i,w_i) = \int_{0}^{u'} \int_{0}^{v'} \int_{0}^{w'} \textrm{d}u\textrm{d}v\textrm{d}w
+<span class="lineNum">      76 </span>            :    K\left( \frac{u - u_i}{\sigma} \right)K\left( \frac{v - v_i}{\sigma} \right)K\left( \frac{w - w_i}{\sigma} \right)
+<span class="lineNum">      77 </span>            : \f]
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : where \f$K\f$ is one of the kernel functions described on \ref histogrambead and \f$\sigma\f$ is a bandwidth parameter.
+<span class="lineNum">      80 </span>            : The vector connecting atom 1 to atom 4 is used to define the extent of the box in each of the \f$u\f$, \f$v\f$ and \f$w\f$
+<span class="lineNum">      81 </span>            : directions.  Essentially the vector connecting atom 1 to atom 4 is projected onto the three unit vectors
+<span class="lineNum">      82 </span>            : described above and the resulting projections determine the \f$u'\f$, \f$v'\f$ and \f$w'\f$ parameters in the above expression.
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : \par Examples
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : The following commands tell plumed to calculate the number of atoms in an ion chanel in a protein.
+<span class="lineNum">      87 </span>            : The extent of the chanel is calculated from the positions of atoms 1, 4, 5 and 11. The final value will be labeled cav.
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : \plumedfile
+<span class="lineNum">      90 </span>            : d1: DENSITY SPECIES=20-500
+<span class="lineNum">      91 </span>            : CAVITY DATA=d1 ATOMS=1,4,5,11 SIGMA=0.1 LABEL=cav
+<span class="lineNum">      92 </span>            : \endplumedfile
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : The following command tells plumed to calculate the coordination numbers (with other water molecules) for the water
+<span class="lineNum">      95 </span>            : molecules in the protein channel described above.  The average coordination number and the number of coordination
+<span class="lineNum">      96 </span>            : numbers more than 4 is then calculated.  The values of these two quantities are given the labels cav.mean and cav.morethan
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : \plumedfile
+<span class="lineNum">      99 </span>            : d1: COORDINATIONNUMBER SPECIES=20-500
+<span class="lineNum">     100 </span>            : CAVITY DATA=d1 ATOMS=1,4,5,11 SIGMA=0.1 MEAN MORE_THAN={RATIONAL R_0=4} LABEL=cav
+<span class="lineNum">     101 </span>            : \endplumedfile
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : */
+<span class="lineNum">     104 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : namespace PLMD {
+<span class="lineNum">     107 </span>            : namespace multicolvar {
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : class VolumeCavity : public ActionVolume {
+<span class="lineNum">     110 </span>            : private:
+<span class="lineNum">     111 </span>            :   bool boxout;
+<span class="lineNum">     112 </span>            :   OFile boxfile;
+<span class="lineNum">     113 </span>            :   double lenunit;
+<span class="lineNum">     114 </span>            :   double jacob_det;
+<span class="lineNum">     115 </span>            :   double len_bi, len_cross, len_perp, sigma;
+<span class="lineNum">     116 </span>            :   Vector origin, bi, cross, perp;
+<span class="lineNum">     117 </span>            :   std::vector&lt;Vector&gt; dlbi, dlcross, dlperp;
+<span class="lineNum">     118 </span>            :   std::vector&lt;Tensor&gt; dbi, dcross, dperp;
+<span class="lineNum">     119 </span>            : public:
+<span class="lineNum">     120 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     121 </span>            :   explicit VolumeCavity(const ActionOptions&amp; ao);
+<span class="lineNum">     122 </span>            :   ~VolumeCavity();
+<span class="lineNum">     123 </span>            :   void setupRegions();
+<span class="lineNum">     124 </span>            :   void update();
+<span class="lineNum">     125 </span>            :   double calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const ;
+<a name="126"><span class="lineNum">     126 </span>            : };</a>
+<span class="lineNum">     127 </span>            : 
+<a name="128"><span class="lineNum">     128 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(VolumeCavity,&quot;CAVITY&quot;)</span></a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">          3 : void VolumeCavity::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     131 </span><span class="lineCov">          3 :   ActionVolume::registerKeywords( keys );</span>
+<span class="lineNum">     132 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;the positions of four atoms that define spatial extent of the cavity&quot;);</span>
+<span class="lineNum">     133 </span><span class="lineCov">          9 :   keys.addFlag(&quot;PRINT_BOX&quot;,false,&quot;write out the positions of the corners of the box to an xyz file&quot;);</span>
+<span class="lineNum">     134 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;FILE&quot;,&quot;the file on which to write out the box coordinates&quot;);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;UNITS&quot;,&quot;( default=nm ) the units in which to write out the corners of the box&quot;);</span>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">          2 : VolumeCavity::VolumeCavity(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     139 </span>            :   Action(ao),
+<span class="lineNum">     140 </span>            :   ActionVolume(ao),
+<span class="lineNum">     141 </span>            :   boxout(false),
+<span class="lineNum">     142 </span>            :   lenunit(1.0),
+<span class="lineNum">     143 </span>            :   dlbi(4),
+<span class="lineNum">     144 </span>            :   dlcross(4),
+<span class="lineNum">     145 </span>            :   dlperp(4),
+<span class="lineNum">     146 </span>            :   dbi(3),
+<span class="lineNum">     147 </span>            :   dcross(3),
+<span class="lineNum">     148 </span><span class="lineCov">          2 :   dperp(3)</span>
+<span class="lineNum">     149 </span>            : {
+<span class="lineNum">     150 </span>            :   std::vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     151 </span><span class="lineCov">          4 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     152 </span><span class="lineCov">          2 :   if( atoms.size()!=4 ) error(&quot;number of atoms should be equal to four&quot;);</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineCov">          2 :   log.printf(&quot;  boundaries for region are calculated based on positions of atoms : &quot;);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         28 :   for(unsigned i=0; i&lt;atoms.size(); ++i) log.printf(&quot;%d &quot;,atoms[i].serial() );</span>
+<span class="lineNum">     156 </span><span class="lineCov">          2 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">          4 :   boxout=false; parseFlag(&quot;PRINT_BOX&quot;,boxout);</span>
+<span class="lineNum">     159 </span><span class="lineCov">          2 :   if(boxout) {</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     std::string boxfname; parse(&quot;FILE&quot;,boxfname);</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     if(boxfname.length()==0) error(&quot;no name for box file specified&quot;);</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     std::string unitname; parse(&quot;UNITS&quot;,unitname);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     if ( unitname.length()&gt;0 ) {</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :       Units u; u.setLength(unitname);</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :       lenunit=plumed.getAtoms().getUnits().getLength()/u.getLength();</span>
+<span class="lineNum">     166 </span>            :     } else {
+<span class="lineNum">     167 </span>            :       unitname=&quot;nm&quot;;
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     boxfile.link(*this);</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     boxfile.open( boxfname.c_str() );</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     log.printf(&quot;  printing box coordinates on file named %s in %s \n&quot;,boxfname.c_str(), unitname.c_str() );</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     175 </span><span class="lineCov">          2 :   requestAtoms(atoms);</span>
+<span class="lineNum">     176 </span>            :   // We have to readd the dependency because requestAtoms removes it
+<span class="lineNum">     177 </span><span class="lineCov">          2 :   addDependency( getPntrToMultiColvar() );</span>
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">          6 : VolumeCavity::~VolumeCavity() {</span>
+<a name="181"><span class="lineNum">     181 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">       1620 : void VolumeCavity::setupRegions() {</span>
+<span class="lineNum">     184 </span>            :   // Make some space for things
+<span class="lineNum">     185 </span><span class="lineCov">       1620 :   Vector d1, d2, d3;</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :   // Retrieve the sigma value
+<span class="lineNum">     188 </span><span class="lineCov">       1620 :   sigma=getSigma();</span>
+<span class="lineNum">     189 </span>            :   // Set the position of the origin
+<span class="lineNum">     190 </span><span class="lineCov">       1620 :   origin=getPosition(0);</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :   // Get two vectors
+<span class="lineNum">     193 </span><span class="lineCov">       3240 :   d1 = pbcDistance(origin,getPosition(1));</span>
+<span class="lineNum">     194 </span><span class="lineCov">       1620 :   double d1l=d1.modulo();</span>
+<span class="lineNum">     195 </span><span class="lineCov">       3240 :   d2 = pbcDistance(origin,getPosition(2));</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :   // Find the vector connecting the origin to the top corner of
+<span class="lineNum">     198 </span>            :   // the subregion
+<span class="lineNum">     199 </span><span class="lineCov">       3240 :   d3 = pbcDistance(origin,getPosition(3));</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :   // Create a set of unit vectors
+<span class="lineNum">     202 </span><span class="lineCov">       1620 :   bi = d1 / d1l; len_bi=dotProduct( d3, bi );</span>
+<span class="lineNum">     203 </span><span class="lineCov">       1620 :   cross = crossProduct( d1, d2 ); double crossmod=cross.modulo();</span>
+<span class="lineNum">     204 </span><span class="lineCov">       1620 :   cross = cross / crossmod; len_cross=dotProduct( d3, cross );</span>
+<span class="lineNum">     205 </span><span class="lineCov">       1620 :   perp = crossProduct( cross, bi ); len_perp=dotProduct( d3, perp );</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :   // Calculate derivatives of box shape with respect to atoms
+<span class="lineNum">     208 </span><span class="lineCov">       1620 :   double d1l3=d1l*d1l*d1l;</span>
+<span class="lineNum">     209 </span><span class="lineCov">       3240 :   dbi[0](0,0) = ( -(d1[1]*d1[1]+d1[2]*d1[2])/d1l3 );   // dx/dx</span>
+<span class="lineNum">     210 </span><span class="lineCov">       3240 :   dbi[0](0,1) = (  d1[0]*d1[1]/d1l3 );                 // dx/dy</span>
+<span class="lineNum">     211 </span><span class="lineCov">       3240 :   dbi[0](0,2) = (  d1[0]*d1[2]/d1l3 );                 // dx/dz</span>
+<span class="lineNum">     212 </span><span class="lineCov">       3240 :   dbi[0](1,0) = (  d1[1]*d1[0]/d1l3 );                 // dy/dx</span>
+<span class="lineNum">     213 </span><span class="lineCov">       3240 :   dbi[0](1,1) = ( -(d1[0]*d1[0]+d1[2]*d1[2])/d1l3 );   // dy/dy</span>
+<span class="lineNum">     214 </span><span class="lineCov">       3240 :   dbi[0](1,2) = (  d1[1]*d1[2]/d1l3 );</span>
+<span class="lineNum">     215 </span><span class="lineCov">       3240 :   dbi[0](2,0) = (  d1[2]*d1[0]/d1l3 );</span>
+<span class="lineNum">     216 </span><span class="lineCov">       3240 :   dbi[0](2,1) = (  d1[2]*d1[1]/d1l3 );</span>
+<span class="lineNum">     217 </span><span class="lineCov">       3240 :   dbi[0](2,2) = ( -(d1[1]*d1[1]+d1[0]*d1[0])/d1l3 );</span>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineCov">       3240 :   dbi[1](0,0) = ( (d1[1]*d1[1]+d1[2]*d1[2])/d1l3 );</span>
+<span class="lineNum">     220 </span><span class="lineCov">       3240 :   dbi[1](0,1) = ( -d1[0]*d1[1]/d1l3 );</span>
+<span class="lineNum">     221 </span><span class="lineCov">       3240 :   dbi[1](0,2) = ( -d1[0]*d1[2]/d1l3 );</span>
+<span class="lineNum">     222 </span><span class="lineCov">       3240 :   dbi[1](1,0) = ( -d1[1]*d1[0]/d1l3 );</span>
+<span class="lineNum">     223 </span><span class="lineCov">       3240 :   dbi[1](1,1) = ( (d1[0]*d1[0]+d1[2]*d1[2])/d1l3 );</span>
+<span class="lineNum">     224 </span><span class="lineCov">       3240 :   dbi[1](1,2) = ( -d1[1]*d1[2]/d1l3 );</span>
+<span class="lineNum">     225 </span><span class="lineCov">       3240 :   dbi[1](2,0) = ( -d1[2]*d1[0]/d1l3 );</span>
+<span class="lineNum">     226 </span><span class="lineCov">       3240 :   dbi[1](2,1) = ( -d1[2]*d1[1]/d1l3 );</span>
+<span class="lineNum">     227 </span><span class="lineCov">       3240 :   dbi[1](2,2) = ( (d1[1]*d1[1]+d1[0]*d1[0])/d1l3 );</span>
+<span class="lineNum">     228 </span><span class="lineCov">       1620 :   dbi[2].zero();</span>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">       1620 :   Tensor tcderiv; double cmod3=crossmod*crossmod*crossmod; Vector ucross=crossmod*cross;</span>
+<span class="lineNum">     231 </span><span class="lineCov">       3240 :   tcderiv.setCol( 0, crossProduct( d1, Vector(-1.0,0.0,0.0) ) + crossProduct( Vector(-1.0,0.0,0.0), d2 ) );</span>
+<span class="lineNum">     232 </span><span class="lineCov">       3240 :   tcderiv.setCol( 1, crossProduct( d1, Vector(0.0,-1.0,0.0) ) + crossProduct( Vector(0.0,-1.0,0.0), d2 ) );</span>
+<span class="lineNum">     233 </span><span class="lineCov">       3240 :   tcderiv.setCol( 2, crossProduct( d1, Vector(0.0,0.0,-1.0) ) + crossProduct( Vector(0.0,0.0,-1.0), d2 ) );</span>
+<span class="lineNum">     234 </span><span class="lineCov">       3240 :   dcross[0](0,0)=( tcderiv(0,0)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dx/dx</span>
+<span class="lineNum">     235 </span><span class="lineCov">       3240 :   dcross[0](0,1)=( tcderiv(0,1)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dx/dy</span>
+<span class="lineNum">     236 </span><span class="lineCov">       3240 :   dcross[0](0,2)=( tcderiv(0,2)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dx/dz</span>
+<span class="lineNum">     237 </span><span class="lineCov">       3240 :   dcross[0](1,0)=( tcderiv(1,0)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dy/dx</span>
+<span class="lineNum">     238 </span><span class="lineCov">       3240 :   dcross[0](1,1)=( tcderiv(1,1)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dy/dy</span>
+<span class="lineNum">     239 </span><span class="lineCov">       3240 :   dcross[0](1,2)=( tcderiv(1,2)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dy/dz</span>
+<span class="lineNum">     240 </span><span class="lineCov">       3240 :   dcross[0](2,0)=( tcderiv(2,0)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dz/dx</span>
+<span class="lineNum">     241 </span><span class="lineCov">       3240 :   dcross[0](2,1)=( tcderiv(2,1)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dz/dy</span>
+<span class="lineNum">     242 </span><span class="lineCov">       3240 :   dcross[0](2,2)=( tcderiv(2,2)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dz/dz</span>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineCov">       1620 :   tcderiv.setCol( 0, crossProduct( Vector(1.0,0.0,0.0), d2 ) );</span>
+<span class="lineNum">     245 </span><span class="lineCov">       1620 :   tcderiv.setCol( 1, crossProduct( Vector(0.0,1.0,0.0), d2 ) );</span>
+<span class="lineNum">     246 </span><span class="lineCov">       1620 :   tcderiv.setCol( 2, crossProduct( Vector(0.0,0.0,1.0), d2 ) );</span>
+<span class="lineNum">     247 </span><span class="lineCov">       3240 :   dcross[1](0,0)=( tcderiv(0,0)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dx/dx</span>
+<span class="lineNum">     248 </span><span class="lineCov">       3240 :   dcross[1](0,1)=( tcderiv(0,1)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dx/dy</span>
+<span class="lineNum">     249 </span><span class="lineCov">       3240 :   dcross[1](0,2)=( tcderiv(0,2)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dx/dz</span>
+<span class="lineNum">     250 </span><span class="lineCov">       3240 :   dcross[1](1,0)=( tcderiv(1,0)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dy/dx</span>
+<span class="lineNum">     251 </span><span class="lineCov">       3240 :   dcross[1](1,1)=( tcderiv(1,1)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dy/dy</span>
+<span class="lineNum">     252 </span><span class="lineCov">       3240 :   dcross[1](1,2)=( tcderiv(1,2)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dy/dz</span>
+<span class="lineNum">     253 </span><span class="lineCov">       3240 :   dcross[1](2,0)=( tcderiv(2,0)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dz/dx</span>
+<span class="lineNum">     254 </span><span class="lineCov">       3240 :   dcross[1](2,1)=( tcderiv(2,1)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dz/dy</span>
+<span class="lineNum">     255 </span><span class="lineCov">       3240 :   dcross[1](2,2)=( tcderiv(2,2)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dz/dz</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span><span class="lineCov">       1620 :   tcderiv.setCol( 0, crossProduct( d1, Vector(1.0,0.0,0.0) ) );</span>
+<span class="lineNum">     258 </span><span class="lineCov">       1620 :   tcderiv.setCol( 1, crossProduct( d1, Vector(0.0,1.0,0.0) ) );</span>
+<span class="lineNum">     259 </span><span class="lineCov">       1620 :   tcderiv.setCol( 2, crossProduct( d1, Vector(0.0,0.0,1.0) ) );</span>
+<span class="lineNum">     260 </span><span class="lineCov">       3240 :   dcross[2](0,0)=( tcderiv(0,0)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dx/dx</span>
+<span class="lineNum">     261 </span><span class="lineCov">       3240 :   dcross[2](0,1)=( tcderiv(0,1)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dx/dy</span>
+<span class="lineNum">     262 </span><span class="lineCov">       3240 :   dcross[2](0,2)=( tcderiv(0,2)/crossmod - ucross[0]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dx/dz</span>
+<span class="lineNum">     263 </span><span class="lineCov">       3240 :   dcross[2](1,0)=( tcderiv(1,0)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dy/dx</span>
+<span class="lineNum">     264 </span><span class="lineCov">       3240 :   dcross[2](1,1)=( tcderiv(1,1)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dy/dy</span>
+<span class="lineNum">     265 </span><span class="lineCov">       3240 :   dcross[2](1,2)=( tcderiv(1,2)/crossmod - ucross[1]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dy/dz</span>
+<span class="lineNum">     266 </span><span class="lineCov">       3240 :   dcross[2](2,0)=( tcderiv(2,0)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,0) + ucross[1]*tcderiv(1,0) + ucross[2]*tcderiv(2,0))/cmod3 );    // dz/dx</span>
+<span class="lineNum">     267 </span><span class="lineCov">       3240 :   dcross[2](2,1)=( tcderiv(2,1)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,1) + ucross[1]*tcderiv(1,1) + ucross[2]*tcderiv(2,1))/cmod3 );    // dz/dy</span>
+<span class="lineNum">     268 </span><span class="lineCov">       3240 :   dcross[2](2,2)=( tcderiv(2,2)/crossmod - ucross[2]*(ucross[0]*tcderiv(0,2) + ucross[1]*tcderiv(1,2) + ucross[2]*tcderiv(2,2))/cmod3 );    // dz/dz</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineCov">       3240 :   dperp[0].setCol( 0, ( crossProduct( dcross[0].getCol(0), bi ) + crossProduct( cross, dbi[0].getCol(0) ) ) );</span>
+<span class="lineNum">     271 </span><span class="lineCov">       3240 :   dperp[0].setCol( 1, ( crossProduct( dcross[0].getCol(1), bi ) + crossProduct( cross, dbi[0].getCol(1) ) ) );</span>
+<span class="lineNum">     272 </span><span class="lineCov">       3240 :   dperp[0].setCol( 2, ( crossProduct( dcross[0].getCol(2), bi ) + crossProduct( cross, dbi[0].getCol(2) ) ) );</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span><span class="lineCov">       3240 :   dperp[1].setCol( 0, ( crossProduct( dcross[1].getCol(0), bi ) + crossProduct( cross, dbi[1].getCol(0) ) ) );</span>
+<span class="lineNum">     275 </span><span class="lineCov">       3240 :   dperp[1].setCol( 1, ( crossProduct( dcross[1].getCol(1), bi ) + crossProduct( cross, dbi[1].getCol(1) ) ) );</span>
+<span class="lineNum">     276 </span><span class="lineCov">       3240 :   dperp[1].setCol( 2, ( crossProduct( dcross[1].getCol(2), bi ) + crossProduct( cross, dbi[1].getCol(2) ) ) );</span>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span><span class="lineCov">       1620 :   dperp[2].setCol( 0, ( crossProduct( dcross[2].getCol(0), bi ) ) );</span>
+<span class="lineNum">     279 </span><span class="lineCov">       1620 :   dperp[2].setCol( 1, ( crossProduct( dcross[2].getCol(1), bi ) ) );</span>
+<span class="lineNum">     280 </span><span class="lineCov">       1620 :   dperp[2].setCol( 2, ( crossProduct( dcross[2].getCol(2), bi ) ) );</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :   // Ensure that all lengths are positive
+<span class="lineNum">     283 </span><span class="lineCov">       1620 :   if( len_bi&lt;0 ) {</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :     bi=-bi; len_bi=-len_bi;</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;3; ++i) dbi[i]*=-1.0;</span>
+<span class="lineNum">     286 </span>            :   }
+<span class="lineNum">     287 </span><span class="lineCov">       1620 :   if( len_cross&lt;0 ) {</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :     cross=-cross; len_cross=-len_cross;</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;3; ++i) dcross[i]*=-1.0;</span>
+<span class="lineNum">     290 </span>            :   }
+<span class="lineNum">     291 </span><span class="lineCov">       1620 :   if( len_perp&lt;0 ) {</span>
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :     perp=-perp; len_perp=-len_perp;</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;3; ++i) dperp[i]*=-1.0;</span>
+<span class="lineNum">     294 </span>            :   }
+<span class="lineNum">     295 </span><span class="lineCov">       1620 :   if( len_bi&lt;=0 || len_cross&lt;=0 || len_bi&lt;=0 ) plumed_merror(&quot;Invalid box coordinates&quot;);</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :   // Now derivatives of lengths
+<span class="lineNum">     298 </span><span class="lineCov">       1620 :   Tensor dd3( Tensor::identity() );</span>
+<span class="lineNum">     299 </span><span class="lineCov">       4860 :   dlbi[0] = matmul(d3,dbi[0]) - matmul(bi,dd3);</span>
+<span class="lineNum">     300 </span><span class="lineCov">       1620 :   dlbi[1] = matmul(d3,dbi[1]);</span>
+<span class="lineNum">     301 </span><span class="lineCov">       1620 :   dlbi[2] = matmul(d3,dbi[2]);</span>
+<span class="lineNum">     302 </span><span class="lineCov">       1620 :   dlbi[3] = matmul(bi,dd3);</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">       4860 :   dlcross[0] = matmul(d3,dcross[0]) - matmul(cross,dd3);</span>
+<span class="lineNum">     305 </span><span class="lineCov">       1620 :   dlcross[1] = matmul(d3,dcross[1]);</span>
+<span class="lineNum">     306 </span><span class="lineCov">       1620 :   dlcross[2] = matmul(d3,dcross[2]);</span>
+<span class="lineNum">     307 </span><span class="lineCov">       1620 :   dlcross[3] = matmul(cross,dd3);</span>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineCov">       4860 :   dlperp[0] = matmul(d3,dperp[0]) - matmul(perp,dd3);</span>
+<span class="lineNum">     310 </span><span class="lineCov">       1620 :   dlperp[1] = matmul(d3,dperp[1]);</span>
+<span class="lineNum">     311 </span><span class="lineCov">       1620 :   dlperp[2] = matmul(d3,dperp[2]);</span>
+<span class="lineNum">     312 </span><span class="lineCov">       1620 :   dlperp[3] = matmul(perp,dd3);</span>
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            :   // Need to calculate the jacobian
+<span class="lineNum">     315 </span><span class="lineCov">       1620 :   Tensor jacob;</span>
+<span class="lineNum">     316 </span><span class="lineCov">       1620 :   jacob(0,0)=bi[0]; jacob(1,0)=bi[1]; jacob(2,0)=bi[2];</span>
+<span class="lineNum">     317 </span><span class="lineCov">       1620 :   jacob(0,1)=cross[0]; jacob(1,1)=cross[1]; jacob(2,1)=cross[2];</span>
+<span class="lineNum">     318 </span><span class="lineCov">       1620 :   jacob(0,2)=perp[0]; jacob(1,2)=perp[1]; jacob(2,2)=perp[2];</span>
+<span class="lineNum">     319 </span><span class="lineCov">       1620 :   jacob_det = fabs( jacob.determinant() );</span>
+<a name="320"><span class="lineNum">     320 </span><span class="lineCov">       1620 : }</span></a>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">        120 : void VolumeCavity::update() {</span>
+<span class="lineNum">     323 </span><span class="lineCov">        120 :   if(boxout) {</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;%d\n&quot;,8);</span>
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 :     const Tensor &amp; t(getPbc().getBox());</span>
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :     if(getPbc().isOrthorombic()) {</span>
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :       boxfile.printf(&quot; %f %f %f\n&quot;,lenunit*t(0,0),lenunit*t(1,1),lenunit*t(2,2));</span>
+<span class="lineNum">     328 </span>            :     } else {
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :       boxfile.printf(&quot; %f %f %f %f %f %f %f %f %f\n&quot;,</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                      lenunit*t(0,0),lenunit*t(0,1),lenunit*t(0,2),</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :                      lenunit*t(1,0),lenunit*t(1,1),lenunit*t(1,2),</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :                      lenunit*t(2,0),lenunit*t(2,1),lenunit*t(2,2)</span>
+<span class="lineNum">     333 </span>            :                     );
+<span class="lineNum">     334 </span>            :     }
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*origin[0],lenunit*origin[1],lenunit*origin[2]);</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :     Vector ut, vt, wt;</span>
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :     ut = origin + len_bi*bi;</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :     vt = origin + len_cross*cross;</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :     wt = origin + len_perp*perp;</span>
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(ut[0]), lenunit*(ut[1]), lenunit*(ut[2]) );</span>
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(vt[0]), lenunit*(vt[1]), lenunit*(vt[2]) );</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(wt[0]), lenunit*(wt[1]), lenunit*(wt[2]) );</span>
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(vt[0]+len_bi*bi[0]),</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :                    lenunit*(vt[1]+len_bi*bi[1]),</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                    lenunit*(vt[2]+len_bi*bi[2]) );</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(ut[0]+len_perp*perp[0]),</span>
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :                    lenunit*(ut[1]+len_perp*perp[1]),</span>
+<span class="lineNum">     348 </span><span class="lineNoCov">          0 :                    lenunit*(ut[2]+len_perp*perp[2]) );</span>
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(vt[0]+len_perp*perp[0]),</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :                    lenunit*(vt[1]+len_perp*perp[1]),</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :                    lenunit*(vt[2]+len_perp*perp[2]) );</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :     boxfile.printf(&quot;AR %f %f %f \n&quot;,lenunit*(vt[0]+len_perp*perp[0]+len_bi*bi[0]),</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :                    lenunit*(vt[1]+len_perp*perp[1]+len_bi*bi[1]),</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :                    lenunit*(vt[2]+len_perp*perp[2]+len_bi*bi[2]) );</span>
+<span class="lineNum">     355 </span>            :   }
+<a name="356"><span class="lineNum">     356 </span><span class="lineCov">        120 : }</span></a>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineCov">       1620 : double VolumeCavity::calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; rderiv ) const {</span>
+<span class="lineNum">     359 </span>            :   // Setup the histogram bead
+<span class="lineNum">     360 </span><span class="lineCov">       4860 :   HistogramBead bead; bead.isNotPeriodic(); bead.setKernelType( getKernelType() );</span>
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            :   // Calculate distance of atom from origin of new coordinate frame
+<span class="lineNum">     363 </span><span class="lineCov">       1620 :   Vector datom=pbcDistance( origin, cpos );</span>
+<span class="lineNum">     364 </span>            :   double ucontr, uder, vcontr, vder, wcontr, wder;
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            :   // Calculate contribution from integral along bi
+<span class="lineNum">     367 </span><span class="lineCov">       1620 :   bead.set( 0, len_bi, sigma );</span>
+<span class="lineNum">     368 </span><span class="lineCov">       1620 :   double upos=dotProduct( datom, bi );</span>
+<span class="lineNum">     369 </span><span class="lineCov">       1620 :   ucontr=bead.calculate( upos, uder );</span>
+<span class="lineNum">     370 </span><span class="lineCov">       1620 :   double udlen=bead.uboundDerivative( upos );</span>
+<span class="lineNum">     371 </span><span class="lineCov">       1620 :   double uder2 = bead.lboundDerivative( upos ) - udlen;</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            :   // Calculate contribution from integral along cross
+<span class="lineNum">     374 </span><span class="lineCov">       1620 :   bead.set( 0, len_cross, sigma );</span>
+<span class="lineNum">     375 </span><span class="lineCov">       1620 :   double vpos=dotProduct( datom, cross );</span>
+<span class="lineNum">     376 </span><span class="lineCov">       1620 :   vcontr=bead.calculate( vpos, vder );</span>
+<span class="lineNum">     377 </span><span class="lineCov">       1620 :   double vdlen=bead.uboundDerivative( vpos );</span>
+<span class="lineNum">     378 </span><span class="lineCov">       1620 :   double vder2 = bead.lboundDerivative( vpos ) - vdlen;</span>
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :   // Calculate contribution from integral along perp
+<span class="lineNum">     381 </span><span class="lineCov">       1620 :   bead.set( 0, len_perp, sigma );</span>
+<span class="lineNum">     382 </span><span class="lineCov">       1620 :   double wpos=dotProduct( datom, perp );</span>
+<span class="lineNum">     383 </span><span class="lineCov">       1620 :   wcontr=bead.calculate( wpos, wder );</span>
+<span class="lineNum">     384 </span><span class="lineCov">       1620 :   double wdlen=bead.uboundDerivative( wpos );</span>
+<span class="lineNum">     385 </span><span class="lineCov">       1620 :   double wder2 = bead.lboundDerivative( wpos ) - wdlen;</span>
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineCov">       1620 :   Vector dfd; dfd[0]=uder*vcontr*wcontr; dfd[1]=ucontr*vder*wcontr; dfd[2]=ucontr*vcontr*wder;</span>
+<span class="lineNum">     388 </span><span class="lineCov">       1620 :   derivatives[0] = (dfd[0]*bi[0]+dfd[1]*cross[0]+dfd[2]*perp[0]);</span>
+<span class="lineNum">     389 </span><span class="lineCov">       1620 :   derivatives[1] = (dfd[0]*bi[1]+dfd[1]*cross[1]+dfd[2]*perp[1]);</span>
+<span class="lineNum">     390 </span><span class="lineCov">       1620 :   derivatives[2] = (dfd[0]*bi[2]+dfd[1]*cross[2]+dfd[2]*perp[2]);</span>
+<span class="lineNum">     391 </span><span class="lineCov">       1620 :   double tot = ucontr*vcontr*wcontr*jacob_det;</span>
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :   // Add reference atom derivatives
+<span class="lineNum">     394 </span><span class="lineCov">       1620 :   dfd[0]=uder2*vcontr*wcontr; dfd[1]=ucontr*vder2*wcontr; dfd[2]=ucontr*vcontr*wder2;</span>
+<span class="lineNum">     395 </span><span class="lineCov">       1620 :   Vector dfld; dfld[0]=udlen*vcontr*wcontr; dfld[1]=ucontr*vdlen*wcontr; dfld[2]=ucontr*vcontr*wdlen;</span>
+<span class="lineNum">     396 </span><span class="lineCov">       8100 :   rderiv[0] = dfd[0]*matmul(datom,dbi[0]) + dfd[1]*matmul(datom,dcross[0]) + dfd[2]*matmul(datom,dperp[0]) +</span>
+<span class="lineNum">     397 </span><span class="lineCov">       9720 :               dfld[0]*dlbi[0] + dfld[1]*dlcross[0] + dfld[2]*dlperp[0] - derivatives;</span>
+<span class="lineNum">     398 </span><span class="lineCov">       8100 :   rderiv[1] = dfd[0]*matmul(datom,dbi[1]) + dfd[1]*matmul(datom,dcross[1]) + dfd[2]*matmul(datom,dperp[1]) +</span>
+<span class="lineNum">     399 </span><span class="lineCov">       9720 :               dfld[0]*dlbi[1] + dfld[1]*dlcross[1] + dfld[2]*dlperp[1];</span>
+<span class="lineNum">     400 </span><span class="lineCov">       8100 :   rderiv[2] = dfd[0]*matmul(datom,dbi[2]) + dfd[1]*matmul(datom,dcross[2]) + dfd[2]*matmul(datom,dperp[2]) +</span>
+<span class="lineNum">     401 </span><span class="lineCov">       9720 :               dfld[0]*dlbi[2] + dfld[1]*dlcross[2] + dfld[2]*dlperp[2];</span>
+<span class="lineNum">     402 </span><span class="lineCov">       6480 :   rderiv[3] = dfld[0]*dlbi[3] + dfld[1]*dlcross[3] + dfld[2]*dlperp[3];</span>
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span><span class="lineCov">       1620 :   vir.zero(); vir-=Tensor( cpos,derivatives );</span>
+<span class="lineNum">     405 </span><span class="lineCov">      14580 :   for(unsigned i=0; i&lt;4; ++i) {</span>
+<span class="lineNum">     406 </span><span class="lineCov">      12960 :     vir -= Tensor( getPosition(i), rderiv[i] );</span>
+<span class="lineNum">     407 </span>            :   }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span><span class="lineCov">       1620 :   return tot;</span>
+<span class="lineNum">     410 </span>            : }
+<a name="411"><span class="lineNum">     411 </span>            : </a>
+<span class="lineNum">     412 </span>            : }
+<span class="lineNum">     413 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

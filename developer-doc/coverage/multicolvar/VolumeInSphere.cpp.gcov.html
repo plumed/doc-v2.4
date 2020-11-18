@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/VolumeInSphere.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - VolumeInSphere.cpp<span style="font-size: 80%;"> (source / <a href="VolumeInSphere.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ActionVolume.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //+PLUMEDOC VOLUMES INSPHERE
+<span class="lineNum">      28 </span>            : /*
+<span class="lineNum">      29 </span>            : This quantity can be used to calculate functions of the distribution of collective
+<span class="lineNum">      30 </span>            : variables for the atoms that lie in a particular, user-specified part of of the cell.
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : Each of the base quantities calculated by a multicolvar can can be assigned to a particular point in three
+<span class="lineNum">      33 </span>            : dimensional space. For example, if we have the coordination numbers for all the atoms in the
+<span class="lineNum">      34 </span>            : system each coordination number can be assumed to lie on the position of the central atom.
+<span class="lineNum">      35 </span>            : Because each base quantity can be assigned to a particular point in space we can calculate functions of the
+<span class="lineNum">      36 </span>            : distribution of base quantities in a particular part of the box by using:
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : \f[
+<span class="lineNum">      39 </span>            : \overline{s}_{\tau} = \frac{ \sum_i f(s_i) \sigma(r) }{ \sum_i \sigma(r) }
+<span class="lineNum">      40 </span>            : \f]
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : where the sum is over the collective variables, \f$s_i\f$, each of which can be thought to be at \f$ (x_i,y_i,z_i)\f$.
+<span class="lineNum">      43 </span>            : The function \f$\sigma\f$ is a \ref switchingfunction that acts on the distance between the point at which the
+<span class="lineNum">      44 </span>            : collective is located \f$(x_i,y_i,z_i)\f$ and the position of the atom that was specified using the ORIGIN keyword.
+<span class="lineNum">      45 </span>            : In other words:
+<span class="lineNum">      46 </span>            : \f[
+<span class="lineNum">      47 </span>            : r = sqrt{ ( x_i - x_0)^2 + ( y_i - y_0)^2 + ( z_i - z_0)^2}
+<span class="lineNum">      48 </span>            : \f]
+<span class="lineNum">      49 </span>            : In short this function, \f$\sigma(r_{xy})\f$, measures whether or not the CV is within a sphere that is
+<span class="lineNum">      50 </span>            : centered on the position of the atom specified using the keyword ORIGIN.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : The function \f$(s_i)\f$ can be any of the usual LESS_THAN, MORE_THAN, WITHIN etc that are used in all other multicolvars.
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : When INCYLINDER is used with the \ref DENSITY action the number of atoms in the specified region is calculated
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \par Examples
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : The input below can be use to calculate the average coordination numbers for those atoms that are within a sphere
+<span class="lineNum">      59 </span>            : of radius 1.5 nm that is centered on the position of atom 101.
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : \plumedfile
+<span class="lineNum">      62 </span>            : c1: COORDINATIONNUMBER SPECIES=1-100 SWITCH={RATIONAL R_0=0.1}
+<span class="lineNum">      63 </span>            : d2: INSPHERE ATOM=101 DATA=d1 RADIUS={TANH R_0=1.5} SIGMA=0.1 LOWER=-0.1 UPPER=0.1 MEAN
+<span class="lineNum">      64 </span>            : PRINT ARG=d2.* FILE=colvar
+<span class="lineNum">      65 </span>            : \endplumedfile
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : */
+<span class="lineNum">      68 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : namespace PLMD {
+<a name="71"><span class="lineNum">      71 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">          6 : class VolumeInSphere : public ActionVolume {</span>
+<span class="lineNum">      74 </span>            : private:
+<span class="lineNum">      75 </span>            :   Vector origin;
+<span class="lineNum">      76 </span>            :   SwitchingFunction switchingFunction;
+<span class="lineNum">      77 </span>            : public:
+<span class="lineNum">      78 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      79 </span>            :   explicit VolumeInSphere(const ActionOptions&amp; ao);
+<span class="lineNum">      80 </span>            :   void setupRegions();
+<span class="lineNum">      81 </span>            :   double calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const ;
+<a name="82"><span class="lineNum">      82 </span>            : };</a>
+<span class="lineNum">      83 </span>            : 
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">       6455 : PLUMED_REGISTER_ACTION(VolumeInSphere,&quot;INSPHERE&quot;)</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">          4 : void VolumeInSphere::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      87 </span><span class="lineCov">          4 :   ActionVolume::registerKeywords( keys );</span>
+<span class="lineNum">      88 </span><span class="lineCov">         16 :   keys.add(&quot;atoms&quot;,&quot;ATOM&quot;,&quot;the atom whose vicinity we are interested in examining&quot;);</span>
+<span class="lineNum">      89 </span><span class="lineCov">         16 :   keys.add(&quot;compulsory&quot;,&quot;RADIUS&quot;,&quot;the switching function that tells us the extent of the sphereical region of interest&quot;);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          8 :   keys.remove(&quot;SIGMA&quot;);</span>
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          3 : VolumeInSphere::VolumeInSphere(const ActionOptions&amp; ao):</span>
+<span class="lineNum">      94 </span>            :   Action(ao),
+<span class="lineNum">      95 </span><span class="lineCov">          3 :   ActionVolume(ao)</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span>            :   std::vector&lt;AtomNumber&gt; atom;
+<span class="lineNum">      98 </span><span class="lineCov">          6 :   parseAtomList(&quot;ATOM&quot;,atom);</span>
+<span class="lineNum">      99 </span><span class="lineCov">          3 :   if( atom.size()!=1 ) error(&quot;should only be one atom specified&quot;);</span>
+<span class="lineNum">     100 </span><span class="lineCov">          6 :   log.printf(&quot;  center of sphere is at position of atom : %d\n&quot;,atom[0].serial() );</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">          6 :   std::string sw, errors; parse(&quot;RADIUS&quot;,sw);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          3 :   if(sw.length()==0) error(&quot;missing RADIUS keyword&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">          3 :   switchingFunction.set(sw,errors);</span>
+<span class="lineNum">     105 </span><span class="lineCov">          3 :   if( errors.length()!=0 ) error(&quot;problem reading RADIUS keyword : &quot; + errors );</span>
+<span class="lineNum">     106 </span><span class="lineCov">          9 :   log.printf(&quot;  radius of sphere is given by %s \n&quot;, ( switchingFunction.description() ).c_str() );</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">          3 :   checkRead(); requestAtoms(atom);</span>
+<a name="109"><span class="lineNum">     109 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     110 </span>            : 
+<a name="111"><span class="lineNum">     111 </span><span class="lineCov">         82 : void VolumeInSphere::setupRegions() { }</span></a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">     155474 : double VolumeInSphere::calculateNumberInside( const Vector&amp; cpos, Vector&amp; derivatives, Tensor&amp; vir, std::vector&lt;Vector&gt;&amp; refders ) const {</span>
+<span class="lineNum">     114 </span>            :   // Calculate position of atom wrt to origin
+<span class="lineNum">     115 </span><span class="lineCov">     310948 :   Vector fpos=pbcDistance( getPosition(0), cpos );</span>
+<span class="lineNum">     116 </span><span class="lineCov">     155474 :   double dfunc, value = switchingFunction.calculateSqr( fpos.modulo2(), dfunc );</span>
+<span class="lineNum">     117 </span><span class="lineCov">     310948 :   derivatives.zero(); derivatives = dfunc*fpos; refders[0] = -derivatives;</span>
+<span class="lineNum">     118 </span>            :   // Add a virial contribution
+<span class="lineNum">     119 </span><span class="lineCov">     155474 :   vir -= Tensor(fpos,derivatives);</span>
+<span class="lineNum">     120 </span><span class="lineCov">     155474 :   return value;</span>
+<span class="lineNum">     121 </span>            : }
+<a name="122"><span class="lineNum">     122 </span>            : </a>
+<span class="lineNum">     123 </span>            : }
+<span class="lineNum">     124 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

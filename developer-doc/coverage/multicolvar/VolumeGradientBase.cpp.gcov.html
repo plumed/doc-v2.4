@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/VolumeGradientBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - VolumeGradientBase.cpp<span style="font-size: 80%;"> (source / <a href="VolumeGradientBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntryMed">79.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;VolumeGradientBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;CatomPack.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<a name="28"><span class="lineNum">      28 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span><span class="lineCov">         37 : void VolumeGradientBase::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      31 </span><span class="lineCov">         37 :   BridgedMultiColvarFunction::registerKeywords( keys );</span>
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">         37 : }</span></a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">         30 : VolumeGradientBase::VolumeGradientBase(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      35 </span>            :   Action(ao),
+<span class="lineNum">      36 </span><span class="lineCov">         30 :   BridgedMultiColvarFunction(ao)</span>
+<span class="lineNum">      37 </span>            : {
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">         30 : void VolumeGradientBase::requestAtoms( const std::vector&lt;AtomNumber&gt;&amp; atoms ) {</span>
+<span class="lineNum">      41 </span><span class="lineCov">         60 :   ActionAtomistic::requestAtoms(atoms); bridgeVariable=3*atoms.size();</span>
+<span class="lineNum">      42 </span>            :   std::map&lt;std::string,bool&gt; checklabs;
+<span class="lineNum">      43 </span><span class="lineCov">         66 :   for(const auto &amp; p : getDependencies() ) checklabs.insert(std::pair&lt;std::string,bool&gt;(p-&gt;getLabel(),false));</span>
+<span class="lineNum">      44 </span><span class="lineCov">        132 :   for(const auto &amp; p : plumed.getActionSet() ) {</span>
+<span class="lineNum">      45 </span><span class="lineCov">        306 :     if( p-&gt;getLabel()==getPntrToMultiColvar()-&gt;getLabel() ) break;</span>
+<span class="lineNum">      46 </span><span class="lineCov">          6 :     if( checklabs.count(p-&gt;getLabel()) ) checklabs[p-&gt;getLabel()]=true;</span>
+<span class="lineNum">      47 </span>            :   }
+<span class="lineNum">      48 </span><span class="lineCov">         33 :   for(const auto &amp; p : checklabs ) {</span>
+<span class="lineNum">      49 </span><span class="lineCov">          3 :     if( !p.second ) error(&quot;the input for the virtual atoms used in the input for this action must appear in the input file before the input multicolvar&quot;);</span>
+<span class="lineNum">      50 </span>            :   }
+<span class="lineNum">      51 </span><span class="lineCov">         60 :   addDependency( getPntrToMultiColvar() );</span>
+<span class="lineNum">      52 </span><span class="lineCov">         60 :   tmpforces.resize( 3*atoms.size()+9 );</span>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">       2239 : void VolumeGradientBase::doJobsRequiredBeforeTaskList() {</span>
+<span class="lineNum">      56 </span><span class="lineCov">       2239 :   ActionWithValue::clearDerivatives();</span>
+<span class="lineNum">      57 </span><span class="lineCov">       2239 :   retrieveAtoms(); setupRegions();</span>
+<span class="lineNum">      58 </span><span class="lineCov">       2239 :   ActionWithVessel::doJobsRequiredBeforeTaskList();</span>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">       2239 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">      80958 : void VolumeGradientBase::completeTask( const unsigned&amp; curr, MultiValue&amp; invals, MultiValue&amp; outvals ) const {</span>
+<span class="lineNum">      62 </span><span class="lineCov">      80958 :   if( getPntrToMultiColvar()-&gt;isDensity() ) {</span>
+<span class="lineNum">      63 </span>            :     outvals.setValue(0, 1.0); outvals.setValue(1, 1.0);
+<span class="lineNum">      64 </span>            :   } else {
+<span class="lineNum">      65 </span>            :     // Copy derivatives of the colvar and the value of the colvar
+<span class="lineNum">      66 </span><span class="lineCov">      37538 :     invals.copyValues( outvals );</span>
+<span class="lineNum">      67 </span><span class="lineCov">      37538 :     if( derivativesAreRequired() ) invals.copyDerivatives( outvals );</span>
+<span class="lineNum">      68 </span>            :   }
+<span class="lineNum">      69 </span><span class="lineCov">      80958 :   calculateAllVolumes( curr, outvals );</span>
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">      80958 : }</span></a>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">     115758 : void VolumeGradientBase::setNumberInVolume( const unsigned&amp; ivol, const unsigned&amp; curr, const double&amp; weight,</span>
+<span class="lineNum">      73 </span>            :     const Vector&amp; wdf, const Tensor&amp; virial, const std::vector&lt;Vector&gt;&amp; refders,
+<span class="lineNum">      74 </span>            :     MultiValue&amp; outvals ) const {
+<span class="lineNum">      75 </span>            :   MultiColvarBase* mcolv=getPntrToMultiColvar();
+<span class="lineNum">      76 </span><span class="lineCov">     115758 :   if( !mcolv-&gt;weightHasDerivatives ) {</span>
+<span class="lineNum">      77 </span>            :     outvals.setValue(ivol, weight );
+<span class="lineNum">      78 </span><span class="lineCov">     115758 :     if( derivativesAreRequired() ) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">     225450 :       CatomPack catom; mcolv-&gt;getCentralAtomPack( 0, curr, catom );</span>
+<span class="lineNum">      80 </span><span class="lineCov">     506900 :       for(unsigned i=0; i&lt;catom.getNumberOfAtomsWithDerivatives(); ++i) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">     140725 :         unsigned jatom=3*catom.getIndex(i);</span>
+<span class="lineNum">      82 </span><span class="lineCov">     140725 :         outvals.addDerivative( ivol, jatom+0, catom.getDerivative(i,0,wdf) );</span>
+<span class="lineNum">      83 </span><span class="lineCov">     140725 :         outvals.addDerivative( ivol, jatom+1, catom.getDerivative(i,1,wdf) );</span>
+<span class="lineNum">      84 </span><span class="lineCov">     140725 :         outvals.addDerivative( ivol, jatom+2, catom.getDerivative(i,2,wdf) );</span>
+<span class="lineNum">      85 </span>            :       }
+<span class="lineNum">      86 </span><span class="lineCov">     112725 :       unsigned nmder=getPntrToMultiColvar()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">      87 </span><span class="lineCov">     450900 :       for(unsigned i=0; i&lt;3; ++i) for(unsigned j=0; j&lt;3; ++j) outvals.addDerivative( ivol, nmder-9+3*i+j, virial(i,j) );</span>
+<span class="lineNum">      88 </span><span class="lineCov">     578205 :       for(unsigned i=0; i&lt;refders.size(); ++i) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">     117585 :         unsigned iatom=nmder+3*i;</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">     117585 :         outvals.addDerivative( ivol, iatom+0, refders[i][0] );</span>
+<span class="lineNum">      92 </span><span class="lineCov">     117585 :         outvals.addDerivative( ivol, iatom+1, refders[i][1] );</span>
+<span class="lineNum">      93 </span><span class="lineCov">     117585 :         outvals.addDerivative( ivol, iatom+2, refders[i][2] );</span>
+<span class="lineNum">      94 </span>            :       }
+<span class="lineNum">      95 </span>            :     }
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :   } else if(ivol==0) {</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     double ww=outvals.get(0); outvals.setValue(ivol,ww*weight);</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     if( derivativesAreRequired() ) {</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;This needs testing&quot;);</span>
+<span class="lineNum">     100 </span>            :       CatomPack catom; mcolv-&gt;getCentralAtomPack( 0, curr, catom );
+<span class="lineNum">     101 </span>            :       for(unsigned i=0; i&lt;catom.getNumberOfAtomsWithDerivatives(); ++i) {
+<span class="lineNum">     102 </span>            :         unsigned jatom=3*catom.getIndex(i);
+<span class="lineNum">     103 </span>            :         outvals.addDerivative( ivol, jatom+0, weight*outvals.getDerivative(ivol,jatom+0) + ww*catom.getDerivative(i,0,wdf) );
+<span class="lineNum">     104 </span>            :         outvals.addDerivative( ivol, jatom+1, weight*outvals.getDerivative(ivol,jatom+1) + ww*catom.getDerivative(i,1,wdf) );
+<span class="lineNum">     105 </span>            :         outvals.addDerivative( ivol, jatom+2, weight*outvals.getDerivative(ivol,jatom+2) + ww*catom.getDerivative(i,2,wdf) );
+<span class="lineNum">     106 </span>            :       }
+<span class="lineNum">     107 </span>            :       unsigned nmder=getPntrToMultiColvar()-&gt;getNumberOfDerivatives();
+<span class="lineNum">     108 </span>            :       for(unsigned i=0; i&lt;3; ++i) for(unsigned j=0; j&lt;3; ++j) outvals.addDerivative( ivol, nmder-9+3*i+j, ww*virial(i,j) );
+<span class="lineNum">     109 </span>            :       for(unsigned i=0; i&lt;refders.size(); ++i) {
+<span class="lineNum">     110 </span>            :         unsigned iatom=nmder+3*i;
+<span class="lineNum">     111 </span>            :         outvals.addDerivative( ivol, iatom+0, ww*refders[i][0] );
+<span class="lineNum">     112 </span>            :         outvals.addDerivative( ivol, iatom+1, ww*refders[i][1] );
+<span class="lineNum">     113 </span>            :         outvals.addDerivative( ivol, iatom+2, ww*refders[i][2] );
+<span class="lineNum">     114 </span>            :       }
+<span class="lineNum">     115 </span>            :     }
+<span class="lineNum">     116 </span>            :   } else {
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     double ww=outvals.get(0); outvals.setValue(ivol,ww*weight);</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :     if( derivativesAreRequired() ) {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;This needs testing&quot;);</span>
+<span class="lineNum">     120 </span>            :       CatomPack catom; mcolv-&gt;getCentralAtomPack( 0, curr, catom );
+<span class="lineNum">     121 </span>            :       for(unsigned i=0; i&lt;catom.getNumberOfAtomsWithDerivatives(); ++i) {
+<span class="lineNum">     122 </span>            :         unsigned jatom=3*catom.getIndex(i);
+<span class="lineNum">     123 </span>            :         outvals.addDerivative( ivol, jatom+0, ww*catom.getDerivative(i,0,wdf) );
+<span class="lineNum">     124 </span>            :         outvals.addDerivative( ivol, jatom+1, ww*catom.getDerivative(i,1,wdf) );
+<span class="lineNum">     125 </span>            :         outvals.addDerivative( ivol, jatom+2, ww*catom.getDerivative(i,2,wdf) );
+<span class="lineNum">     126 </span>            :       }
+<span class="lineNum">     127 </span>            :       unsigned nmder=getPntrToMultiColvar()-&gt;getNumberOfDerivatives();
+<span class="lineNum">     128 </span>            :       for(unsigned i=0; i&lt;3; ++i) for(unsigned j=0; j&lt;3; ++j) outvals.addDerivative( ivol, nmder-9+3*i+j, ww*virial(i,j) );
+<span class="lineNum">     129 </span>            :       for(unsigned i=0; i&lt;refders.size(); ++i) {
+<span class="lineNum">     130 </span>            :         unsigned iatom=nmder+3*i;
+<span class="lineNum">     131 </span>            :         outvals.addDerivative( ivol, iatom+0, ww*refders[i][0] );
+<span class="lineNum">     132 </span>            :         outvals.addDerivative( ivol, iatom+1, ww*refders[i][1] );
+<span class="lineNum">     133 </span>            :         outvals.addDerivative( ivol, iatom+2, ww*refders[i][2] );
+<span class="lineNum">     134 </span>            :       }
+<span class="lineNum">     135 </span>            :     }
+<span class="lineNum">     136 </span>            :   }
+<a name="137"><span class="lineNum">     137 </span><span class="lineCov">     115758 : }</span></a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 : void VolumeGradientBase::addBridgeForces( const std::vector&lt;double&gt;&amp; bb ) {</span>
+<span class="lineNum">     140 </span>            :   plumed_dbg_assert( bb.size()==tmpforces.size()-9 );
+<span class="lineNum">     141 </span>            :   // Forces on local atoms
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;bb.size(); ++i) tmpforces[i]=bb[i];</span>
+<span class="lineNum">     143 </span>            :   // Virial contribution is zero
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :   for(unsigned i=bb.size(); i&lt;bb.size()+9; ++i) tmpforces[i]=0.0;</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :   setForcesOnAtoms( tmpforces, 0 );</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 : }</span>
+<a name="147"><span class="lineNum">     147 </span>            : </a>
+<span class="lineNum">     148 </span>            : }
+<span class="lineNum">     149 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

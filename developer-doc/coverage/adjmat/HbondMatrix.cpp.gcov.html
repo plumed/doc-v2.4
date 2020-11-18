@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/HbondMatrix.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - HbondMatrix.cpp<span style="font-size: 80%;"> (source / <a href="HbondMatrix.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">74</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntryHi">96.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">92.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;AdjacencyMatrixBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;multicolvar/AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/HistogramBead.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Angle.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //+PLUMEDOC MATRIX HBOND_MATRIX
+<span class="lineNum">      31 </span>            : /*
+<span class="lineNum">      32 </span>            : Adjacency matrix in which two atoms are adjacent if there is a hydrogen bond between them.
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : As discussed in the section of the manual on \ref contactmatrix a useful tool for developing complex collective variables is the notion of the
+<span class="lineNum">      35 </span>            : so called adjacency matrix.  An adjacency matrix is an \f$N \times N\f$ matrix in which the \f$i\f$th, \f$j\f$th element tells you whether
+<span class="lineNum">      36 </span>            : or not the \f$i\f$th and \f$j\f$th atoms/molecules from a set of \f$N\f$ atoms/molecules are adjacent or not.  These matrices can then be further
+<span class="lineNum">      37 </span>            : analysed using a number of other algorithms as is detailed in \cite tribello-clustering.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : For this action the elements of the adjacency matrix are calculated using:
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \f[
+<span class="lineNum">      42 </span>            : a_{ij} = \sigma_{oo}( |\mathbf{r}_{ij}| ) \sum_{k=1}^N \sigma_{oh}( |\mathbf{r}_{ik}| ) \sigma_{\theta}( \theta_{kij} )
+<span class="lineNum">      43 </span>            : \f]
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : This expression was derived by thinking about how to detect if there is a hydrogen bond between atoms \f$i\f$ and \f$j\f$.  The notion is that
+<span class="lineNum">      46 </span>            : if the hydrogen bond is present atoms \f$i\f$ and \f$j\f$ should be within a certain cutoff distance.  In addition, there should be a hydrogen
+<span class="lineNum">      47 </span>            : within a certain cutoff distance of atom \f$i\f$ and this hydrogen should lie on or close to the vector connecting atoms \f$i\f$ and \f$j\f$.
+<span class="lineNum">      48 </span>            : As such \f$\sigma_{oo}( |\mathbf{r}_{ij}| )\f$ is a \ref switchingfunction that acts on the modulus of the vector connecting atom \f$i\f$ to atom
+<span class="lineNum">      49 </span>            : \f$j\f$.  The sum over \f$k\f$ then runs over all the hydrogen atoms that are specified using using HYDROGEN keyword.  \f$\sigma_{oh}( |\mathbf{r}_{ik}| )\f$
+<span class="lineNum">      50 </span>            : is a \ref switchingfunction that acts on the modulus of the vector connecting atom \f$i\f$ to atom \f$k\f$ and \f$\sigma_{\theta}( \theta_{kij} )\f$
+<span class="lineNum">      51 </span>            : is a \ref switchingfunction that acts on the angle between the vector connecting atoms \f$i\f$ and \f$j\f$ and the vector connecting atoms \f$i\f$ and
+<span class="lineNum">      52 </span>            : \f$k\f$.
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : It is important to note that hydrogen bonds, unlike regular bonds, are asymetric. In other words, the hydrogen atom does not sit at the
+<span class="lineNum">      55 </span>            : mid point between the two other atoms in this three-center bond.  As a result of this adjacency matrices calculated using \ref HBOND_MATRIX are not
+<span class="lineNum">      56 </span>            : symmetric like those calculated by \ref CONTACT_MATRIX.  One consequence of this fact is that the quantities found by performing \ref ROWSUMS and
+<span class="lineNum">      57 </span>            : \ref COLUMNSUMS on a square \ref HBOND_MATRIX are not the same as they would be if you performed \ref ROWSUMS and
+<span class="lineNum">      58 </span>            : \ref COLUMNSUMS on a square \ref CONTACT_MATRIX.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : \par Examples
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : The following input can be used to analyse the number of hydrogen bonds each of the oxygen atoms in a box of water participates in.  Each
+<span class="lineNum">      63 </span>            : water molecule can participate in a hydrogen bond in one of two ways.  It can either donate its hydrogens to the neighbouring oxygen or
+<span class="lineNum">      64 </span>            : it can accept a bond between the hydrogen of a neighboring water molecule and its own oxygen.  The input below allows you to output information
+<span class="lineNum">      65 </span>            : on the number of hydrogen bonds each of the water molecules donates and accepts.  This information is output in two xyz files which each contain
+<span class="lineNum">      66 </span>            : five columns of data.  The first four of these columns are a label for the atom and the x, y and z position of the oxygen.  The last column is then
+<span class="lineNum">      67 </span>            : the number of accepted/donated hydrogen bonds.
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : \plumedfile
+<span class="lineNum">      70 </span>            : mat: HBOND_MATRIX ATOMS=1-192:3 HYDROGENS=2-192:3,3-192:3 SWITCH={RATIONAL R_0=3.20} HSWITCH={RATIONAL R_0=2.30} ASWITCH={RATIONAL R_0=0.167pi} SUM
+<span class="lineNum">      71 </span>            : rsums: ROWSUMS MATRIX=mat MEAN
+<span class="lineNum">      72 </span>            : csums: COLUMNSUMS MATRIX=mat MEAN
+<span class="lineNum">      73 </span>            : DUMPMULTICOLVAR DATA=rsums FILE=donors.xyz
+<span class="lineNum">      74 </span>            : DUMPMULTICOLVAR DATA=csums FILE=acceptors.x
+<span class="lineNum">      75 </span>            : \endplumedfile
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : */
+<span class="lineNum">      78 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : namespace PLMD {
+<a name="82"><span class="lineNum">      82 </span>            : namespace adjmat {</a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">          6 : class HBondMatrix : public AdjacencyMatrixBase {</span>
+<span class="lineNum">      85 </span>            : private:
+<span class="lineNum">      86 </span>            :   unsigned ndonor_types;
+<span class="lineNum">      87 </span>            : /// switching function
+<span class="lineNum">      88 </span>            :   Matrix&lt;SwitchingFunction&gt; distanceOOSwitch;
+<span class="lineNum">      89 </span>            :   Matrix&lt;SwitchingFunction&gt; distanceOHSwitch;
+<span class="lineNum">      90 </span>            :   Matrix&lt;SwitchingFunction&gt; angleSwitch;
+<span class="lineNum">      91 </span>            : public:
+<span class="lineNum">      92 </span>            : /// Create manual
+<span class="lineNum">      93 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      94 </span>            : /// Constructor
+<span class="lineNum">      95 </span>            :   explicit HBondMatrix(const ActionOptions&amp;);
+<span class="lineNum">      96 </span>            : /// Create the ith, ith switching function
+<span class="lineNum">      97 </span>            :   void setupConnector( const unsigned&amp; id, const unsigned&amp; i, const unsigned&amp; j, const std::vector&lt;std::string&gt;&amp; desc );
+<span class="lineNum">      98 </span>            : /// This actually calculates the value of the contact function
+<span class="lineNum">      99 </span>            :   double calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     100 </span>            : /// This does nothing
+<span class="lineNum">     101 </span>            :   double compute( const unsigned&amp; tindex, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">     102 </span>            : ///
+<span class="lineNum">     103 </span>            :   double calculateForThree( const unsigned&amp; iat, const unsigned&amp; ano, const unsigned&amp; dno, const Vector&amp; ood,
+<span class="lineNum">     104 </span>            :                             const double&amp; ood_df, const double&amp; ood_sw, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<a name="105"><span class="lineNum">     105 </span>            : };</a>
+<span class="lineNum">     106 </span>            : 
+<a name="107"><span class="lineNum">     107 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(HBondMatrix,&quot;HBOND_MATRIX&quot;)</span></a>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">          3 : void HBondMatrix::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">          3 :   AdjacencyMatrixBase::registerKeywords( keys );</span>
+<span class="lineNum">     111 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;The list of atoms which can be part of a hydrogen bond.  When this command is used the set of atoms that can donate a &quot;</span>
+<span class="lineNum">     112 </span>            :            &quot;hydrogen bond is assumed to be the same as the set of atoms that can form hydrogen bonds.  The atoms involved must be specified&quot;
+<span class="lineNum">     113 </span>            :            &quot;as a list of labels of \\ref mcolv or labels of a \\ref multicolvarfunction actions.  If you would just like to use &quot;
+<span class="lineNum">     114 </span>            :            &quot;the atomic positions you can use a \\ref DENSITY command to specify a group of atoms.  Specifying your atomic positions using labels of &quot;
+<span class="lineNum">     115 </span>            :            &quot;other \\ref mcolv or \\ref multicolvarfunction commands is useful, however, as you can then exploit a much wider &quot;
+<span class="lineNum">     116 </span>            :            &quot;variety of functions of the contact matrix as described in \\ref contactmatrix&quot;);
+<span class="lineNum">     117 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;,&quot;HYDROGENS&quot;,&quot;The list of hydrogen atoms that can form part of a hydrogen bond.  The atoms must be specified using a comma separated list, &quot;</span>
+<span class="lineNum">     118 </span>            :            &quot;an index range or by using a \\ref GROUP.  A list of hydrogen atoms is always required even if you specify the other atoms using &quot;
+<span class="lineNum">     119 </span>            :            &quot;DONORS and ACCEPTORS as described below.&quot;);
+<span class="lineNum">     120 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-2&quot;,&quot;DONORS&quot;,&quot;The list of atoms which can donate a hydrogen bond.  The atoms involved must be specified &quot;</span>
+<span class="lineNum">     121 </span>            :            &quot;as a list of labels of \\ref mcolv or labels of a \\ref multicolvarfunction actions.  If you would just like to use &quot;
+<span class="lineNum">     122 </span>            :            &quot;the atomic positions you can use a \\ref DENSITY command to specify a group of atoms.  Specifying your atomic positions using labels of &quot;
+<span class="lineNum">     123 </span>            :            &quot;other \\ref mcolv or \\ref multicolvarfunction commands is useful, however, as you can then exploit a much wider &quot;
+<span class="lineNum">     124 </span>            :            &quot;variety of functions of the contact matrix as described in \\ref contactmatrix&quot;);
+<span class="lineNum">     125 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-2&quot;,&quot;ACCEPTORS&quot;,&quot;The list of atoms which can accept a hydrogen bond.  The atoms involved must be specified &quot;</span>
+<span class="lineNum">     126 </span>            :            &quot;as a list of labels of \\ref mcolv or labels of a \\ref multicolvarfunction actions.  If you would just like to use &quot;
+<span class="lineNum">     127 </span>            :            &quot;the atomic positions you can use a \\ref DENSITY command to specify a group of atoms.  Specifying your atomic positions using labels of &quot;
+<span class="lineNum">     128 </span>            :            &quot;other \\ref mcolv or \\ref multicolvarfunction commands is useful, however, as you can then exploit a much wider &quot;
+<span class="lineNum">     129 </span>            :            &quot;variety of functions of the contact matrix as described in \\ref contactmatrix&quot;);
+<span class="lineNum">     130 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;,&quot;SWITCH&quot;,&quot;The \\ref switchingfunction that specifies how close a pair of atoms must be together for there to be a hydrogen bond between them&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;,&quot;HSWITCH&quot;,&quot;The \\ref switchingfunction that specifies how close the hydrogen must be to the donor atom of the hydrogen bond for it to be &quot;</span>
+<span class="lineNum">     132 </span>            :            &quot;considered a hydrogen bond&quot;);
+<span class="lineNum">     133 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;,&quot;ASWITCH&quot;,&quot;A \\ref switchingfunction that is used to specify what the angle between the vector connecting the donor atom to the acceptor atom and &quot;</span>
+<span class="lineNum">     134 </span>            :            &quot;the vector connecting the donor atom to the hydrogen must be in order for it considered to be a hydrogen bond&quot;);
+<span class="lineNum">     135 </span><span class="lineCov">          6 :   keys.use(&quot;SUM&quot;);</span>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">          2 : HBondMatrix::HBondMatrix( const ActionOptions&amp; ao ):</span>
+<span class="lineNum">     139 </span>            :   Action(ao),
+<span class="lineNum">     140 </span><span class="lineCov">          2 :   AdjacencyMatrixBase(ao)</span>
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span><span class="lineCov">         10 :   readMaxThreeSpeciesMatrix( &quot;ATOMS&quot;, &quot;DONORS&quot;, &quot;ACCEPTORS&quot;, &quot;HYDROGENS&quot;, false );</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :   unsigned nrows, ncols; retrieveTypeDimensions( nrows, ncols, ndonor_types );</span>
+<span class="lineNum">     144 </span><span class="lineCov">          6 :   distanceOOSwitch.resize( nrows, ncols ); distanceOHSwitch.resize( nrows, ncols ); angleSwitch.resize( nrows, ncols );</span>
+<span class="lineNum">     145 </span><span class="lineCov">          4 :   parseConnectionDescriptions(&quot;SWITCH&quot;,false,ndonor_types);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          4 :   parseConnectionDescriptions(&quot;HSWITCH&quot;,false,ndonor_types);</span>
+<span class="lineNum">     147 </span><span class="lineCov">          4 :   parseConnectionDescriptions(&quot;ASWITCH&quot;,false,ndonor_types);</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :   // Find the largest sf cutoff
+<span class="lineNum">     150 </span><span class="lineCov">          2 :   double sfmax=distanceOOSwitch(0,0).get_dmax();</span>
+<span class="lineNum">     151 </span><span class="lineCov">          6 :   for(unsigned i=0; i&lt;getNumberOfNodeTypes(); ++i) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">          6 :     for(unsigned j=0; j&lt;getNumberOfNodeTypes(); ++j) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">          2 :       double tsf=distanceOOSwitch(i,j).get_dmax();</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :       if( tsf&gt;sfmax ) sfmax=tsf;</span>
+<span class="lineNum">     155 </span>            :     }
+<span class="lineNum">     156 </span>            :   }
+<span class="lineNum">     157 </span>            :   // Set the link cell cutoff
+<span class="lineNum">     158 </span><span class="lineCov">          2 :   setLinkCellCutoff( sfmax );</span>
+<a name="159"><span class="lineNum">     159 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">          6 : void HBondMatrix::setupConnector( const unsigned&amp; id, const unsigned&amp; i, const unsigned&amp; j, const std::vector&lt;std::string&gt;&amp; desc ) {</span>
+<span class="lineNum">     162 </span><span class="lineCov">         12 :   plumed_assert( id&lt;3 &amp;&amp; desc.size()==1 );</span>
+<span class="lineNum">     163 </span><span class="lineCov">          6 :   if( id==0 ) {</span>
+<span class="lineNum">     164 </span><span class="lineCov">          2 :     std::string errors; distanceOOSwitch(j,i).set(desc[0],errors);</span>
+<span class="lineNum">     165 </span><span class="lineCov">          2 :     if( errors.length()!=0 ) error(&quot;problem reading switching function description &quot; + errors);</span>
+<span class="lineNum">     166 </span><span class="lineCov">          2 :     if( j!=i) distanceOOSwitch(i,j).set(desc[0],errors);</span>
+<span class="lineNum">     167 </span><span class="lineCov">          8 :     log.printf(&quot;  atoms of type %u and %u must be within %s\n&quot;,i+1,j+1,(distanceOOSwitch(i,j).description()).c_str() );</span>
+<span class="lineNum">     168 </span><span class="lineCov">          4 :   } else if( id==1 ) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">          2 :     std::string errors; distanceOHSwitch(j,i).set(desc[0],errors);</span>
+<span class="lineNum">     170 </span><span class="lineCov">          2 :     if( errors.length()!=0 ) error(&quot;problem reading switching function description &quot; + errors);</span>
+<span class="lineNum">     171 </span><span class="lineCov">          2 :     if( j!=i) distanceOHSwitch(i,j).set(desc[0],errors);</span>
+<span class="lineNum">     172 </span><span class="lineCov">          8 :     log.printf(&quot;  for atoms of type %u and %u the OH distance must be less than %s \n&quot;,i+1,j+1,(distanceOHSwitch(i,j).description()).c_str() );</span>
+<span class="lineNum">     173 </span><span class="lineCov">          2 :   } else if( id==2 ) {</span>
+<span class="lineNum">     174 </span><span class="lineCov">          2 :     std::string errors; angleSwitch(j,i).set(desc[0],errors);</span>
+<span class="lineNum">     175 </span><span class="lineCov">          2 :     if( errors.length()!=0 ) error(&quot;problem reading switching function description &quot; + errors);</span>
+<span class="lineNum">     176 </span><span class="lineCov">          2 :     if( j!=i) angleSwitch(i,j).set(desc[0],errors);</span>
+<span class="lineNum">     177 </span><span class="lineCov">          8 :     log.printf(&quot;  for atoms of type %u and %u the OOH angle must be less than %s \n&quot;,i+1,j+1,(angleSwitch(i,j).description()).c_str() );</span>
+<span class="lineNum">     178 </span>            :   }
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">       4038 : double HBondMatrix::calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     182 </span>            :   // Ensure we skip diagonal elements of square matrix
+<span class="lineNum">     183 </span><span class="lineCov">       4038 :   if( myatoms.getIndex(0)==myatoms.getIndex(1) ) return 0.0;</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">       8076 :   Vector distance = getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) );</span>
+<span class="lineNum">     186 </span><span class="lineCov">       8076 :   if( distance.modulo2()&lt;distanceOOSwitch( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) ).get_dmax2() ) return 1.0;</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   return 0.0;</span>
+<a name="188"><span class="lineNum">     188 </span>            : }</a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">       4038 : double HBondMatrix::compute( const unsigned&amp; tindex, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     191 </span><span class="lineCov">       8076 :   Vector ood = getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) ); double ood_l = ood.modulo(); // acceptor - donor</span>
+<span class="lineNum">     192 </span><span class="lineCov">       4038 :   double ood_df, ood_sw=distanceOOSwitch( getBaseColvarNumber( myatoms.getIndex(0) ),</span>
+<span class="lineNum">     193 </span><span class="lineCov">       4038 :                                           getBaseColvarNumber( myatoms.getIndex(1) ) ).calculate( ood_l, ood_df );</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :   // Get the base colvar numbers
+<span class="lineNum">     196 </span><span class="lineCov">       4038 :   unsigned ano, dno = getBaseColvarNumber( myatoms.getIndex(0) );</span>
+<span class="lineNum">     197 </span><span class="lineCov">       8076 :   if( ndonor_types==0 ) ano = getBaseColvarNumber( myatoms.getIndex(1) );</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :   else ano = getBaseColvarNumber( myatoms.getIndex(1) ) - ndonor_types;</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :   double value=0;
+<span class="lineNum">     201 </span><span class="lineCov">       4038 :   if( myatoms.getNumberOfAtoms()&gt;3 ) {</span>
+<span class="lineNum">     202 </span><span class="lineCov">     524208 :     for(unsigned i=2; i&lt;myatoms.getNumberOfAtoms(); ++i) value+=calculateForThree( i, ano, dno, ood, ood_df, ood_sw,  myatoms );</span>
+<span class="lineNum">     203 </span>            :   } else {
+<span class="lineNum">     204 </span>            :     plumed_dbg_assert( myatoms.getNumberOfAtoms()==3 );
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :     value=calculateForThree( 2, ano, dno, ood, ood_df, ood_sw, myatoms );</span>
+<span class="lineNum">     206 </span>            :   }
+<span class="lineNum">     207 </span><span class="lineCov">       4038 :   return value;</span>
+<a name="208"><span class="lineNum">     208 </span>            : }</a>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">     516132 : double HBondMatrix::calculateForThree( const unsigned&amp; iat, const unsigned&amp; ano, const unsigned&amp; dno, const Vector&amp; ood,</span>
+<span class="lineNum">     211 </span>            :                                        const double&amp; ood_df, const double&amp; ood_sw, multicolvar::AtomValuePack&amp; myatoms ) const {
+<span class="lineNum">     212 </span><span class="lineCov">    1032264 :   Vector ohd=getSeparation( myatoms.getPosition(0), myatoms.getPosition(iat) ); double ohd_l=ohd.modulo();</span>
+<span class="lineNum">     213 </span><span class="lineCov">     516132 :   double ohd_df, ohd_sw=distanceOHSwitch( getBaseColvarNumber( myatoms.getIndex(0) ),</span>
+<span class="lineNum">     214 </span><span class="lineCov">     516132 :                                           getBaseColvarNumber( myatoms.getIndex(1) ) ).calculate( ohd_l, ohd_df );</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">     516132 :   Angle a; Vector ood_adf, ohd_adf; double angle=a.compute( ood, ohd, ood_adf, ohd_adf );</span>
+<span class="lineNum">     217 </span><span class="lineCov">     516132 :   double angle_df, angle_sw=angleSwitch( getBaseColvarNumber( myatoms.getIndex(0) ),</span>
+<span class="lineNum">     218 </span><span class="lineCov">     516132 :                                          getBaseColvarNumber( myatoms.getIndex(1) ) ).calculate( angle, angle_df );</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">     516132 :   if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     221 </span><span class="lineCov">         36 :     addAtomDerivatives( 1, 0, angle_sw*ohd_sw*(-ood_df)*ood + angle_sw*ood_sw*(-ohd_df)*ohd + ood_sw*ohd_sw*angle_df*angle*(-ood_adf-ohd_adf), myatoms );</span>
+<span class="lineNum">     222 </span><span class="lineCov">         36 :     addAtomDerivatives( 1, 1, angle_sw*ohd_sw*(+ood_df)*ood + ood_sw*ohd_sw*angle_df*angle*ood_adf, myatoms );</span>
+<span class="lineNum">     223 </span><span class="lineCov">         36 :     addAtomDerivatives( 1, iat, angle_sw*ood_sw*(+ohd_df)*ohd + ood_sw*ohd_sw*angle_df*angle*ohd_adf, myatoms );</span>
+<span class="lineNum">     224 </span><span class="lineCov">        108 :     myatoms.addBoxDerivatives( 1, angle_sw*ohd_sw*(-ood_df)*Tensor(ood,ood) + angle_sw*ood_sw*(-ohd_df)*Tensor(ohd,ohd)</span>
+<span class="lineNum">     225 </span><span class="lineCov">        144 :                                -ood_sw*ohd_sw*angle_df*angle*(Tensor(ood,ood_adf)+Tensor(ohd,ohd_adf)) );</span>
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span><span class="lineCov">     516132 :   return ood_sw*ohd_sw*angle_sw;</span>
+<span class="lineNum">     228 </span>            : }
+<a name="229"><span class="lineNum">     229 </span>            : </a>
+<span class="lineNum">     230 </span>            : }
+<span class="lineNum">     231 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     232 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

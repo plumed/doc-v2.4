@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - bias/Restraint.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">bias</a> - Restraint.cpp<span style="font-size: 80%;"> (source / <a href="Restraint.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Bias.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace bias {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC BIAS RESTRAINT
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Adds harmonic and/or linear restraints on one or more variables.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : Either or both
+<span class="lineNum">      37 </span>            : of SLOPE and KAPPA must be present to specify the linear and harmonic force constants
+<span class="lineNum">      38 </span>            : respectively.  The resulting potential is given by:
+<span class="lineNum">      39 </span>            : \f[
+<span class="lineNum">      40 </span>            :   \sum_i \frac{k_i}{2} (x_i-a_i)^2 + m_i*(x_i-a_i)
+<span class="lineNum">      41 </span>            : \f].
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The number of components for any vector of force constants must be equal to the number
+<span class="lineNum">      44 </span>            : of arguments to the action.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : Additional material and examples can be also found in the tutorial \ref belfast-4
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \par Examples
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : The following input tells plumed to restrain the distance between atoms 3 and 5
+<span class="lineNum">      51 </span>            : and the distance between atoms 2 and 4, at different equilibrium
+<span class="lineNum">      52 </span>            : values, and to print the energy of the restraint
+<span class="lineNum">      53 </span>            : \plumedfile
+<span class="lineNum">      54 </span>            : DISTANCE ATOMS=3,5 LABEL=d1
+<span class="lineNum">      55 </span>            : DISTANCE ATOMS=2,4 LABEL=d2
+<span class="lineNum">      56 </span>            : RESTRAINT ARG=d1,d2 AT=1.0,1.5 KAPPA=150.0,150.0 LABEL=restraint
+<span class="lineNum">      57 </span>            : PRINT ARG=restraint.bias
+<span class="lineNum">      58 </span>            : \endplumedfile
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : */
+<a name="61"><span class="lineNum">      61 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">        435 : class Restraint : public Bias {</span>
+<span class="lineNum">      64 </span>            :   std::vector&lt;double&gt; at;
+<span class="lineNum">      65 </span>            :   std::vector&lt;double&gt; kappa;
+<span class="lineNum">      66 </span>            :   std::vector&lt;double&gt; slope;
+<span class="lineNum">      67 </span>            :   Value* valueForce2;
+<span class="lineNum">      68 </span>            : public:
+<span class="lineNum">      69 </span>            :   explicit Restraint(const ActionOptions&amp;);
+<span class="lineNum">      70 </span>            :   void calculate();
+<span class="lineNum">      71 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="72"><span class="lineNum">      72 </span>            : };</a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">       6599 : PLUMED_REGISTER_ACTION(Restraint,&quot;RESTRAINT&quot;)</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">        148 : void Restraint::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">        148 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">      78 </span><span class="lineCov">        296 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">      79 </span><span class="lineCov">        740 :   keys.add(&quot;compulsory&quot;,&quot;SLOPE&quot;,&quot;0.0&quot;,&quot;specifies that the restraint is linear and what the values of the force constants on each of the variables are&quot;);</span>
+<span class="lineNum">      80 </span><span class="lineCov">        740 :   keys.add(&quot;compulsory&quot;,&quot;KAPPA&quot;,&quot;0.0&quot;,&quot;specifies that the restraint is harmonic and what the values of the force constants on each of the variables are&quot;);</span>
+<span class="lineNum">      81 </span><span class="lineCov">        592 :   keys.add(&quot;compulsory&quot;,&quot;AT&quot;,&quot;the position of the restraint&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineCov">        592 :   keys.addOutputComponent(&quot;force2&quot;,&quot;default&quot;,&quot;the instantaneous value of the squared force due to this bias potential&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">        148 : }</span>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">        147 : Restraint::Restraint(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      86 </span>            :   PLUMED_BIAS_INIT(ao),
+<span class="lineNum">      87 </span>            :   at(getNumberOfArguments()),
+<span class="lineNum">      88 </span>            :   kappa(getNumberOfArguments(),0.0),
+<span class="lineNum">      89 </span><span class="lineCov">        582 :   slope(getNumberOfArguments(),0.0)</span>
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span><span class="lineCov">        290 :   parseVector(&quot;SLOPE&quot;,slope);</span>
+<span class="lineNum">      92 </span><span class="lineCov">        290 :   parseVector(&quot;KAPPA&quot;,kappa);</span>
+<span class="lineNum">      93 </span><span class="lineCov">        290 :   parseVector(&quot;AT&quot;,at);</span>
+<span class="lineNum">      94 </span><span class="lineCov">        145 :   checkRead();</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">        145 :   log.printf(&quot;  at&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">        824 :   for(unsigned i=0; i&lt;at.size(); i++) log.printf(&quot; %f&quot;,at[i]);</span>
+<span class="lineNum">      98 </span><span class="lineCov">        145 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">      99 </span><span class="lineCov">        145 :   log.printf(&quot;  with harmonic force constant&quot;);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        824 :   for(unsigned i=0; i&lt;kappa.size(); i++) log.printf(&quot; %f&quot;,kappa[i]);</span>
+<span class="lineNum">     101 </span><span class="lineCov">        145 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">        145 :   log.printf(&quot;  and linear force constant&quot;);</span>
+<span class="lineNum">     103 </span><span class="lineCov">        824 :   for(unsigned i=0; i&lt;slope.size(); i++) log.printf(&quot; %f&quot;,slope[i]);</span>
+<span class="lineNum">     104 </span><span class="lineCov">        145 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">        290 :   addComponent(&quot;force2&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">        290 :   componentIsNotPeriodic(&quot;force2&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">        290 :   valueForce2=getPntrToComponent(&quot;force2&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">        145 : }</span>
+<a name="110"><span class="lineNum">     110 </span>            : </a>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">       1931 : void Restraint::calculate() {</span>
+<span class="lineNum">     113 </span>            :   double ene=0.0;
+<span class="lineNum">     114 </span>            :   double totf2=0.0;
+<span class="lineNum">     115 </span><span class="lineCov">       6321 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">       2195 :     const double cv=difference(i,at[i],getArgument(i));</span>
+<span class="lineNum">     117 </span><span class="lineCov">       2195 :     const double k=kappa[i];</span>
+<span class="lineNum">     118 </span><span class="lineCov">       2195 :     const double m=slope[i];</span>
+<span class="lineNum">     119 </span><span class="lineCov">       2195 :     const double f=-(k*cv+m);</span>
+<span class="lineNum">     120 </span><span class="lineCov">       2195 :     ene+=0.5*k*cv*cv+m*cv;</span>
+<span class="lineNum">     121 </span>            :     setOutputForce(i,f);
+<span class="lineNum">     122 </span><span class="lineCov">       2195 :     totf2+=f*f;</span>
+<span class="lineNum">     123 </span>            :   }
+<span class="lineNum">     124 </span>            :   setBias(ene);
+<span class="lineNum">     125 </span><span class="lineCov">       1931 :   valueForce2-&gt;set(totf2);</span>
+<span class="lineNum">     126 </span><span class="lineCov">       1931 : }</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : }
+<a name="129"><span class="lineNum">     129 </span>            : </a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

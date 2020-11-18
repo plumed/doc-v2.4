@@ -1,0 +1,457 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/DynamicList.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - DynamicList.h<span style="font-size: 80%;"> (source / <a href="DynamicList.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">50</td>
+            <td class="headerCovTableEntry">50</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_DynamicList_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_DynamicList_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      26 </span>            : #include &quot;Communicator.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : /**
+<span class="lineNum">      31 </span>            : \ingroup TOOLBOX
+<span class="lineNum">      32 </span>            : A class for storing a list that changes which members are active as a function of time.  It also
+<span class="lineNum">      33 </span>            : contains friends method that allows you to link two dynamic lists so that you can request
+<span class="lineNum">      34 </span>            : stuff from list2 in list1
+<span class="lineNum">      35 </span>            : A PLMD::DynamicList can be used to change what elements in a list should be looped over at any given
+<span class="lineNum">      36 </span>            : time. This class is, for the most part, used in tandem with PLMD::NeighbourList.  For complex reasons
+<span class="lineNum">      37 </span>            : related to the PLMD::MultiColvar object the dynamic list class is separate from PLMD::NeighbourList.
+<span class="lineNum">      38 </span>            : This is no bad thing though as there may be occasions where one needs to change the elements currently
+<span class="lineNum">      39 </span>            : involved in a calculation using some non neighbour list based method.  To be clear though PLMD::NeighbourList
+<span class="lineNum">      40 </span>            : will look after everything connected with PLMD::DynamicList other than the initial setup of PLMD::DynamicList
+<span class="lineNum">      41 </span>            : and the loops over the active elements of the list.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The essence of a dynamic list is as follows.  Consider the following loop:
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \verbatim
+<span class="lineNum">      46 </span>            : std::vector&lt;something&gt; aa;
+<span class="lineNum">      47 </span>            : for(unsigned i=0;i&lt;aa.size();++i){ aa[i].doSomething(); }
+<span class="lineNum">      48 </span>            : \endverbatim
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : This takes all the members in aa and does something or other to them - simple.  Now it may well
+<span class="lineNum">      51 </span>            : be that the precise set of things from aa that you want to do in any given time or place is not
+<span class="lineNum">      52 </span>            : always the same.  We can thus use dynamic lists to control what particular things are done are done
+<span class="lineNum">      53 </span>            : at a given time.  That is to say we can use PLMD::DynamicList to specify a subset of things from
+<span class="lineNum">      54 </span>            : aa to do at a given time.  This is done by:
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \verbatim
+<span class="lineNum">      57 </span>            : DynamicList list; std::vector&lt;something&gt; aa; unsigned kk;
+<span class="lineNum">      58 </span>            : for(unsigned i=0;i&lt;list.getNumberActive();++i){ kk=list[i]; aa[kk].doSomething(); }
+<span class="lineNum">      59 </span>            : \endverbatim
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : where we somewhere set up the list and make some decisions (in PLMD::NeighbourList for example) as to what elements
+<span class="lineNum">      62 </span>            : from aa are currently active.
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : \section Setup
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : Setting up a dynamic list is a matter of declaring it and passing a set of indices to it.  For the example
+<span class="lineNum">      67 </span>            : above with aa one can do this using:
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : \verbatim
+<span class="lineNum">      70 </span>            : DynamicList list;
+<span class="lineNum">      71 </span>            : for(unsigned i=0;i&lt;aa.size();++i) list.addIndexToList( i );
+<span class="lineNum">      72 </span>            : \endverbatim
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : Doing this creates the list of all members.
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : \section arse1 Cycling over the full set of members
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : To cycle over the full set of members in the list one should do:
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : \verbatim
+<span class="lineNum">      81 </span>            : for(unsigned i=0;i&lt;list.fullSize();++i){ kk=list(i); aa[kk].doSomething(); }
+<span class="lineNum">      82 </span>            : \endverbatim
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : If the DynamicList was set up as per the example above then this code is equivalent to:
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : \verbatim
+<span class="lineNum">      87 </span>            : for(unsigned i=0;i&lt;aa.size();++i){ aa[i].doSomething(); }
+<span class="lineNum">      88 </span>            : \endverbatim
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : \section arse2 Activating and deactivating members
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : The important bussiness comes when we start activating and deactivating members.  When we create
+<span class="lineNum">      93 </span>            : a dynamic list none of the members are active for bussiness.  Hence, getNumberActive() returns 0.
+<span class="lineNum">      94 </span>            : There are four routines that we can use to change this situation.
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : &lt;table align=&quot;center&quot; frame=&quot;void&quot; width=&quot;95%&quot; cellpadding=&quot;5%&quot;&gt;
+<span class="lineNum">      97 </span>            : &lt;tr&gt;
+<span class="lineNum">      98 </span>            : &lt;td width=&quot;5%&quot;&gt; activateAll() &lt;/td&gt; &lt;td&gt; make all members active &lt;/td&gt;
+<span class="lineNum">      99 </span>            : &lt;/tr&gt;&lt;tr&gt;
+<span class="lineNum">     100 </span>            : &lt;td&gt; activate(i) &lt;/td&gt; &lt;td&gt; make the ith element of the list active (in the example above this mean we doSomething() for element i of aa) &lt;/td&gt;
+<span class="lineNum">     101 </span>            : &lt;/tr&gt;&lt;tr&gt;
+<span class="lineNum">     102 </span>            : &lt;td&gt; deactivateAll() &lt;/td&gt; &lt;td&gt; make all members inactive &lt;/td&gt;
+<span class="lineNum">     103 </span>            : &lt;/tr&gt;&lt;tr&gt;
+<span class="lineNum">     104 </span>            : &lt;td&gt; deactivate(i) &lt;/td&gt; &lt;td&gt; make th ith element of the list active (in the example above this mean we dont doSomething() for element i of aa) &lt;/td&gt;
+<span class="lineNum">     105 </span>            : &lt;/tr&gt;
+<span class="lineNum">     106 </span>            : &lt;/table&gt;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : Once you have activated and deactivated members to your hearts content you can then update the dynamic list using
+<span class="lineNum">     109 </span>            : PLMD::DynamicList::updateActiveMembers().  Once this is done you can loop over only the members you have specifically
+<span class="lineNum">     110 </span>            : made active using:
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : \verbatim
+<span class="lineNum">     113 </span>            : DynamicList list;
+<span class="lineNum">     114 </span>            : for(unsigned i=0;i&lt;list.getNumberActive();++i){ kk=list[i]; aa[kk].doSomething(); }
+<span class="lineNum">     115 </span>            : \endverbatim
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : as was described above.
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : \section arse3 Using MPI
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : If your loop is distributed over processesors you can still use dynamic lists to activate and deactivate members.
+<span class="lineNum">     122 </span>            : When running with mpi however you must call PLMD::DynamicList::setupMPICommunication during initialization.  To
+<span class="lineNum">     123 </span>            : gather the members that have been activated/deactivated during the running of all the processes on all the nodes
+<span class="lineNum">     124 </span>            : you must call PLMD::DynamicList::mpi_gatherActiveMembers in place of PLMD::DynamicList::updateActiveMembers.
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : \section arse4 A final note
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : When using dynamic_lists we strongly recommend that you first compile without the -DNDEBUG flag.  When this
+<span class="lineNum">     129 </span>            : flag is not present many checks are performed inside the dynamic list class, which will help you ensure that
+<span class="lineNum">     130 </span>            : the dynamic list is used correctly.
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : */
+<a name="133"><span class="lineNum">     133 </span>            : </a>
+<span class="lineNum">     134 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     135 </span><span class="lineCov">     223564 : class DynamicList {</span>
+<span class="lineNum">     136 </span>            : /// This gathers data split across nodes list of Dynamic lists
+<span class="lineNum">     137 </span>            :   template &lt;typename U&gt;
+<span class="lineNum">     138 </span>            :   friend void mpi_gatherActiveMembers(Communicator&amp;, std::vector&lt; DynamicList&lt;U&gt; &gt;&amp; );
+<span class="lineNum">     139 </span>            : private:
+<span class="lineNum">     140 </span>            : /// This is the list of all the relevent members
+<span class="lineNum">     141 </span>            :   std::vector&lt;T&gt; all;
+<span class="lineNum">     142 </span>            : /// This tells us what members of all are on/off at any given time
+<span class="lineNum">     143 </span>            :   std::vector&lt;unsigned&gt; onoff;
+<span class="lineNum">     144 </span>            : /// The current number of active members
+<span class="lineNum">     145 </span>            :   unsigned nactive;
+<span class="lineNum">     146 </span>            : /// This is the list of active members
+<span class="lineNum">     147 </span>            :   std::vector&lt;unsigned&gt; active;
+<span class="lineNum">     148 </span>            : /// the number of processors the jobs in the Dynamic list are distributed across
+<span class="lineNum">     149 </span>            :   unsigned nprocessors;
+<span class="lineNum">     150 </span>            : /// The rank of the node we are on
+<span class="lineNum">     151 </span>            :   unsigned rank;
+<span class="lineNum">     152 </span>            : /// These are flags that are used internally to ensure that dynamic lists are being used properly
+<span class="lineNum">     153 </span>            :   bool allWereActivated, allWereDeactivated;
+<span class="lineNum">     154 </span>            : public:
+<span class="lineNum">     155 </span>            : /// Constructor
+<span class="lineNum">     156 </span><span class="lineCov">     329370 :   DynamicList():nactive(0),nprocessors(1),rank(0),allWereActivated(false),allWereDeactivated(false) {}</span>
+<span class="lineNum">     157 </span>            : /// An operator that returns the element from the current active list
+<span class="lineNum">     158 </span>            :   inline T operator [] (const unsigned&amp; i) const {
+<span class="lineNum">     159 </span>            :     plumed_dbg_assert( i&lt;nactive );
+<span class="lineNum">     160 </span><span class="lineCov"> 1942684190 :     return all[ active[i] ];</span>
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span>            : /// An operator that returns the element from the full list (used in neighbour lists)
+<span class="lineNum">     163 </span>            :   inline T operator () (const unsigned&amp; i) const {
+<span class="lineNum">     164 </span>            :     plumed_dbg_assert( i&lt;all.size() );
+<span class="lineNum">     165 </span>            :     return all[i];
+<span class="lineNum">     166 </span>            :   }
+<span class="lineNum">     167 </span>            : /// Clear the list
+<span class="lineNum">     168 </span>            :   void clear();
+<span class="lineNum">     169 </span>            : /// Return the total number of elements in the list
+<span class="lineNum">     170 </span>            :   unsigned fullSize() const;
+<span class="lineNum">     171 </span>            : /// Return the number of elements that are currently active
+<span class="lineNum">     172 </span>            :   unsigned getNumberActive() const;
+<span class="lineNum">     173 </span>            : /// Find out if a member is active
+<span class="lineNum">     174 </span>            :   bool isActive(const unsigned&amp; ) const;
+<span class="lineNum">     175 </span>            : /// Setup MPI communication if things are activated/deactivated on different nodes
+<span class="lineNum">     176 </span>            :   void setupMPICommunication( Communicator&amp; comm );
+<span class="lineNum">     177 </span>            : /// Add something to the active list
+<span class="lineNum">     178 </span>            :   void addIndexToList( const T &amp; ii );
+<span class="lineNum">     179 </span>            : /// Create the list from a vector
+<span class="lineNum">     180 </span>            :   void createIndexListFromVector( const std::vector&lt;T&gt;&amp; myind );
+<span class="lineNum">     181 </span>            : /// Find the index of in the list which has value t
+<span class="lineNum">     182 </span>            :   int getIndexOfElement( const T&amp; t ) const ;
+<span class="lineNum">     183 </span>            : /// Make a particular element inactive
+<span class="lineNum">     184 </span>            :   void deactivate( const T&amp; t );
+<span class="lineNum">     185 </span>            : /// Make everything in the list inactive
+<span class="lineNum">     186 </span>            :   void deactivateAll();
+<span class="lineNum">     187 </span>            : /// Make something active
+<span class="lineNum">     188 </span>            :   void activate( const unsigned ii );
+<span class="lineNum">     189 </span>            : /// Make everything in the list active
+<span class="lineNum">     190 </span>            :   void activateAll();
+<span class="lineNum">     191 </span>            : /// Do updateActiveMembers for a loop that has been distributed over multiple nodes
+<span class="lineNum">     192 </span>            :   void mpi_gatherActiveMembers(Communicator&amp; comm);
+<span class="lineNum">     193 </span>            : /// Get the list of active members
+<span class="lineNum">     194 </span>            :   void updateActiveMembers();
+<span class="lineNum">     195 </span>            : /// Empty the list of active members
+<span class="lineNum">     196 </span>            :   void emptyActiveMembers();
+<span class="lineNum">     197 </span>            : /// This can be used for a fast version of updateActiveMembers in which only a subset of the
+<span class="lineNum">     198 </span>            : /// indexes are checked
+<span class="lineNum">     199 </span>            :   void putIndexInActiveArray( const unsigned&amp; ii );
+<span class="lineNum">     200 </span>            : /// This can be called on once update is complete
+<span class="lineNum">     201 </span>            :   void completeUpdate();
+<span class="lineNum">     202 </span>            : /// This tells one if an update has been completed
+<span class="lineNum">     203 </span>            :   bool updateComplete() const ;
+<span class="lineNum">     204 </span>            : /// This sorts the elements in the active list
+<span class="lineNum">     205 </span>            :   void sortActiveList();
+<span class="lineNum">     206 </span>            : /// Retriee the list of active objects
+<span class="lineNum">     207 </span>            :   std::vector&lt;T&gt; retrieveActiveList();
+<span class="lineNum">     208 </span>            : };
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     211 </span>            : std::vector&lt;T&gt; DynamicList&lt;T&gt;::retrieveActiveList() {
+<span class="lineNum">     212 </span>            :   std::vector&lt;T&gt; this_active(nactive);
+<span class="lineNum">     213 </span>            :   for(unsigned k=0; k&lt;nactive; ++k) this_active[k]=all[ active[k] ];
+<span class="lineNum">     214 </span>            :   return this_active;
+<span class="lineNum">     215 </span>            : }
+<a name="216"><span class="lineNum">     216 </span>            : </a>
+<span class="lineNum">     217 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     218 </span><span class="lineCov">      41822 : void DynamicList&lt;T&gt;::clear() {</span>
+<span class="lineNum">     219 </span><span class="lineCov">      41822 :   all.resize(0);</span>
+<span class="lineNum">     220 </span><span class="lineCov">      41822 :   onoff.resize(0); active.resize(0);</span>
+<span class="lineNum">     221 </span><span class="lineCov">      41822 : }</span>
+<a name="222"><span class="lineNum">     222 </span>            : </a>
+<span class="lineNum">     223 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     224 </span><span class="lineCov">  421254144 : bool DynamicList&lt;T&gt;::isActive( const unsigned&amp; i ) const {</span>
+<span class="lineNum">     225 </span><span class="lineCov">  842508288 :   return (onoff[i]&gt;0 &amp;&amp; onoff[i]%nprocessors==0);</span>
+<span class="lineNum">     226 </span>            : }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     229 </span>            : unsigned DynamicList&lt;T&gt;::fullSize() const {
+<span class="lineNum">     230 </span>            :   return all.size();
+<span class="lineNum">     231 </span>            : }
+<a name="232"><span class="lineNum">     232 </span>            : </a>
+<span class="lineNum">     233 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     234 </span><span class="lineCov">   54367155 : unsigned DynamicList&lt;T&gt;::getNumberActive() const {</span>
+<span class="lineNum">     235 </span><span class="lineCov">   54367155 :   return nactive;</span>
+<span class="lineNum">     236 </span>            : }
+<a name="237"><span class="lineNum">     237 </span>            : </a>
+<span class="lineNum">     238 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     239 </span><span class="lineCov">         91 : void DynamicList&lt;T&gt;::addIndexToList( const T &amp; ii ) {</span>
+<span class="lineNum">     240 </span><span class="lineCov">        273 :   all.push_back(ii); active.resize( all.size() ); onoff.push_back(0);</span>
+<span class="lineNum">     241 </span><span class="lineCov">         91 : }</span>
+<a name="242"><span class="lineNum">     242 </span>            : </a>
+<span class="lineNum">     243 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     244 </span><span class="lineCov">     151611 : void DynamicList&lt;T&gt;::createIndexListFromVector( const std::vector&lt;T&gt;&amp; myind ) {</span>
+<span class="lineNum">     245 </span><span class="lineCov">     303222 :   plumed_dbg_assert( all.size()==0 ); onoff.resize( myind.size(), 0 );</span>
+<span class="lineNum">     246 </span><span class="lineCov">     303222 :   active.resize( myind.size() );</span>
+<span class="lineNum">     247 </span><span class="lineCov">     303222 :   all.insert( all.end(), myind.begin(), myind.end() );</span>
+<span class="lineNum">     248 </span><span class="lineCov">     151611 : }</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     251 </span>            : void DynamicList&lt;T&gt;::setupMPICommunication( Communicator&amp; comm ) {
+<span class="lineNum">     252 </span>            :   nprocessors=comm.Get_size(); rank=comm.Get_rank();
+<span class="lineNum">     253 </span>            : }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     256 </span>            : int DynamicList&lt;T&gt;::getIndexOfElement( const T&amp; t ) const {
+<span class="lineNum">     257 </span>            :   for(unsigned i=0; i&lt;all.size(); ++i) {
+<span class="lineNum">     258 </span>            :     if( t==all[i] ) {return i; }
+<span class="lineNum">     259 </span>            :   }
+<span class="lineNum">     260 </span>            :   plumed_merror(&quot;Could not find an element in the dynamic list&quot;);
+<span class="lineNum">     261 </span>            :   return 0;
+<span class="lineNum">     262 </span>            : }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     265 </span>            : void DynamicList&lt;T&gt;::deactivate( const T&amp; t ) {
+<span class="lineNum">     266 </span>            :   plumed_dbg_assert( allWereActivated );
+<span class="lineNum">     267 </span>            :   unsigned ii=getIndexOfElement( t );
+<span class="lineNum">     268 </span>            :   if( onoff[ii]==0 || onoff[ii]%nprocessors!=0 ) return;
+<span class="lineNum">     269 </span>            :   // Deactivates the component
+<span class="lineNum">     270 </span>            :   if( rank==0 ) onoff[ii]=nprocessors-1;
+<span class="lineNum">     271 </span>            :   else onoff[ii]=nprocessors-rank;
+<span class="lineNum">     272 </span>            : }
+<a name="273"><span class="lineNum">     273 </span>            : </a>
+<span class="lineNum">     274 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     275 </span><span class="lineCov">    2103230 : void DynamicList&lt;T&gt;::deactivateAll() {</span>
+<span class="lineNum">     276 </span><span class="lineCov">    2103230 :   allWereDeactivated=true; allWereActivated=false;</span>
+<span class="lineNum">     277 </span><span class="lineCov">  245479928 :   for(unsigned i=0; i&lt;nactive; ++i) onoff[ active[i] ]= 0;</span>
+<span class="lineNum">     278 </span><span class="lineCov">    2103230 :   nactive=0;</span>
+<span class="lineNum">     279 </span>            : #ifndef NDEBUG
+<span class="lineNum">     280 </span>            :   for(unsigned i=0; i&lt;onoff.size(); ++i) plumed_dbg_assert( onoff[i]==0 );
+<span class="lineNum">     281 </span>            : #endif
+<span class="lineNum">     282 </span><span class="lineCov">    2103230 : }</span>
+<a name="283"><span class="lineNum">     283 </span>            : </a>
+<span class="lineNum">     284 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     285 </span><span class="lineCov"> 1493117139 : void DynamicList&lt;T&gt;::activate( const unsigned ii ) {</span>
+<span class="lineNum">     286 </span>            :   plumed_dbg_massert(ii&lt;all.size(),&quot;ii is out of bounds&quot;);
+<span class="lineNum">     287 </span>            :   plumed_dbg_assert( !allWereActivated );
+<span class="lineNum">     288 </span><span class="lineCov"> 2986234278 :   onoff[ii]=nprocessors;</span>
+<span class="lineNum">     289 </span><span class="lineCov"> 1493117139 : }</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     292 </span>            : void DynamicList&lt;T&gt;::activateAll() {
+<span class="lineNum">     293 </span>            :   for(unsigned i=0; i&lt;onoff.size(); ++i) onoff[i]=nprocessors;
+<span class="lineNum">     294 </span>            :   allWereActivated=true; updateActiveMembers(); allWereActivated=true;
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     299 </span>            : void DynamicList&lt;T&gt;::mpi_gatherActiveMembers(Communicator&amp; comm) {
+<span class="lineNum">     300 </span>            :   plumed_massert( comm.Get_size()==nprocessors, &quot;error missing a call to DynamicList::setupMPICommunication&quot;);
+<span class="lineNum">     301 </span>            :   comm.Sum(&amp;onoff[0],onoff.size());
+<span class="lineNum">     302 </span>            :   // When we mpi gather onoff to be on it should be active on ALL nodes
+<span class="lineNum">     303 </span>            :   for(unsigned i=0; i&lt;all.size(); ++i) if( onoff[i]&gt;0 &amp;&amp; onoff[i]%nprocessors==0 ) { onoff[i]=nprocessors; }
+<span class="lineNum">     304 </span>            :   updateActiveMembers();
+<span class="lineNum">     305 </span>            : }
+<a name="306"><span class="lineNum">     306 </span>            : </a>
+<span class="lineNum">     307 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     308 </span><span class="lineCov">      61844 : void DynamicList&lt;T&gt;::updateActiveMembers() {</span>
+<span class="lineNum">     309 </span>            :   plumed_dbg_assert( allWereActivated || allWereDeactivated );
+<span class="lineNum">     310 </span><span class="lineCov">      61844 :   unsigned kk=0; allWereActivated=allWereDeactivated=false;</span>
+<span class="lineNum">     311 </span><span class="lineCov">   56900269 :   for(unsigned i=0; i&lt;all.size(); ++i) {</span>
+<span class="lineNum">     312 </span><span class="lineCov">   21440679 :     if( onoff[i]&gt;0 &amp;&amp; onoff[i]%nprocessors==0 ) { active[kk]=i; kk++; }</span>
+<span class="lineNum">     313 </span>            :   }
+<span class="lineNum">     314 </span><span class="lineCov">      61844 :   nactive=kk;</span>
+<span class="lineNum">     315 </span><span class="lineCov">      61844 : }</span>
+<a name="316"><span class="lineNum">     316 </span>            : </a>
+<span class="lineNum">     317 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     318 </span><span class="lineCov">     946777 : void DynamicList&lt;T&gt;::emptyActiveMembers() {</span>
+<span class="lineNum">     319 </span>            :   plumed_dbg_assert( allWereActivated || allWereDeactivated );
+<span class="lineNum">     320 </span><span class="lineCov">     946777 :   nactive=0;</span>
+<span class="lineNum">     321 </span><span class="lineCov">     946777 : }</span>
+<a name="322"><span class="lineNum">     322 </span>            : </a>
+<span class="lineNum">     323 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     324 </span><span class="lineCov">   78558980 : void DynamicList&lt;T&gt;::putIndexInActiveArray( const unsigned&amp; ii ) {</span>
+<span class="lineNum">     325 </span>            :   plumed_dbg_assert( allWereActivated || allWereDeactivated );
+<span class="lineNum">     326 </span>            :   plumed_dbg_assert( onoff[ii]&gt;0 &amp;&amp; onoff[ii]%nprocessors==0 );
+<span class="lineNum">     327 </span><span class="lineCov">  157117960 :   active[nactive]=ii; nactive++;</span>
+<span class="lineNum">     328 </span><span class="lineCov">   78558980 : }</span>
+<a name="329"><span class="lineNum">     329 </span>            : </a>
+<span class="lineNum">     330 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     331 </span><span class="lineCov">     890647 : void DynamicList&lt;T&gt;::completeUpdate() {</span>
+<span class="lineNum">     332 </span>            :   plumed_dbg_assert( allWereActivated || allWereDeactivated );
+<span class="lineNum">     333 </span><span class="lineCov">     890647 :   allWereActivated=allWereDeactivated=false;</span>
+<span class="lineNum">     334 </span><span class="lineCov">     890647 : }</span>
+<a name="335"><span class="lineNum">     335 </span>            : </a>
+<span class="lineNum">     336 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     337 </span><span class="lineCov">      56130 : void DynamicList&lt;T&gt;::sortActiveList() {</span>
+<span class="lineNum">     338 </span>            :   plumed_dbg_assert( allWereActivated || allWereDeactivated );
+<span class="lineNum">     339 </span><span class="lineCov">      56130 :   allWereActivated=allWereDeactivated=false;</span>
+<span class="lineNum">     340 </span><span class="lineCov">      56130 :   std::sort( active.begin(), active.begin()+nactive );</span>
+<span class="lineNum">     341 </span><span class="lineCov">      56130 : }</span>
+<a name="342"><span class="lineNum">     342 </span>            : </a>
+<span class="lineNum">     343 </span>            : template &lt;typename T&gt;
+<span class="lineNum">     344 </span><span class="lineCov">    4683178 : bool DynamicList&lt;T&gt;::updateComplete() const {</span>
+<span class="lineNum">     345 </span><span class="lineCov">    4683178 :   if( !allWereActivated &amp;&amp; !allWereDeactivated ) return true;</span>
+<span class="lineNum">     346 </span><span class="lineCov">     945342 :   return false;</span>
+<span class="lineNum">     347 </span>            : }
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            : template &lt;typename U&gt;
+<span class="lineNum">     350 </span>            : void mpi_gatherActiveMembers(Communicator&amp; comm, std::vector&lt; DynamicList&lt;U&gt; &gt;&amp; ll ) {
+<span class="lineNum">     351 </span>            :   // Setup an array to hold all data
+<span class="lineNum">     352 </span>            :   unsigned bufsize=0; unsigned size=comm.Get_size();
+<span class="lineNum">     353 </span>            :   for(unsigned i=0; i&lt;ll.size(); ++i) {
+<span class="lineNum">     354 </span>            :     plumed_dbg_massert( ll[i].nprocessors==size, &quot;missing a call to DynamicList::setupMPICommunication&quot; );
+<span class="lineNum">     355 </span>            :     bufsize+=ll[i].onoff.size();
+<span class="lineNum">     356 </span>            :   }
+<span class="lineNum">     357 </span>            :   std::vector&lt;unsigned&gt; buffer( bufsize );
+<span class="lineNum">     358 </span>            :   // Gather all onoff data into a single array
+<span class="lineNum">     359 </span>            :   bufsize=0;
+<span class="lineNum">     360 </span>            :   for(unsigned i=0; i&lt;ll.size(); ++i) {
+<span class="lineNum">     361 </span>            :     for(unsigned j=0; j&lt;ll[i].onoff.size(); ++j) { buffer[bufsize]=ll[i].onoff[j]; bufsize++; }
+<span class="lineNum">     362 </span>            :   }
+<span class="lineNum">     363 </span>            :   // GATHER from all nodes
+<span class="lineNum">     364 </span>            :   comm.Sum(&amp;buffer[0],buffer.size());
+<span class="lineNum">     365 </span>            :   // distribute back to original lists
+<span class="lineNum">     366 </span>            :   bufsize=0;
+<span class="lineNum">     367 </span>            :   for(unsigned i=0; i&lt;ll.size(); ++i) {
+<span class="lineNum">     368 </span>            :     for(unsigned j=0; j&lt;ll[i].onoff.size(); ++j) {
+<span class="lineNum">     369 </span>            :       if( buffer[bufsize]&gt;0 &amp;&amp; buffer[bufsize]%size==0 ) ll[i].onoff[j]=size;
+<span class="lineNum">     370 </span>            :       else ll[i].onoff[j]=size-1;
+<span class="lineNum">     371 </span>            :       bufsize++;
+<span class="lineNum">     372 </span>            :     }
+<span class="lineNum">     373 </span>            :   }
+<span class="lineNum">     374 </span>            :   for(unsigned i=0; i&lt;ll.size(); ++i) ll[i].updateActiveMembers();
+<a name="375"><span class="lineNum">     375 </span>            : }</a>
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            : #endif
+<span class="lineNum">     380 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

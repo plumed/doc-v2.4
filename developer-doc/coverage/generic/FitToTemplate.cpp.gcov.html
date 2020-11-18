@@ -1,0 +1,421 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/FitToTemplate.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - FitToTemplate.cpp<span style="font-size: 80%;"> (source / <a href="FitToTemplate.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntryHi">96.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryMed">78.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionWithValue.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/AtomNumber.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/RMSD.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      39 </span>            : #include &lt;string&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : using namespace std;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace PLMD {
+<span class="lineNum">      44 </span>            : namespace generic {
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : //+PLUMEDOC GENERIC FIT_TO_TEMPLATE
+<span class="lineNum">      47 </span>            : /*
+<span class="lineNum">      48 </span>            : This action is used to align a molecule to a template.
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : This can be used to move the coordinates stored in plumed
+<span class="lineNum">      51 </span>            : so as to be aligned with a provided template in PDB format. Pdb should contain
+<span class="lineNum">      52 </span>            : also weights for alignment (see the format of PDB files used e.g. for \ref RMSD).
+<span class="lineNum">      53 </span>            : Make sure your PDB file is correclty formatted as explained \ref pdbreader &quot;in this page&quot;.
+<span class="lineNum">      54 </span>            : Weights for displacement are ignored, since no displacement is computed here.
+<span class="lineNum">      55 </span>            : Notice that all atoms (not only those in the template) are aligned.
+<span class="lineNum">      56 </span>            : To see what effect try
+<span class="lineNum">      57 </span>            : the \ref DUMPATOMS directive to output the atomic positions.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : Also notice that PLUMED propagate forces correctly so that you can add a bias on a CV computed
+<span class="lineNum">      60 </span>            : after alignment. For many CVs this has no effect, but in some case the alignment can
+<span class="lineNum">      61 </span>            : change the result. Examples are:
+<span class="lineNum">      62 </span>            : - \ref POSITION CV since it is affected by a rigid shift of the system.
+<span class="lineNum">      63 </span>            : - \ref DISTANCE CV with COMPONENTS. Since the alignment could involve a rotation (with TYPE=OPTIMAL) the actual components could be different
+<span class="lineNum">      64 </span>            :   from the original ones.
+<span class="lineNum">      65 </span>            : - \ref CELL components for a similar reason.
+<span class="lineNum">      66 </span>            : - \ref DISTANCE from a \ref FIXEDATOM, provided the fixed atom is introduced _after_ the \ref FIT_TO_TEMPLATE action.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : \attention
+<span class="lineNum">      69 </span>            : The implementation of TYPE=OPTIMAL is available but should be considered in testing phase. Please report any
+<span class="lineNum">      70 </span>            : strange behavior.
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : \attention
+<span class="lineNum">      73 </span>            : This directive modifies the stored position at the precise moment
+<span class="lineNum">      74 </span>            : it is executed. This means that only collective variables
+<span class="lineNum">      75 </span>            : which are below it in the input script will see the corrected positions.
+<span class="lineNum">      76 </span>            : As a general rule, put it at the top of the input file. Also, unless you
+<span class="lineNum">      77 </span>            : know exactly what you are doing, leave the default stride (1), so that
+<span class="lineNum">      78 </span>            : this action is performed at every MD step.
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : \warning
+<span class="lineNum">      81 </span>            : The molecule used for alignment should be whole.
+<span class="lineNum">      82 </span>            : In case it is broken by the host MD code, please use \ref WHOLEMOLECULES to reconstruct it before \ref FIT_TO_TEMPLATE .
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : \par Examples
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : Align the atomic position to a template then print them.
+<span class="lineNum">      88 </span>            : The following example is only translating the system so as
+<span class="lineNum">      89 </span>            : to align the center of mass of a molecule to the one in the reference
+<span class="lineNum">      90 </span>            : structure `ref.pdb`:
+<span class="lineNum">      91 </span>            : \plumedfile
+<span class="lineNum">      92 </span>            : # dump coordinates before fitting, to see the difference:
+<span class="lineNum">      93 </span>            : DUMPATOMS FILE=dump-before.xyz ATOMS=1-20
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : # fit coordinates to ref.pdb template
+<span class="lineNum">      96 </span>            : # this is a &quot;TYPE=SIMPLE&quot; fit, so that only translations are used.
+<span class="lineNum">      97 </span>            : FIT_TO_TEMPLATE STRIDE=1 REFERENCE=ref.pdb TYPE=SIMPLE
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : # dump coordinates after fitting, to see the difference:
+<span class="lineNum">     100 </span>            : DUMPATOMS FILE=dump-after.xyz ATOMS=1-20
+<span class="lineNum">     101 </span>            : \endplumedfile
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : The following example instead performs a rototranslational fit.
+<span class="lineNum">     104 </span>            : \plumedfile
+<span class="lineNum">     105 </span>            : # dump coordinates before fitting, to see the difference:
+<span class="lineNum">     106 </span>            : DUMPATOMS FILE=dump-before.xyz ATOMS=1-20
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : # fit coordinates to ref.pdb template
+<span class="lineNum">     109 </span>            : # this is a &quot;TYPE=OPTIMAL&quot; fit, so that rototranslations are used.
+<span class="lineNum">     110 </span>            : FIT_TO_TEMPLATE STRIDE=1 REFERENCE=ref.pdb TYPE=OPTIMAL
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : # dump coordinates after fitting, to see the difference:
+<span class="lineNum">     113 </span>            : DUMPATOMS FILE=dump-after.xyz ATOMS=1-20
+<span class="lineNum">     114 </span>            : \endplumedfile
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : In the following example you see two completely equivalent way
+<span class="lineNum">     117 </span>            : to restrain an atom close to a position that is defined in the reference
+<span class="lineNum">     118 </span>            : frame of an aligned molecule. It could be for instance the center of mass
+<span class="lineNum">     119 </span>            : of a ligand with respect to a protein
+<span class="lineNum">     120 </span>            : \plumedfile
+<span class="lineNum">     121 </span>            : # center of the ligand:
+<span class="lineNum">     122 </span>            : ce: CENTER ATOMS=100-110
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : FIT_TO_TEMPLATE REFERENCE=protein.pdb TYPE=OPTIMAL
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : # place a fixed atom in the protein reference coordinates:
+<span class="lineNum">     127 </span>            : fix: FIXEDATOM AT=1.0,1.1,1.0
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : # take the distance between the fixed atom and the center of the ligand
+<span class="lineNum">     130 </span>            : d: DISTANCE ATOMS=ce,fix
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : # apply a restraint
+<span class="lineNum">     133 </span>            : RESTRAINT ARG=d AT=0.0 KAPPA=100.0
+<span class="lineNum">     134 </span>            : \endplumedfile
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : Notice that you could have obtained an (almost) identical result adding a fictitious
+<span class="lineNum">     137 </span>            : atom to `ref.pdb` with the serial number corresponding to the `ce` atom (there is no automatic way
+<span class="lineNum">     138 </span>            : to get it, but in this example it should be the number of atoms of the system plus one),
+<span class="lineNum">     139 </span>            : and properly setting the weights for alignment and displacement in \ref RMSD.
+<span class="lineNum">     140 </span>            : There are two differences to be expected:
+<span class="lineNum">     141 </span>            : (ab) \ref FIT_TO_TEMPLATE might be slower since it has to rototranslate all the available atoms and
+<span class="lineNum">     142 </span>            : (b) variables employing PBCs (such as \ref DISTANCE without `NOPBC`, as in the example above)
+<span class="lineNum">     143 </span>            :   are allowed after \ref FIT_TO_TEMPLATE, whereas \ref RMSD expects PBCs to be already solved.
+<span class="lineNum">     144 </span>            : The latter means that before the \ref RMSD statement one should use \ref WRAPAROUND or \ref WHOLEMOLECULES to properly place
+<span class="lineNum">     145 </span>            : the ligand.
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : */
+<span class="lineNum">     149 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : class FitToTemplate:
+<span class="lineNum">     153 </span>            :   public ActionPilot,
+<span class="lineNum">     154 </span>            :   public ActionAtomistic,
+<span class="lineNum">     155 </span>            :   public ActionWithValue
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span>            :   std::string type;
+<span class="lineNum">     158 </span>            :   std::vector&lt;double&gt; weights;
+<span class="lineNum">     159 </span>            :   std::vector&lt;AtomNumber&gt; aligned;
+<span class="lineNum">     160 </span>            :   Vector center;
+<span class="lineNum">     161 </span>            :   Vector shift;
+<span class="lineNum">     162 </span>            :   // optimal alignment related stuff
+<span class="lineNum">     163 </span>            :   PLMD::RMSD* rmsd;
+<span class="lineNum">     164 </span>            :   Tensor rotation;
+<span class="lineNum">     165 </span>            :   Matrix&lt; std::vector&lt;Vector&gt; &gt; drotdpos;
+<span class="lineNum">     166 </span>            :   std::vector&lt;Vector&gt; positions;
+<span class="lineNum">     167 </span>            :   std::vector&lt;Vector&gt; DDistDRef;
+<span class="lineNum">     168 </span>            :   std::vector&lt;Vector&gt; ddistdpos;
+<span class="lineNum">     169 </span>            :   std::vector&lt;Vector&gt; centeredpositions;
+<span class="lineNum">     170 </span>            :   Vector center_positions;
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : public:
+<span class="lineNum">     174 </span>            :   explicit FitToTemplate(const ActionOptions&amp;ao);
+<span class="lineNum">     175 </span>            :   ~FitToTemplate();
+<span class="lineNum">     176 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="177"><span class="lineNum">     177 </span>            :   void calculate();</a>
+<span class="lineNum">     178 </span>            :   void apply();
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :   unsigned getNumberOfDerivatives() {plumed_merror(&quot;You should not call this function&quot;);};</span>
+<a name="180"><span class="lineNum">     180 </span>            : };</a>
+<span class="lineNum">     181 </span>            : 
+<a name="182"><span class="lineNum">     182 </span><span class="lineCov">       6460 : PLUMED_REGISTER_ACTION(FitToTemplate,&quot;FIT_TO_TEMPLATE&quot;)</span></a>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineCov">          9 : void FitToTemplate::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     185 </span><span class="lineCov">          9 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">     186 </span><span class="lineCov">          9 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">     187 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which molecules are reassembled.  Unless you are completely certain about what you are doing leave this set equal to 1!&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         36 :   keys.add(&quot;compulsory&quot;,&quot;REFERENCE&quot;,&quot;a file in pdb format containing the reference structure and the atoms involved in the CV.&quot;);</span>
+<span class="lineNum">     189 </span><span class="lineCov">         45 :   keys.add(&quot;compulsory&quot;,&quot;TYPE&quot;,&quot;SIMPLE&quot;,&quot;the manner in which RMSD alignment is performed.  Should be OPTIMAL or SIMPLE.&quot;);</span>
+<a name="190"><span class="lineNum">     190 </span><span class="lineCov">          9 : }</span></a>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">          8 : FitToTemplate::FitToTemplate(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     193 </span>            :   Action(ao),
+<span class="lineNum">     194 </span>            :   ActionPilot(ao),
+<span class="lineNum">     195 </span>            :   ActionAtomistic(ao),
+<span class="lineNum">     196 </span>            :   ActionWithValue(ao),
+<span class="lineNum">     197 </span><span class="lineCov">         40 :   rmsd(NULL)</span>
+<span class="lineNum">     198 </span>            : {
+<span class="lineNum">     199 </span>            :   string reference;
+<span class="lineNum">     200 </span><span class="lineCov">         16 :   parse(&quot;REFERENCE&quot;,reference);</span>
+<span class="lineNum">     201 </span><span class="lineCov">          8 :   type.assign(&quot;SIMPLE&quot;);</span>
+<span class="lineNum">     202 </span><span class="lineCov">         16 :   parse(&quot;TYPE&quot;,type);</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            : // if(type!=&quot;SIMPLE&quot;) error(&quot;Only TYPE=SIMPLE is implemented in FIT_TO_TEMPLATE&quot;);
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">          8 :   checkRead();</span>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">         16 :   PDB pdb;</span>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :   // read everything in ang and transform to nm if we are not in natural units
+<span class="lineNum">     211 </span><span class="lineCov">         16 :   if( !pdb.read(reference,plumed.getAtoms().usingNaturalUnits(),0.1/atoms.getUnits().getLength()) )</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     error(&quot;missing input file &quot; + reference );</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">          8 :   requestAtoms(pdb.getAtomNumbers());</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">          8 :   std::vector&lt;Vector&gt; positions=pdb.getPositions();</span>
+<span class="lineNum">     217 </span><span class="lineCov">          8 :   weights=pdb.getOccupancy();</span>
+<span class="lineNum">     218 </span><span class="lineCov">          8 :   aligned=pdb.getAtomNumbers();</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :   // normalize weights
+<span class="lineNum">     222 </span><span class="lineCov">        100 :   double n=0.0; for(unsigned i=0; i&lt;weights.size(); ++i) n+=weights[i];</span>
+<span class="lineNum">     223 </span><span class="lineCov">          8 :   if(n==0.0) {</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :     error(&quot;PDB file &quot; + reference + &quot; has zero weights. Please check the occupancy column.&quot;);</span>
+<span class="lineNum">     225 </span>            :   }
+<span class="lineNum">     226 </span><span class="lineCov">          8 :   n=1.0/n;</span>
+<span class="lineNum">     227 </span><span class="lineCov">        100 :   for(unsigned i=0; i&lt;weights.size(); ++i) weights[i]*=n;</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :   // normalize weights for rmsd calculation
+<span class="lineNum">     230 </span><span class="lineCov">          8 :   vector&lt;double&gt; weights_measure=pdb.getBeta();</span>
+<span class="lineNum">     231 </span><span class="lineCov">        100 :   n=0.0; for(unsigned i=0; i&lt;weights_measure.size(); ++i) n+=weights_measure[i]; n=1.0/n;</span>
+<span class="lineNum">     232 </span><span class="lineCov">        100 :   for(unsigned i=0; i&lt;weights_measure.size(); ++i) weights_measure[i]*=n;</span>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :   // subtract the center
+<span class="lineNum">     235 </span><span class="lineCov">        128 :   for(unsigned i=0; i&lt;weights.size(); ++i) center+=positions[i]*weights[i];</span>
+<span class="lineNum">     236 </span><span class="lineCov">        100 :   for(unsigned i=0; i&lt;weights.size(); ++i) positions[i]-=center;</span>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineCov">         12 :   if(type==&quot;OPTIMAL&quot; or type==&quot;OPTIMAL-FAST&quot; ) {</span>
+<span class="lineNum">     239 </span><span class="lineCov">          4 :     rmsd=new RMSD();</span>
+<span class="lineNum">     240 </span><span class="lineCov">          4 :     rmsd-&gt;set(weights,weights_measure,positions,type,false,false);// note: the reference is shifted now with center in the origin</span>
+<span class="lineNum">     241 </span><span class="lineCov">          8 :     log&lt;&lt;&quot;  Method chosen for fitting: &quot;&lt;&lt;rmsd-&gt;getMethod()&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">     242 </span>            :   }
+<span class="lineNum">     243 </span>            :   // register the value of rmsd (might be useful sometimes)
+<span class="lineNum">     244 </span><span class="lineCov">          8 :   addValue(); setNotPeriodic();</span>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :   doNotRetrieve();
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :   // this is required so as to allow modifyGlobalForce() to return correct
+<span class="lineNum">     249 </span>            :   // also for forces that are not owned (and thus not zeored) by all processors.
+<span class="lineNum">     250 </span>            :   allowToAccessGlobalForces();
+<span class="lineNum">     251 </span><span class="lineCov">          8 : }</span>
+<a name="252"><span class="lineNum">     252 </span>            : </a>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span><span class="lineCov">         96 : void FitToTemplate::calculate() {</span>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">         96 :   Vector cc;</span>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">       1200 :   for(unsigned i=0; i&lt;aligned.size(); ++i) {</span>
+<span class="lineNum">     259 </span><span class="lineCov">        336 :     cc+=weights[i]*modifyPosition(aligned[i]);</span>
+<span class="lineNum">     260 </span>            :   }
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span><span class="lineCov">        192 :   if (type==&quot;SIMPLE&quot;) {</span>
+<span class="lineNum">     263 </span><span class="lineCov">         48 :     shift=center-cc;</span>
+<span class="lineNum">     264 </span><span class="lineCov">         48 :     setValue(shift.modulo());</span>
+<span class="lineNum">     265 </span><span class="lineCov">      12792 :     for(unsigned i=0; i&lt;getTotAtoms(); i++) {</span>
+<span class="lineNum">     266 </span>            :       Vector &amp; ato (modifyPosition(AtomNumber::index(i)));
+<span class="lineNum">     267 </span><span class="lineCov">       6372 :       ato+=shift;</span>
+<span class="lineNum">     268 </span>            :     }
+<span class="lineNum">     269 </span>            :   }
+<span class="lineNum">     270 </span><span class="lineCov">         48 :   else if( type==&quot;OPTIMAL&quot; or type==&quot;OPTIMAL-FAST&quot;) {</span>
+<span class="lineNum">     271 </span>            : // we store positions here to be used in apply()
+<span class="lineNum">     272 </span>            : // notice that in apply() it is not guaranteed that positions are still equal to their value here
+<span class="lineNum">     273 </span>            : // since they could have been changed by a subsequent FIT_TO_TEMPLATE
+<span class="lineNum">     274 </span><span class="lineCov">         96 :     positions.resize(aligned.size());</span>
+<span class="lineNum">     275 </span><span class="lineCov">        816 :     for (unsigned i=0; i&lt;aligned.size(); i++) positions[i]=modifyPosition(aligned[i]);</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :     // specific stuff that provides all that is needed
+<span class="lineNum">     278 </span><span class="lineCov">         48 :     double r=rmsd-&gt;calc_FitElements( positions, rotation,  drotdpos, centeredpositions, center_positions);</span>
+<span class="lineNum">     279 </span><span class="lineCov">         48 :     setValue(r);</span>
+<span class="lineNum">     280 </span><span class="lineCov">      12720 :     for(unsigned i=0; i&lt;getTotAtoms(); i++) {</span>
+<span class="lineNum">     281 </span>            :       Vector &amp; ato (modifyPosition(AtomNumber::index(i)));
+<span class="lineNum">     282 </span><span class="lineCov">       6336 :       ato=matmul(rotation,ato-center_positions)+center;</span>
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span>            : // rotate box
+<span class="lineNum">     285 </span>            :     Pbc &amp; pbc(modifyGlobalPbc());
+<span class="lineNum">     286 </span><span class="lineCov">         48 :     pbc.setBox(matmul(pbc.getBox(),transpose(rotation)));</span>
+<span class="lineNum">     287 </span>            :   }
+<span class="lineNum">     288 </span>            : 
+<a name="289"><span class="lineNum">     289 </span><span class="lineCov">         96 : }</span></a>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineCov">         96 : void FitToTemplate::apply() {</span>
+<span class="lineNum">     292 </span><span class="lineCov">        192 :   if (type==&quot;SIMPLE&quot;) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">         48 :     Vector totForce;</span>
+<span class="lineNum">     294 </span><span class="lineCov">      12792 :     for(unsigned i=0; i&lt;getTotAtoms(); i++) {</span>
+<span class="lineNum">     295 </span><span class="lineCov">       6372 :       totForce+=modifyGlobalForce(AtomNumber::index(i));</span>
+<span class="lineNum">     296 </span>            :     }
+<span class="lineNum">     297 </span>            :     Tensor &amp; vv(modifyGlobalVirial());
+<span class="lineNum">     298 </span><span class="lineCov">         48 :     vv+=Tensor(center,totForce);</span>
+<span class="lineNum">     299 </span><span class="lineCov">        384 :     for(unsigned i=0; i&lt;aligned.size(); ++i) {</span>
+<span class="lineNum">     300 </span>            :       Vector &amp; ff(modifyGlobalForce(aligned[i]));
+<span class="lineNum">     301 </span><span class="lineCov">         96 :       ff-=totForce*weights[i];</span>
+<span class="lineNum">     302 </span>            :     }
+<span class="lineNum">     303 </span><span class="lineCov">         48 :   } else if ( type==&quot;OPTIMAL&quot; or type==&quot;OPTIMAL-FAST&quot;) {</span>
+<span class="lineNum">     304 </span><span class="lineCov">         48 :     Vector totForce;</span>
+<span class="lineNum">     305 </span><span class="lineCov">      12720 :     for(unsigned i=0; i&lt;getTotAtoms(); i++) {</span>
+<span class="lineNum">     306 </span>            :       Vector &amp; f(modifyGlobalForce(AtomNumber::index(i)));
+<span class="lineNum">     307 </span>            : // rotate back forces
+<span class="lineNum">     308 </span><span class="lineCov">       6336 :       f=matmul(transpose(rotation),f);</span>
+<span class="lineNum">     309 </span>            : // accumulate rotated c.o.m. forces - this is already in the non rotated reference frame
+<span class="lineNum">     310 </span><span class="lineCov">       6336 :       totForce+=f;</span>
+<span class="lineNum">     311 </span>            :     }
+<span class="lineNum">     312 </span>            :     Tensor&amp; virial(modifyGlobalVirial());
+<span class="lineNum">     313 </span>            : // notice that an extra Tensor(center,matmul(rotation,totForce)) is required to
+<span class="lineNum">     314 </span>            : // compute the derivatives of the rotation with respect to center
+<span class="lineNum">     315 </span><span class="lineCov">         48 :     Tensor ww=matmul(transpose(rotation),virial+Tensor(center,matmul(rotation,totForce)));</span>
+<span class="lineNum">     316 </span>            : // rotate back virial
+<span class="lineNum">     317 </span><span class="lineCov">         48 :     virial=matmul(transpose(rotation),matmul(virial,rotation));</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : // now we compute the force due to alignment
+<span class="lineNum">     320 </span><span class="lineCov">        576 :     for(unsigned i=0; i&lt;aligned.size(); i++) {</span>
+<span class="lineNum">     321 </span><span class="lineCov">        240 :       Vector g;</span>
+<span class="lineNum">     322 </span><span class="lineCov">        960 :       for(unsigned k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     323 </span>            : // this could be made faster computing only the diagonal of d
+<span class="lineNum">     324 </span><span class="lineCov">        720 :         Tensor d=matmul(ww,RMSD::getMatrixFromDRot(drotdpos,i,k));</span>
+<span class="lineNum">     325 </span><span class="lineCov">        720 :         g[k]=(d(0,0)+d(1,1)+d(2,2));</span>
+<span class="lineNum">     326 </span>            :       }
+<span class="lineNum">     327 </span>            : // here is the extra contribution
+<span class="lineNum">     328 </span><span class="lineCov">        720 :       modifyGlobalForce(aligned[i])+=-g-weights[i]*totForce;</span>
+<span class="lineNum">     329 </span>            : // here it the contribution to the virial
+<span class="lineNum">     330 </span>            : // notice that here we can use absolute positions since, for the alignment to be defined,
+<span class="lineNum">     331 </span>            : // positions should be in one well defined periodic image
+<span class="lineNum">     332 </span><span class="lineCov">        480 :       virial+=extProduct(positions[i],g);</span>
+<span class="lineNum">     333 </span>            :     }
+<span class="lineNum">     334 </span>            : // finally, correction to the virial
+<span class="lineNum">     335 </span><span class="lineCov">         48 :     virial+=extProduct(matmul(transpose(rotation),center),totForce);</span>
+<span class="lineNum">     336 </span>            :   }
+<a name="337"><span class="lineNum">     337 </span><span class="lineCov">         96 : }</span></a>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">         32 : FitToTemplate::~FitToTemplate() {</span>
+<span class="lineNum">     340 </span><span class="lineCov">          8 :   if(rmsd) delete rmsd;</span>
+<span class="lineNum">     341 </span><span class="lineCov">         16 : }</span>
+<a name="342"><span class="lineNum">     342 </span>            : </a>
+<span class="lineNum">     343 </span>            : }
+<span class="lineNum">     344 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

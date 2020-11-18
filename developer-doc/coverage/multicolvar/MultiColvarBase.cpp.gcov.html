@@ -1,0 +1,1163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/MultiColvarBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - MultiColvarBase.cpp<span style="font-size: 80%;"> (source / <a href="MultiColvarBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">572</td>
+            <td class="headerCovTableEntry">637</td>
+            <td class="headerCovTableEntryMed">89.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryHi">97.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionVolume.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;MultiColvarFilter.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;vesselbase/Vessel.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;vesselbase/BridgeVessel.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      31 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      32 </span>            : #include &lt;string&gt;
+<span class="lineNum">      33 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : using namespace std;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace PLMD {
+<a name="38"><span class="lineNum">      38 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">        399 : void MultiColvarBase::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      41 </span><span class="lineCov">        399 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">      42 </span><span class="lineCov">        399 :   ActionWithValue::registerKeywords( keys );</span>
+<span class="lineNum">      43 </span><span class="lineCov">        399 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">      44 </span><span class="lineCov">       1197 :   keys.addFlag(&quot;NOPBC&quot;,false,&quot;ignore the periodic boundary conditions when calculating distances&quot;);</span>
+<span class="lineNum">      45 </span><span class="lineCov">        399 :   ActionWithVessel::registerKeywords( keys );</span>
+<span class="lineNum">      46 </span><span class="lineCov">       1596 :   keys.add(&quot;hidden&quot;,&quot;NL_STRIDE&quot;,&quot;the frequency with which the neighbor list should be updated. Between neighbour list update steps all quantities &quot;</span>
+<span class="lineNum">      47 </span>            :            &quot;that contributed less than TOL at the previous neighbor list update step are ignored.&quot;);
+<span class="lineNum">      48 </span><span class="lineCov">        798 :   keys.setComponentsIntroduction(&quot;When the label of this action is used as the input for a second you are not referring to a scalar quantity as you are in &quot;</span>
+<span class="lineNum">      49 </span>            :                                  &quot;regular collective variables.  The label is used to reference the full set of quantities calculated by &quot;
+<span class="lineNum">      50 </span>            :                                  &quot;the action.  This is usual when using \\ref multicolvarfunction. Generally when doing this the previously calculated &quot;
+<span class="lineNum">      51 </span>            :                                  &quot;multicolvar will be referenced using the DATA keyword rather than ARG.\n\n&quot;
+<span class="lineNum">      52 </span>            :                                  &quot;This Action can be used to calculate the following scalar quantities directly.  These quantities are calculated by &quot;
+<span class="lineNum">      53 </span>            :                                  &quot;employing the keywords listed below. &quot;
+<span class="lineNum">      54 </span>            :                                  &quot;These quantities can then be referenced elsewhere in the input file by using this Action's label &quot;
+<span class="lineNum">      55 </span>            :                                  &quot;followed by a dot and the name of the quantity. Some amongst them can be calculated multiple times &quot;
+<span class="lineNum">      56 </span>            :                                  &quot;with different parameters.  In this case the quantities calculated can be referenced elsewhere in the &quot;
+<span class="lineNum">      57 </span>            :                                  &quot;input by using the name of the quantity followed by a numerical identifier &quot;
+<span class="lineNum">      58 </span>            :                                  &quot;e.g. &lt;em&gt;label&lt;/em&gt;.lessthan-1, &lt;em&gt;label&lt;/em&gt;.lessthan-2 etc.  When doing this and, for clarity we have &quot;
+<span class="lineNum">      59 </span>            :                                  &quot;made the label of the components customizable. As such by using the LABEL keyword in the description of the keyword &quot;
+<span class="lineNum">      60 </span>            :                                  &quot;input you can customize the component name&quot;);
+<span class="lineNum">      61 </span><span class="lineCov">       1596 :   keys.reserve(&quot;atoms-3&quot;,&quot;SPECIES&quot;,&quot;this keyword is used for colvars such as coordination number. In that context it specifies that plumed should calculate &quot;</span>
+<span class="lineNum">      62 </span>            :                &quot;one coordination number for each of the atoms specified.  Each of these coordination numbers specifies how many of the &quot;
+<span class="lineNum">      63 </span>            :                &quot;other specified atoms are within a certain cutoff of the central atom.  You can specify the atoms here as another multicolvar &quot;
+<span class="lineNum">      64 </span>            :                &quot;action or using a MultiColvarFilter or ActionVolume action.  When you do so the quantity is calculated for those atoms specified &quot;
+<span class="lineNum">      65 </span>            :                &quot;in the previous multicolvar.  This is useful if you would like to calculate the Steinhardt parameter for those atoms that have a &quot;
+<span class="lineNum">      66 </span>            :                &quot;coordination number more than four for example&quot;);
+<span class="lineNum">      67 </span><span class="lineCov">       1596 :   keys.reserve(&quot;atoms-4&quot;,&quot;SPECIESA&quot;,&quot;this keyword is used for colvars such as the coordination number.  In that context it species that plumed should calculate &quot;</span>
+<span class="lineNum">      68 </span>            :                &quot;one coordination number for each of the atoms specified in SPECIESA.  Each of these cooordination numbers specifies how many &quot;
+<span class="lineNum">      69 </span>            :                &quot;of the atoms specifies using SPECIESB is within the specified cutoff.  As with the species keyword the input can also be specified &quot;
+<span class="lineNum">      70 </span>            :                &quot;using the label of another multicolvar&quot;);
+<span class="lineNum">      71 </span><span class="lineCov">       1596 :   keys.reserve(&quot;atoms-4&quot;,&quot;SPECIESB&quot;,&quot;this keyword is used for colvars such as the coordination number.  It must appear with SPECIESA.  For a full explanation see &quot;</span>
+<span class="lineNum">      72 </span>            :                &quot;the documentation for that keyword&quot;);
+<span class="lineNum">      73 </span><span class="lineCov">        399 : }</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">        328 : MultiColvarBase::MultiColvarBase(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      76 </span>            :   Action(ao),
+<span class="lineNum">      77 </span>            :   ActionAtomistic(ao),
+<span class="lineNum">      78 </span>            :   ActionWithValue(ao),
+<span class="lineNum">      79 </span>            :   ActionWithVessel(ao),
+<span class="lineNum">      80 </span>            :   usepbc(false),
+<span class="lineNum">      81 </span>            :   allthirdblockintasks(false),
+<span class="lineNum">      82 </span>            :   uselinkforthree(false),
+<span class="lineNum">      83 </span>            :   linkcells(comm),
+<span class="lineNum">      84 </span>            :   threecells(comm),
+<span class="lineNum">      85 </span>            :   setup_completed(false),
+<span class="lineNum">      86 </span>            :   atomsWereRetrieved(false),
+<span class="lineNum">      87 </span>            :   matsums(false),
+<span class="lineNum">      88 </span>            :   usespecies(false),
+<span class="lineNum">      89 </span><span class="lineCov">        984 :   nblock(0)</span>
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span><span class="lineCov">        656 :   if( keywords.exists(&quot;NOPBC&quot;) ) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">        656 :     bool nopbc=!usepbc; parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">      93 </span><span class="lineCov">        328 :     usepbc=!nopbc;</span>
+<span class="lineNum">      94 </span>            :   }
+<span class="lineNum">      95 </span><span class="lineCov">        656 :   if( keywords.exists(&quot;SPECIESA&quot;) ) { matsums=usespecies=true; }</span>
+<span class="lineNum">      96 </span><span class="lineCov">        328 : }</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">         46 : void MultiColvarBase::readAtomsLikeKeyword( const std::string &amp; key, const int&amp; natoms, std::vector&lt;AtomNumber&gt;&amp; all_atoms ) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">         46 :   plumed_assert( !usespecies );</span>
+<span class="lineNum">     100 </span><span class="lineCov">         46 :   if( all_atoms.size()&gt;0 ) return;</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   std::vector&lt;AtomNumber&gt; t;
+<span class="lineNum">     103 </span><span class="lineCov">        916 :   for(int i=1;; ++i ) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">        962 :     parseAtomList(key, i, t );</span>
+<span class="lineNum">     105 </span><span class="lineCov">        962 :     if( t.empty() ) break;</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">        916 :     log.printf(&quot;  Colvar %d is calculated from atoms : &quot;, i);</span>
+<span class="lineNum">     108 </span><span class="lineCov">       9344 :     for(unsigned j=0; j&lt;t.size(); ++j) log.printf(&quot;%d &quot;,t[j].serial() );</span>
+<span class="lineNum">     109 </span><span class="lineCov">        916 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">        922 :     if( i==1 &amp;&amp; natoms&lt;0 ) { ablocks.resize(t.size()); }</span>
+<span class="lineNum">     112 </span><span class="lineCov">        910 :     else if( i==1 ) ablocks.resize(natoms);</span>
+<span class="lineNum">     113 </span><span class="lineCov">        916 :     if( t.size()!=ablocks.size() ) {</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :       std::string ss; Tools::convert(i,ss);</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :       error(key + ss + &quot; keyword has the wrong number of atoms&quot;);</span>
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span><span class="lineCov">       9344 :     for(unsigned j=0; j&lt;ablocks.size(); ++j) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">       7512 :       ablocks[j].push_back( ablocks.size()*(i-1)+j ); all_atoms.push_back( t[j] );</span>
+<span class="lineNum">     119 </span><span class="lineCov">       7512 :       atom_lab.push_back( std::pair&lt;unsigned,unsigned&gt;( 0, ablocks.size()*(i-1)+j ) );</span>
+<span class="lineNum">     120 </span>            :     }
+<span class="lineNum">     121 </span><span class="lineCov">        916 :     t.resize(0);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        916 :   }</span>
+<span class="lineNum">     123 </span><span class="lineCov">         46 :   if( all_atoms.size()&gt;0 ) {</span>
+<span class="lineNum">     124 </span><span class="lineCov">         46 :     nblock=0;</span>
+<span class="lineNum">     125 </span><span class="lineCov">       1008 :     for(unsigned i=0; i&lt;ablocks[0].size(); ++i) addTaskToList( i );</span>
+<span class="lineNum">     126 </span>            :   }
+<span class="lineNum">     127 </span>            : }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">        440 : bool MultiColvarBase::parseMultiColvarAtomList(const std::string&amp; key, const int&amp; num, std::vector&lt;AtomNumber&gt;&amp; t) {</span>
+<span class="lineNum">     130 </span><span class="lineCov">        440 :   std::vector&lt;std::string&gt; mlabs;</span>
+<span class="lineNum">     131 </span><span class="lineCov">        440 :   if( num&lt;0 ) parseVector(key,mlabs);</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   else parseNumberedVector(key,num,mlabs);</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">        440 :   if( mlabs.size()==0 ) return false;</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">        296 :   std::string mname; unsigned found_mcolv=mlabs.size();</span>
+<span class="lineNum">     137 </span><span class="lineCov">        958 :   for(unsigned i=0; i&lt;mlabs.size(); ++i) {</span>
+<span class="lineNum">     138 </span><span class="lineCov">        600 :     MultiColvarBase* mycolv = plumed.getActionSet().selectWithLabel&lt;MultiColvarBase*&gt;(mlabs[i]);</span>
+<span class="lineNum">     139 </span><span class="lineCov">        300 :     if(!mycolv) { found_mcolv=i; break; }</span>
+<span class="lineNum">     140 </span>            :     // Check all base multicolvars are of same type
+<span class="lineNum">     141 </span><span class="lineCov">        122 :     if( i==0 ) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">        118 :       mname = mycolv-&gt;getName();</span>
+<span class="lineNum">     143 </span><span class="lineCov">        118 :       if( mycolv-&gt;isPeriodic() ) error(&quot;multicolvar functions don't work with this multicolvar&quot;);</span>
+<span class="lineNum">     144 </span>            :     } else {
+<span class="lineNum">     145 </span><span class="lineCov">          8 :       if( mname!=mycolv-&gt;getName() ) error(&quot;All input multicolvars must be of same type&quot;);</span>
+<span class="lineNum">     146 </span>            :     }
+<span class="lineNum">     147 </span>            :     // And track which variable stores each colvar
+<span class="lineNum">     148 </span><span class="lineCov">   17801200 :     for(unsigned j=0; j&lt;mycolv-&gt;getFullNumberOfTasks(); ++j) atom_lab.push_back( std::pair&lt;unsigned,unsigned&gt;( mybasemulticolvars.size()+1, j ) );</span>
+<span class="lineNum">     149 </span>            :     // And store the multicolvar base
+<span class="lineNum">     150 </span><span class="lineCov">        122 :     mybasemulticolvars.push_back( mycolv );</span>
+<span class="lineNum">     151 </span>            :     // And create a basedata stash
+<span class="lineNum">     152 </span><span class="lineCov">        488 :     mybasedata.push_back( mybasemulticolvars[mybasemulticolvars.size()-1]-&gt;buildDataStashes( this ) );</span>
+<span class="lineNum">     153 </span>            :     // Check if weight has derivatives
+<span class="lineNum">     154 </span><span class="lineCov">        244 :     if( mybasemulticolvars[ mybasemulticolvars.size()-1 ]-&gt;weightHasDerivatives ) weightHasDerivatives=true;</span>
+<span class="lineNum">     155 </span><span class="lineCov">        122 :     plumed_assert( mybasemulticolvars.size()==mybasedata.size() );</span>
+<span class="lineNum">     156 </span>            :   }
+<span class="lineNum">     157 </span>            :   // Have we conventional atoms to read in
+<span class="lineNum">     158 </span><span class="lineCov">        296 :   if( found_mcolv==0 ) {</span>
+<span class="lineNum">     159 </span><span class="lineCov">        178 :     std::vector&lt;AtomNumber&gt; tt; ActionAtomistic::interpretAtomList( mlabs, tt );</span>
+<span class="lineNum">     160 </span><span class="lineCov">     344772 :     for(unsigned i=0; i&lt;tt.size(); ++i) { atom_lab.push_back( std::pair&lt;unsigned,unsigned&gt;( 0, t.size() + i ) ); }</span>
+<span class="lineNum">     161 </span><span class="lineCov">        356 :     log.printf(&quot;  keyword %s takes atoms : &quot;, key.c_str() );</span>
+<span class="lineNum">     162 </span><span class="lineCov">     344772 :     for(unsigned i=0; i&lt;tt.size(); ++i) { t.push_back( tt[i] ); log.printf(&quot;%d &quot;,tt[i].serial() ); }</span>
+<span class="lineNum">     163 </span><span class="lineCov">        178 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     164 </span><span class="lineCov">        118 :   } else if( found_mcolv==mlabs.size() ) {</span>
+<span class="lineNum">     165 </span><span class="lineCov">        118 :     if( checkNumericalDerivatives() ) error(&quot;cannot use NUMERICAL_DERIVATIVES keyword with dynamic groups as input&quot;);</span>
+<span class="lineNum">     166 </span><span class="lineCov">        236 :     log.printf(&quot;  keyword %s takes dynamic groups of atoms constructed from multicolvars labelled : &quot;, key.c_str() );</span>
+<span class="lineNum">     167 </span><span class="lineCov">        602 :     for(unsigned i=0; i&lt;mlabs.size(); ++i) log.printf(&quot;%s &quot;,mlabs[i].c_str() );</span>
+<span class="lineNum">     168 </span><span class="lineCov">        118 :     log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   } else if( found_mcolv&lt;mlabs.size() ) {</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     error(&quot;cannot mix multicolvar input and atom input in one line&quot;);</span>
+<span class="lineNum">     171 </span>            :   }
+<span class="lineNum">     172 </span>            :   return true;
+<span class="lineNum">     173 </span>            : }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">         76 : void MultiColvarBase::readTwoGroups( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, std::vector&lt;AtomNumber&gt;&amp; all_atoms ) {</span>
+<span class="lineNum">     176 </span><span class="lineCov">         76 :   plumed_dbg_assert( keywords.exists(key0) &amp;&amp; keywords.exists(key1) &amp;&amp; keywords.exists(key2) ); ablocks.resize( 2 );</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">         76 :   if( parseMultiColvarAtomList(key0,-1,all_atoms) ) {</span>
+<span class="lineNum">     179 </span><span class="lineCov">         78 :     nblock=atom_lab.size(); for(unsigned i=0; i&lt;2; ++i) ablocks[i].resize(nblock);</span>
+<span class="lineNum">     180 </span><span class="lineCov">         26 :     resizeBookeepingArray( nblock, nblock );</span>
+<span class="lineNum">     181 </span><span class="lineCov">      16406 :     for(unsigned i=0; i&lt;nblock; ++i) ablocks[0][i]=ablocks[1][i]=i;</span>
+<span class="lineNum">     182 </span><span class="lineCov">      10894 :     for(unsigned i=1; i&lt;nblock; ++i) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">    8427224 :       for(unsigned j=0; j&lt;i; ++j) {</span>
+<span class="lineNum">     184 </span><span class="lineCov">    4210895 :         bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     185 </span><span class="lineCov">    4210895 :         addTaskToList( i*nblock + j );</span>
+<span class="lineNum">     186 </span><span class="lineCov">    4210895 :         bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     187 </span>            :       }
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span>            :   } else {
+<span class="lineNum">     190 </span><span class="lineCov">         50 :     parseMultiColvarAtomList(key1,-1,all_atoms);</span>
+<span class="lineNum">     191 </span><span class="lineCov">        134 :     ablocks[0].resize( atom_lab.size() ); for(unsigned i=0; i&lt;ablocks[0].size(); ++i) ablocks[0][i]=i;</span>
+<span class="lineNum">     192 </span><span class="lineCov">         50 :     parseMultiColvarAtomList(key2,-1,all_atoms);</span>
+<span class="lineNum">     193 </span><span class="lineCov">       3307 :     ablocks[1].resize( atom_lab.size() - ablocks[0].size() ); for(unsigned i=0; i&lt;ablocks[1].size(); ++i) ablocks[1][i]=ablocks[0].size() + i;</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">         50 :     if( ablocks[0].size()&gt;ablocks[1].size() ) nblock = ablocks[0].size();</span>
+<span class="lineNum">     196 </span><span class="lineCov">         50 :     else nblock=ablocks[1].size();</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">        100 :     resizeBookeepingArray( ablocks[0].size(), ablocks[1].size() );</span>
+<span class="lineNum">     199 </span><span class="lineCov">        151 :     for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     200 </span><span class="lineCov">       3361 :       for(unsigned j=0; j&lt;ablocks[1].size(); ++j) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">       1109 :         bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     202 </span><span class="lineCov">       2218 :         if( atom_lab[ablocks[0][i]].first&gt;0 &amp;&amp; atom_lab[ablocks[1][j]].first&gt;0 ) {</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :           if( mybasemulticolvars[atom_lab[ablocks[0][i]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[1][j]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :               atom_lab[ablocks[0][i]].second!=atom_lab[ablocks[1][j]].second ) addTaskToList( i*nblock + j );</span>
+<span class="lineNum">     205 </span><span class="lineCov">       5545 :         } else if( all_atoms[atom_lab[ablocks[0][i]].second]!=all_atoms[atom_lab[ablocks[1][j]].second] ) addTaskToList( i*nblock + j );</span>
+<span class="lineNum">     206 </span><span class="lineCov">       1109 :         bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     207 </span>            :       }
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            :   }
+<span class="lineNum">     210 </span><span class="lineCov">         76 : }</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineCov">         10 : void MultiColvarBase::readGroupKeywords( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, const std::string&amp; key3,</span>
+<span class="lineNum">     213 </span>            :     const bool&amp; no_third_dim_accum, const bool&amp; symmetric, std::vector&lt;AtomNumber&gt;&amp; all_atoms ) {
+<span class="lineNum">     214 </span><span class="lineCov">         10 :   plumed_dbg_assert( keywords.exists(key0) &amp;&amp; keywords.exists(key1) &amp;&amp; keywords.exists(key2) &amp;&amp; keywords.exists(key3) ); ablocks.resize( 3 );</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">         10 :   if( parseMultiColvarAtomList(key0,-1,all_atoms) ) {</span>
+<span class="lineNum">     217 </span><span class="lineCov">          8 :     if( no_third_dim_accum ) {</span>
+<span class="lineNum">     218 </span><span class="lineCov">         24 :       nblock=atom_lab.size(); ablocks[0].resize(nblock); ablocks[1].resize( nblock );</span>
+<span class="lineNum">     219 </span><span class="lineCov">       5632 :       for(unsigned i=0; i&lt;ablocks[0].size(); ++i) ablocks[0][i]=ablocks[1][i]=i;</span>
+<span class="lineNum">     220 </span><span class="lineCov">          8 :       resizeBookeepingArray( nblock, nblock );</span>
+<span class="lineNum">     221 </span><span class="lineCov">          8 :       if( symmetric ) {</span>
+<span class="lineNum">     222 </span>            :         // This ensures that later parts of the code don't switch off allthirdblockintasks
+<span class="lineNum">     223 </span><span class="lineCov">       4017 :         for(unsigned i=0; i&lt;nblock; ++i) { bookeeping(i,i).first=0; bookeeping(i,i).second=1; }</span>
+<span class="lineNum">     224 </span><span class="lineCov">       2668 :         for(unsigned i=1; i&lt;nblock; ++i) {</span>
+<span class="lineNum">     225 </span><span class="lineCov">     443563 :           for(unsigned j=0; j&lt;i; ++j) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">     221116 :             bookeeping(j,i).first=bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     227 </span><span class="lineCov">     221116 :             addTaskToList( i*nblock + j );</span>
+<span class="lineNum">     228 </span><span class="lineCov">     442232 :             bookeeping(j,i).second=bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     229 </span>            :           }
+<span class="lineNum">     230 </span>            :         }
+<span class="lineNum">     231 </span>            :       } else {
+<span class="lineNum">     232 </span><span class="lineCov">        136 :         for(unsigned i=0; i&lt;nblock; ++i) {</span>
+<span class="lineNum">     233 </span><span class="lineCov">       8277 :           for(unsigned j=0; j&lt;nblock; ++j) {</span>
+<span class="lineNum">     234 </span><span class="lineCov">       4105 :             if( i==j ) continue ;</span>
+<span class="lineNum">     235 </span><span class="lineCov">       4038 :             bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     236 </span><span class="lineCov">       4038 :             addTaskToList( i*nblock + j );</span>
+<span class="lineNum">     237 </span><span class="lineCov">       4038 :             bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     238 </span>            :           }
+<span class="lineNum">     239 </span>            :         }
+<span class="lineNum">     240 </span>            :       }
+<span class="lineNum">     241 </span><span class="lineCov">          8 :       if( !parseMultiColvarAtomList(key3,-1,all_atoms) ) error(&quot;missing required keyword &quot; + key3 + &quot; in input&quot;);</span>
+<span class="lineNum">     242 </span><span class="lineCov">          8 :       ablocks[2].resize( atom_lab.size() - ablocks[0].size() );</span>
+<span class="lineNum">     243 </span><span class="lineCov">     198820 :       for(unsigned i=0; i&lt;ablocks[2].size(); ++i) ablocks[2][i]=ablocks[0].size() + i;</span>
+<span class="lineNum">     244 </span>            :     } else {
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :       nblock=atom_lab.size(); for(unsigned i=0; i&lt;3; ++i) ablocks[i].resize(nblock);</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :       resizeBookeepingArray( nblock, nblock );</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;nblock; ++i) { ablocks[0][i]=i; ablocks[1][i]=i; ablocks[2][i]=i; }</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :       if( symmetric ) {</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :         for(unsigned i=2; i&lt;nblock; ++i) {</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :           for(unsigned j=1; j&lt;i; ++j) {</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :             bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :             for(unsigned k=0; k&lt;j; ++k) addTaskToList( i*nblock*nblock + j*nblock + k );</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :             bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     254 </span>            :           }
+<span class="lineNum">     255 </span>            :         }
+<span class="lineNum">     256 </span>            :       } else {
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;nblock; ++i) {</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :           for(unsigned j=0; j&lt;nblock; ++j) {</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :             if( i==j ) continue;</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :             bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :             for(unsigned k=0; k&lt;nblock; ++k) {</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :               if( i!=k &amp;&amp; j!=k ) addTaskToList( i*nblock*nblock + j*nblock + k );</span>
+<span class="lineNum">     263 </span>            :             }
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :             bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     265 </span>            :           }
+<span class="lineNum">     266 </span>            :         }
+<span class="lineNum">     267 </span>            :       }
+<span class="lineNum">     268 </span>            :     }
+<span class="lineNum">     269 </span>            :   } else {
+<span class="lineNum">     270 </span><span class="lineCov">          2 :     readThreeGroups( key1, key2, key3, true, no_third_dim_accum, all_atoms );</span>
+<span class="lineNum">     271 </span>            :   }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">         10 : }</span>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineCov">         11 : void MultiColvarBase::readThreeGroups( const std::string&amp; key1, const std::string&amp; key2, const std::string&amp; key3,</span>
+<span class="lineNum">     276 </span>            :                                        const bool&amp; allow2, const bool&amp; no_third_dim_accum, std::vector&lt;AtomNumber&gt;&amp; all_atoms ) {
+<span class="lineNum">     277 </span><span class="lineCov">         11 :   plumed_dbg_assert( keywords.exists(key1) &amp;&amp; keywords.exists(key2) &amp;&amp; keywords.exists(key3) ); ablocks.resize( 3 );</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">         11 :   bool readkey1=parseMultiColvarAtomList(key1,-1,all_atoms);</span>
+<span class="lineNum">     280 </span><span class="lineCov">         84 :   ablocks[0].resize( atom_lab.size() ); for(unsigned i=0; i&lt;ablocks[0].size(); ++i) ablocks[0][i]=i;</span>
+<span class="lineNum">     281 </span><span class="lineCov">         11 :   bool readkey2=parseMultiColvarAtomList(key2,-1,all_atoms);</span>
+<span class="lineNum">     282 </span><span class="lineCov">         11 :   if( !readkey1 &amp;&amp; !readkey2 ) return ;</span>
+<span class="lineNum">     283 </span><span class="lineCov">        697 :   ablocks[1].resize( atom_lab.size() - ablocks[0].size() ); for(unsigned i=0; i&lt;ablocks[1].size(); ++i) ablocks[1][i]=ablocks[0].size() + i;</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">         22 :   resizeBookeepingArray( ablocks[0].size(), ablocks[1].size() );</span>
+<span class="lineNum">     286 </span><span class="lineCov">         11 :   bool readkey3=parseMultiColvarAtomList(key3,-1,all_atoms);</span>
+<span class="lineNum">     287 </span><span class="lineCov">         11 :   if( !readkey3 &amp;&amp; !allow2 ) {</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :     error(&quot;missing atom specification &quot; + key3);</span>
+<span class="lineNum">     289 </span><span class="lineCov">         11 :   } else if( !readkey3 ) {</span>
+<span class="lineNum">     290 </span><span class="lineCov">          2 :     if( ablocks[1].size()&gt;ablocks[0].size() ) nblock=ablocks[1].size();</span>
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :     else nblock=ablocks[0].size();</span>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span><span class="lineCov">          2 :     ablocks[2].resize( ablocks[1].size() );</span>
+<span class="lineNum">     294 </span><span class="lineCov">        796 :     for(unsigned i=0; i&lt;ablocks[1].size(); ++i) ablocks[2][i]=ablocks[0].size() + i;</span>
+<span class="lineNum">     295 </span><span class="lineCov">         10 :     for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     296 </span><span class="lineCov">        592 :       for(unsigned j=1; j&lt;ablocks[1].size(); ++j) {</span>
+<span class="lineNum">     297 </span><span class="lineCov">        196 :         bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     298 </span><span class="lineCov">      19600 :         for(unsigned k=0; k&lt;j; ++k) {</span>
+<span class="lineNum">     299 </span><span class="lineCov">      19404 :           if( atom_lab[ablocks[0][i]].first&gt;0 &amp;&amp; atom_lab[ablocks[1][j]].first&gt;0 &amp;&amp; atom_lab[ablocks[2][k]].first&gt;0 ) {</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :             if( mybasemulticolvars[atom_lab[ablocks[0][i]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[1][j]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :                 mybasemulticolvars[atom_lab[ablocks[0][i]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[2][k]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :                 mybasemulticolvars[atom_lab[ablocks[1][j]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[2][k]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                 atom_lab[ablocks[0][i]].second!=atom_lab[ablocks[1][j]].second &amp;&amp; atom_lab[ablocks[0][i]].second!=atom_lab[ablocks[2][k]].second &amp;&amp;</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :                 atom_lab[ablocks[1][j]].second!=atom_lab[ablocks[2][k]].second )  addTaskToList( nblock*nblock*i + nblock*j + k );</span>
+<span class="lineNum">     305 </span><span class="lineCov">      38808 :           } else if( all_atoms[atom_lab[ablocks[0][i]].second]!=all_atoms[atom_lab[ablocks[1][j]].second] &amp;&amp;</span>
+<span class="lineNum">     306 </span><span class="lineCov">      48510 :                      all_atoms[atom_lab[ablocks[0][i]].second]!=all_atoms[atom_lab[ablocks[2][k]].second] &amp;&amp;</span>
+<span class="lineNum">     307 </span><span class="lineCov">       9702 :                      all_atoms[atom_lab[ablocks[1][j]].second]!=all_atoms[atom_lab[ablocks[2][k]].second] ) addTaskToList( nblock*nblock*i + nblock*j + k );</span>
+<span class="lineNum">     308 </span>            :         }
+<span class="lineNum">     309 </span><span class="lineCov">        196 :         bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     310 </span>            :       }
+<span class="lineNum">     311 </span>            :     }
+<span class="lineNum">     312 </span>            :   } else {
+<span class="lineNum">     313 </span><span class="lineCov">         18 :     ablocks[2].resize( atom_lab.size() - ablocks[1].size() - ablocks[0].size() );</span>
+<span class="lineNum">     314 </span><span class="lineCov">      15938 :     for(unsigned i=0; i&lt;ablocks[2].size(); ++i) ablocks[2][i] = ablocks[0].size() + ablocks[1].size() + i;</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">          9 :     if( ablocks[1].size()&gt;ablocks[0].size() ) nblock=ablocks[1].size();</span>
+<span class="lineNum">     317 </span><span class="lineCov">          9 :     else nblock=ablocks[0].size();</span>
+<span class="lineNum">     318 </span><span class="lineCov">          9 :     if( ablocks[2].size()&gt;nblock ) nblock=ablocks[2].size();</span>
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span><span class="lineCov">          9 :     unsigned  kcount; if( no_third_dim_accum ) kcount=1; else kcount=ablocks[2].size();</span>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">        105 :     for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     323 </span><span class="lineCov">        685 :       for(unsigned j=0; j&lt;ablocks[1].size(); ++j) {</span>
+<span class="lineNum">     324 </span><span class="lineCov">        209 :         bookeeping(i,j).first=getFullNumberOfTasks();</span>
+<span class="lineNum">     325 </span><span class="lineCov">        627 :         for(unsigned k=0; k&lt;kcount; ++k) {</span>
+<span class="lineNum">     326 </span><span class="lineCov">        209 :           if( no_third_dim_accum ) addTaskToList( nblock*i + j  );</span>
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :           else if( atom_lab[ablocks[0][i]].first&gt;0 &amp;&amp; atom_lab[ablocks[1][j]].first&gt;0 &amp;&amp; atom_lab[ablocks[2][k]].first&gt;0 ) {</span>
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :             if( mybasemulticolvars[atom_lab[ablocks[0][i]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[1][j]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :                 mybasemulticolvars[atom_lab[ablocks[0][i]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[2][k]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                 mybasemulticolvars[atom_lab[ablocks[1][j]].first-1]-&gt;getLabel()!=mybasemulticolvars[atom_lab[ablocks[2][k]].first-1]-&gt;getLabel() &amp;&amp;</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :                 atom_lab[ablocks[0][i]].second!=atom_lab[ablocks[1][j]].second &amp;&amp; atom_lab[ablocks[0][i]].second!=atom_lab[ablocks[2][k]].second &amp;&amp;</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :                 atom_lab[ablocks[1][j]].second!=atom_lab[ablocks[2][k]].second ) addTaskToList( nblock*nblock*i + nblock*j + k );</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :           } else if( all_atoms[atom_lab[ablocks[0][i]].second]!=all_atoms[atom_lab[ablocks[1][j]].second] &amp;&amp;</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :                      all_atoms[atom_lab[ablocks[0][i]].second]!=all_atoms[atom_lab[ablocks[2][k]].second] &amp;&amp;</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :                      all_atoms[atom_lab[ablocks[1][j]].second]!=all_atoms[atom_lab[ablocks[2][k]].second] ) addTaskToList( nblock*nblock*i + nblock*j + k );</span>
+<span class="lineNum">     336 </span>            :         }
+<span class="lineNum">     337 </span><span class="lineCov">        209 :         bookeeping(i,j).second=getFullNumberOfTasks();</span>
+<span class="lineNum">     338 </span>            :       }
+<span class="lineNum">     339 </span>            :     }
+<span class="lineNum">     340 </span>            :   }
+<span class="lineNum">     341 </span>            : }
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineCov">          2 : void MultiColvarBase::buildSets() {</span>
+<span class="lineNum">     344 </span>            :   std::vector&lt;AtomNumber&gt; fake_atoms;
+<span class="lineNum">     345 </span><span class="lineCov">          4 :   if( !parseMultiColvarAtomList(&quot;DATA&quot;,-1,fake_atoms) ) error(&quot;missing DATA keyword&quot;);</span>
+<span class="lineNum">     346 </span><span class="lineCov">          2 :   if( fake_atoms.size()&gt;0 ) error(&quot;no atoms should appear in the specification for this object.  Input should be other multicolvars&quot;);</span>
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span><span class="lineCov">          4 :   nblock = mybasemulticolvars[0]-&gt;getFullNumberOfTasks();</span>
+<span class="lineNum">     349 </span><span class="lineCov">         16 :   for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">     350 </span><span class="lineCov">          8 :     if( mybasemulticolvars[i]-&gt;getFullNumberOfTasks()!=nblock ) {</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :       error(&quot;mismatch between numbers of tasks in various base multicolvars&quot;);</span>
+<span class="lineNum">     352 </span>            :     }
+<span class="lineNum">     353 </span>            :   }
+<span class="lineNum">     354 </span><span class="lineCov">          2 :   ablocks.resize( mybasemulticolvars.size() ); usespecies=false;</span>
+<span class="lineNum">     355 </span><span class="lineCov">         16 :   for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">     356 </span><span class="lineCov">          4 :     ablocks[i].resize( nblock );</span>
+<span class="lineNum">     357 </span><span class="lineCov">         28 :     for(unsigned j=0; j&lt;nblock; ++j) ablocks[i][j]=i*nblock+j;</span>
+<span class="lineNum">     358 </span>            :   }
+<span class="lineNum">     359 </span><span class="lineCov">          8 :   for(unsigned i=0; i&lt;nblock; ++i) {</span>
+<span class="lineNum">     360 </span><span class="lineCov">          6 :     if( mybasemulticolvars.size()&lt;4 ) {</span>
+<span class="lineNum">     361 </span><span class="lineCov">          6 :       unsigned cvcode=0, tmpc=1;</span>
+<span class="lineNum">     362 </span><span class="lineCov">         36 :       for(unsigned j=0; j&lt;ablocks.size(); ++j) { cvcode += i*tmpc; tmpc *= nblock; }</span>
+<span class="lineNum">     363 </span><span class="lineCov">          6 :       addTaskToList( cvcode );</span>
+<span class="lineNum">     364 </span>            :     } else {
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :       addTaskToList( i );</span>
+<span class="lineNum">     366 </span>            :     }
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span><span class="lineCov">          4 :   mybasedata[0]-&gt;resizeTemporyMultiValues( mybasemulticolvars.size() ); setupMultiColvarBase( fake_atoms );</span>
+<span class="lineNum">     369 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineCov">   12506830 : void MultiColvarBase::addTaskToList( const unsigned&amp; taskCode ) {</span>
+<span class="lineNum">     372 </span><span class="lineCov">   12506830 :   plumed_assert( getNumberOfVessels()==0 );</span>
+<span class="lineNum">     373 </span><span class="lineCov">   12506830 :   ActionWithVessel::addTaskToList( taskCode );</span>
+<span class="lineNum">     374 </span><span class="lineCov">   12506830 : }</span>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineCov">         95 : void MultiColvarBase::resizeBookeepingArray( const unsigned&amp; num1, const unsigned&amp; num2 ) {</span>
+<span class="lineNum">     377 </span><span class="lineCov">         95 :   bookeeping.resize( num1, num2 );</span>
+<span class="lineNum">     378 </span><span class="lineCov">      13919 :   for(unsigned i=0; i&lt;num1; ++i) {</span>
+<span class="lineNum">     379 </span><span class="lineCov">   26636232 :     for(unsigned j=0; j&lt;num2; ++j) { bookeeping(i,j).first=0; bookeeping(i,j).second=0; }</span>
+<span class="lineNum">     380 </span>            :   }
+<span class="lineNum">     381 </span><span class="lineCov">         95 : }</span>
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineCov">        284 : void MultiColvarBase::setupMultiColvarBase( const std::vector&lt;AtomNumber&gt;&amp; atoms ) {</span>
+<span class="lineNum">     384 </span><span class="lineCov">        402 :   if( !matsums &amp;&amp; atom_lab.size()==0 ) error(&quot;No atoms have been read in&quot;);</span>
+<span class="lineNum">     385 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">     386 </span>            :   // Setup decoder array
+<span class="lineNum">     387 </span><span class="lineCov">        284 :   if( !usespecies &amp;&amp; nblock&gt;0 ) {</span>
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span><span class="lineCov">         60 :     ncentral=ablocks.size(); use_for_central_atom.resize( ablocks.size(), true );</span>
+<span class="lineNum">     390 </span><span class="lineCov">         60 :     numberForCentralAtom = 1.0 / static_cast&lt;double&gt;( ablocks.size() );</span>
+<span class="lineNum">     391 </span><span class="lineCov">         60 :     if( ablocks.size()==3 ) {</span>
+<span class="lineNum">     392 </span><span class="lineCov">         19 :       allthirdblockintasks=uselinkforthree=true;</span>
+<span class="lineNum">     393 </span><span class="lineCov">       2889 :       for(unsigned i=0; i&lt;bookeeping.nrows(); ++i) {</span>
+<span class="lineNum">     394 </span><span class="lineCov">     897597 :         for(unsigned j=0; j&lt;bookeeping.ncols(); ++j) {</span>
+<span class="lineNum">     395 </span><span class="lineCov">     448081 :           unsigned ntper = bookeeping(i,j).second - bookeeping(i,j).first;</span>
+<span class="lineNum">     396 </span><span class="lineCov">     448081 :           if( i==j &amp;&amp; ntper==0 ) {</span>
+<span class="lineNum">     397 </span><span class="lineCov">         69 :             continue;</span>
+<span class="lineNum">     398 </span><span class="lineCov">     448012 :           } else if( ntper == 1 &amp;&amp; allthirdblockintasks ) {</span>
+<span class="lineNum">     399 </span><span class="lineCov">     447818 :             allthirdblockintasks=true;</span>
+<span class="lineNum">     400 </span><span class="lineCov">        388 :           } else if( ntper != ablocks[2].size() ) {</span>
+<span class="lineNum">     401 </span><span class="lineCov">        194 :             allthirdblockintasks=uselinkforthree=false;</span>
+<span class="lineNum">     402 </span>            :           } else {
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :             allthirdblockintasks=false;</span>
+<span class="lineNum">     404 </span>            :           }
+<span class="lineNum">     405 </span>            :         }
+<span class="lineNum">     406 </span>            :       }
+<span class="lineNum">     407 </span>            :     }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span><span class="lineCov">         60 :     if( allthirdblockintasks ) {</span>
+<span class="lineNum">     410 </span><span class="lineCov">         34 :       decoder.resize(2); plumed_assert( ablocks.size()==3 );</span>
+<span class="lineNum">     411 </span>            :       // Check if number of atoms is too large
+<span class="lineNum">     412 </span><span class="lineCov">         17 :       if( pow( double(nblock), 2.0 )&gt;std::numeric_limits&lt;unsigned&gt;::max() ) error(&quot;number of atoms in groups is too big for PLUMED to handle&quot;);</span>
+<span class="lineNum">     413 </span>            :     } else {
+<span class="lineNum">     414 </span><span class="lineCov">         43 :       decoder.resize( ablocks.size() );</span>
+<span class="lineNum">     415 </span>            :       // Check if number of atoms is too large
+<span class="lineNum">     416 </span><span class="lineCov">         43 :       if( pow( double(nblock), double(ablocks.size()) )&gt;std::numeric_limits&lt;unsigned&gt;::max() ) error(&quot;number of atoms in groups is too big for PLUMED to handle&quot;);</span>
+<span class="lineNum">     417 </span>            :     }
+<span class="lineNum">     418 </span><span class="lineCov">        486 :     unsigned code=1; for(unsigned i=0; i&lt;decoder.size(); ++i) { decoder[decoder.size()-1-i]=code; code *= nblock; }</span>
+<span class="lineNum">     419 </span><span class="lineCov">        224 :   } else if( !usespecies ) {</span>
+<span class="lineNum">     420 </span><span class="lineCov">         83 :     ncentral=ablocks.size(); use_for_central_atom.resize( ablocks.size(), true );</span>
+<span class="lineNum">     421 </span><span class="lineCov">         83 :     numberForCentralAtom = 1.0 / static_cast&lt;double&gt;( ablocks.size() );</span>
+<span class="lineNum">     422 </span><span class="lineCov">        282 :   } else if( keywords.exists(&quot;SPECIESA&quot;) ) {</span>
+<span class="lineNum">     423 </span><span class="lineCov">        174 :     plumed_assert( atom_lab.size()==0 &amp;&amp; all_atoms.size()==0 );</span>
+<span class="lineNum">     424 </span><span class="lineCov">        261 :     ablocks.resize( 1 ); bool readspecies=parseMultiColvarAtomList(&quot;SPECIES&quot;, -1, all_atoms);</span>
+<span class="lineNum">     425 </span><span class="lineCov">         87 :     if( readspecies ) {</span>
+<span class="lineNum">     426 </span><span class="lineCov">      79880 :       ablocks[0].resize( atom_lab.size() ); for(unsigned i=0; i&lt;atom_lab.size(); ++i) { addTaskToList(i); ablocks[0][i]=i; }</span>
+<span class="lineNum">     427 </span>            :     } else {
+<span class="lineNum">     428 </span><span class="lineCov">         32 :       if( !parseMultiColvarAtomList(&quot;SPECIESA&quot;, -1, all_atoms) ) error(&quot;missing SPECIES/SPECIESA keyword&quot;);</span>
+<span class="lineNum">     429 </span><span class="lineCov">         16 :       unsigned nat1=atom_lab.size();</span>
+<span class="lineNum">     430 </span><span class="lineCov">         32 :       if( !parseMultiColvarAtomList(&quot;SPECIESB&quot;, -1, all_atoms) ) error(&quot;missing SPECIESB keyword&quot;);</span>
+<span class="lineNum">     431 </span><span class="lineCov">         16 :       unsigned nat2=atom_lab.size() - nat1;</span>
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineCov">         16 :       for(unsigned i=0; i&lt;nat1; ++i) addTaskToList(i);</span>
+<span class="lineNum">     434 </span><span class="lineCov">         16 :       ablocks[0].resize( nat2 );</span>
+<span class="lineNum">     435 </span><span class="lineCov">       4412 :       for(unsigned i=0; i&lt;nat2; ++i) {</span>
+<span class="lineNum">     436 </span>            :         bool found=false; unsigned inum;
+<span class="lineNum">     437 </span><span class="lineCov">     521066 :         for(unsigned j=0; j&lt;nat1; ++j) {</span>
+<span class="lineNum">     438 </span><span class="lineCov">     771748 :           if( atom_lab[nat1+i].first&gt;0 &amp;&amp; atom_lab[j].first&gt;0 ) {</span>
+<span class="lineNum">     439 </span><span class="lineCov">     252720 :             if( atom_lab[nat1+i].first==atom_lab[j].first &amp;&amp;</span>
+<span class="lineNum">     440 </span><span class="lineCov">     252720 :                 mybasemulticolvars[atom_lab[nat1+i].first-1]-&gt;getAbsoluteIndexOfCentralAtom(atom_lab[nat1+i].second)==</span>
+<span class="lineNum">     441 </span><span class="lineCov">     252720 :                 mybasemulticolvars[atom_lab[j].first-1]-&gt;getAbsoluteIndexOfCentralAtom(atom_lab[j].second) ) { found=true; inum=j; break; }</span>
+<span class="lineNum">     442 </span><span class="lineCov">       6794 :           } else if( atom_lab[nat1+i].first&gt;0 ) {</span>
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :             if( mybasemulticolvars[atom_lab[nat1+i].first-1]-&gt;getAbsoluteIndexOfCentralAtom(atom_lab[nat1+i].second)==</span>
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :                 all_atoms[atom_lab[j].second] ) { found=true; inum=nat1 + i; break; }</span>
+<span class="lineNum">     445 </span><span class="lineCov">      13588 :           } else if( atom_lab[j].first&gt;0 ) {</span>
+<span class="lineNum">     446 </span><span class="lineNoCov">          0 :             if( all_atoms[atom_lab[nat1+i].second]==</span>
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :                 mybasemulticolvars[atom_lab[j].first-1]-&gt;getAbsoluteIndexOfCentralAtom(atom_lab[j].second) ) { found=true; inum=nat1+i; break; }</span>
+<span class="lineNum">     448 </span><span class="lineCov">      20382 :           } else if( all_atoms[atom_lab[nat1+i].second]==all_atoms[atom_lab[j].second] ) { found=true; inum=j; break; }</span>
+<span class="lineNum">     449 </span>            :         }
+<span class="lineNum">     450 </span>            :         // This prevents mistakes being made in colvar setup
+<span class="lineNum">     451 </span><span class="lineCov">        160 :         if( found ) { ablocks[0][i]=inum; }</span>
+<span class="lineNum">     452 </span><span class="lineCov">       4236 :         else { ablocks[0][i]=nat1 + i; }</span>
+<span class="lineNum">     453 </span>            :       }
+<span class="lineNum">     454 </span>            :     }
+<span class="lineNum">     455 </span>            :   }
+<span class="lineNum">     456 </span><span class="lineCov">        284 :   if( mybasemulticolvars.size()&gt;0 ) {</span>
+<span class="lineNum">     457 </span><span class="lineCov">        596 :     for(unsigned i=0; i&lt;mybasedata.size(); ++i) {</span>
+<span class="lineNum">     458 </span><span class="lineCov">        244 :       mybasedata[i]-&gt;resizeTemporyMultiValues(2); mybasemulticolvars[i]-&gt;my_tmp_capacks.resize(2);</span>
+<span class="lineNum">     459 </span>            :     }
+<span class="lineNum">     460 </span>            :   }
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            :   // Copy lists of atoms involved from base multicolvars
+<span class="lineNum">     463 </span>            :   std::vector&lt;AtomNumber&gt; tmp_atoms;
+<span class="lineNum">     464 </span><span class="lineCov">        934 :   for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">     465 </span><span class="lineCov">        122 :     tmp_atoms=mybasemulticolvars[i]-&gt;getAbsoluteIndexes();</span>
+<span class="lineNum">     466 </span><span class="lineCov">    1243981 :     for(unsigned j=0; j&lt;tmp_atoms.size(); ++j) all_atoms.push_back( tmp_atoms[j] );</span>
+<span class="lineNum">     467 </span>            :   }
+<span class="lineNum">     468 </span>            :   // Copy atom lists from input
+<span class="lineNum">     469 </span><span class="lineCov">        284 :   if( !usespecies ) {</span>
+<span class="lineNum">     470 </span><span class="lineCov">     176296 :     for(unsigned i=0; i&lt;atoms.size(); ++i) all_atoms.push_back( atoms[i] );</span>
+<span class="lineNum">     471 </span>            :   }
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span>            :   // Now make sure we get all the atom positions
+<span class="lineNum">     474 </span><span class="lineCov">        284 :   ActionAtomistic::requestAtoms( all_atoms );</span>
+<span class="lineNum">     475 </span>            :   // And setup dependencies
+<span class="lineNum">     476 </span><span class="lineCov">        934 :   for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) addDependency( mybasemulticolvars[i] );</span>
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            :   // Setup underlying ActionWithVessel
+<span class="lineNum">     479 </span><span class="lineCov">        284 :   readVesselKeywords();</span>
+<span class="lineNum">     480 </span><span class="lineCov">        284 : }</span>
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span><span class="lineCov">         18 : void MultiColvarBase::setAtomsForCentralAtom( const std::vector&lt;bool&gt;&amp; catom_ind ) {</span>
+<span class="lineNum">     483 </span><span class="lineCov">         18 :   unsigned nat=0; plumed_assert( catom_ind.size()==ablocks.size() );</span>
+<span class="lineNum">     484 </span><span class="lineCov">        231 :   for(unsigned i=0; i&lt;catom_ind.size(); ++i) {</span>
+<span class="lineNum">     485 </span>            :     use_for_central_atom[i]=catom_ind[i];
+<span class="lineNum">     486 </span><span class="lineCov">         65 :     if( use_for_central_atom[i] ) nat++;</span>
+<span class="lineNum">     487 </span>            :   }
+<span class="lineNum">     488 </span><span class="lineCov">         18 :   plumed_dbg_assert( nat&gt;0 ); ncentral=nat;</span>
+<span class="lineNum">     489 </span><span class="lineCov">         18 :   numberForCentralAtom = 1.0 / static_cast&lt;double&gt;( nat );</span>
+<a name="490"><span class="lineNum">     490 </span><span class="lineCov">         18 : }</span></a>
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span><span class="lineCov">        399 : void MultiColvarBase::turnOnDerivatives() {</span>
+<span class="lineNum">     493 </span><span class="lineCov">        399 :   ActionWithValue::turnOnDerivatives();</span>
+<span class="lineNum">     494 </span><span class="lineCov">        399 :   needsDerivatives();</span>
+<span class="lineNum">     495 </span><span class="lineCov">        399 :   forcesToApply.resize( getNumberOfDerivatives() );</span>
+<span class="lineNum">     496 </span><span class="lineCov">        399 : }</span>
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span><span class="lineCov">        175 : void MultiColvarBase::setLinkCellCutoff( const double&amp; lcut, double tcut ) {</span>
+<span class="lineNum">     499 </span><span class="lineCov">        263 :   plumed_assert( usespecies || ablocks.size()&lt;4 );</span>
+<span class="lineNum">     500 </span><span class="lineCov">        344 :   if( tcut&lt;0 ) tcut=lcut;</span>
+<span class="lineNum">     501 </span><span class="lineCov">        175 :   linkcells.setCutoff( lcut );</span>
+<span class="lineNum">     502 </span><span class="lineCov">        175 :   threecells.setCutoff( tcut );</span>
+<a name="503"><span class="lineNum">     503 </span><span class="lineCov">        175 : }</span></a>
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span><span class="lineCov">          8 : double MultiColvarBase::getLinkCellCutoff()  const {</span>
+<span class="lineNum">     506 </span><span class="lineCov">          8 :   return linkcells.getCutoff();</span>
+<span class="lineNum">     507 </span>            : }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span><span class="lineCov">       1688 : void MultiColvarBase::setupLinkCells() {</span>
+<span class="lineNum">     510 </span><span class="lineCov">       2599 :   if( (!usespecies &amp;&amp; nblock==0) || !linkcells.enabled() ) return ;</span>
+<span class="lineNum">     511 </span>            :   // Retrieve any atoms that haven't already been retrieved
+<span class="lineNum">     512 </span><span class="lineCov">       1093 :   for(std::vector&lt;MultiColvarBase*&gt;::iterator p=mybasemulticolvars.begin(); p!=mybasemulticolvars.end(); ++p) {</span>
+<span class="lineNum">     513 </span><span class="lineCov">        202 :     (*p)-&gt;retrieveAtoms();</span>
+<span class="lineNum">     514 </span>            :   }
+<span class="lineNum">     515 </span><span class="lineCov">        891 :   retrieveAtoms();</span>
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span>            :   unsigned iblock;
+<span class="lineNum">     518 </span><span class="lineCov">        891 :   if( usespecies ) {</span>
+<span class="lineNum">     519 </span>            :     iblock=0;
+<span class="lineNum">     520 </span><span class="lineCov">        220 :   } else if( ablocks.size()&lt;4 ) {</span>
+<span class="lineNum">     521 </span>            :     iblock=1;
+<span class="lineNum">     522 </span>            :   } else {
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :     plumed_error();</span>
+<span class="lineNum">     524 </span>            :   }
+<span class="lineNum">     525 </span>            : 
+<span class="lineNum">     526 </span>            :   // Count number of currently active atoms
+<span class="lineNum">     527 </span><span class="lineCov">        891 :   nactive_atoms=0;</span>
+<span class="lineNum">     528 </span><span class="lineCov">    1134057 :   for(unsigned i=0; i&lt;ablocks[iblock].size(); ++i) {</span>
+<span class="lineNum">     529 </span><span class="lineCov">     754850 :     if( isCurrentlyActive( ablocks[iblock][i] ) ) nactive_atoms++;</span>
+<span class="lineNum">     530 </span>            :   }
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span><span class="lineCov">        891 :   if( nactive_atoms&gt;0 ) {</span>
+<span class="lineNum">     533 </span><span class="lineCov">        891 :     std::vector&lt;Vector&gt; ltmp_pos( nactive_atoms );</span>
+<span class="lineNum">     534 </span><span class="lineCov">        891 :     std::vector&lt;unsigned&gt; ltmp_ind( nactive_atoms );</span>
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span><span class="lineCov">        891 :     nactive_atoms=0;</span>
+<span class="lineNum">     537 </span><span class="lineCov">        891 :     if( usespecies ) {</span>
+<span class="lineNum">     538 </span><span class="lineCov">    1070374 :       for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     539 </span><span class="lineCov">     712688 :         if( !isCurrentlyActive( ablocks[0][i] ) ) continue;</span>
+<span class="lineNum">     540 </span><span class="lineCov">     712496 :         ltmp_ind[nactive_atoms]=ablocks[0][i];</span>
+<span class="lineNum">     541 </span><span class="lineCov">     712496 :         ltmp_pos[nactive_atoms]=getPositionOfAtomForLinkCells( ltmp_ind[nactive_atoms] );</span>
+<span class="lineNum">     542 </span><span class="lineCov">     356248 :         nactive_atoms++;</span>
+<span class="lineNum">     543 </span>            :       }
+<span class="lineNum">     544 </span>            :     } else {
+<span class="lineNum">     545 </span><span class="lineCov">      63683 :       for(unsigned i=0; i&lt;ablocks[1].size(); ++i) {</span>
+<span class="lineNum">     546 </span><span class="lineCov">      42162 :         if( !isCurrentlyActive( ablocks[1][i] ) ) continue;</span>
+<span class="lineNum">     547 </span><span class="lineCov">      32322 :         ltmp_ind[nactive_atoms]=i;</span>
+<span class="lineNum">     548 </span><span class="lineCov">      48483 :         ltmp_pos[nactive_atoms]=getPositionOfAtomForLinkCells( ablocks[1][i] );</span>
+<span class="lineNum">     549 </span><span class="lineCov">      16161 :         nactive_atoms++;</span>
+<span class="lineNum">     550 </span>            :       }
+<span class="lineNum">     551 </span>            :     }
+<span class="lineNum">     552 </span>            : 
+<span class="lineNum">     553 </span>            :     // Build the lists for the link cells
+<span class="lineNum">     554 </span><span class="lineCov">       1782 :     linkcells.buildCellLists( ltmp_pos, ltmp_ind, getPbc() );</span>
+<span class="lineNum">     555 </span>            :   }
+<span class="lineNum">     556 </span>            : }
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineCov">       5108 : void MultiColvarBase::setupNonUseSpeciesLinkCells( const unsigned&amp; my_always_active ) {</span>
+<span class="lineNum">     559 </span><span class="lineCov">       5108 :   plumed_assert( !usespecies );</span>
+<span class="lineNum">     560 </span><span class="lineCov">       6201 :   if( nblock==0 || !linkcells.enabled() ) return ;</span>
+<span class="lineNum">     561 </span><span class="lineCov">        708 :   deactivateAllTasks();</span>
+<span class="lineNum">     562 </span>            :   std::vector&lt;unsigned&gt; requiredlinkcells;
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span><span class="lineCov">        708 :   if( !uselinkforthree &amp;&amp; nactive_atoms&gt;0 ) {</span>
+<span class="lineNum">     565 </span>            :     // Get some parallel info
+<span class="lineNum">     566 </span><span class="lineCov">        156 :     unsigned stride=comm.Get_size();</span>
+<span class="lineNum">     567 </span><span class="lineCov">        156 :     unsigned rank=comm.Get_rank();</span>
+<span class="lineNum">     568 </span><span class="lineCov">        156 :     if( serialCalculation() ) { stride=1; rank=0; }</span>
+<span class="lineNum">     569 </span>            : 
+<span class="lineNum">     570 </span>            :     // Ensure we only do tasks where atoms are in appropriate link cells
+<span class="lineNum">     571 </span><span class="lineCov">        156 :     std::vector&lt;unsigned&gt; linked_atoms( 1+ablocks[1].size() );</span>
+<span class="lineNum">     572 </span><span class="lineCov">      17115 :     for(unsigned i=rank; i&lt;ablocks[0].size(); i+=stride) {</span>
+<span class="lineNum">     573 </span><span class="lineCov">      11202 :       if( !isCurrentlyActive( ablocks[0][i] ) ) continue;</span>
+<span class="lineNum">     574 </span><span class="lineCov">       5244 :       unsigned natomsper=1; linked_atoms[0]=my_always_active;  // Note we always check atom 0 because it is simpler than changing LinkCells.cpp</span>
+<span class="lineNum">     575 </span><span class="lineCov">       5244 :       linkcells.retrieveNeighboringAtoms( getPositionOfAtomForLinkCells( ablocks[0][i] ), requiredlinkcells, natomsper, linked_atoms );</span>
+<span class="lineNum">     576 </span><span class="lineCov">     408788 :       for(unsigned j=0; j&lt;natomsper; ++j) {</span>
+<span class="lineNum">     577 </span><span class="lineCov">     909319 :         for(unsigned k=bookeeping(i,linked_atoms[j]).first; k&lt;bookeeping(i,linked_atoms[j]).second; ++k) taskFlags[k]=1;</span>
+<span class="lineNum">     578 </span>            :       }
+<span class="lineNum">     579 </span><span class="lineCov">        156 :     }</span>
+<span class="lineNum">     580 </span><span class="lineCov">        552 :   } else if( nactive_atoms&gt;0 ) {</span>
+<span class="lineNum">     581 </span>            :     // Get some parallel info
+<span class="lineNum">     582 </span><span class="lineCov">        552 :     unsigned stride=comm.Get_size();</span>
+<span class="lineNum">     583 </span><span class="lineCov">        552 :     unsigned rank=comm.Get_rank();</span>
+<span class="lineNum">     584 </span><span class="lineCov">        552 :     if( serialCalculation() ) { stride=1; rank=0; }</span>
+<span class="lineNum">     585 </span>            : 
+<span class="lineNum">     586 </span>            :     unsigned nactive_three=0;
+<span class="lineNum">     587 </span><span class="lineCov">     215337 :     for(unsigned i=0; i&lt;ablocks[2].size(); ++i) {</span>
+<span class="lineNum">     588 </span><span class="lineCov">     142822 :       if( isCurrentlyActive( ablocks[2][i] ) ) nactive_three++;</span>
+<span class="lineNum">     589 </span>            :     }
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span><span class="lineCov">        552 :     std::vector&lt;Vector&gt; lttmp_pos( nactive_three );</span>
+<span class="lineNum">     592 </span><span class="lineCov">        552 :     std::vector&lt;unsigned&gt; lttmp_ind( nactive_three );</span>
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span>            :     nactive_three=0;
+<span class="lineNum">     595 </span><span class="lineCov">        552 :     if( allthirdblockintasks ) {</span>
+<span class="lineNum">     596 </span><span class="lineCov">     215337 :       for(unsigned i=0; i&lt;ablocks[2].size(); ++i) {</span>
+<span class="lineNum">     597 </span><span class="lineCov">     142822 :         if( !isCurrentlyActive( ablocks[2][i] ) ) continue;</span>
+<span class="lineNum">     598 </span><span class="lineCov">     142822 :         lttmp_ind[nactive_three]=ablocks[2][i];</span>
+<span class="lineNum">     599 </span><span class="lineCov">     142822 :         lttmp_pos[nactive_three]=getPositionOfAtomForLinkCells( ablocks[2][i] );</span>
+<span class="lineNum">     600 </span><span class="lineCov">      71411 :         nactive_three++;</span>
+<span class="lineNum">     601 </span>            :       }
+<span class="lineNum">     602 </span>            :     } else {
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;ablocks[2].size(); ++i) {</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :         if( !isCurrentlyActive( ablocks[2][i] ) ) continue;</span>
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :         lttmp_ind[nactive_three]=i;</span>
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :         lttmp_pos[nactive_three]=getPositionOfAtomForLinkCells( ablocks[2][i] );</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :         nactive_three++;</span>
+<span class="lineNum">     608 </span>            :       }
+<span class="lineNum">     609 </span>            :     }
+<span class="lineNum">     610 </span>            :     // Build the list of the link cells
+<span class="lineNum">     611 </span><span class="lineCov">       1104 :     threecells.buildCellLists( lttmp_pos, lttmp_ind, getPbc() );</span>
+<span class="lineNum">     612 </span>            : 
+<span class="lineNum">     613 </span>            :     // Ensure we only do tasks where atoms are in appropriate link cells
+<span class="lineNum">     614 </span><span class="lineCov">        552 :     std::vector&lt;unsigned&gt; linked_atoms( 1+ablocks[1].size() );</span>
+<span class="lineNum">     615 </span><span class="lineCov">        552 :     std::vector&lt;unsigned&gt; tlinked_atoms( 1+ablocks[2].size() );</span>
+<span class="lineNum">     616 </span><span class="lineCov">      17640 :     for(unsigned i=rank; i&lt;ablocks[0].size(); i+=stride) {</span>
+<span class="lineNum">     617 </span><span class="lineCov">      11024 :       if( !isCurrentlyActive( ablocks[0][i] ) ) continue;</span>
+<span class="lineNum">     618 </span><span class="lineCov">      11024 :       unsigned natomsper=1; linked_atoms[0]=my_always_active;  // Note we always check atom 0 because it is simpler than changing LinkCells.cpp</span>
+<span class="lineNum">     619 </span><span class="lineCov">      11024 :       linkcells.retrieveNeighboringAtoms( getPositionOfAtomForLinkCells( ablocks[0][i] ), requiredlinkcells, natomsper, linked_atoms );</span>
+<span class="lineNum">     620 </span><span class="lineCov">       5512 :       if( allthirdblockintasks ) {</span>
+<span class="lineNum">     621 </span><span class="lineCov">     239808 :         for(unsigned j=0; j&lt;natomsper; ++j) {</span>
+<span class="lineNum">     622 </span><span class="lineCov">     585606 :           for(unsigned k=bookeeping(i,linked_atoms[j]).first; k&lt;bookeeping(i,linked_atoms[j]).second; ++k) taskFlags[k]=1;</span>
+<span class="lineNum">     623 </span>            :         }
+<span class="lineNum">     624 </span>            :       } else {
+<span class="lineNum">     625 </span><span class="lineNoCov">          0 :         unsigned ntatomsper=1; tlinked_atoms[0]=lttmp_ind[0];</span>
+<span class="lineNum">     626 </span><span class="lineNoCov">          0 :         threecells.retrieveNeighboringAtoms( getPositionOfAtomForLinkCells( ablocks[0][i] ), requiredlinkcells, ntatomsper, tlinked_atoms );</span>
+<span class="lineNum">     627 </span><span class="lineNoCov">          0 :         for(unsigned j=0; j&lt;natomsper; ++j) {</span>
+<span class="lineNum">     628 </span><span class="lineNoCov">          0 :           for(unsigned k=0; k&lt;ntatomsper; ++k) taskFlags[bookeeping(i,linked_atoms[j]).first+tlinked_atoms[k]]=1;</span>
+<span class="lineNum">     629 </span>            :         }
+<span class="lineNum">     630 </span>            :       }
+<span class="lineNum">     631 </span>            :     }
+<span class="lineNum">     632 </span>            :   }
+<span class="lineNum">     633 </span><span class="lineCov">        708 :   if( !serialCalculation() ) comm.Sum( taskFlags );</span>
+<span class="lineNum">     634 </span><span class="lineCov">        708 :   lockContributors();</span>
+<span class="lineNum">     635 </span>            : }
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span><span class="lineCov">     291922 : void MultiColvarBase::decodeIndexToAtoms( const unsigned&amp; taskCode, std::vector&lt;unsigned&gt;&amp; atoms ) const {</span>
+<span class="lineNum">     638 </span>            :   plumed_dbg_assert( !usespecies &amp;&amp; nblock&gt;0 );
+<span class="lineNum">     639 </span><span class="lineCov">     291922 :   if( atoms.size()!=decoder.size() ) atoms.resize( decoder.size() );</span>
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span><span class="lineCov">     291922 :   unsigned scode = taskCode;</span>
+<span class="lineNum">     642 </span><span class="lineCov">    2480906 :   for(unsigned i=0; i&lt;decoder.size(); ++i) {</span>
+<span class="lineNum">     643 </span><span class="lineCov">     632354 :     unsigned ind=( scode / decoder[i] );</span>
+<span class="lineNum">     644 </span><span class="lineCov">    1264708 :     atoms[i] = ablocks[i][ind];</span>
+<span class="lineNum">     645 </span><span class="lineCov">     632354 :     scode -= ind*decoder[i];</span>
+<span class="lineNum">     646 </span>            :   }
+<span class="lineNum">     647 </span><span class="lineCov">     291922 : }</span>
+<span class="lineNum">     648 </span>            : 
+<span class="lineNum">     649 </span><span class="lineCov">     465455 : bool MultiColvarBase::setupCurrentAtomList( const unsigned&amp; taskCode, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     650 </span><span class="lineCov">     465455 :   if( isDensity() ) {</span>
+<span class="lineNum">     651 </span><span class="lineCov">      19065 :     myatoms.setNumberOfAtoms( 1 ); myatoms.setAtom( 0, taskCode ); return true;</span>
+<span class="lineNum">     652 </span><span class="lineCov">     446390 :   } else if( usespecies ) {</span>
+<span class="lineNum">     653 </span><span class="lineCov">     298068 :     std::vector&lt;unsigned&gt; task_atoms(1); task_atoms[0]=taskCode;</span>
+<span class="lineNum">     654 </span><span class="lineCov">     149034 :     unsigned natomsper=myatoms.setupAtomsFromLinkCells( task_atoms, getPositionOfAtomForLinkCells( taskCode ), linkcells );</span>
+<span class="lineNum">     655 </span><span class="lineCov">     149034 :     return natomsper&gt;1;</span>
+<span class="lineNum">     656 </span><span class="lineCov">     297356 :   } else if( matsums ) {</span>
+<span class="lineNum">     657 </span>            :     myatoms.setNumberOfAtoms( getNumberOfAtoms() );
+<span class="lineNum">     658 </span><span class="lineCov">      28407 :     for(unsigned i=0; i&lt;getNumberOfAtoms(); ++i) myatoms.setAtom( i, i );</span>
+<span class="lineNum">     659 </span><span class="lineCov">     297043 :   } else if( allthirdblockintasks ) {</span>
+<span class="lineNum">     660 </span><span class="lineCov">      85778 :     plumed_dbg_assert( ablocks.size()==3 ); std::vector&lt;unsigned&gt; atoms(2); decodeIndexToAtoms( taskCode, atoms );</span>
+<span class="lineNum">     661 </span><span class="lineCov">     171556 :     myatoms.setupAtomsFromLinkCells( atoms, getPositionOfAtomForLinkCells( atoms[0] ), threecells );</span>
+<span class="lineNum">     662 </span><span class="lineCov">     211265 :   } else if( nblock&gt;0 ) {</span>
+<span class="lineNum">     663 </span><span class="lineCov">     179523 :     std::vector&lt;unsigned&gt; atoms( ablocks.size() );</span>
+<span class="lineNum">     664 </span><span class="lineCov">     359046 :     decodeIndexToAtoms( taskCode, atoms ); myatoms.setNumberOfAtoms( ablocks.size() );</span>
+<span class="lineNum">     665 </span><span class="lineCov">    1174158 :     for(unsigned i=0; i&lt;ablocks.size(); ++i) myatoms.setAtom( i, atoms[i] );</span>
+<span class="lineNum">     666 </span>            :   } else {
+<span class="lineNum">     667 </span><span class="lineCov">      31742 :     myatoms.setNumberOfAtoms( ablocks.size() );</span>
+<span class="lineNum">     668 </span><span class="lineCov">     248636 :     for(unsigned i=0; i&lt;ablocks.size(); ++i) myatoms.setAtom( i, ablocks[i][taskCode] );</span>
+<span class="lineNum">     669 </span>            :   }
+<span class="lineNum">     670 </span>            :   return true;
+<span class="lineNum">     671 </span>            : }
+<span class="lineNum">     672 </span>            : 
+<span class="lineNum">     673 </span><span class="lineCov">       9021 : void MultiColvarBase::setupActiveTaskSet( std::vector&lt;unsigned&gt;&amp; active_tasks, const std::string&amp; input_label ) {</span>
+<span class="lineNum">     674 </span><span class="lineCov">       9021 :   if( !setup_completed ) {</span>
+<span class="lineNum">     675 </span>            :     bool justVolumes=false;
+<span class="lineNum">     676 </span><span class="lineCov">       1680 :     if( usespecies ) {</span>
+<span class="lineNum">     677 </span>            :       justVolumes=true;
+<span class="lineNum">     678 </span><span class="lineCov">       1328 :       for(unsigned i=0; i&lt;getNumberOfVessels(); ++i) {</span>
+<span class="lineNum">     679 </span><span class="lineCov">        670 :         vesselbase::StoreDataVessel* mys=dynamic_cast&lt;vesselbase::StoreDataVessel*&gt;( getPntrToVessel(i) );</span>
+<span class="lineNum">     680 </span><span class="lineCov">        670 :         if( mys ) continue;</span>
+<span class="lineNum">     681 </span><span class="lineCov">        373 :         vesselbase::BridgeVessel* myb=dynamic_cast&lt;vesselbase::BridgeVessel*&gt;( getPntrToVessel(i) );</span>
+<span class="lineNum">     682 </span><span class="lineCov">        373 :         if( !myb ) { justVolumes=false; break; }</span>
+<span class="lineNum">     683 </span><span class="lineCov">         38 :         ActionVolume* myv=dynamic_cast&lt;ActionVolume*&gt;( myb-&gt;getOutputAction() );</span>
+<span class="lineNum">     684 </span><span class="lineCov">         38 :         if( !myv ) { justVolumes=false; break; }</span>
+<span class="lineNum">     685 </span>            :       }
+<span class="lineNum">     686 </span>            :     }
+<span class="lineNum">     687 </span><span class="lineCov">       1680 :     deactivateAllTasks();</span>
+<span class="lineNum">     688 </span><span class="lineCov">       1680 :     if( justVolumes &amp;&amp; mydata ) {</span>
+<span class="lineNum">     689 </span><span class="lineCov">        297 :       if( mydata-&gt;getNumberOfDataUsers()==0 ) justVolumes=false;</span>
+<span class="lineNum">     690 </span>            : 
+<span class="lineNum">     691 </span><span class="lineCov">        741 :       for(unsigned i=0; i&lt;mydata-&gt;getNumberOfDataUsers(); ++i) {</span>
+<span class="lineNum">     692 </span><span class="lineCov">         49 :         MultiColvarBase* myu=dynamic_cast&lt;MultiColvarBase*&gt;( mydata-&gt;getDataUser(i) );</span>
+<span class="lineNum">     693 </span><span class="lineCov">         49 :         if( myu ) {</span>
+<span class="lineNum">     694 </span><span class="lineCov">         98 :           myu-&gt;setupActiveTaskSet( taskFlags, getLabel() );</span>
+<span class="lineNum">     695 </span>            :         } else {
+<span class="lineNum">     696 </span><span class="lineNoCov">          0 :           for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) taskFlags[i]=1;</span>
+<span class="lineNum">     697 </span>            :         }
+<span class="lineNum">     698 </span>            :       }
+<span class="lineNum">     699 </span>            :     }
+<span class="lineNum">     700 </span><span class="lineCov">       1680 :     if( justVolumes ) {</span>
+<span class="lineNum">     701 </span><span class="lineCov">        240 :       for(unsigned j=0; j&lt;getNumberOfVessels(); ++j) {</span>
+<span class="lineNum">     702 </span><span class="lineCov">         80 :         vesselbase::BridgeVessel* myb=dynamic_cast&lt;vesselbase::BridgeVessel*&gt;( getPntrToVessel(j) );</span>
+<span class="lineNum">     703 </span><span class="lineCov">         80 :         if( !myb ) continue ;</span>
+<span class="lineNum">     704 </span><span class="lineCov">         32 :         ActionVolume* myv=dynamic_cast&lt;ActionVolume*&gt;( myb-&gt;getOutputAction() );</span>
+<span class="lineNum">     705 </span><span class="lineCov">         32 :         if( !myv ) continue ;</span>
+<span class="lineNum">     706 </span><span class="lineCov">         32 :         myv-&gt;retrieveAtoms(); myv-&gt;setupRegions();</span>
+<span class="lineNum">     707 </span>            : 
+<span class="lineNum">     708 </span><span class="lineCov">     296322 :         for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) {</span>
+<span class="lineNum">     709 </span><span class="lineCov">     151567 :           if( myv-&gt;inVolumeOfInterest(i) ) taskFlags[i]=1;</span>
+<span class="lineNum">     710 </span>            :         }
+<span class="lineNum">     711 </span>            :       }
+<span class="lineNum">     712 </span>            :     } else {
+<span class="lineNum">     713 </span><span class="lineCov">    9757270 :       for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) taskFlags[i]=1;</span>
+<span class="lineNum">     714 </span>            :     }
+<span class="lineNum">     715 </span>            : 
+<span class="lineNum">     716 </span>            :     // Now activate all this class
+<span class="lineNum">     717 </span><span class="lineCov">       1680 :     lockContributors();</span>
+<span class="lineNum">     718 </span>            :     // Setup the link cells
+<span class="lineNum">     719 </span><span class="lineCov">       1680 :     setupLinkCells();</span>
+<span class="lineNum">     720 </span>            :     // Ensures that setup is not performed multiple times during one cycle
+<span class="lineNum">     721 </span><span class="lineCov">       1680 :     setup_completed=true;</span>
+<span class="lineNum">     722 </span>            :   }
+<span class="lineNum">     723 </span>            : 
+<span class="lineNum">     724 </span>            :   // And activate the tasks in input action
+<span class="lineNum">     725 </span><span class="lineCov">      18042 :   if( getLabel()!=input_label ) {</span>
+<span class="lineNum">     726 </span>            :     int input_code=-1;
+<span class="lineNum">     727 </span><span class="lineCov">        134 :     for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">     728 </span><span class="lineCov">        122 :       if( mybasemulticolvars[i]-&gt;getLabel()==input_label ) { input_code=i+1; break; }</span>
+<span class="lineNum">     729 </span>            :     }
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span><span class="lineCov">         98 :     MultiValue my_tvals( getNumberOfQuantities(), getNumberOfDerivatives() );</span>
+<span class="lineNum">     732 </span><span class="lineCov">         49 :     AtomValuePack mytmp_atoms( my_tvals, this );</span>
+<span class="lineNum">     733 </span><span class="lineCov">     296468 :     for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) {</span>
+<span class="lineNum">     734 </span><span class="lineCov">     148185 :       if( !taskIsCurrentlyActive(i) ) continue;</span>
+<span class="lineNum">     735 </span><span class="lineCov">       3529 :       setupCurrentAtomList( getTaskCode(i), mytmp_atoms );</span>
+<span class="lineNum">     736 </span><span class="lineCov">     506063 :       for(unsigned j=0; j&lt;mytmp_atoms.getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     737 </span>            :         unsigned itask=mytmp_atoms.getIndex(j);
+<span class="lineNum">     738 </span><span class="lineCov">     753101 :         if( atom_lab[itask].first==input_code ) active_tasks[ atom_lab[itask].second ]=1;</span>
+<span class="lineNum">     739 </span>            :       }
+<span class="lineNum">     740 </span>            :     }
+<span class="lineNum">     741 </span>            :   }
+<span class="lineNum">     742 </span><span class="lineCov">       9021 : }</span>
+<span class="lineNum">     743 </span>            : 
+<span class="lineNum">     744 </span><span class="lineCov">        433 : bool MultiColvarBase::filtersUsedAsInput() {</span>
+<span class="lineNum">     745 </span>            :   bool inputAreFilters=false;
+<span class="lineNum">     746 </span><span class="lineCov">       1589 :   for(unsigned i=0; i&lt;mybasemulticolvars.size(); ++i) {</span>
+<span class="lineNum">     747 </span><span class="lineCov">        241 :     MultiColvarFilter* myfilt=dynamic_cast&lt;MultiColvarFilter*&gt;( mybasemulticolvars[i] );</span>
+<span class="lineNum">     748 </span><span class="lineCov">        241 :     if( myfilt || mybasemulticolvars[i]-&gt;filtersUsedAsInput() ) inputAreFilters=true;</span>
+<span class="lineNum">     749 </span>            :   }
+<span class="lineNum">     750 </span><span class="lineCov">        433 :   return inputAreFilters;</span>
+<span class="lineNum">     751 </span>            : }
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span><span class="lineCov">       8972 : void MultiColvarBase::calculate() {</span>
+<span class="lineNum">     754 </span>            :   // Recursive function that sets up tasks
+<span class="lineNum">     755 </span><span class="lineCov">      17944 :   setupActiveTaskSet( taskFlags, getLabel() );</span>
+<span class="lineNum">     756 </span>            : 
+<span class="lineNum">     757 </span>            :   // Check for filters and rerun setup of link cells if there are any
+<span class="lineNum">     758 </span><span class="lineCov">       8972 :   if( mybasemulticolvars.size()&gt;0 &amp;&amp; filtersUsedAsInput() ) setupLinkCells();</span>
+<span class="lineNum">     759 </span>            : 
+<span class="lineNum">     760 </span>            :   //  Setup the link cells if we are not using species
+<span class="lineNum">     761 </span><span class="lineCov">      16089 :   if( !usespecies &amp;&amp; ablocks.size()&gt;1 ) {</span>
+<span class="lineNum">     762 </span>            :     // This loop finds the first active atom, which is always checked because
+<span class="lineNum">     763 </span>            :     // of a peculiarity in linkcells
+<span class="lineNum">     764 </span><span class="lineCov">       5108 :     unsigned first_active=std::numeric_limits&lt;unsigned&gt;::max();</span>
+<span class="lineNum">     765 </span><span class="lineCov">      10618 :     for(unsigned i=0; i&lt;ablocks[0].size(); ++i) {</span>
+<span class="lineNum">     766 </span><span class="lineCov">      10484 :       if( !isCurrentlyActive( ablocks[1][i] ) ) continue;</span>
+<span class="lineNum">     767 </span>            :       else {
+<span class="lineNum">     768 </span><span class="lineCov">       5108 :         first_active=i; break;</span>
+<span class="lineNum">     769 </span>            :       }
+<span class="lineNum">     770 </span>            :     }
+<span class="lineNum">     771 </span><span class="lineCov">       5108 :     setupNonUseSpeciesLinkCells( first_active );</span>
+<span class="lineNum">     772 </span>            :   }
+<span class="lineNum">     773 </span>            :   // And run all tasks
+<span class="lineNum">     774 </span><span class="lineCov">       8972 :   runAllTasks();</span>
+<span class="lineNum">     775 </span><span class="lineCov">       8972 : }</span>
+<span class="lineNum">     776 </span>            : 
+<span class="lineNum">     777 </span><span class="lineCov">        217 : void MultiColvarBase::calculateNumericalDerivatives( ActionWithValue* a ) {</span>
+<span class="lineNum">     778 </span><span class="lineCov">        217 :   if( mybasemulticolvars.size()&gt;0 ) plumed_merror(&quot;cannot calculate numerical derivatives for this quantity&quot;);</span>
+<span class="lineNum">     779 </span><span class="lineCov">        217 :   calculateAtomicNumericalDerivatives( this, 0 );</span>
+<a name="780"><span class="lineNum">     780 </span><span class="lineCov">        217 : }</span></a>
+<span class="lineNum">     781 </span>            : 
+<span class="lineNum">     782 </span><span class="lineCov">       2709 : void MultiColvarBase::prepare() {</span>
+<span class="lineNum">     783 </span><span class="lineCov">       2709 :   setup_completed=false; atomsWereRetrieved=false;</span>
+<a name="784"><span class="lineNum">     784 </span><span class="lineCov">       2709 : }</span></a>
+<span class="lineNum">     785 </span>            : 
+<span class="lineNum">     786 </span><span class="lineCov">       6073 : void MultiColvarBase::retrieveAtoms() {</span>
+<span class="lineNum">     787 </span><span class="lineCov">       6073 :   if( !atomsWereRetrieved ) { ActionAtomistic::retrieveAtoms(); atomsWereRetrieved=true; }</span>
+<span class="lineNum">     788 </span><span class="lineCov">       6073 : }</span>
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span><span class="lineCov">      38205 : void MultiColvarBase::mergeInputDerivatives( const unsigned&amp; ival, const unsigned&amp; start, const unsigned&amp; end,</span>
+<span class="lineNum">     791 </span>            :     const unsigned&amp; jatom, const std::vector&lt;double&gt;&amp; der,
+<span class="lineNum">     792 </span>            :     MultiValue&amp; myder, AtomValuePack&amp; myatoms ) const {
+<span class="lineNum">     793 </span>            :   MultiValue&amp; myvals=myatoms.getUnderlyingMultiValue();
+<span class="lineNum">     794 </span>            :   plumed_dbg_assert( ival&lt;myatoms.getUnderlyingMultiValue().getNumberOfValues() );
+<span class="lineNum">     795 </span>            :   plumed_dbg_assert( start&lt;myder.getNumberOfValues() &amp;&amp; end&lt;=myder.getNumberOfValues() );
+<span class="lineNum">     796 </span>            :   plumed_dbg_assert( der.size()==myder.getNumberOfValues() &amp;&amp; jatom&lt;myatoms.getNumberOfAtoms() );
+<span class="lineNum">     797 </span>            :   // Convert input atom to local index
+<span class="lineNum">     798 </span>            :   unsigned katom = myatoms.getIndex( jatom ); plumed_dbg_assert( katom&lt;atom_lab.size() ); plumed_dbg_assert( atom_lab[katom].first&gt;0 );
+<span class="lineNum">     799 </span>            :   // Find base colvar
+<span class="lineNum">     800 </span><span class="lineCov">      76410 :   unsigned mmc=atom_lab[katom].first - 1; plumed_dbg_assert( mybasemulticolvars[mmc]-&gt;taskIsCurrentlyActive( atom_lab[katom].second ) );</span>
+<span class="lineNum">     801 </span>            :   // Get start of indices for this atom
+<span class="lineNum">     802 </span><span class="lineCov">      39425 :   unsigned basen=0; for(unsigned i=0; i&lt;mmc; ++i) basen+=mybasemulticolvars[i]-&gt;getNumberOfDerivatives() - 9;</span>
+<span class="lineNum">     803 </span>            :   plumed_dbg_assert( basen%3==0 ); // Check the number of atoms is consistent with input derivatives
+<span class="lineNum">     804 </span>            : 
+<span class="lineNum">     805 </span><span class="lineCov">      38205 :   unsigned virbas = myvals.getNumberOfDerivatives()-9;</span>
+<span class="lineNum">     806 </span><span class="lineCov">    9573417 :   for(unsigned j=0; j&lt;myder.getNumberActive(); ++j) {</span>
+<span class="lineNum">     807 </span>            :     unsigned jder=myder.getActiveIndex(j);
+<span class="lineNum">     808 </span><span class="lineCov">    9535212 :     if( jder&lt;mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives()-9 ) {</span>
+<span class="lineNum">     809 </span><span class="lineCov">    4434561 :       unsigned kder=basen+jder;</span>
+<span class="lineNum">     810 </span><span class="lineCov">  110197260 :       for(unsigned icomp=start; icomp&lt;end; ++icomp) {</span>
+<span class="lineNum">     811 </span><span class="lineCov">  317288097 :         myvals.addDerivative( ival, kder, der[icomp]*myder.getDerivative( icomp, jder ) );</span>
+<span class="lineNum">     812 </span>            :       }
+<span class="lineNum">     813 </span>            :     } else {
+<span class="lineNum">     814 </span><span class="lineCov">     333045 :       unsigned kder=virbas + (jder - mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() + 9);</span>
+<span class="lineNum">     815 </span><span class="lineCov">    7551360 :       for(unsigned icomp=start; icomp&lt;end; ++icomp) {</span>
+<span class="lineNum">     816 </span><span class="lineCov">   14436630 :         myvals.addDerivative( ival, kder, der[icomp]*myder.getDerivative( icomp, jder ) );</span>
+<span class="lineNum">     817 </span>            :       }
+<span class="lineNum">     818 </span>            :     }
+<span class="lineNum">     819 </span>            :   }
+<span class="lineNum">     820 </span><span class="lineCov">      38205 : }</span>
+<span class="lineNum">     821 </span>            : 
+<span class="lineNum">     822 </span><span class="lineCov">         60 : void MultiColvarBase::splitInputDerivatives( const unsigned&amp; ival, const unsigned&amp; start, const unsigned&amp; end,</span>
+<span class="lineNum">     823 </span>            :     const unsigned&amp; jatom, const std::vector&lt;double&gt;&amp; der,
+<span class="lineNum">     824 </span>            :     MultiValue&amp; myder, AtomValuePack&amp; myatoms ) const {
+<span class="lineNum">     825 </span>            :   MultiValue&amp; myvals=myatoms.getUnderlyingMultiValue();
+<span class="lineNum">     826 </span>            :   plumed_dbg_assert( ival&lt;myder.getNumberOfValues() );
+<span class="lineNum">     827 </span>            :   plumed_dbg_assert( start&lt;myvals.getNumberOfValues() &amp;&amp; end&lt;=myvals.getNumberOfValues() );
+<span class="lineNum">     828 </span>            :   plumed_dbg_assert( der.size()==myatoms.getUnderlyingMultiValue().getNumberOfValues() &amp;&amp; jatom&lt;myatoms.getNumberOfAtoms() );
+<span class="lineNum">     829 </span>            :   // Convert input atom to local index
+<span class="lineNum">     830 </span>            :   unsigned katom = myatoms.getIndex( jatom ); plumed_dbg_assert( katom&lt;atom_lab.size() ); plumed_dbg_assert( atom_lab[katom].first&gt;0 );
+<span class="lineNum">     831 </span>            :   // Find base colvar
+<span class="lineNum">     832 </span><span class="lineCov">        120 :   unsigned mmc=atom_lab[katom].first - 1; plumed_dbg_assert( mybasemulticolvars[mmc]-&gt;taskIsCurrentlyActive( atom_lab[katom].second ) );</span>
+<span class="lineNum">     833 </span>            :   // Get start of indices for this atom
+<span class="lineNum">     834 </span><span class="lineCov">        120 :   unsigned basen=0; for(unsigned i=0; i&lt;mmc; ++i) basen+=mybasemulticolvars[i]-&gt;getNumberOfDerivatives() - 9;</span>
+<span class="lineNum">     835 </span>            :   plumed_dbg_assert( basen%3==0 ); // Check the number of atoms is consistent with input derivatives
+<span class="lineNum">     836 </span><span class="lineCov">         60 :   unsigned virbas = myvals.getNumberOfDerivatives()-9;</span>
+<span class="lineNum">     837 </span><span class="lineCov">      36420 :   for(unsigned j=0; j&lt;myder.getNumberActive(); ++j) {</span>
+<span class="lineNum">     838 </span>            :     unsigned jder=myder.getActiveIndex(j);
+<span class="lineNum">     839 </span><span class="lineCov">      36360 :     if( jder&lt;mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives()-9 ) {</span>
+<span class="lineNum">     840 </span><span class="lineCov">      35280 :       unsigned kder=basen+jder; plumed_assert( kder&lt;myvals.getNumberOfDerivatives() );</span>
+<span class="lineNum">     841 </span><span class="lineCov">      35280 :       for(unsigned icomp=start; icomp&lt;end; ++icomp) {</span>
+<span class="lineNum">     842 </span><span class="lineCov">      52920 :         myvals.addDerivative( icomp, kder, der[icomp]*myder.getDerivative( ival, jder ) );</span>
+<span class="lineNum">     843 </span>            :       }
+<span class="lineNum">     844 </span>            :     } else {
+<span class="lineNum">     845 </span><span class="lineCov">        540 :       unsigned kder=virbas + (jder - mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() + 9);</span>
+<span class="lineNum">     846 </span><span class="lineCov">       1080 :       for(unsigned icomp=start; icomp&lt;end; ++icomp) {</span>
+<span class="lineNum">     847 </span><span class="lineCov">       1620 :         myvals.addDerivative( icomp, kder, der[icomp]*myder.getDerivative( ival, jder ) );</span>
+<span class="lineNum">     848 </span>            :       }
+<span class="lineNum">     849 </span>            :     }
+<span class="lineNum">     850 </span>            :   }
+<span class="lineNum">     851 </span><span class="lineCov">         60 : }</span>
+<span class="lineNum">     852 </span>            : 
+<span class="lineNum">     853 </span><span class="lineCov">     905722 : void MultiColvarBase::addComDerivatives( const int&amp; ival, const unsigned&amp; iatom, const Vector&amp; der, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     854 </span>            :   plumed_dbg_assert( ival&lt;static_cast&lt;int&gt;(myatoms.getUnderlyingMultiValue().getNumberOfValues()) &amp;&amp; iatom&lt;myatoms.getNumberOfAtoms() );
+<span class="lineNum">     855 </span>            :   // Convert input atom to local index
+<span class="lineNum">     856 </span>            :   unsigned katom = myatoms.getIndex( iatom ); plumed_dbg_assert( atom_lab[katom].first&gt;0 );
+<span class="lineNum">     857 </span>            :   // Find base colvar
+<span class="lineNum">     858 </span><span class="lineCov">    1811444 :   unsigned mmc = atom_lab[katom].first - 1; plumed_dbg_assert( mybasemulticolvars[mmc]-&gt;taskIsCurrentlyActive( atom_lab[katom].second ) );</span>
+<span class="lineNum">     859 </span><span class="lineCov">    1738684 :   if( usespecies &amp;&amp; iatom==0 ) { myatoms.addComDerivatives( ival, der, mybasemulticolvars[mmc]-&gt;my_tmp_capacks[0] ); return; }</span>
+<span class="lineNum">     860 </span>            : 
+<span class="lineNum">     861 </span>            :   // Get start of indices for this atom
+<span class="lineNum">     862 </span><span class="lineCov">     646506 :   unsigned basen=0; for(unsigned i=0; i&lt;mmc; ++i) basen+=(mybasemulticolvars[i]-&gt;getNumberOfDerivatives() - 9) / 3;</span>
+<span class="lineNum">     863 </span><span class="lineCov">    1467723 :   mybasemulticolvars[mmc]-&gt;getCentralAtomPack( basen, atom_lab[katom].second, mybasemulticolvars[mmc]-&gt;my_tmp_capacks[1] );</span>
+<span class="lineNum">     864 </span><span class="lineCov">     978482 :   myatoms.addComDerivatives( ival, der, mybasemulticolvars[mmc]-&gt;my_tmp_capacks[1] );</span>
+<span class="lineNum">     865 </span>            : }
+<span class="lineNum">     866 </span>            : 
+<span class="lineNum">     867 </span><span class="lineCov">    1122612 : void MultiColvarBase::getInputData( const unsigned&amp; ind, const bool&amp; normed,</span>
+<span class="lineNum">     868 </span>            :                                     const multicolvar::AtomValuePack&amp; myatoms,
+<span class="lineNum">     869 </span>            :                                     std::vector&lt;double&gt;&amp; orient ) const {
+<span class="lineNum">     870 </span>            :   // Converint input atom to local index
+<span class="lineNum">     871 </span>            :   unsigned katom = myatoms.getIndex(ind); plumed_dbg_assert( atom_lab[katom].first&gt;0 );
+<span class="lineNum">     872 </span>            :   // Find base colvar
+<span class="lineNum">     873 </span><span class="lineCov">    2245224 :   unsigned mmc = atom_lab[katom].first - 1; plumed_dbg_assert( mybasemulticolvars[mmc]-&gt;taskIsCurrentlyActive( atom_lab[katom].second ) );</span>
+<span class="lineNum">     874 </span>            :   // Check if orient is the correct size
+<span class="lineNum">     875 </span><span class="lineCov">    2245224 :   if( orient.size()!=mybasemulticolvars[mmc]-&gt;getNumberOfQuantities() ) orient.resize( mybasemulticolvars[mmc]-&gt;getNumberOfQuantities() );</span>
+<span class="lineNum">     876 </span>            :   // Retrieve the value
+<span class="lineNum">     877 </span><span class="lineCov">    2245224 :   mybasedata[mmc]-&gt;retrieveValueWithIndex( atom_lab[katom].second, normed, orient );</span>
+<span class="lineNum">     878 </span><span class="lineCov">    1122612 : }</span>
+<span class="lineNum">     879 </span>            : 
+<span class="lineNum">     880 </span><span class="lineCov">      52977 : MultiValue&amp; MultiColvarBase::getInputDerivatives( const unsigned&amp; iatom, const bool&amp; normed, const multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     881 </span>            :   // Converint input atom to local index
+<span class="lineNum">     882 </span>            :   unsigned katom = myatoms.getIndex(iatom); plumed_dbg_assert( atom_lab[katom].first&gt;0 );
+<span class="lineNum">     883 </span>            :   // Find base colvar
+<span class="lineNum">     884 </span><span class="lineCov">     105954 :   unsigned mmc = atom_lab[katom].first - 1; plumed_dbg_assert( mybasemulticolvars[mmc]-&gt;taskIsCurrentlyActive( atom_lab[katom].second ) );</span>
+<span class="lineNum">     885 </span><span class="lineCov">      54755 :   if( usespecies &amp;&amp; !normed &amp;&amp; iatom==0 ) return mybasedata[mmc]-&gt;getTemporyMultiValue(0);</span>
+<span class="lineNum">     886 </span>            : 
+<span class="lineNum">     887 </span><span class="lineCov">      51199 :   unsigned oval=0; if( iatom&gt;0 ) oval=1;</span>
+<span class="lineNum">     888 </span><span class="lineCov">     102398 :   MultiValue&amp; myder=mybasedata[mmc]-&gt;getTemporyMultiValue(oval);</span>
+<span class="lineNum">     889 </span><span class="lineCov">     102362 :   if( myder.getNumberOfValues()!=mybasemulticolvars[mmc]-&gt;getNumberOfQuantities() ||</span>
+<span class="lineNum">     890 </span><span class="lineCov">      51163 :       myder.getNumberOfDerivatives()!=mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() ) {</span>
+<span class="lineNum">     891 </span><span class="lineCov">         72 :     myder.resize( mybasemulticolvars[mmc]-&gt;getNumberOfQuantities(), mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     892 </span>            :   }
+<span class="lineNum">     893 </span><span class="lineCov">     102398 :   mybasedata[mmc]-&gt;retrieveDerivatives( atom_lab[katom].second, normed, myder );</span>
+<span class="lineNum">     894 </span>            :   return myder;
+<span class="lineNum">     895 </span>            : }
+<span class="lineNum">     896 </span>            : 
+<span class="lineNum">     897 </span><span class="lineCov">   60207197 : void MultiColvarBase::accumulateSymmetryFunction( const int&amp; ival, const unsigned&amp; iatom, const double&amp; val, const Vector&amp; der, const Tensor&amp; vir, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     898 </span>            :   plumed_dbg_assert( usespecies ); unsigned katom=myatoms.getIndex(0), jatom=myatoms.getIndex(iatom);
+<span class="lineNum">     899 </span><span class="lineCov">  120415168 :   double weight0=1.0; if( atom_lab[katom].first&gt;0 ) weight0=mybasedata[atom_lab[katom].first-1]-&gt;retrieveWeightWithIndex( atom_lab[katom].second );</span>
+<span class="lineNum">     900 </span><span class="lineCov">  120415168 :   double weighti=1.0; if( atom_lab[jatom].first&gt;0 ) weighti=mybasedata[atom_lab[jatom].first-1]-&gt;retrieveWeightWithIndex( atom_lab[jatom].second );</span>
+<span class="lineNum">     901 </span>            :   // Accumulate the value
+<span class="lineNum">     902 </span><span class="lineCov">   62943725 :   if( ival&lt;0 ) myatoms.getUnderlyingMultiValue().addTemporyValue( weight0*weighti*val );</span>
+<span class="lineNum">     903 </span><span class="lineCov">   57470669 :   else myatoms.addValue( ival, weight0*weighti*val );</span>
+<span class="lineNum">     904 </span>            : 
+<span class="lineNum">     905 </span>            :   // Return if we don't need derivatives
+<span class="lineNum">     906 </span><span class="lineCov">   60207197 :   if( doNotCalculateDerivatives() ) return ;</span>
+<span class="lineNum">     907 </span>            :   // And virial
+<span class="lineNum">     908 </span><span class="lineCov">   54044650 :   if( ival&lt;0 ) myatoms.addTemporyBoxDerivatives( weight0*weighti*vir );</span>
+<span class="lineNum">     909 </span><span class="lineCov">   51786875 :   else myatoms.addBoxDerivatives( ival, weight0*weighti*vir );</span>
+<span class="lineNum">     910 </span>            : 
+<span class="lineNum">     911 </span>            :   // Add derivatives of central atom
+<span class="lineNum">     912 </span><span class="lineCov">   54044650 :   if( atom_lab[katom].first&gt;0 ) {</span>
+<span class="lineNum">     913 </span><span class="lineCov">        774 :     addComDerivatives( ival, 0, -weight0*weighti*der, myatoms );</span>
+<span class="lineNum">     914 </span><span class="lineCov">       2322 :     std::vector&lt;double&gt; tmpder( mybasemulticolvars[atom_lab[katom].first - 1]-&gt;getNumberOfQuantities(), 0. );</span>
+<span class="lineNum">     915 </span><span class="lineCov">       1548 :     tmpder[0]=weighti*val; mergeInputDerivatives( ival, 0, 1, 0, tmpder, getInputDerivatives(0, false, myatoms), myatoms );</span>
+<span class="lineNum">     916 </span>            :   } else {
+<span class="lineNum">     917 </span><span class="lineCov">   54043876 :     if( ival&lt;0 ) myatoms.addTemporyAtomsDerivatives( 0, -der );</span>
+<span class="lineNum">     918 </span><span class="lineCov">   51786101 :     else myatoms.addAtomsDerivatives( ival, 0, -der );</span>
+<span class="lineNum">     919 </span>            :   }
+<span class="lineNum">     920 </span>            :   // Add derivatives of atom in coordination sphere
+<span class="lineNum">     921 </span><span class="lineCov">   54044650 :   if( atom_lab[jatom].first&gt;0 ) {</span>
+<span class="lineNum">     922 </span><span class="lineCov">        774 :     addComDerivatives( ival, iatom, weight0*weighti*der, myatoms );</span>
+<span class="lineNum">     923 </span><span class="lineCov">       2322 :     std::vector&lt;double&gt; tmpder( mybasemulticolvars[atom_lab[katom].first - 1]-&gt;getNumberOfQuantities(), 0. );</span>
+<span class="lineNum">     924 </span><span class="lineCov">       1548 :     tmpder[0]=weight0*val; mergeInputDerivatives( ival, 0, 1, iatom, tmpder, getInputDerivatives(iatom, false, myatoms), myatoms );</span>
+<span class="lineNum">     925 </span>            :   } else {
+<span class="lineNum">     926 </span><span class="lineCov">   54043876 :     if( ival&lt;0 ) myatoms.addTemporyAtomsDerivatives( iatom, der );</span>
+<span class="lineNum">     927 </span><span class="lineCov">   51786101 :     else myatoms.addAtomsDerivatives( ival, iatom, der );</span>
+<span class="lineNum">     928 </span>            :   }
+<span class="lineNum">     929 </span>            : }
+<span class="lineNum">     930 </span>            : 
+<span class="lineNum">     931 </span><span class="lineCov">    2927751 : void MultiColvarBase::addAtomDerivatives( const int&amp; ival, const unsigned&amp; iatom, const Vector&amp; der, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     932 </span><span class="lineCov">    2927751 :   if( doNotCalculateDerivatives() ) return ;</span>
+<span class="lineNum">     933 </span>            :   unsigned jatom=myatoms.getIndex(iatom);
+<span class="lineNum">     934 </span>            : 
+<span class="lineNum">     935 </span><span class="lineCov">    5360350 :   if( atom_lab[jatom].first&gt;0 ) {</span>
+<span class="lineNum">     936 </span><span class="lineCov">     904174 :     addComDerivatives( ival, iatom, der, myatoms );</span>
+<span class="lineNum">     937 </span>            :   } else {
+<span class="lineNum">     938 </span><span class="lineCov">    1776001 :     if( ival&lt;0 ) myatoms.addTemporyAtomsDerivatives( iatom, der );</span>
+<span class="lineNum">     939 </span><span class="lineCov">    1776001 :     else myatoms.addAtomsDerivatives( ival, iatom, der );</span>
+<span class="lineNum">     940 </span>            :   }
+<a name="941"><span class="lineNum">     941 </span>            : }</a>
+<span class="lineNum">     942 </span>            : 
+<span class="lineNum">     943 </span><span class="lineCov">     256812 : double MultiColvarBase::calculateWeight( const unsigned&amp; current, const double&amp; weight, AtomValuePack&amp; myvals ) const {</span>
+<span class="lineNum">     944 </span><span class="lineCov">     256812 :   return 1.0;</span>
+<span class="lineNum">     945 </span>            : }
+<span class="lineNum">     946 </span>            : 
+<span class="lineNum">     947 </span><span class="lineCov">     461926 : void MultiColvarBase::performTask( const unsigned&amp; task_index, const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     948 </span><span class="lineCov">     461926 :   AtomValuePack myatoms( myvals, this );</span>
+<span class="lineNum">     949 </span>            :   // Retrieve the atom list
+<span class="lineNum">     950 </span><span class="lineCov">     461926 :   if( !setupCurrentAtomList( current, myatoms ) ) return;</span>
+<span class="lineNum">     951 </span>            :   // Get weight due to dynamic groups
+<span class="lineNum">     952 </span><span class="lineCov">     461806 :   double weight = 1.0;</span>
+<span class="lineNum">     953 </span><span class="lineCov">     461806 :   if( !matsums ) {</span>
+<span class="lineNum">     954 </span><span class="lineCov">  772330581 :     for(unsigned i=0; i&lt;myatoms.getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">     955 </span><span class="lineCov">  772014578 :       if( atom_lab[myatoms.getIndex(i)].first==0 ) continue;</span>
+<span class="lineNum">     956 </span>            :       // Only need to do first two atoms for thigns like TopologyMatrix, HbondMatrix, Bridge and so on
+<span class="lineNum">     957 </span><span class="lineCov">     243971 :       if( allthirdblockintasks &amp;&amp; i&gt;1 ) break;</span>
+<span class="lineNum">     958 </span><span class="lineCov">     243971 :       unsigned mmc = atom_lab[myatoms.getIndex(i)].first - 1;</span>
+<span class="lineNum">     959 </span><span class="lineCov">     487942 :       weight *= mybasedata[mmc]-&gt;retrieveWeightWithIndex( atom_lab[myatoms.getIndex(i)].second );</span>
+<span class="lineNum">     960 </span>            :     }
+<span class="lineNum">     961 </span><span class="lineCov">     145803 :   } else if( usespecies ) {</span>
+<span class="lineNum">     962 </span><span class="lineCov">     290980 :     if( atom_lab[myatoms.getIndex(0)].first&gt;0 ) {</span>
+<span class="lineNum">     963 </span><span class="lineCov">      18136 :       if( mybasedata[atom_lab[myatoms.getIndex(0)].first-1]-&gt;retrieveWeightWithIndex( atom_lab[myatoms.getIndex(0)].second )&lt;epsilon ) weight=0.;</span>
+<span class="lineNum">     964 </span>            :     }
+<span class="lineNum">     965 </span>            :   }
+<span class="lineNum">     966 </span>            :   // Do a quick check on the size of this contribution
+<span class="lineNum">     967 </span><span class="lineCov">     461806 :   double multweight = calculateWeight( current, weight, myatoms );</span>
+<span class="lineNum">     968 </span><span class="lineCov">     923612 :   if( weight*multweight&lt;getTolerance() ) {</span>
+<span class="lineNum">     969 </span><span class="lineCov">     121536 :     updateActiveAtoms( myatoms );</span>
+<span class="lineNum">     970 </span>            :     return;
+<span class="lineNum">     971 </span>            :   }
+<span class="lineNum">     972 </span>            :   myatoms.setValue( 0, weight*multweight );
+<span class="lineNum">     973 </span>            :   // Deal with derivatives of weights due to dynamic groups
+<span class="lineNum">     974 </span><span class="lineCov">     480460 :   if( !matsums &amp;&amp; !doNotCalculateDerivatives() &amp;&amp; mybasemulticolvars.size()&gt;0 ) {</span>
+<span class="lineNum">     975 </span><span class="lineCov">      78776 :     MultiValue&amp; outder=myatoms.getUnderlyingMultiValue(); MultiValue myder(0,0);</span>
+<span class="lineNum">     976 </span><span class="lineCov">     190710 :     for(unsigned i=0; i&lt;myatoms.getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">     977 </span>            :       // Neglect any atoms without differentiable weights
+<span class="lineNum">     978 </span><span class="lineCov">     151322 :       if( atom_lab[myatoms.getIndex(i)].first==0 ) continue;</span>
+<span class="lineNum">     979 </span>            : 
+<span class="lineNum">     980 </span>            :       // Retrieve derivatives
+<span class="lineNum">     981 </span><span class="lineCov">      75661 :       unsigned mmc = atom_lab[myatoms.getIndex(i)].first - 1;</span>
+<span class="lineNum">     982 </span><span class="lineCov">     187595 :       if( myder.getNumberOfValues()!=mybasemulticolvars[mmc]-&gt;getNumberOfQuantities() || myder.getNumberOfDerivatives()!=mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() ) {</span>
+<span class="lineNum">     983 </span><span class="lineCov">      78776 :         myder.resize( mybasemulticolvars[mmc]-&gt;getNumberOfQuantities(), mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     984 </span>            :       }
+<span class="lineNum">     985 </span><span class="lineCov">     226983 :       mybasedata[mmc]-&gt;retrieveDerivatives( atom_lab[myatoms.getIndex(i)].second, false, myder );</span>
+<span class="lineNum">     986 </span>            : 
+<span class="lineNum">     987 </span>            :       // Retrieve the prefactor (product of all other weights)
+<span class="lineNum">     988 </span><span class="lineCov">     302644 :       double prefactor = multweight*weight / mybasedata[mmc]-&gt;retrieveWeightWithIndex( atom_lab[myatoms.getIndex(i)].second );</span>
+<span class="lineNum">     989 </span>            :       // And accumulate the derivatives
+<span class="lineNum">     990 </span><span class="lineCov">    8626219 :       for(unsigned j=0; j&lt;myder.getNumberActive(); ++j) { unsigned jder=myder.getActiveIndex(j); outder.addDerivative( 0, jder, prefactor*myder.getDerivative(0,jder) ); }</span>
+<span class="lineNum">     991 </span><span class="lineCov">      75661 :       myder.clearAll();</span>
+<span class="lineNum">     992 </span>            :     }
+<span class="lineNum">     993 </span>            :   }
+<span class="lineNum">     994 </span>            :   // Retrieve derivative stuff for central atom
+<span class="lineNum">     995 </span><span class="lineCov">     340270 :   if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     996 </span><span class="lineCov">     318525 :     if( usespecies &amp;&amp; mybasemulticolvars.size()&gt;0 &amp;&amp; atom_lab[myatoms.getIndex(0)].first&gt;0 ) {</span>
+<span class="lineNum">     997 </span><span class="lineCov">       1605 :       unsigned mmc = atom_lab[0].first - 1;</span>
+<span class="lineNum">     998 </span><span class="lineCov">       3210 :       MultiValue&amp; myder=mybasedata[mmc]-&gt;getTemporyMultiValue(0);</span>
+<span class="lineNum">     999 </span><span class="lineCov">       3198 :       if( myder.getNumberOfValues()!=mybasemulticolvars[mmc]-&gt;getNumberOfQuantities() ||</span>
+<span class="lineNum">    1000 </span><span class="lineCov">       1593 :           myder.getNumberOfDerivatives()!=mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() ) {</span>
+<span class="lineNum">    1001 </span><span class="lineCov">         24 :         myder.resize( mybasemulticolvars[mmc]-&gt;getNumberOfQuantities(), mybasemulticolvars[mmc]-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">    1002 </span>            :       }
+<span class="lineNum">    1003 </span><span class="lineCov">       4815 :       mybasedata[mmc]-&gt;retrieveDerivatives( atom_lab[myatoms.getIndex(0)].second, false, myder );</span>
+<span class="lineNum">    1004 </span><span class="lineCov">       1605 :       unsigned basen=0; for(unsigned i=0; i&lt;mmc; ++i) basen+=mybasemulticolvars[i]-&gt;getNumberOfDerivatives() - 9;</span>
+<span class="lineNum">    1005 </span><span class="lineCov">       4815 :       mybasemulticolvars[mmc]-&gt;getCentralAtomPack( basen, atom_lab[myatoms.getIndex(0)].second,  mybasemulticolvars[mmc]-&gt;my_tmp_capacks[0] );</span>
+<span class="lineNum">    1006 </span>            :     }
+<span class="lineNum">    1007 </span>            :   }
+<span class="lineNum">    1008 </span>            :   // Compute everything
+<span class="lineNum">    1009 </span><span class="lineCov">     340270 :   double vv=compute( task_index, myatoms ); updateActiveAtoms( myatoms );</span>
+<span class="lineNum">    1010 </span>            :   myatoms.setValue( 1, vv );
+<span class="lineNum">    1011 </span><span class="lineCov">     340270 :   return;</span>
+<span class="lineNum">    1012 </span>            : }
+<span class="lineNum">    1013 </span>            : 
+<span class="lineNum">    1014 </span><span class="lineCov">     672158 : void MultiColvarBase::updateActiveAtoms( AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">    1015 </span><span class="lineCov">     672158 :   if( mybasemulticolvars.size()==0 ) myatoms.updateUsingIndices();</span>
+<span class="lineNum">    1016 </span><span class="lineCov">     141710 :   else myatoms.updateDynamicList();</span>
+<span class="lineNum">    1017 </span><span class="lineCov">     672158 : }</span>
+<span class="lineNum">    1018 </span>            : 
+<span class="lineNum">    1019 </span><span class="lineCov">    2753562 : Vector MultiColvarBase::getCentralAtomPos( const unsigned&amp; taskIndex ) {</span>
+<span class="lineNum">    1020 </span><span class="lineCov">    2753562 :   unsigned curr=getTaskCode( taskIndex );</span>
+<span class="lineNum">    1021 </span>            : 
+<span class="lineNum">    1022 </span><span class="lineCov">    2753562 :   if( usespecies || isDensity() ) {</span>
+<span class="lineNum">    1023 </span><span class="lineCov">    1459773 :     return getPositionOfAtomForLinkCells(curr);</span>
+<span class="lineNum">    1024 </span><span class="lineCov">    1293789 :   } else if( nblock&gt;0 ) {</span>
+<span class="lineNum">    1025 </span>            :     // double factor=1.0/static_cast&lt;double&gt;( ablocks.size() );
+<span class="lineNum">    1026 </span><span class="lineCov">       2130 :     Vector mypos; mypos.zero();</span>
+<span class="lineNum">    1027 </span><span class="lineCov">       2130 :     std::vector&lt;unsigned&gt; atoms( ablocks.size() ); decodeIndexToAtoms( curr, atoms );</span>
+<span class="lineNum">    1028 </span><span class="lineCov">      17040 :     for(unsigned i=0; i&lt;ablocks.size(); ++i) {</span>
+<span class="lineNum">    1029 </span><span class="lineCov">       8520 :       if( use_for_central_atom[i] ) mypos+=numberForCentralAtom*getPositionOfAtomForLinkCells(atoms[i]);</span>
+<span class="lineNum">    1030 </span>            :     }
+<span class="lineNum">    1031 </span><span class="lineCov">       2130 :     return mypos;</span>
+<span class="lineNum">    1032 </span>            :   } else {
+<span class="lineNum">    1033 </span><span class="lineCov">    1291659 :     Vector mypos; mypos.zero();</span>
+<span class="lineNum">    1034 </span><span class="lineCov">   14122431 :     for(unsigned i=0; i&lt;ablocks.size(); ++i) {</span>
+<span class="lineNum">    1035 </span><span class="lineCov">    5169550 :       if( use_for_central_atom[i] ) mypos+=numberForCentralAtom*getPositionOfAtomForLinkCells(ablocks[i][curr]);</span>
+<span class="lineNum">    1036 </span>            :     }
+<span class="lineNum">    1037 </span><span class="lineCov">    1291659 :     return mypos;</span>
+<span class="lineNum">    1038 </span>            :   }
+<span class="lineNum">    1039 </span>            : }
+<span class="lineNum">    1040 </span>            : 
+<span class="lineNum">    1041 </span><span class="lineCov">     605385 : void MultiColvarBase::getCentralAtomPack( const unsigned&amp; basn, const unsigned&amp; taskIndex, CatomPack&amp; mypack ) {</span>
+<span class="lineNum">    1042 </span><span class="lineCov">     605385 :   unsigned curr=getTaskCode( taskIndex );</span>
+<span class="lineNum">    1043 </span>            : 
+<span class="lineNum">    1044 </span><span class="lineCov">     605385 :   if(usespecies) {</span>
+<span class="lineNum">    1045 </span><span class="lineCov">     464996 :     if( mypack.getNumberOfAtomsWithDerivatives()!=1 ) mypack.resize(1);</span>
+<span class="lineNum">    1046 </span><span class="lineCov">     464996 :     mypack.setIndex( 0, basn + curr );</span>
+<span class="lineNum">    1047 </span><span class="lineCov">     929992 :     mypack.setDerivative( 0, Tensor::identity() );</span>
+<span class="lineNum">    1048 </span><span class="lineCov">     140389 :   } else if( nblock&gt;0 ) {</span>
+<span class="lineNum">    1049 </span><span class="lineNoCov">          0 :     if( mypack.getNumberOfAtomsWithDerivatives()!=ncentral ) mypack.resize(ncentral);</span>
+<span class="lineNum">    1050 </span>            :     unsigned k=0;
+<span class="lineNum">    1051 </span><span class="lineNoCov">          0 :     std::vector&lt;unsigned&gt; atoms( ablocks.size() ); decodeIndexToAtoms( curr, atoms );</span>
+<span class="lineNum">    1052 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;ablocks.size(); ++i) {</span>
+<span class="lineNum">    1053 </span><span class="lineNoCov">          0 :       if( use_for_central_atom[i] ) {</span>
+<span class="lineNum">    1054 </span><span class="lineNoCov">          0 :         mypack.setIndex( k, basn + atoms[i] );</span>
+<span class="lineNum">    1055 </span><span class="lineNoCov">          0 :         mypack.setDerivative( k, numberForCentralAtom*Tensor::identity() );</span>
+<span class="lineNum">    1056 </span><span class="lineNoCov">          0 :         k++;</span>
+<span class="lineNum">    1057 </span>            :       }
+<span class="lineNum">    1058 </span>            :     }
+<span class="lineNum">    1059 </span>            :   } else {
+<span class="lineNum">    1060 </span><span class="lineCov">     140389 :     if( mypack.getNumberOfAtomsWithDerivatives()!=ncentral ) mypack.resize(ncentral);</span>
+<span class="lineNum">    1061 </span>            :     unsigned k=0;
+<span class="lineNum">    1062 </span><span class="lineCov">     809705 :     for(unsigned i=0; i&lt;ablocks.size(); ++i) {</span>
+<span class="lineNum">    1063 </span><span class="lineCov">     176309 :       if( use_for_central_atom[i] ) {</span>
+<span class="lineNum">    1064 </span><span class="lineCov">     347338 :         mypack.setIndex( k, basn + ablocks[i][curr] );</span>
+<span class="lineNum">    1065 </span><span class="lineCov">     347338 :         mypack.setDerivative( k, numberForCentralAtom*Tensor::identity() );</span>
+<span class="lineNum">    1066 </span><span class="lineCov">     173669 :         k++;</span>
+<span class="lineNum">    1067 </span>            :       }
+<span class="lineNum">    1068 </span>            :     }
+<span class="lineNum">    1069 </span>            :   }
+<a name="1070"><span class="lineNum">    1070 </span><span class="lineCov">     605385 : }</span></a>
+<span class="lineNum">    1071 </span>            : 
+<span class="lineNum">    1072 </span><span class="lineCov">  120056683 : Vector MultiColvarBase::getSeparation( const Vector&amp; vec1, const Vector&amp; vec2 ) const {</span>
+<span class="lineNum">    1073 </span><span class="lineCov">  120056683 :   if(usepbc) { return pbcDistance( vec1, vec2 ); }</span>
+<span class="lineNum">    1074 </span><span class="lineNoCov">          0 :   else { return delta( vec1, vec2 ); }</span>
+<a name="1075"><span class="lineNum">    1075 </span>            : }</a>
+<span class="lineNum">    1076 </span>            : 
+<span class="lineNum">    1077 </span><span class="lineCov">     234812 : void MultiColvarBase::applyPbc(std::vector&lt;Vector&gt;&amp; dlist, unsigned int max_index) const {</span>
+<span class="lineNum">    1078 </span><span class="lineCov">     234812 :   if (usepbc) pbcApply(dlist, max_index);</span>
+<a name="1079"><span class="lineNum">    1079 </span><span class="lineCov">     234812 : }</span></a>
+<span class="lineNum">    1080 </span>            : 
+<span class="lineNum">    1081 </span><span class="lineCov">       1744 : void MultiColvarBase::apply() {</span>
+<span class="lineNum">    1082 </span><span class="lineCov">       1744 :   if( getForcesFromVessels( forcesToApply ) ) setForcesOnAtoms( forcesToApply );</span>
+<span class="lineNum">    1083 </span><span class="lineCov">       1744 : }</span>
+<a name="1084"><span class="lineNum">    1084 </span>            : </a>
+<span class="lineNum">    1085 </span>            : }
+<span class="lineNum">    1086 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

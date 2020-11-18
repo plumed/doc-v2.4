@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - function/LocalEnsemble.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">function</a> - LocalEnsemble.cpp<span style="font-size: 80%;"> (source / <a href="LocalEnsemble.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Function.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/OpenMP.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace function {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC FUNCTION LOCALENSEMBLE
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Calculates the average over multiple arguments.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : If more than one collective variable is given for each argument then they
+<span class="lineNum">      36 </span>            : are averaged separately. The average is stored in a component labelled &lt;em&gt;label&lt;/em&gt;.cvlabel.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : \par Examples
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : The following input tells plumed to calculate the chemical shifts for four
+<span class="lineNum">      41 </span>            : different proteins in the same simulation box then average them, calcualated
+<span class="lineNum">      42 </span>            : the sum of the squared deviation with respect to the experiemntal values and
+<span class="lineNum">      43 </span>            : applies a linear restraint.
+<span class="lineNum">      44 </span>            : \plumedfile
+<span class="lineNum">      45 </span>            : MOLINFO STRUCTURE=data/template.pdb
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : chaina: GROUP ATOMS=1-1640
+<span class="lineNum">      48 </span>            : chainb: GROUP ATOMS=1641-3280
+<span class="lineNum">      49 </span>            : chainc: GROUP ATOMS=3281-4920
+<span class="lineNum">      50 </span>            : chaind: GROUP ATOMS=4921-6560
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : WHOLEMOLECULES ENTITY0=chaina ENTITY1=chainb ENTITY2=chainc ENTITY3=chaind
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : csa: CS2BACKBONE ATOMS=chaina NRES=100 DATA=data/ TEMPLATE=chaina.pdb NOPBC
+<span class="lineNum">      55 </span>            : csb: CS2BACKBONE ATOMS=chainb NRES=100 DATA=data/ TEMPLATE=chainb.pdb NOPBC
+<span class="lineNum">      56 </span>            : csc: CS2BACKBONE ATOMS=chainc NRES=100 DATA=data/ TEMPLATE=chainc.pdb NOPBC
+<span class="lineNum">      57 </span>            : csd: CS2BACKBONE ATOMS=chaind NRES=100 DATA=data/ TEMPLATE=chaind.pdb NOPBC
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : ensca: LOCALENSEMBLE NUM=4 ARG1=(csa\.ca_.*) ARG2=(csb\.ca_.*) ARG3=(csc\.ca_.*) ARG4=(csd\.ca_.*)
+<span class="lineNum">      60 </span>            : enscb: LOCALENSEMBLE NUM=4 ARG1=(csa\.cb_.*) ARG2=(csb\.cb_.*) ARG3=(csc\.cb_.*) ARG4=(csd\.cb_.*)
+<span class="lineNum">      61 </span>            : ensco: LOCALENSEMBLE NUM=4 ARG1=(csa\.co_.*) ARG2=(csb\.co_.*) ARG3=(csc\.co_.*) ARG4=(csd\.co_.*)
+<span class="lineNum">      62 </span>            : enshn: LOCALENSEMBLE NUM=4 ARG1=(csa\.hn_.*) ARG2=(csb\.hn_.*) ARG3=(csc\.hn_.*) ARG4=(csd\.hn_.*)
+<span class="lineNum">      63 </span>            : ensnh: LOCALENSEMBLE NUM=4 ARG1=(csa\.nh_.*) ARG2=(csb\.nh_.*) ARG3=(csc\.nh_.*) ARG4=(csd\.nh_.*)
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : stca: STATS ARG=(ensca\.csa\.ca_.*) PARARG=(csa\.expca_.*) SQDEVSUM
+<span class="lineNum">      66 </span>            : stcb: STATS ARG=(enscb\.csa\.cb_.*) PARARG=(csa\.expcb_.*) SQDEVSUM
+<span class="lineNum">      67 </span>            : stco: STATS ARG=(ensco\.csa\.co_.*) PARARG=(csa\.expco_.*) SQDEVSUM
+<span class="lineNum">      68 </span>            : sthn: STATS ARG=(enshn\.csa\.hn_.*) PARARG=(csa\.exphn_.*) SQDEVSUM
+<span class="lineNum">      69 </span>            : stnh: STATS ARG=(ensnh\.csa\.nh_.*) PARARG=(csa\.expnh_.*) SQDEVSUM
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : res: RESTRAINT ARG=stca.*,stcb.*,stco.*,sthn.*,stnh.* AT=0.,0.,0.,0.,0. KAPPA=0.,0.,0.,0.,0 SLOPE=16.,16.,12.,24.,0.5
+<span class="lineNum">      72 </span>            : \endplumedfile
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : */
+<span class="lineNum">      75 </span>            : //+ENDPLUMEDOC
+<a name="76"><span class="lineNum">      76 </span>            : </a>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">          4 : class LocalEnsemble :</span>
+<span class="lineNum">      79 </span>            :   public Function
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span>            :   unsigned ens_dim;
+<span class="lineNum">      82 </span>            :   unsigned narg;
+<span class="lineNum">      83 </span>            : public:
+<span class="lineNum">      84 </span>            :   explicit LocalEnsemble(const ActionOptions&amp;);
+<span class="lineNum">      85 </span>            :   void     calculate();
+<span class="lineNum">      86 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      87 </span>            : };
+<a name="88"><span class="lineNum">      88 </span>            : </a>
+<span class="lineNum">      89 </span>            : 
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(LocalEnsemble,&quot;LOCALENSEMBLE&quot;)</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">          3 : void LocalEnsemble::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">          3 :   Function::registerKeywords(keys);</span>
+<span class="lineNum">      94 </span><span class="lineCov">          6 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;NUM&quot;,&quot;the number of local replicas&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">          3 :   ActionWithValue::useCustomisableComponents(keys);</span>
+<a name="97"><span class="lineNum">      97 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">          2 : LocalEnsemble::LocalEnsemble(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     100 </span>            :   Action(ao),
+<span class="lineNum">     101 </span>            :   Function(ao),
+<span class="lineNum">     102 </span><span class="lineCov">          2 :   ens_dim(0)</span>
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span><span class="lineCov">          4 :   parse(&quot;NUM&quot;,ens_dim);</span>
+<span class="lineNum">     105 </span><span class="lineCov">          2 :   if(ens_dim==0) error(&quot;NUM should be greater or equal to 1&quot;);</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :   vector&lt;Value*&gt; arg;
+<span class="lineNum">     108 </span>            :   int oldsize=-1;
+<span class="lineNum">     109 </span><span class="lineCov">         14 :   for(unsigned i=1; i&lt;=ens_dim; ++i ) {</span>
+<span class="lineNum">     110 </span>            :     vector&lt;Value*&gt; larg;
+<span class="lineNum">     111 </span><span class="lineCov">         12 :     if(!parseArgumentList(&quot;ARG&quot;,i,larg)) break;</span>
+<span class="lineNum">     112 </span><span class="lineCov">         48 :     for(unsigned j=0; j&lt;larg.size(); j++) arg.push_back(larg[j]);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          6 :     if(oldsize!=-1&amp;&amp;oldsize!=larg.size()) error(&quot;In LOCALENSEMBLE you should have the same number of arguments for each ARG keyword&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          6 :     oldsize = larg.size();</span>
+<span class="lineNum">     115 </span><span class="lineCov">          6 :     if(!larg.empty()) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">          6 :       log.printf(&quot;  with arguments %u: &quot;, i);</span>
+<span class="lineNum">     117 </span><span class="lineCov">         60 :       for(unsigned j=0; j&lt;larg.size(); j++) log.printf(&quot; %s&quot;,larg[j]-&gt;getName().c_str());</span>
+<span class="lineNum">     118 </span><span class="lineCov">          6 :       log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     119 </span>            :     }
+<span class="lineNum">     120 </span>            :   }
+<span class="lineNum">     121 </span><span class="lineCov">          2 :   requestArguments(arg);</span>
+<span class="lineNum">     122 </span><span class="lineCov">          2 :   narg = arg.size()/ens_dim;</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :   // these are the averages
+<span class="lineNum">     125 </span><span class="lineCov">         10 :   for(unsigned i=0; i&lt;narg; i++) {</span>
+<span class="lineNum">     126 </span>            :     std::string s=getPntrToArgument(i)-&gt;getName();
+<span class="lineNum">     127 </span><span class="lineCov">          4 :     addComponentWithDerivatives(s);</span>
+<span class="lineNum">     128 </span><span class="lineCov">          4 :     getPntrToComponent(i)-&gt;setNotPeriodic();</span>
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">          2 :   log.printf(&quot;  averaging over %u replicas.\n&quot;, ens_dim);</span>
+<a name="132"><span class="lineNum">     132 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">         40 : void LocalEnsemble::calculate()</span>
+<a name="135"><span class="lineNum">     135 </span>            : {</a>
+<span class="lineNum">     136 </span><span class="lineCov">         40 :   const double fact = 1.0/static_cast&lt;double&gt;(ens_dim);</span>
+<span class="lineNum">     137 </span><span class="lineCov">        120 :   #pragma omp parallel for num_threads(OpenMP::getNumThreads())</span>
+<span class="lineNum">     138 </span><span class="lineCov">         80 :   for(unsigned i=0; i&lt;narg; ++i) {</span>
+<span class="lineNum">     139 </span>            :     double mean = 0.;
+<span class="lineNum">     140 </span><span class="lineCov">         80 :     Value* v=getPntrToComponent(i);</span>
+<span class="lineNum">     141 </span><span class="lineCov">        560 :     for(unsigned j=0; j&lt;ens_dim; ++j) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">        240 :       const unsigned index = j*narg+i;</span>
+<span class="lineNum">     143 </span>            :       setDerivative(v, index, fact);
+<span class="lineNum">     144 </span><span class="lineCov">        240 :       mean += fact*getArgument(index);</span>
+<span class="lineNum">     145 </span>            :     }
+<span class="lineNum">     146 </span>            :     v-&gt;set(mean);
+<span class="lineNum">     147 </span>            :   }
+<span class="lineNum">     148 </span><span class="lineCov">         40 : }</span>
+<a name="149"><span class="lineNum">     149 </span>            : </a>
+<span class="lineNum">     150 </span>            : }
+<span class="lineNum">     151 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

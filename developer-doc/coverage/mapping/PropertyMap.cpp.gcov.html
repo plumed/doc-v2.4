@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - mapping/PropertyMap.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">mapping</a> - PropertyMap.cpp<span style="font-size: 80%;"> (source / <a href="PropertyMap.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;PathBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : //+PLUMEDOC COLVAR GPROPERTYMAP
+<span class="lineNum">      26 </span>            : /*
+<span class="lineNum">      27 </span>            : Property maps but with a more flexible framework for the distance metric being used.
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : This colvar calculates a property map using the formalism developed by Spiwok \cite Spiwok:2011ce.
+<span class="lineNum">      30 </span>            : In essence if you have the value of some property, \f$X_i\f$, that it takes at a set of high-dimensional
+<span class="lineNum">      31 </span>            : positions then you calculate the value of the property at some arbitrary point in the high-dimensional space
+<span class="lineNum">      32 </span>            : using:
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : \f[
+<span class="lineNum">      35 </span>            : X=\frac{\sum_i X_i*\exp(-\lambda D_i(x))}{\sum_i  \exp(-\lambda D_i(x))}
+<span class="lineNum">      36 </span>            : \f]
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : Within PLUMED there are multiple ways to define the distance from a high-dimensional configuration, \f$D_i\f$.  You could calculate
+<span class="lineNum">      39 </span>            : the RMSD distance or you could calculate the ammount by which a set of collective variables change.  As such this implementation
+<span class="lineNum">      40 </span>            : of the propertymap allows one to use all the different distance metric that are discussed in \ref dists. This is as opposed to
+<span class="lineNum">      41 </span>            : the alternative implementation \ref PROPERTYMAP which is a bit faster but which only allows one to use the RMSD distance.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : \par Examples
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : The input shown below can be used to calculate the interpolated values of two properties called X and Y based on the values
+<span class="lineNum">      46 </span>            : that these properties take at a set of reference configurations and using the formula above.  For this input the distances
+<span class="lineNum">      47 </span>            : between the reference configurations and the instantaneous configurations are calculated using the OPTIMAL metric that is
+<span class="lineNum">      48 </span>            : discussed at length in the manual pages on \ref RMSD.
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : \plumedfile
+<span class="lineNum">      51 </span>            : p2: GPROPERTYMAP REFERENCE=allv.pdb PROPERTY=X,Y LAMBDA=69087
+<span class="lineNum">      52 </span>            : PRINT ARG=p2.X,p2.Y,p2.zpath STRIDE=1 FILE=colvar
+<span class="lineNum">      53 </span>            : \endplumedfile
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : The additional input file for this calculation, which contains the reference frames and the values of X and Y at these reference
+<span class="lineNum">      56 </span>            : points has the following format.
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : \verbatim
+<span class="lineNum">      59 </span>            : REMARK X=1 Y=2
+<span class="lineNum">      60 </span>            : ATOM      1  CL  ALA     1      -3.171   0.295   2.045  1.00  1.00
+<span class="lineNum">      61 </span>            : ATOM      5  CLP ALA     1      -1.819  -0.143   1.679  1.00  1.00
+<span class="lineNum">      62 </span>            : ATOM      6  OL  ALA     1      -1.177  -0.889   2.401  1.00  1.00
+<span class="lineNum">      63 </span>            : ATOM      7  NL  ALA     1      -1.313   0.341   0.529  1.00  1.00
+<span class="lineNum">      64 </span>            : ATOM      8  HL  ALA     1      -1.845   0.961  -0.011  1.00  1.00
+<span class="lineNum">      65 </span>            : ATOM      9  CA  ALA     1      -0.003  -0.019   0.021  1.00  1.00
+<span class="lineNum">      66 </span>            : ATOM     10  HA  ALA     1       0.205  -1.051   0.259  1.00  1.00
+<span class="lineNum">      67 </span>            : ATOM     11  CB  ALA     1       0.009   0.135  -1.509  1.00  1.00
+<span class="lineNum">      68 </span>            : ATOM     15  CRP ALA     1       1.121   0.799   0.663  1.00  1.00
+<span class="lineNum">      69 </span>            : ATOM     16  OR  ALA     1       1.723   1.669   0.043  1.00  1.00
+<span class="lineNum">      70 </span>            : ATOM     17  NR  ALA     1       1.423   0.519   1.941  1.00  1.00
+<span class="lineNum">      71 </span>            : ATOM     18  HR  ALA     1       0.873  -0.161   2.413  1.00  1.00
+<span class="lineNum">      72 </span>            : ATOM     19  CR  ALA     1       2.477   1.187   2.675  1.00  1.00
+<span class="lineNum">      73 </span>            : END
+<span class="lineNum">      74 </span>            : FIXED
+<span class="lineNum">      75 </span>            : REMARK X=2 Y=3
+<span class="lineNum">      76 </span>            : ATOM      1  CL  ALA     1      -3.175   0.365   2.024  1.00  1.00
+<span class="lineNum">      77 </span>            : ATOM      5  CLP ALA     1      -1.814  -0.106   1.685  1.00  1.00
+<span class="lineNum">      78 </span>            : ATOM      6  OL  ALA     1      -1.201  -0.849   2.425  1.00  1.00
+<span class="lineNum">      79 </span>            : ATOM      7  NL  ALA     1      -1.296   0.337   0.534  1.00  1.00
+<span class="lineNum">      80 </span>            : ATOM      8  HL  ALA     1      -1.807   0.951  -0.044  1.00  1.00
+<span class="lineNum">      81 </span>            : ATOM      9  CA  ALA     1       0.009  -0.067   0.033  1.00  1.00
+<span class="lineNum">      82 </span>            : ATOM     10  HA  ALA     1       0.175  -1.105   0.283  1.00  1.00
+<span class="lineNum">      83 </span>            : ATOM     11  CB  ALA     1       0.027   0.046  -1.501  1.00  1.00
+<span class="lineNum">      84 </span>            : ATOM     15  CRP ALA     1       1.149   0.725   0.654  1.00  1.00
+<span class="lineNum">      85 </span>            : ATOM     16  OR  ALA     1       1.835   1.491  -0.011  1.00  1.00
+<span class="lineNum">      86 </span>            : ATOM     17  NR  ALA     1       1.380   0.537   1.968  1.00  1.00
+<span class="lineNum">      87 </span>            : ATOM     18  HR  ALA     1       0.764  -0.060   2.461  1.00  1.00
+<span class="lineNum">      88 </span>            : ATOM     19  CR  ALA     1       2.431   1.195   2.683  1.00  1.00
+<span class="lineNum">      89 </span>            : END
+<span class="lineNum">      90 </span>            : \endverbatim
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : */
+<span class="lineNum">      93 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : namespace PLMD {
+<a name="96"><span class="lineNum">      96 </span>            : namespace mapping {</a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">          6 : class PropertyMap : public PathBase {</span>
+<span class="lineNum">      99 </span>            : public:
+<span class="lineNum">     100 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     101 </span>            :   explicit PropertyMap(const ActionOptions&amp;);
+<a name="102"><span class="lineNum">     102 </span>            : };</a>
+<span class="lineNum">     103 </span>            : 
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">       6455 : PLUMED_REGISTER_ACTION(PropertyMap,&quot;GPROPERTYMAP&quot;)</span></a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">          4 : void PropertyMap::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     107 </span><span class="lineCov">          4 :   PathBase::registerKeywords( keys );</span>
+<span class="lineNum">     108 </span><span class="lineCov">          4 :   ActionWithValue::useCustomisableComponents( keys );</span>
+<span class="lineNum">     109 </span><span class="lineCov">         12 :   keys.addFlag(&quot;NOMAPPING&quot;,false,&quot;do not calculate the position on the manifold&quot;);</span>
+<a name="110"><span class="lineNum">     110 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">          3 : PropertyMap::PropertyMap(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     113 </span>            :   Action(ao),
+<span class="lineNum">     114 </span><span class="lineCov">          3 :   PathBase(ao)</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineCov">          6 :   bool nos; parseFlag(&quot;NOMAPPING&quot;,nos);</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :   std::string empty;
+<span class="lineNum">     119 </span><span class="lineCov">          3 :   if(!nos) {</span>
+<span class="lineNum">     120 </span><span class="lineCov">         18 :     for(unsigned i=0; i&lt;getNumberOfProperties(); ++i) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">         18 :       empty=&quot;LABEL=&quot;+getPropertyName(i);</span>
+<span class="lineNum">     122 </span><span class="lineCov">         12 :       addVessel( &quot;SPATH&quot;, empty, 0 );</span>
+<span class="lineNum">     123 </span>            :     }
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span><span class="lineCov">          3 :   readVesselKeywords();</span>
+<span class="lineNum">     126 </span><span class="lineCov">          3 :   checkRead();</span>
+<span class="lineNum">     127 </span><span class="lineCov">          3 : }</span>
+<a name="128"><span class="lineNum">     128 </span>            : </a>
+<span class="lineNum">     129 </span>            : }
+<span class="lineNum">     130 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/PDB.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - PDB.h<span style="font-size: 80%;"> (source / <a href="PDB.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_PDB_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_PDB_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;AtomNumber.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Vector.h&quot;
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;map&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : class Log;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /// Minimalistic pdb parser.
+<a name="37"><span class="lineNum">      37 </span>            : /// Contain positions, atomic indexes, occupancy and beta.</a>
+<span class="lineNum">      38 </span>            : /// We should also add other info (e.g. residue name etc).
+<span class="lineNum">      39 </span><span class="lineCov">      29322 : class PDB {</span>
+<span class="lineNum">      40 </span>            :   std::vector&lt;unsigned&gt; block_ends;
+<span class="lineNum">      41 </span>            :   std::vector&lt;std::string&gt; atomsymb, chain;
+<span class="lineNum">      42 </span>            :   std::vector&lt;unsigned&gt; residue;
+<span class="lineNum">      43 </span>            :   std::vector&lt;Vector&gt; positions;
+<span class="lineNum">      44 </span>            :   std::vector&lt;double&gt; occupancy;
+<span class="lineNum">      45 </span>            :   std::vector&lt;double&gt; beta;
+<span class="lineNum">      46 </span>            :   std::vector&lt;std::string&gt; remark;
+<span class="lineNum">      47 </span>            :   std::vector&lt;AtomNumber&gt; numbers;
+<span class="lineNum">      48 </span>            :   std::map&lt;AtomNumber,unsigned&gt; number2index;
+<span class="lineNum">      49 </span>            :   std::vector&lt;std::string&gt; residuenames;
+<span class="lineNum">      50 </span>            : public:
+<span class="lineNum">      51 </span>            : /// Read the pdb from a file, scaling positions by a factor scale
+<span class="lineNum">      52 </span>            :   bool read(const std::string&amp;file,bool naturalUnits,double scale);
+<span class="lineNum">      53 </span>            : /// Read from a file pointer
+<span class="lineNum">      54 </span>            :   bool readFromFilepointer(FILE *fp,bool naturalUnits,double scale);
+<span class="lineNum">      55 </span>            : /// Access to the position array
+<span class="lineNum">      56 </span>            :   const std::vector&lt;Vector&gt;     &amp; getPositions()const;
+<span class="lineNum">      57 </span>            : /// Access to the occupancy array
+<span class="lineNum">      58 </span>            :   const std::vector&lt;double&gt;     &amp; getOccupancy()const;
+<span class="lineNum">      59 </span>            : /// Access to the beta array
+<span class="lineNum">      60 </span>            :   const std::vector&lt;double&gt;     &amp; getBeta()const;
+<span class="lineNum">      61 </span>            : /// This is used to set the keyword ARG - this is so we
+<span class="lineNum">      62 </span>            : /// we can use a1.* in the input for reference configurations
+<span class="lineNum">      63 </span>            :   void setArgKeyword( const std::string&amp; new_args );
+<span class="lineNum">      64 </span>            : /// Add information to the remark
+<span class="lineNum">      65 </span>            :   void addRemark( const std::vector&lt;std::string&gt;&amp; v1 );
+<span class="lineNum">      66 </span>            : /// Access to the lines of REMARK
+<span class="lineNum">      67 </span>            :   const std::vector&lt;std::string&gt;     &amp; getRemark()const;
+<span class="lineNum">      68 </span>            : /// Access to the indexes
+<span class="lineNum">      69 </span>            :   const std::vector&lt;AtomNumber&gt; &amp; getAtomNumbers()const;
+<span class="lineNum">      70 </span>            : /// Returns the number of atoms
+<span class="lineNum">      71 </span>            :   unsigned                        size()const;
+<span class="lineNum">      72 </span>            : /// Get the names of all the chains in the pdb file
+<span class="lineNum">      73 </span>            :   void getChainNames( std::vector&lt;std::string&gt;&amp; chains ) const;
+<span class="lineNum">      74 </span>            : /// Get the residues in each of the chains
+<span class="lineNum">      75 </span>            :   void getResidueRange( const std::string&amp; chainname, unsigned&amp; res_start, unsigned&amp; res_end, std::string&amp; errmsg ) const;
+<span class="lineNum">      76 </span>            : /// Get the atoms in each of the chains
+<span class="lineNum">      77 </span>            :   void getAtomRange( const std::string&amp; chainname, AtomNumber&amp; a_start, AtomNumber&amp; a_end, std::string&amp; errmsg ) const;
+<span class="lineNum">      78 </span>            : /// Get the chain ID that a particular residue is a part of
+<span class="lineNum">      79 </span>            :   std::string getChainID(const unsigned&amp; resnumber) const;
+<span class="lineNum">      80 </span>            : ///use the log to dump information
+<span class="lineNum">      81 </span>            :   friend Log&amp; operator&lt;&lt;(Log&amp; ostr, const PDB&amp; pdb);
+<span class="lineNum">      82 </span>            : /// return the name of a specific atom
+<span class="lineNum">      83 </span>            :   std::string getAtomName(AtomNumber a) const;
+<span class="lineNum">      84 </span>            : /// return the residue number for a specific atom
+<span class="lineNum">      85 </span>            :   unsigned getResidueNumber(AtomNumber a) const;
+<span class="lineNum">      86 </span>            : /// return the residue name for a specific atom
+<span class="lineNum">      87 </span>            :   std::string getResidueName(AtomNumber a) const;
+<span class="lineNum">      88 </span>            : /// get the name of the resnum'th residue
+<span class="lineNum">      89 </span>            :   std::string getResidueName(const unsigned&amp; resnum ) const;
+<span class="lineNum">      90 </span>            : /// get the name of the resnum'th residue of chain
+<span class="lineNum">      91 </span>            : /// Chain==&quot;*&quot; matches any chain and makes it equivalent to getResidueName
+<span class="lineNum">      92 </span>            :   std::string getResidueName(const unsigned&amp; resnum,const std::string&amp; chain ) const;
+<span class="lineNum">      93 </span>            : /// Check if any of the residues are named name
+<span class="lineNum">      94 </span>            :   bool checkForResidue( const std::string&amp; name ) const ;
+<span class="lineNum">      95 </span>            : /// Check if any of the atoms are named atom
+<span class="lineNum">      96 </span>            :   bool checkForAtom( const std::string&amp; name ) const ;
+<span class="lineNum">      97 </span>            : /// Return the atom named aname from residue number resnum
+<span class="lineNum">      98 </span>            :   AtomNumber getNamedAtomFromResidue( const std::string&amp; aname, const unsigned&amp; resnum ) const;
+<span class="lineNum">      99 </span>            : /// Return the atom named aname from residue number resnum and chain.
+<span class="lineNum">     100 </span>            : /// Chain==&quot;*&quot; matches any chain and makes it equivalent to getNamedAtomFromResidue.
+<span class="lineNum">     101 </span>            :   AtomNumber getNamedAtomFromResidueAndChain( const std::string&amp; aname, const unsigned&amp; resnum, const std::string&amp; chain ) const;
+<span class="lineNum">     102 </span>            : /// Access to the atoms of a residue
+<span class="lineNum">     103 </span>            :   std::vector&lt;AtomNumber&gt; getAtomsInResidue(const unsigned&amp; resnum,const std::string&amp; chainid)const;
+<span class="lineNum">     104 </span>            : /// Access to the atoms of a chain
+<span class="lineNum">     105 </span>            :   std::vector&lt;AtomNumber&gt; getAtomsInChain(const std::string&amp; chainid)const;
+<span class="lineNum">     106 </span>            : /// Get the extents of the blocks containing the atoms
+<span class="lineNum">     107 </span>            :   const std::vector&lt;unsigned&gt; &amp; getAtomBlockEnds() const ;
+<span class="lineNum">     108 </span>            : /// Get the number of blocks of atoms in the pdb
+<span class="lineNum">     109 </span>            :   unsigned getNumberOfAtomBlocks() const ;
+<span class="lineNum">     110 </span>            : /// Set the position array
+<span class="lineNum">     111 </span>            :   void setPositions(const std::vector&lt;Vector&gt; &amp;v);
+<span class="lineNum">     112 </span>            : /// Access to the position array
+<span class="lineNum">     113 </span>            :   Vector getPosition(AtomNumber a)const;
+<span class="lineNum">     114 </span>            : };
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : }
+<span class="lineNum">     117 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

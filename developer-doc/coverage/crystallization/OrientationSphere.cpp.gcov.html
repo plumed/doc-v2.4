@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/OrientationSphere.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - OrientationSphere.cpp<span style="font-size: 80%;"> (source / <a href="OrientationSphere.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">60</td>
+            <td class="headerCovTableEntry">66</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;OrientationSphere.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;VectorMultiColvar.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<a name="29"><span class="lineNum">      29 </span>            : namespace crystallization {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         16 : void OrientationSphere::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      32 </span><span class="lineCov">         16 :   multicolvar::MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">      33 </span><span class="lineCov">         80 :   keys.add(&quot;compulsory&quot;,&quot;NN&quot;,&quot;6&quot;,&quot;The n parameter of the switching function &quot;);</span>
+<span class="lineNum">      34 </span><span class="lineCov">         80 :   keys.add(&quot;compulsory&quot;,&quot;MM&quot;,&quot;0&quot;,&quot;The m parameter of the switching function; 0 implies 2*NN&quot;);</span>
+<span class="lineNum">      35 </span><span class="lineCov">         80 :   keys.add(&quot;compulsory&quot;,&quot;D_0&quot;,&quot;0.0&quot;,&quot;The d_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">      36 </span><span class="lineCov">         64 :   keys.add(&quot;compulsory&quot;,&quot;R_0&quot;,&quot;The r_0 parameter of the switching function&quot;);</span>
+<span class="lineNum">      37 </span><span class="lineCov">         64 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;This keyword is used if you want to employ an alternative to the continuous swiching function defined above. &quot;</span>
+<span class="lineNum">      38 </span>            :            &quot;The following provides information on the \\ref switchingfunction that are available. &quot;
+<span class="lineNum">      39 </span>            :            &quot;When this keyword is present you no longer need the NN, MM, D_0 and R_0 keywords.&quot;);
+<span class="lineNum">      40 </span>            :   // Use actionWithDistributionKeywords
+<span class="lineNum">      41 </span><span class="lineCov">         64 :   keys.use(&quot;SPECIES&quot;); keys.use(&quot;SPECIESA&quot;); keys.use(&quot;SPECIESB&quot;);</span>
+<span class="lineNum">      42 </span><span class="lineCov">         64 :   keys.use(&quot;MEAN&quot;); keys.use(&quot;MORE_THAN&quot;); keys.use(&quot;LESS_THAN&quot;);</span>
+<span class="lineNum">      43 </span><span class="lineCov">         80 :   keys.use(&quot;MIN&quot;); keys.use(&quot;BETWEEN&quot;); keys.use(&quot;HISTOGRAM&quot;); keys.use(&quot;MOMENTS&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineCov">         48 :   keys.use(&quot;LOWEST&quot;); keys.use(&quot;HIGHEST&quot;);</span>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">         16 : }</span></a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">         11 : OrientationSphere::OrientationSphere(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      48 </span>            :   Action(ao),
+<span class="lineNum">      49 </span><span class="lineCov">         11 :   MultiColvarBase(ao)</span>
+<span class="lineNum">      50 </span>            : {
+<span class="lineNum">      51 </span><span class="lineCov">         11 :   if( getNumberOfBaseMultiColvars()&gt;1 ) warning(&quot;not sure if orientation sphere works with more than one base multicolvar - check numerical derivatives&quot;);</span>
+<span class="lineNum">      52 </span>            :   // Read in the switching function
+<span class="lineNum">      53 </span><span class="lineCov">         22 :   std::string sw, errors; parse(&quot;SWITCH&quot;,sw);</span>
+<span class="lineNum">      54 </span><span class="lineCov">         11 :   if(sw.length()&gt;0) {</span>
+<span class="lineNum">      55 </span><span class="lineCov">         11 :     switchingFunction.set(sw,errors);</span>
+<span class="lineNum">      56 </span>            :   } else {
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :     double r_0=-1.0, d_0; int nn, mm;</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :     parse(&quot;NN&quot;,nn); parse(&quot;MM&quot;,mm);</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :     parse(&quot;R_0&quot;,r_0); parse(&quot;D_0&quot;,d_0);</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :     if( r_0&lt;0.0 ) error(&quot;you must set a value for R_0&quot;);</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :     switchingFunction.set(nn,mm,r_0,d_0);</span>
+<span class="lineNum">      62 </span>            :   }
+<span class="lineNum">      63 </span><span class="lineCov">         33 :   log.printf(&quot;  degree of overlap in orientation between central molecule and those within %s\n&quot;,( switchingFunction.description() ).c_str() );</span>
+<span class="lineNum">      64 </span><span class="lineCov">         33 :   log&lt;&lt;&quot;  Bibliography &quot;&lt;&lt;plumed.cite(&quot;Tribello, Giberti, Sosso, Salvalaglio and Parrinello, J. Chem. Theory Comput. 13, 1317 (2017)&quot;)&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">      65 </span>            :   // Set the link cell cutoff
+<span class="lineNum">      66 </span><span class="lineCov">         11 :   rcut2 = switchingFunction.get_dmax()*switchingFunction.get_dmax();</span>
+<span class="lineNum">      67 </span><span class="lineCov">         11 :   setLinkCellCutoff( switchingFunction.get_dmax() );</span>
+<span class="lineNum">      68 </span><span class="lineCov">         11 :   std::vector&lt;AtomNumber&gt; all_atoms; setupMultiColvarBase( all_atoms );</span>
+<a name="69"><span class="lineNum">      69 </span><span class="lineCov">         11 : }</span></a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">       7782 : double OrientationSphere::compute( const unsigned&amp; tindex, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">      72 </span><span class="lineCov">       7782 :   double sw, value=0, denom=0, dfunc; Vector ddistance;</span>
+<span class="lineNum">      73 </span><span class="lineCov">       7782 :   unsigned ncomponents=getBaseMultiColvar(0)-&gt;getNumberOfQuantities();</span>
+<span class="lineNum">      74 </span><span class="lineCov">       7782 :   std::vector&lt;double&gt; catom_orient( ncomponents ), this_orient( ncomponents );</span>
+<span class="lineNum">      75 </span><span class="lineCov">       7782 :   std::vector&lt;double&gt; this_der( ncomponents ), catom_der( ncomponents );</span>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">       7782 :   getInputData( 0, true, myatoms, catom_orient );</span>
+<span class="lineNum">      78 </span><span class="lineCov">       7782 :   MultiValue&amp; myder0=getInputDerivatives( 0, true, myatoms );</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">    2759786 :   for(unsigned i=1; i&lt;myatoms.getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">      81 </span>            :     Vector&amp; distance=myatoms.getPosition(i);
+<span class="lineNum">      82 </span>            :     double d2;
+<span class="lineNum">      83 </span><span class="lineCov">    2611747 :     if ( (d2=distance[0]*distance[0])&lt;rcut2 &amp;&amp;</span>
+<span class="lineNum">      84 </span><span class="lineCov">    2368793 :          (d2+=distance[1]*distance[1])&lt;rcut2 &amp;&amp;</span>
+<span class="lineNum">      85 </span><span class="lineCov">    3571019 :          (d2+=distance[2]*distance[2])&lt;rcut2 &amp;&amp;</span>
+<span class="lineNum">      86 </span>            :          d2&gt;epsilon ) {
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">    1069658 :       sw = switchingFunction.calculateSqr( d2, dfunc );</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">    1069658 :       getInputData( i, true, myatoms, this_orient );</span>
+<span class="lineNum">      91 </span>            :       // Calculate the dot product wrt to this position
+<span class="lineNum">      92 </span><span class="lineCov">    1069658 :       double f_dot = computeVectorFunction( distance, catom_orient, this_orient, ddistance, catom_der, this_der );</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">    1069658 :       if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">      95 </span><span class="lineCov">     914046 :         for(unsigned k=2; k&lt;catom_orient.size(); ++k) { this_der[k]*=sw; catom_der[k]*=sw; }</span>
+<span class="lineNum">      96 </span><span class="lineCov">      10227 :         MultiValue&amp; myder1=getInputDerivatives( i, true, myatoms );</span>
+<span class="lineNum">      97 </span><span class="lineCov">      20454 :         mergeInputDerivatives( 1, 2, this_orient.size(), 0, catom_der, myder0, myatoms );</span>
+<span class="lineNum">      98 </span><span class="lineCov">      10227 :         mergeInputDerivatives( 1, 2, catom_der.size(), i, this_der, myder1, myatoms );</span>
+<span class="lineNum">      99 </span><span class="lineCov">      10227 :         addAtomDerivatives( 1, 0, f_dot*(-dfunc)*distance - sw*ddistance, myatoms );</span>
+<span class="lineNum">     100 </span><span class="lineCov">      10227 :         addAtomDerivatives( 1, i, f_dot*(dfunc)*distance + sw*ddistance, myatoms );</span>
+<span class="lineNum">     101 </span><span class="lineCov">      10227 :         myatoms.addBoxDerivatives( 1, (-dfunc)*f_dot*Tensor(distance,distance) - sw*extProduct(distance,ddistance) );</span>
+<span class="lineNum">     102 </span><span class="lineCov">      10227 :         myder1.clearAll();</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">      10227 :         addAtomDerivatives( -1, 0, (-dfunc)*distance, myatoms );</span>
+<span class="lineNum">     105 </span><span class="lineCov">      10227 :         addAtomDerivatives( -1, i, (dfunc)*distance, myatoms );</span>
+<span class="lineNum">     106 </span><span class="lineCov">      10227 :         myatoms.addTemporyBoxDerivatives( (-dfunc)*Tensor(distance,distance) );</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :       }
+<span class="lineNum">     109 </span><span class="lineCov">    1069658 :       value += sw*f_dot;</span>
+<span class="lineNum">     110 </span><span class="lineCov">    1069658 :       denom += sw;</span>
+<span class="lineNum">     111 </span>            :     }
+<span class="lineNum">     112 </span>            :   }
+<span class="lineNum">     113 </span><span class="lineCov">       7782 :   double rdenom, df2, pref=calculateCoordinationPrefactor( denom, df2 );</span>
+<span class="lineNum">     114 </span><span class="lineCov">       7782 :   if( fabs(denom)&gt;epsilon ) { rdenom = 1.0 / denom; }</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :   else { plumed_assert(fabs(value)&lt;epsilon); rdenom=1.0; }</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   // Now divide everything
+<span class="lineNum">     118 </span><span class="lineCov">       7782 :   double rdenom2=rdenom*rdenom;</span>
+<span class="lineNum">     119 </span><span class="lineCov">       7782 :   updateActiveAtoms( myatoms ); MultiValue&amp; myvals=myatoms.getUnderlyingMultiValue();</span>
+<span class="lineNum">     120 </span><span class="lineCov">     107190 :   for(unsigned i=0; i&lt;myvals.getNumberActive(); ++i) {</span>
+<span class="lineNum">     121 </span>            :     unsigned ider=myvals.getActiveIndex(i);
+<span class="lineNum">     122 </span>            :     double  dgd=myvals.getTemporyDerivative(ider);
+<span class="lineNum">     123 </span><span class="lineCov">      49704 :     myvals.setDerivative( 1, ider, rdenom*(pref*myvals.getDerivative(1,ider)+value*df2*dgd) - (value*pref*dgd)*rdenom2 );</span>
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">      15564 :   return pref*rdenom*value;</span>
+<span class="lineNum">     127 </span>            : }
+<a name="128"><span class="lineNum">     128 </span>            : </a>
+<span class="lineNum">     129 </span>            : }
+<span class="lineNum">     130 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     131 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

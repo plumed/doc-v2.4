@@ -1,0 +1,403 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/Dimer.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - Dimer.cpp<span style="font-size: 80%;"> (source / <a href="Dimer.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">85</td>
+            <td class="headerCovTableEntry">92</td>
+            <td class="headerCovTableEntryHi">92.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2017-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cassert&gt;
+<span class="lineNum">      31 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      32 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : using namespace std;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace PLMD {
+<span class="lineNum">      37 </span>            : namespace colvar {
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : //+PLUMEDOC COLVAR DIMER
+<span class="lineNum">      40 </span>            : /*
+<span class="lineNum">      41 </span>            : This CV computes the Dimer interaction energy for a collection of Dimers.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : Each Dimer represents an atom, as described in the Dimer paper,
+<span class="lineNum">      44 </span>            : JCTC 13, 425 (2017). A system of N atoms is thus represented with N Dimers, each
+<span class="lineNum">      45 </span>            : Dimer being composed of two beads and eventually a virtual site representing its center of mass.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : A typical configuration for a dimerized system has the following ordering of atoms:
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 1    TAG1 X Y Z          N atoms representing the first bead of each Dimer
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : 2    TAG2 X Y Z
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : ...
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : N    TAGN X Y Z          N atoms representing the second bead of each Dimer
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : N+1  TAG1 X Y Z
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : N+2  TAG2 X Y Z
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : ...
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : 2N   TAGN X Y Z          Optional: N atoms representing the center of mass of each Dimer
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : 2N+1 TAG1 X Y Z
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : 2N+2 TAG2 X Y Z
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : ...
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : 3N   TAGN X Y Z          The configuration might go on with un-dimerized atoms (like a solvent)
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : 3N+1
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : 3N+2
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : ...
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : The Dimer interaction energy is defined between atoms x and N+x, for x=1,...,N and is
+<span class="lineNum">      81 </span>            : characterized by two parameters Q and DSIGMA. These are passed as mandatory arguments along with
+<span class="lineNum">      82 </span>            : the temperature of the system.
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : \par Examples
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : This line tells Plumed to compute the Dimer interaction energy for every dimer in the system.
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : \plumedfile
+<span class="lineNum">      89 </span>            : dim: DIMER TEMP=300 Q=0.5 ALLATOMS DSIGMA=0.002
+<span class="lineNum">      90 </span>            : \endplumedfile
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : If the simulation doesn't use virtual sites for the dimers centers of mass,
+<span class="lineNum">      93 </span>            : Plumed has to know in order to determine correctly the total number of dimers from
+<span class="lineNum">      94 </span>            : the total number of atoms:
+<span class="lineNum">      95 </span>            : \plumedfile
+<span class="lineNum">      96 </span>            : dim: DIMER TEMP=300 Q=0.5 ALLATOMS DSIGMA=0.002 NOVSITES
+<span class="lineNum">      97 </span>            : \endplumedfile
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : The NOVSITES flag is not required if one provides the atom serials of each Dimer. These are
+<span class="lineNum">     100 </span>            : defined through two atomlists provided __instead__ of the ALLATOMS keyword.
+<span class="lineNum">     101 </span>            : For example, the Dimer interaction energy of dimers specified by beads (1;23),(5;27),(7;29) is:
+<span class="lineNum">     102 </span>            : \plumedfile
+<span class="lineNum">     103 </span>            : dim: DIMER TEMP=300 Q=0.5 ATOMS1=1,5,7 ATOMS2=23,27,29 DSIGMA=0.002
+<span class="lineNum">     104 </span>            : \endplumedfile
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : Note that the ATOMS1,ATOMS2 keywords can support atom groups and
+<span class="lineNum">     107 </span>            : interval notation as defined in \ref GROUP.
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : In a Replica Exchange simulation the keyword DSIGMA can be used in two ways:
+<span class="lineNum">     111 </span>            : if a plumed.n.dat file is provided for each replica, then DSIGMA is passed as a single value,
+<span class="lineNum">     112 </span>            : like in the previous examples, and each replica will read its own DSIGMA value. If
+<span class="lineNum">     113 </span>            : a unique plumed.dat is given, DSIGMA has to be a list containing a value for each replica.
+<span class="lineNum">     114 </span>            : For 4 replicas:
+<span class="lineNum">     115 </span>            : \plumedfile
+<span class="lineNum">     116 </span>            : dim: DIMER TEMP=300 Q=0.5 ATOMS1=1,5,7 ATOMS2=23,27,29 DSIGMA=0.002,0.002,0.004,0.01
+<span class="lineNum">     117 </span>            : \endplumedfile
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : \par Usage of the CV
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : The dimer interaction is not coded in the driver program and has to be inserted
+<span class="lineNum">     123 </span>            : in the hamiltonian of the system as a linear RESTRAINT (see \ref RESTRAINT):
+<span class="lineNum">     124 </span>            : \plumedfile
+<span class="lineNum">     125 </span>            : dim: DIMER TEMP=300 Q=0.5 ALLATOMS DSIGMA=0.002
+<span class="lineNum">     126 </span>            : RESTRAINT ARG=dim AT=0 KAPPA=0 SLOPE=1 LABEL=dimforces
+<span class="lineNum">     127 </span>            : \endplumedfile
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : In a replica exchange, Metadynamics (see \ref METAD) can be used on the Dimer CV to reduce
+<span class="lineNum">     130 </span>            : the number of replicas. Just keep in mind that METAD SIGMA values should be tuned
+<span class="lineNum">     131 </span>            : in the standard way for each replica according to the value of DSIGMA.
+<span class="lineNum">     132 </span>            : */
+<a name="133"><span class="lineNum">     133 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">          6 : class Dimer : public Colvar {</span>
+<span class="lineNum">     136 </span>            : public:
+<span class="lineNum">     137 </span>            :   static void registerKeywords( Keywords&amp; keys);
+<span class="lineNum">     138 </span>            :   explicit Dimer(const ActionOptions&amp;);
+<span class="lineNum">     139 </span>            :   virtual void calculate();
+<span class="lineNum">     140 </span>            : protected:
+<span class="lineNum">     141 </span>            :   bool trimer,useall;
+<span class="lineNum">     142 </span>            :   int myrank, nranks;
+<span class="lineNum">     143 </span>            :   double qexp,temperature,beta,dsigma;
+<span class="lineNum">     144 </span>            :   vector&lt;double&gt; dsigmas;
+<span class="lineNum">     145 </span>            : private:
+<span class="lineNum">     146 </span>            :   void consistencyCheck();
+<span class="lineNum">     147 </span>            :   vector&lt;AtomNumber&gt; usedatoms1;
+<span class="lineNum">     148 </span>            :   vector&lt;AtomNumber&gt; usedatoms2;
+<span class="lineNum">     149 </span>            : 
+<a name="150"><span class="lineNum">     150 </span>            : };</a>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(Dimer, &quot;DIMER&quot;)</span>
+<span class="lineNum">     153 </span>            : 
+<a name="154"><span class="lineNum">     154 </span>            : </a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">          3 : void Dimer::registerKeywords( Keywords&amp; keys) {</span>
+<span class="lineNum">     157 </span><span class="lineCov">          3 :   Colvar::registerKeywords(keys);</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;DSIGMA&quot;,&quot;The interaction strength of the dimer bond.&quot;);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;, &quot;Q&quot;, &quot;The exponent of the dimer potential.&quot;);</span>
+<span class="lineNum">     161 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;, &quot;TEMP&quot;, &quot;The temperature (in Kelvin) of the simulation.&quot;);</span>
+<span class="lineNum">     162 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;, &quot;ATOMS1&quot;, &quot;The list of atoms representing the first bead of each Dimer being considered by this CV. Used if ALLATOMS flag is missing&quot;);</span>
+<span class="lineNum">     163 </span><span class="lineCov">         12 :   keys.add(&quot;atoms&quot;, &quot;ATOMS2&quot;, &quot;The list of atoms representing the second bead of each Dimer being considered by this CV. Used if ALLATOMS flag is missing&quot;);</span>
+<span class="lineNum">     164 </span><span class="lineCov">          9 :   keys.addFlag(&quot;ALLATOMS&quot;, false, &quot;Use EVERY atom of the system. Overrides ATOMS keyword.&quot;);</span>
+<span class="lineNum">     165 </span><span class="lineCov">          9 :   keys.addFlag(&quot;NOVSITES&quot;, false, &quot;If present the configuration is without virtual sites at the centroids.&quot;);</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     168 </span>            : 
+<a name="169"><span class="lineNum">     169 </span>            : </a>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">          2 : Dimer::Dimer(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     172 </span><span class="lineCov">          6 :   PLUMED_COLVAR_INIT(ao)</span>
+<span class="lineNum">     173 </span>            : {
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">          6 :   log&lt;&lt;&quot; Bibliography &quot;&lt;&lt;plumed.cite(&quot;M Nava, F. Palazzesi, C. Perego and M. Parrinello, J. Chem. Theory Comput. 13, 425(2017)&quot;)&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     176 </span><span class="lineCov">          4 :   parseVector(&quot;DSIGMA&quot;,dsigmas);</span>
+<span class="lineNum">     177 </span><span class="lineCov">          4 :   parse(&quot;Q&quot;,qexp);</span>
+<span class="lineNum">     178 </span><span class="lineCov">          4 :   parse(&quot;TEMP&quot;,temperature);</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     182 </span><span class="lineCov">          4 :   parseFlag(&quot;ALLATOMS&quot;,useall);</span>
+<span class="lineNum">     183 </span><span class="lineCov">          2 :   trimer=true;</span>
+<span class="lineNum">     184 </span>            :   bool notrim;
+<span class="lineNum">     185 </span><span class="lineCov">          4 :   parseFlag(&quot;NOVSITES&quot;,notrim);</span>
+<span class="lineNum">     186 </span><span class="lineCov">          2 :   trimer=!notrim;</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">          2 :   nranks=multi_sim_comm.Get_size();</span>
+<span class="lineNum">     189 </span><span class="lineCov">          2 :   myrank=multi_sim_comm.Get_rank();</span>
+<span class="lineNum">     190 </span><span class="lineCov">          2 :   if(dsigmas.size()==1)</span>
+<span class="lineNum">     191 </span><span class="lineCov">          2 :     dsigma=dsigmas[0];</span>
+<span class="lineNum">     192 </span>            :   else
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     dsigma=dsigmas[myrank];</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">          2 :   if(useall)</span>
+<span class="lineNum">     199 </span>            :   {
+<span class="lineNum">     200 </span>            :     // go with every atom in the system but not the virtuals...
+<span class="lineNum">     201 </span>            :     int natoms;
+<span class="lineNum">     202 </span><span class="lineCov">          1 :     if(trimer)</span>
+<span class="lineNum">     203 </span><span class="lineCov">          1 :       natoms= 2*getTotAtoms()/3;</span>
+<span class="lineNum">     204 </span>            :     else
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :       natoms=getTotAtoms()/2;</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineCov">         89 :     for(unsigned int i=0; i&lt;((unsigned int)natoms); i++)</span>
+<span class="lineNum">     208 </span>            :     {
+<span class="lineNum">     209 </span>            :       AtomNumber ati;
+<span class="lineNum">     210 </span>            :       ati.setIndex(i);
+<span class="lineNum">     211 </span><span class="lineCov">         44 :       atoms.push_back(ati);</span>
+<span class="lineNum">     212 </span>            :     }
+<span class="lineNum">     213 </span>            :   }
+<span class="lineNum">     214 </span>            :   else  // serials for the first beads of each dimer are given
+<span class="lineNum">     215 </span>            :   {
+<span class="lineNum">     216 </span><span class="lineCov">          2 :     parseAtomList(&quot;ATOMS1&quot;,usedatoms1);</span>
+<span class="lineNum">     217 </span><span class="lineCov">          2 :     parseAtomList(&quot;ATOMS2&quot;,usedatoms2);</span>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :     int isz1 = usedatoms1.size();
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">          9 :     for(unsigned int i=0; i&lt;isz1; i++)</span>
+<span class="lineNum">     222 </span>            :     {
+<span class="lineNum">     223 </span>            :       AtomNumber ati;
+<span class="lineNum">     224 </span><span class="lineCov">          4 :       ati.setIndex(usedatoms1[i].index());</span>
+<span class="lineNum">     225 </span><span class="lineCov">          4 :       atoms.push_back(ati);</span>
+<span class="lineNum">     226 </span>            :     }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :     int isz2 = usedatoms2.size();
+<span class="lineNum">     229 </span><span class="lineCov">          9 :     for(unsigned int i=0; i&lt;isz2; i++)</span>
+<span class="lineNum">     230 </span>            :     {
+<span class="lineNum">     231 </span>            :       AtomNumber atip2;
+<span class="lineNum">     232 </span><span class="lineCov">          4 :       atip2.setIndex(usedatoms2[i].index());</span>
+<span class="lineNum">     233 </span><span class="lineCov">          4 :       atoms.push_back(atip2);</span>
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :   }
+<span class="lineNum">     237 </span><span class="lineCov">          2 :   consistencyCheck();</span>
+<span class="lineNum">     238 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     239 </span><span class="lineCov">          2 :   beta = 1./(kBoltzmann*temperature);</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span><span class="lineCov">          2 :   addValueWithDerivatives();  // allocate</span>
+<span class="lineNum">     242 </span><span class="lineCov">          2 :   requestAtoms(atoms);</span>
+<span class="lineNum">     243 </span><span class="lineCov">          2 :   setNotPeriodic();</span>
+<a name="244"><span class="lineNum">     244 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">          4 : void Dimer::calculate()</span>
+<span class="lineNum">     247 </span>            : {
+<span class="lineNum">     248 </span><span class="lineCov">          4 :   double cv_val=0;</span>
+<span class="lineNum">     249 </span><span class="lineCov">          4 :   Tensor virial;</span>
+<span class="lineNum">     250 </span>            :   vector&lt;Vector&gt; derivatives;
+<span class="lineNum">     251 </span><span class="lineCov">          4 :   vector&lt;Vector&gt; my_pos=getPositions();</span>
+<span class="lineNum">     252 </span><span class="lineCov">          4 :   int atms = my_pos.size();</span>
+<span class="lineNum">     253 </span>            :   vector&lt;Vector&gt; der_b2;
+<span class="lineNum">     254 </span><span class="lineCov">         72 :   for(int i=0; i&lt;atms/2; i++)</span>
+<span class="lineNum">     255 </span>            :   {
+<span class="lineNum">     256 </span><span class="lineCov">         34 :     Vector dist;</span>
+<span class="lineNum">     257 </span><span class="lineCov">        102 :     dist = pbcDistance(my_pos[i],my_pos[i+atms/2]);</span>
+<span class="lineNum">     258 </span>            :     double distquad=0;
+<span class="lineNum">     259 </span><span class="lineCov">        238 :     for(int j=0; j&lt;3; j++)</span>
+<span class="lineNum">     260 </span><span class="lineCov">        102 :       distquad += dist[j]*dist[j];</span>
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span><span class="lineCov">         34 :     double dsigquad = dsigma*dsigma;</span>
+<span class="lineNum">     263 </span><span class="lineCov">         34 :     double fac1 = 1.0 + distquad/(2*qexp*dsigquad);</span>
+<span class="lineNum">     264 </span><span class="lineCov">         34 :     double fac1qm1 = pow(fac1,qexp-1);</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineCov">         34 :     cv_val += (fac1*fac1qm1-1.0)/beta;</span>
+<span class="lineNum">     268 </span><span class="lineCov">         34 :     Vector der_val;</span>
+<span class="lineNum">     269 </span><span class="lineCov">         34 :     Vector mder_val;</span>
+<span class="lineNum">     270 </span><span class="lineCov">        238 :     for(int j=0; j&lt;3; j++)</span>
+<span class="lineNum">     271 </span>            :     {
+<span class="lineNum">     272 </span><span class="lineCov">        102 :       der_val[j] = -fac1qm1*dist[j]/(dsigquad*beta);</span>
+<span class="lineNum">     273 </span><span class="lineCov">        102 :       mder_val[j]=-der_val[j];</span>
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span><span class="lineCov">         34 :     derivatives.push_back(der_val);</span>
+<span class="lineNum">     276 </span><span class="lineCov">         34 :     der_b2.push_back(mder_val);</span>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :     // virial part: each dimer contributes -x_{ij}*ds/dx_{ij}  (s is the CV)
+<span class="lineNum">     279 </span><span class="lineCov">         34 :     double dfunc = fac1qm1/(beta*dsigquad);</span>
+<span class="lineNum">     280 </span><span class="lineCov">         34 :     Vector dd(dfunc*dist);</span>
+<span class="lineNum">     281 </span><span class="lineCov">         34 :     Tensor vv(dd,dist);</span>
+<span class="lineNum">     282 </span><span class="lineCov">         34 :     virial -= vv;</span>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :   }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">          4 :   derivatives.insert(derivatives.end(), der_b2.begin(), der_b2.end());</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">        212 :   for(unsigned int i=0; i&lt;derivatives.size(); i++)</span>
+<span class="lineNum">     289 </span><span class="lineCov">        136 :     setAtomsDerivatives(i,derivatives[i]);</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineCov">          4 :   setValue(cv_val);</span>
+<span class="lineNum">     292 </span><span class="lineCov">          4 :   setBoxDerivatives(virial);</span>
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : /*****************
+<span class="lineNum">     299 </span>            : There are some conditions that a valid input should satisfy.
+<a name="300"><span class="lineNum">     300 </span>            : These are checked here and PLUMED error handlers are (eventually) called.</a>
+<span class="lineNum">     301 </span>            : ******************/
+<span class="lineNum">     302 </span><span class="lineCov">          2 : void Dimer::consistencyCheck()</span>
+<span class="lineNum">     303 </span>            : {
+<span class="lineNum">     304 </span><span class="lineCov">          3 :   if(!useall &amp;&amp; usedatoms1.size()!=usedatoms2.size())</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :     error(&quot;The provided atom lists are of different sizes.&quot;);</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">          2 :   if(qexp&lt;0.5 || qexp&gt;1)</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :     warning(&quot;Dimer CV is meant to be used with q-exponents between 0.5 and 1. We are not responsible for any black hole. :-)&quot;);</span>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span><span class="lineCov">          2 :   if(dsigma&lt;0)</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :     error(&quot;Please use positive sigma values for the Dimer strength constant&quot;);</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span><span class="lineCov">          2 :   if(temperature&lt;0)</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :     error(&quot;Please, use a positive value for the temperature...&quot;);</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            :   // if dsigmas has only one element means that either
+<span class="lineNum">     317 </span>            :   // you are using different plumed.x.dat files or a plumed.dat with a single replica
+<span class="lineNum">     318 </span><span class="lineCov">          2 :   if(dsigmas.size()!=nranks &amp;&amp; dsigmas.size()!=1)</span>
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :     error(&quot;Mismatch between provided sigmas and number of replicas&quot;);</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     322 </span>            : 
+<a name="323"><span class="lineNum">     323 </span>            : </a>
+<span class="lineNum">     324 </span>            : }
+<span class="lineNum">     325 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     326 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

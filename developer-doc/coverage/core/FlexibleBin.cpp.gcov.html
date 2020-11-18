@@ -1,0 +1,410 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/FlexibleBin.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - FlexibleBin.cpp<span style="font-size: 80%;"> (source / <a href="FlexibleBin.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">68</td>
+            <td class="headerCovTableEntry">142</td>
+            <td class="headerCovTableEntryLo">47.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">55.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;FlexibleBin.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionWithArguments.h&quot;
+<span class="lineNum">      24 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      25 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      26 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">         66 : FlexibleBin::FlexibleBin(int type, ActionWithArguments *paction,  double const &amp;d, vector&lt;double&gt; &amp;smin, vector&lt;double&gt; &amp;smax):type(type),paction(paction),sigma(d),sigmamin(smin),sigmamax(smax) {</span>
+<span class="lineNum">      34 </span>            :   // initialize the averages and the variance matrices
+<span class="lineNum">      35 </span><span class="lineCov">         22 :   if(type==diffusion) {</span>
+<span class="lineNum">      36 </span><span class="lineCov">          3 :     unsigned ncv=paction-&gt;getNumberOfArguments();</span>
+<span class="lineNum">      37 </span><span class="lineCov">          3 :     vector&lt;double&gt; average(ncv*(ncv+1)/2);</span>
+<span class="lineNum">      38 </span><span class="lineCov">          3 :     vector&lt;double&gt; variance(ncv*(ncv+1)/2);</span>
+<span class="lineNum">      39 </span>            :   }
+<span class="lineNum">      40 </span><span class="lineCov">         22 :   paction-&gt;log&lt;&lt;&quot;  Limits for sigmas using adaptive hills:  \n&quot;;</span>
+<span class="lineNum">      41 </span><span class="lineCov">        106 :   for(unsigned i=0; i&lt;paction-&gt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">      42 </span><span class="lineCov">         84 :     paction-&gt;log&lt;&lt;&quot;   CV  &quot;&lt;&lt;paction-&gt;getPntrToArgument(i)-&gt;getName()&lt;&lt;&quot;:\n&quot;;</span>
+<span class="lineNum">      43 </span><span class="lineCov">         42 :     if(sigmamin[i]&gt;0.) {</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :       limitmin.push_back(true);</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :       paction-&gt;log&lt;&lt;&quot;       Min &quot;&lt;&lt;sigmamin[i];</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :       sigmamin[i]*=sigmamin[i]; // this is because the matrix which is calculated is the sigmasquared</span>
+<span class="lineNum">      47 </span>            :     } else {
+<span class="lineNum">      48 </span><span class="lineCov">         42 :       limitmin.push_back(false);</span>
+<span class="lineNum">      49 </span><span class="lineCov">         42 :       paction-&gt;log&lt;&lt;&quot;       Min No &quot;;</span>
+<span class="lineNum">      50 </span>            :     }
+<span class="lineNum">      51 </span><span class="lineCov">         42 :     if(sigmamax[i]&gt;0.) {</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :       limitmax.push_back(true);</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :       paction-&gt;log&lt;&lt;&quot;       Max &quot;&lt;&lt;sigmamax[i];</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :       sigmamax[i]*=sigmamax[i];</span>
+<span class="lineNum">      55 </span>            :     } else {
+<span class="lineNum">      56 </span><span class="lineCov">         42 :       limitmax.push_back(false);</span>
+<span class="lineNum">      57 </span><span class="lineCov">         42 :       paction-&gt;log&lt;&lt;&quot;       Max No &quot;;</span>
+<span class="lineNum">      58 </span>            :     }
+<span class="lineNum">      59 </span><span class="lineCov">         42 :     paction-&gt;log&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">      60 </span>            :   }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">         22 : }</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : /// Constructure for 1D FB for PBMETAD
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 : FlexibleBin::FlexibleBin(int type, ActionWithArguments *paction, unsigned iarg,</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :                          double const &amp;d, vector&lt;double&gt; &amp;smin, vector&lt;double&gt; &amp;smax):</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :   type(type),paction(paction),sigma(d),sigmamin(smin),sigmamax(smax)</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            :   // initialize the averages and the variance matrices
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :   if(type==diffusion) {</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :     vector&lt;double&gt; average(1);</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :     vector&lt;double&gt; variance(1);</span>
+<span class="lineNum">      73 </span>            :   }
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :   paction-&gt;log&lt;&lt;&quot;  Limits for sigmas using adaptive hills:  \n&quot;;</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :   paction-&gt;log&lt;&lt;&quot;   CV  &quot;&lt;&lt;paction-&gt;getPntrToArgument(iarg)-&gt;getName()&lt;&lt;&quot;:\n&quot;;</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :   if(sigmamin[0]&gt;0.) {</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     limitmin.push_back(true);</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :     paction-&gt;log&lt;&lt;&quot;       Min &quot;&lt;&lt;sigmamin[0];</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :     sigmamin[0]*=sigmamin[0];</span>
+<span class="lineNum">      80 </span>            :   } else {
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :     limitmin.push_back(false);</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :     paction-&gt;log&lt;&lt;&quot;       Min No &quot;;</span>
+<span class="lineNum">      83 </span>            :   }
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :   if(sigmamax[0]&gt;0.) {</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     limitmax.push_back(true);</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :     paction-&gt;log&lt;&lt;&quot;       Max &quot;&lt;&lt;sigmamax[0];</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :     sigmamax[0]*=sigmamax[0];</span>
+<span class="lineNum">      88 </span>            :   } else {
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :     limitmax.push_back(false);</span>
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :     paction-&gt;log&lt;&lt;&quot;       Max No &quot;;</span>
+<span class="lineNum">      91 </span>            :   }
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :   paction-&gt;log&lt;&lt;&quot; \n&quot;;</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : /// Update the flexible bin
+<span class="lineNum">      96 </span>            : /// in case of diffusion based: update at every step
+<span class="lineNum">      97 </span>            : /// in case of gradient based: update only when you add the hill
+<span class="lineNum">      98 </span><span class="lineCov">        778 : void FlexibleBin::update(bool nowAddAHill) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">        778 :   unsigned ncv=paction-&gt;getNumberOfArguments();</span>
+<span class="lineNum">     100 </span><span class="lineCov">        778 :   unsigned dimension=ncv*(ncv+1)/2;</span>
+<span class="lineNum">     101 </span>            :   vector&lt;double&gt; delta;
+<span class="lineNum">     102 </span>            :   vector&lt;double&gt; cv;
+<span class="lineNum">     103 </span><span class="lineCov">        778 :   double decay=1./sigma;</span>
+<span class="lineNum">     104 </span>            :   // this is done all the times from scratch. It is not an accumulator
+<span class="lineNum">     105 </span>            :   // here update the flexible bin according to the needs
+<span class="lineNum">     106 </span><span class="lineCov">        778 :   switch (type) {</span>
+<span class="lineNum">     107 </span>            :   // This should be called every time
+<span class="lineNum">     108 </span><span class="lineCov">        586 :   case diffusion:</span>
+<span class="lineNum">     109 </span>            :     // if you use this below then the decay is in time units
+<span class="lineNum">     110 </span>            :     //double decay=paction-&gt;getTimeStep()/sigma;
+<span class="lineNum">     111 </span>            :     // to be consistent with the rest of the program: everything is better to be in timesteps
+<span class="lineNum">     112 </span>            :     // THE AVERAGE VALUE
+<span class="lineNum">     113 </span>            :     // beware: the pbc
+<span class="lineNum">     114 </span><span class="lineCov">        586 :     delta.resize(ncv);</span>
+<span class="lineNum">     115 </span><span class="lineCov">       2344 :     for(unsigned i=0; i&lt;ncv; i++) cv.push_back(paction-&gt;getArgument(i));</span>
+<span class="lineNum">     116 </span><span class="lineCov">        586 :     if(average.size()==0) { // initial time: just set the initial vector</span>
+<span class="lineNum">     117 </span><span class="lineCov">          2 :       average.resize(ncv);</span>
+<span class="lineNum">     118 </span><span class="lineCov">          6 :       for(unsigned i=0; i&lt;ncv; i++) average[i]=cv[i];</span>
+<span class="lineNum">     119 </span>            :     } else { // accumulate
+<span class="lineNum">     120 </span><span class="lineCov">       1752 :       for(unsigned i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">       2336 :         delta[i]=paction-&gt;difference(i,average[i],cv[i]);</span>
+<span class="lineNum">     122 </span><span class="lineCov">       1168 :         average[i]+=decay*delta[i];</span>
+<span class="lineNum">     123 </span><span class="lineCov">       1168 :         average[i]=paction-&gt;bringBackInPbc(i,average[i]); // equation 8 of &quot;Metadynamics with adaptive Gaussians&quot;</span>
+<span class="lineNum">     124 </span>            :       }
+<span class="lineNum">     125 </span>            :     }
+<span class="lineNum">     126 </span>            :     // THE VARIANCE
+<span class="lineNum">     127 </span><span class="lineCov">        586 :     if(variance.size()==0) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">          2 :       variance.resize(dimension,0.); // nonredundant members dimension=ncv*(ncv+1)/2;</span>
+<span class="lineNum">     129 </span>            :     } else {
+<span class="lineNum">     130 </span>            :       unsigned k=0;
+<span class="lineNum">     131 </span><span class="lineCov">       1752 :       for(unsigned i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">       1752 :         for(unsigned j=i; j&lt;ncv; j++) { // upper diagonal loop</span>
+<span class="lineNum">     133 </span><span class="lineCov">       2336 :           variance[k]+=decay*(delta[i]*delta[j]-variance[k]);</span>
+<span class="lineNum">     134 </span><span class="lineCov">        584 :           k++;</span>
+<span class="lineNum">     135 </span>            :         }
+<span class="lineNum">     136 </span>            :       }
+<span class="lineNum">     137 </span>            :     }
+<span class="lineNum">     138 </span>            :     break;
+<span class="lineNum">     139 </span><span class="lineCov">        192 :   case geometry:</span>
+<span class="lineNum">     140 </span>            :     //this calculates in variance the \nabla CV_i \dot \nabla CV_j
+<span class="lineNum">     141 </span><span class="lineCov">        192 :     variance.resize(dimension);</span>
+<span class="lineNum">     142 </span>            :     // now the signal for retrieving the gradients should be already given by checkNeedsGradients.
+<span class="lineNum">     143 </span>            :     // here just do the projections
+<span class="lineNum">     144 </span>            :     // note that the call  checkNeedsGradients() in BiasMetaD takes care of switching on the call to gradients
+<span class="lineNum">     145 </span><span class="lineCov">        192 :     if (nowAddAHill) { // geometry is sync with hill deposition</span>
+<span class="lineNum">     146 </span>            :       unsigned k=0;
+<span class="lineNum">     147 </span><span class="lineCov">        415 :       for(unsigned i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">        664 :         for(unsigned j=i; j&lt;ncv; j++) {</span>
+<span class="lineNum">     149 </span>            :           // eq 12 of &quot;Metadynamics with adaptive Gaussians&quot;
+<span class="lineNum">     150 </span><span class="lineCov">        498 :           variance[k]=sigma*sigma*(paction-&gt;getProjection(i,j));</span>
+<span class="lineNum">     151 </span><span class="lineCov">        249 :           k++;</span>
+<span class="lineNum">     152 </span>            :         }
+<span class="lineNum">     153 </span>            :       }
+<span class="lineNum">     154 </span>            :     }
+<span class="lineNum">     155 </span>            :     break;
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   default:</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;This flexible bin method is not recognized&quot;);</span>
+<span class="lineNum">     158 </span>            :   }
+<a name="159"><span class="lineNum">     159 </span><span class="lineCov">        778 : }</span></a>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 : vector&lt;double&gt; FlexibleBin::getMatrix() const {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   return variance;</span>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : /// Update the flexible bin for PBMetaD like FlexBin
+<span class="lineNum">     166 </span>            : /// in case of diffusion based: update at every step
+<span class="lineNum">     167 </span>            : /// in case of gradient based: update only when you add the hill
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 : void FlexibleBin::update(bool nowAddAHill, unsigned iarg) {</span>
+<span class="lineNum">     169 </span>            :   // this is done all the times from scratch. It is not an accumulator
+<span class="lineNum">     170 </span>            :   // here update the flexible bin according to the needs
+<span class="lineNum">     171 </span>            :   vector&lt;double&gt; cv;
+<span class="lineNum">     172 </span>            :   vector&lt;double&gt; delta;
+<span class="lineNum">     173 </span>            :   // if you use this below then the decay is in time units
+<span class="lineNum">     174 </span>            :   // to be consistent with the rest of the program: everything is better to be in timesteps
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :   double decay=1./sigma;</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :   switch (type) {</span>
+<span class="lineNum">     177 </span>            :   // This should be called every time
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :   case diffusion:</span>
+<span class="lineNum">     179 </span>            :     // THE AVERAGE VALUE
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :     delta.resize(1);</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     cv.push_back(paction-&gt;getArgument(iarg));</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     if(average.size()==0) { // initial time: just set the initial vector</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :       average.resize(1);</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :       average[0]=cv[0];</span>
+<span class="lineNum">     185 </span>            :     } else { // accumulate
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :       delta[0]=paction-&gt;difference(iarg,average[0],cv[0]);</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :       average[0]+=decay*delta[0];</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :       average[0]=paction-&gt;bringBackInPbc(iarg,average[0]); // equation 8 of &quot;Metadynamics with adaptive Gaussians&quot;</span>
+<span class="lineNum">     189 </span>            :     }
+<span class="lineNum">     190 </span>            :     // THE VARIANCE
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     if(variance.size()==0) {</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :       variance.resize(1,0.); // nonredundant members dimension=ncv*(ncv+1)/2;</span>
+<span class="lineNum">     193 </span>            :     } else {
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :       variance[0]+=decay*(delta[0]*delta[0]-variance[0]);</span>
+<span class="lineNum">     195 </span>            :     }
+<span class="lineNum">     196 </span>            :     break;
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :   case geometry:</span>
+<span class="lineNum">     198 </span>            :     //this calculates in variance the \nabla CV_i \dot \nabla CV_j
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :     variance.resize(1);</span>
+<span class="lineNum">     200 </span>            :     // now the signal for retrieving the gradients should be already given by checkNeedsGradients.
+<span class="lineNum">     201 </span>            :     // here just do the projections
+<span class="lineNum">     202 </span>            :     // note that the call  checkNeedsGradients() in BiasMetaD takes care of switching on the call to gradients
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :     if (nowAddAHill) { // geometry is sync with hill deposition</span>
+<span class="lineNum">     204 </span>            :       // eq 12 of &quot;Metadynamics with adaptive Gaussians&quot;
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :       variance[0]=sigma*sigma*(paction-&gt;getProjection(iarg,iarg));</span>
+<span class="lineNum">     206 </span>            :     }
+<span class="lineNum">     207 </span>            :     break;
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :   default:</span>
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;This flexible bin is not recognized&quot;);</span>
+<span class="lineNum">     210 </span>            :   }
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : ///
+<span class="lineNum">     214 </span>            : /// Calculate the matrix of  (dcv_i/dx)*(dcv_j/dx)^-1
+<span class="lineNum">     215 </span>            : /// that is needed for the metrics in metadynamics
+<span class="lineNum">     216 </span>            : ///
+<span class="lineNum">     217 </span>            : ///
+<span class="lineNum">     218 </span><span class="lineCov">        374 : vector&lt;double&gt; FlexibleBin::getInverseMatrix() const {</span>
+<span class="lineNum">     219 </span><span class="lineCov">        374 :   unsigned ncv=paction-&gt;getNumberOfArguments();</span>
+<span class="lineNum">     220 </span>            :   Matrix&lt;double&gt; matrix(ncv,ncv);
+<span class="lineNum">     221 </span>            :   unsigned i,j,k;
+<span class="lineNum">     222 </span>            :   k=0;
+<span class="lineNum">     223 </span>            :   //paction-&gt;log&lt;&lt;&quot;------------ GET INVERSE MATRIX ---------------\n&quot;;
+<span class="lineNum">     224 </span>            :   // place the matrix in a complete matrix for compatibility
+<span class="lineNum">     225 </span><span class="lineCov">       1288 :   for (i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     226 </span><span class="lineCov">       1537 :     for (j=i; j&lt;ncv; j++) {</span>
+<span class="lineNum">     227 </span><span class="lineCov">       1620 :       matrix(j,i)=matrix(i,j)=variance[k];</span>
+<span class="lineNum">     228 </span><span class="lineCov">        540 :       k++;</span>
+<span class="lineNum">     229 </span>            :     }
+<span class="lineNum">     230 </span>            :   }
+<span class="lineNum">     231 </span>            : #define NEWFLEX
+<span class="lineNum">     232 </span>            : #ifdef NEWFLEX
+<span class="lineNum">     233 </span>            :   // diagonalize to impose boundaries (only if boundaries are set)
+<span class="lineNum">     234 </span>            :   Matrix&lt;double&gt; eigenvecs(ncv,ncv);
+<span class="lineNum">     235 </span><span class="lineCov">        374 :   vector&lt;double&gt; eigenvals(ncv);</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   //eigenvecs: first is eigenvec number, second is eigenvec component
+<span class="lineNum">     238 </span><span class="lineCov">        374 :   if(diagMat( matrix, eigenvals, eigenvecs )!=0) {plumed_merror(&quot;diagonalization in FlexibleBin failed! This matrix is weird\n&quot;);};</span>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">       1288 :   for (i=0; i&lt;ncv; i++) { //loop on the dimension</span>
+<span class="lineNum">     241 </span><span class="lineCov">        914 :     if( limitmax[i] ) {</span>
+<span class="lineNum">     242 </span>            :       //limit every  component that is larger
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :       for (j=0; j&lt;ncv; j++) { //loop on components</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :         if(pow(eigenvals[j]*eigenvecs[j][i],2)&gt;pow(sigmamax[i],2) ) {</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :           eigenvals[j]=sqrt(pow(sigmamax[i]/(eigenvecs[j][i]),2))*copysign(1.,eigenvals[j]);</span>
+<span class="lineNum">     246 </span>            :         }
+<span class="lineNum">     247 </span>            :       }
+<span class="lineNum">     248 </span>            :     }
+<span class="lineNum">     249 </span>            :   }
+<span class="lineNum">     250 </span><span class="lineCov">       1288 :   for (i=0; i&lt;ncv; i++) { //loop on the dimension</span>
+<span class="lineNum">     251 </span>            :     // find the largest one:  if it is smaller than min  then rescale
+<span class="lineNum">     252 </span><span class="lineCov">        914 :     if( limitmin[i] ) {</span>
+<span class="lineNum">     253 </span>            :       unsigned imax=0;
+<span class="lineNum">     254 </span>            :       double fmax=-1.e10;
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :       for (j=0; j&lt;ncv; j++) { //loop on components</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :         double fact=pow(eigenvals[j]*eigenvecs[j][i],2);</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :         if(fact&gt;fmax) {</span>
+<span class="lineNum">     258 </span>            :           fmax=fact; imax=j;
+<span class="lineNum">     259 </span>            :         }
+<span class="lineNum">     260 </span>            :       }
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :       if(fmax&lt;pow(sigmamin[i],2) ) {</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :         eigenvals[imax]=sqrt(pow(sigmamin[i]/(eigenvecs[imax][i]),2))*copysign(1.,eigenvals[imax]);</span>
+<span class="lineNum">     263 </span>            :       }
+<span class="lineNum">     264 </span>            :     }
+<span class="lineNum">     265 </span>            :   }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :   // normalize eigenvecs
+<span class="lineNum">     268 </span>            :   Matrix&lt;double&gt; newinvmatrix(ncv,ncv);
+<span class="lineNum">     269 </span><span class="lineCov">       1288 :   for (i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">       1703 :     for (j=0; j&lt;ncv; j++) {</span>
+<span class="lineNum">     271 </span><span class="lineCov">       1246 :       newinvmatrix[j][i]=eigenvecs[j][i]/eigenvals[j];</span>
+<span class="lineNum">     272 </span>            :     }
+<span class="lineNum">     273 </span>            :   }
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineCov">        374 :   vector&lt;double&gt; uppervec(ncv*(ncv+1)/2);</span>
+<span class="lineNum">     276 </span>            :   k=0;
+<span class="lineNum">     277 </span><span class="lineCov">       1288 :   for (i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     278 </span><span class="lineCov">       1537 :     for (j=i; j&lt;ncv; j++) {</span>
+<span class="lineNum">     279 </span>            :       double scal=0;
+<span class="lineNum">     280 </span><span class="lineCov">       2118 :       for(unsigned l=0; l&lt;ncv; ++l) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">        789 :         scal+=eigenvecs[l][i]*newinvmatrix[l][j];</span>
+<span class="lineNum">     282 </span>            :       }
+<span class="lineNum">     283 </span><span class="lineCov">       1080 :       uppervec[k]=scal; k++;</span>
+<span class="lineNum">     284 </span>            :     }
+<span class="lineNum">     285 </span>            :   }
+<span class="lineNum">     286 </span>            : #else
+<span class="lineNum">     287 </span>            :   // get the inverted matrix
+<span class="lineNum">     288 </span>            :   Matrix&lt;double&gt; invmatrix(ncv,ncv);
+<span class="lineNum">     289 </span>            :   Invert(matrix,invmatrix);
+<span class="lineNum">     290 </span>            :   vector&lt;double&gt; uppervec(ncv*(ncv+1)/2);
+<span class="lineNum">     291 </span>            :   // upper diagonal of the inverted matrix (that is symmetric)
+<span class="lineNum">     292 </span>            :   k=0;
+<span class="lineNum">     293 </span>            :   for (i=0; i&lt;ncv; i++) {
+<span class="lineNum">     294 </span>            :     for (j=i; j&lt;ncv; j++) {
+<span class="lineNum">     295 </span>            :       uppervec[k]=invmatrix(i,j);
+<span class="lineNum">     296 </span>            :       //paction-&gt;log&lt;&lt;&quot;VV &quot;&lt;&lt;i&lt;&lt;&quot; &quot;&lt;&lt;j&lt;&lt;&quot; &quot;&lt;&lt;uppervec[k]&lt;&lt;&quot;\n&quot;;
+<span class="lineNum">     297 </span>            :       k++;
+<span class="lineNum">     298 </span>            :     }
+<span class="lineNum">     299 </span>            :   }
+<span class="lineNum">     300 </span>            : #endif
+<span class="lineNum">     301 </span><span class="lineCov">        374 :   return uppervec;</span>
+<span class="lineNum">     302 </span>            : }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : ///
+<span class="lineNum">     305 </span>            : /// Calculate the matrix of  (dcv_i/dx)*(dcv_j/dx)^-1
+<span class="lineNum">     306 </span>            : /// that is needed for the metrics in metadynamics
+<span class="lineNum">     307 </span>            : /// for PBMetaD like FlexBin
+<span class="lineNum">     308 </span>            : ///
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 : vector&lt;double&gt; FlexibleBin::getInverseMatrix(unsigned iarg) const {</span>
+<span class="lineNum">     310 </span>            :   // diagonalize to impose boundaries (only if boundaries are set)
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :   vector&lt;double&gt; eigenvals(1, variance[0]);</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :   if( limitmax[0] ) {</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :     if(eigenvals[0]&gt;sigmamax[0]) {</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :       eigenvals[0]=sigmamax[0];</span>
+<span class="lineNum">     315 </span>            :     }
+<span class="lineNum">     316 </span>            :   }
+<span class="lineNum">     317 </span>            :   // find the largest one:  if it is smaller than min  then rescale
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :   if( limitmin[0] ) {</span>
+<span class="lineNum">     319 </span>            :     double fmax=-1.e10;
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :     double fact=eigenvals[0];</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :     if(fact&gt;fmax) {</span>
+<span class="lineNum">     322 </span>            :       fmax=fact;
+<span class="lineNum">     323 </span>            :     }
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :     if(fmax&lt;sigmamin[0]) {</span>
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 :       eigenvals[0]=sigmamin[0];</span>
+<span class="lineNum">     326 </span>            :     }
+<span class="lineNum">     327 </span>            :   }
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :   vector&lt;double&gt; uppervec(1,1./eigenvals[0]);</span>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :   return uppervec;</span>
+<a name="331"><span class="lineNum">     331 </span>            : }</a>
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

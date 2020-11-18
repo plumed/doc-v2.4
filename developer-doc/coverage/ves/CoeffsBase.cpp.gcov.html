@@ -1,0 +1,581 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/CoeffsBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - CoeffsBase.cpp<span style="font-size: 80%;"> (source / <a href="CoeffsBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">96</td>
+            <td class="headerCovTableEntry">220</td>
+            <td class="headerCovTableEntryLo">43.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryLo">45.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;CoeffsBase.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;BasisFunctions.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;VesBias.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;core/Value.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      33 </span>            : #include &lt;string&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace PLMD {
+<span class="lineNum">      37 </span>            : namespace ves {
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 : CoeffsBase::CoeffsBase(</span>
+<span class="lineNum">      40 </span>            :   const std::string&amp; label,
+<span class="lineNum">      41 </span>            :   const std::vector&lt;std::string&gt;&amp; dimension_labels,
+<span class="lineNum">      42 </span>            :   const std::vector&lt;unsigned int&gt;&amp; indices_shape,
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :   const bool use_iteration_counter):</span>
+<span class="lineNum">      44 </span>            :   label_(label),
+<span class="lineNum">      45 </span>            :   data_label_(label),
+<span class="lineNum">      46 </span>            :   coeffs_type_(Generic),
+<span class="lineNum">      47 </span>            :   iteration_and_time_active_(use_iteration_counter),
+<span class="lineNum">      48 </span>            :   iteration_opt(0),
+<span class="lineNum">      49 </span>            :   time_md(-1.0),
+<span class="lineNum">      50 </span>            :   active(true),
+<span class="lineNum">      51 </span>            :   action_pntr_(NULL),
+<span class="lineNum">      52 </span>            :   vesbias_pntr_(NULL),
+<span class="lineNum">      53 </span>            :   ndimensions_(0),
+<span class="lineNum">      54 </span>            :   indices_shape_(0),
+<span class="lineNum">      55 </span>            :   ncoeffs_(0),
+<span class="lineNum">      56 </span>            :   coeffs_descriptions_(0),
+<span class="lineNum">      57 </span>            :   dimension_labels_(0),
+<span class="lineNum">      58 </span>            :   args_(0),
+<span class="lineNum">      59 </span>            :   basisf_(0),
+<span class="lineNum">      60 </span>            :   multicoeffs_(false),
+<span class="lineNum">      61 </span>            :   multicoeffs_args_(0),
+<span class="lineNum">      62 </span>            :   multicoeffs_basisf_(0),
+<span class="lineNum">      63 </span>            :   field_type_(&quot;type&quot;),
+<span class="lineNum">      64 </span>            :   field_ndimensions_(&quot;ndimensions&quot;),
+<span class="lineNum">      65 </span>            :   field_ncoeffs_total_(&quot;ncoeffs_total&quot;),
+<span class="lineNum">      66 </span>            :   field_shape_prefix_(&quot;shape_&quot;),
+<span class="lineNum">      67 </span>            :   field_time_(&quot;time&quot;),
+<span class="lineNum">      68 </span>            :   field_iteration_(&quot;iteration&quot;),
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :   output_fmt_(&quot;%30.16e&quot;)</span>
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :   initializeIndices(indices_shape,dimension_labels);</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :   setAllCoeffsDescriptions();</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">        294 : CoeffsBase::CoeffsBase(</span>
+<span class="lineNum">      77 </span>            :   const std::string&amp; label,
+<span class="lineNum">      78 </span>            :   std::vector&lt;Value*&gt;&amp; args,
+<span class="lineNum">      79 </span>            :   std::vector&lt;BasisFunctions*&gt;&amp; basisf,
+<span class="lineNum">      80 </span><span class="lineCov">        294 :   const bool use_iteration_counter):</span>
+<span class="lineNum">      81 </span>            :   label_(label),
+<span class="lineNum">      82 </span>            :   data_label_(label),
+<span class="lineNum">      83 </span>            :   coeffs_type_(LinearBasisSet),
+<span class="lineNum">      84 </span>            :   iteration_and_time_active_(use_iteration_counter),
+<span class="lineNum">      85 </span>            :   iteration_opt(0),
+<span class="lineNum">      86 </span>            :   time_md(-1.0),
+<span class="lineNum">      87 </span>            :   active(true),
+<span class="lineNum">      88 </span>            :   action_pntr_(NULL),
+<span class="lineNum">      89 </span>            :   vesbias_pntr_(NULL),
+<span class="lineNum">      90 </span>            :   ndimensions_(0),
+<span class="lineNum">      91 </span>            :   indices_shape_(0),
+<span class="lineNum">      92 </span>            :   ncoeffs_(0),
+<span class="lineNum">      93 </span>            :   coeffs_descriptions_(0),
+<span class="lineNum">      94 </span>            :   dimension_labels_(0),
+<span class="lineNum">      95 </span>            :   args_(args),
+<span class="lineNum">      96 </span>            :   basisf_(basisf),
+<span class="lineNum">      97 </span>            :   multicoeffs_(false),
+<span class="lineNum">      98 </span>            :   multicoeffs_args_(0),
+<span class="lineNum">      99 </span>            :   multicoeffs_basisf_(0),
+<span class="lineNum">     100 </span>            :   field_type_(&quot;type&quot;),
+<span class="lineNum">     101 </span>            :   field_ndimensions_(&quot;ndimensions&quot;),
+<span class="lineNum">     102 </span>            :   field_ncoeffs_total_(&quot;ncoeffs_total&quot;),
+<span class="lineNum">     103 </span>            :   field_shape_prefix_(&quot;shape_&quot;),
+<span class="lineNum">     104 </span>            :   field_time_(&quot;time&quot;),
+<span class="lineNum">     105 </span>            :   field_iteration_(&quot;iteration&quot;),
+<span class="lineNum">     106 </span><span class="lineCov">        882 :   output_fmt_(&quot;%30.16e&quot;)</span>
+<span class="lineNum">     107 </span>            : {
+<span class="lineNum">     108 </span><span class="lineCov">        294 :   plumed_massert(args_.size()==basisf_.size(),&quot;CoeffsBase: number of arguments do not match number of basis functions&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">        588 :   std::vector&lt;std::string&gt; dimension_labels(args_.size());</span>
+<span class="lineNum">     110 </span><span class="lineCov">        294 :   std::vector&lt;unsigned int&gt; indices_shape(args_.size());</span>
+<span class="lineNum">     111 </span><span class="lineCov">       1557 :   for(unsigned int i=0; i&lt;args_.size(); i++) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">        323 :     dimension_labels[i]=args_[i]-&gt;getName();</span>
+<span class="lineNum">     113 </span><span class="lineCov">        646 :     indices_shape[i]=basisf_[i]-&gt;getNumberOfBasisFunctions();</span>
+<span class="lineNum">     114 </span>            :   }
+<span class="lineNum">     115 </span><span class="lineCov">        294 :   initializeIndices(indices_shape,dimension_labels);</span>
+<span class="lineNum">     116 </span><span class="lineCov">        294 :   setupBasisFunctionsInfo();</span>
+<span class="lineNum">     117 </span><span class="lineCov">        294 : }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 : CoeffsBase::CoeffsBase(</span>
+<span class="lineNum">     121 </span>            :   const std::string&amp; label,
+<span class="lineNum">     122 </span>            :   std::vector&lt;std::vector&lt;Value*&gt; &gt;&amp; multicoeffs_args,
+<span class="lineNum">     123 </span>            :   std::vector&lt;std::vector&lt;BasisFunctions*&gt; &gt;&amp; multicoeffs_basisf,
+<span class="lineNum">     124 </span>            :   const bool use_iteration_counter,
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :   const std::string&amp; multicoeffs_label):</span>
+<span class="lineNum">     126 </span>            :   label_(label),
+<span class="lineNum">     127 </span>            :   data_label_(label),
+<span class="lineNum">     128 </span>            :   coeffs_type_(MultiCoeffs_LinearBasisSet),
+<span class="lineNum">     129 </span>            :   iteration_and_time_active_(use_iteration_counter),
+<span class="lineNum">     130 </span>            :   iteration_opt(0),
+<span class="lineNum">     131 </span>            :   time_md(-1.0),
+<span class="lineNum">     132 </span>            :   active(true),
+<span class="lineNum">     133 </span>            :   action_pntr_(NULL),
+<span class="lineNum">     134 </span>            :   vesbias_pntr_(NULL),
+<span class="lineNum">     135 </span>            :   ndimensions_(0),
+<span class="lineNum">     136 </span>            :   indices_shape_(0),
+<span class="lineNum">     137 </span>            :   ncoeffs_(0),
+<span class="lineNum">     138 </span>            :   coeffs_descriptions_(0),
+<span class="lineNum">     139 </span>            :   dimension_labels_(0),
+<span class="lineNum">     140 </span>            :   args_(0),
+<span class="lineNum">     141 </span>            :   basisf_(0),
+<span class="lineNum">     142 </span>            :   multicoeffs_(true),
+<span class="lineNum">     143 </span>            :   multicoeffs_args_(multicoeffs_args),
+<span class="lineNum">     144 </span>            :   multicoeffs_basisf_(multicoeffs_basisf),
+<span class="lineNum">     145 </span>            :   field_type_(&quot;type&quot;),
+<span class="lineNum">     146 </span>            :   field_ndimensions_(&quot;ndimensions&quot;),
+<span class="lineNum">     147 </span>            :   field_ncoeffs_total_(&quot;ncoeffs_total&quot;),
+<span class="lineNum">     148 </span>            :   field_shape_prefix_(&quot;shape_&quot;),
+<span class="lineNum">     149 </span>            :   field_time_(&quot;time&quot;),
+<span class="lineNum">     150 </span>            :   field_iteration_(&quot;iteration&quot;),
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :   output_fmt_(&quot;%30.16e&quot;)</span>
+<span class="lineNum">     152 </span>            : {
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :   plumed_massert(multicoeffs_args.size()==multicoeffs_basisf.size(),&quot;Multi Coeffs: number of arguments vectors does not match number of basis functions vectors&quot;);</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :   unsigned int num_args = multicoeffs_args[0].size();</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :   unsigned int dim = num_args+1;</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   std::vector&lt;std::string&gt; dimension_labels(dim);</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned int&gt; indices_shape(dim);</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;num_args; i++) {</span>
+<span class="lineNum">     159 </span>            :     std::string ip;
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     Tools::convert(i+1,ip);</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     dimension_labels[i] = &quot;bf&quot; + ip;</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     indices_shape[i] = multicoeffs_basisf[0][i]-&gt;getNumberOfBasisFunctions();</span>
+<span class="lineNum">     163 </span>            :   }
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :   indices_shape[dim-1] = multicoeffs_args.size();</span>
+<span class="lineNum">     165 </span>            :   dimension_labels[dim-1] = multicoeffs_label;
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :   for(unsigned int k=0; k&lt;multicoeffs_args.size(); k++) {</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     plumed_massert(multicoeffs_args[k].size()==num_args &amp;&amp; multicoeffs_basisf[k].size()==num_args,&quot;Multi Coeffs: arguments and basis functions vectors for each bias should be of the same size&quot;);</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     for(unsigned int i=0; i&lt;num_args; i++) {</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :       plumed_massert(indices_shape[i]==multicoeffs_basisf[k][i]-&gt;getNumberOfBasisFunctions(),&quot;Multi Coeffs: the coeffs shape for each bias should be identical&quot;);</span>
+<span class="lineNum">     170 </span>            :     }
+<span class="lineNum">     171 </span>            :   }
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :   initializeIndices(indices_shape,dimension_labels);</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :   setupBasisFunctionsInfo();</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">      45788 : CoeffsBase::~CoeffsBase() {}</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">        294 : void CoeffsBase::initializeIndices(const std::vector&lt;unsigned int&gt;&amp; indices_shape, const std::vector&lt;std::string&gt;&amp; dimension_labels) {</span>
+<span class="lineNum">     181 </span><span class="lineCov">        294 :   plumed_massert(indices_shape.size()==dimension_labels.size(),&quot;indices shape and dimension labels must be of the same size&quot;);</span>
+<span class="lineNum">     182 </span><span class="lineCov">        294 :   ndimensions_=indices_shape.size();</span>
+<span class="lineNum">     183 </span><span class="lineCov">        294 :   indices_shape_=indices_shape;</span>
+<span class="lineNum">     184 </span><span class="lineCov">        294 :   dimension_labels_=dimension_labels;</span>
+<span class="lineNum">     185 </span><span class="lineCov">        294 :   ncoeffs_=1;</span>
+<span class="lineNum">     186 </span><span class="lineCov">        940 :   for(unsigned int i=0; i&lt;ndimensions_; i++) {</span>
+<span class="lineNum">     187 </span><span class="lineCov">        646 :     ncoeffs_*=indices_shape_[i];</span>
+<span class="lineNum">     188 </span>            :   }
+<span class="lineNum">     189 </span><span class="lineCov">        294 :   coeffs_descriptions_.resize(ncoeffs_);</span>
+<span class="lineNum">     190 </span><span class="lineCov">        294 : }</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 : void CoeffsBase::reinitializeIndices(const std::vector&lt;unsigned int&gt;&amp; indices_shape_new) {</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :   plumed_massert(indices_shape_.size()&gt;0,&quot;indices must have been previously initialized before using this function&quot;);</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :   plumed_massert(dimension_labels_.size()&gt;0,&quot;indices must have been previously initialized before using this function&quot;);</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :   plumed_massert(indices_shape_new.size()==numberOfDimensions(),&quot;when resizeing Coeffs the dimension must be constant&quot;);</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :   indices_shape_=indices_shape_new;</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :   ncoeffs_=1;</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;ndimensions_; i++) {</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :     ncoeffs_*=indices_shape_[i];</span>
+<span class="lineNum">     201 </span>            :   }
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :   coeffs_descriptions_.clear();</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :   coeffs_descriptions_.resize(ncoeffs_);</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineCov">        294 : void CoeffsBase::setupBasisFunctionsInfo() {</span>
+<span class="lineNum">     208 </span><span class="lineCov">        294 :   plumed_massert(indices_shape_.size()&gt;0,&quot;indices must be initialized before running this function&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">        294 :   if(coeffs_type_==LinearBasisSet) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">      18690 :     for(unsigned int i=0; i&lt;numberOfCoeffs(); i++) {</span>
+<span class="lineNum">     211 </span><span class="lineCov">       6034 :       std::vector&lt;unsigned int&gt; indices=getIndices(i);</span>
+<span class="lineNum">     212 </span>            :       std::string desc;
+<span class="lineNum">     213 </span><span class="lineCov">      24136 :       desc=basisf_[0]-&gt;getBasisFunctionLabel(indices[0]);</span>
+<span class="lineNum">     214 </span><span class="lineCov">      11576 :       for(unsigned int k=1; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     215 </span><span class="lineCov">      16626 :         desc+=&quot;*&quot;+basisf_[k]-&gt;getBasisFunctionLabel(indices[k]);</span>
+<span class="lineNum">     216 </span>            :       }
+<span class="lineNum">     217 </span><span class="lineCov">       6034 :       setCoeffDescription(i,desc);</span>
+<span class="lineNum">     218 </span>            :     }
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :   else if(coeffs_type_==MultiCoeffs_LinearBasisSet) {</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :     for(unsigned int i=0; i&lt;numberOfCoeffs(); i++) {</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :       std::vector&lt;unsigned int&gt; indices=getIndices(i);</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :       unsigned int mc_id = indices[ndimensions_-1];</span>
+<span class="lineNum">     224 </span>            :       std::string mc_idstr;
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :       Tools::convert(mc_id,mc_idstr);</span>
+<span class="lineNum">     226 </span>            :       // std::string mc_label = getDimensionLabel(ndimensions_-1);
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :       std::string postfix = &quot;:&quot; + mc_idstr;</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :       std::string desc =&quot;&quot;;</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :       desc+=multicoeffs_basisf_[mc_id][0]-&gt;getBasisFunctionLabel(indices[0]);</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :       for(unsigned int k=1; k&lt;(numberOfDimensions()-1); k++) {</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :         desc+=&quot;*&quot;+multicoeffs_basisf_[mc_id][k]-&gt;getBasisFunctionLabel(indices[k]);</span>
+<span class="lineNum">     232 </span>            :       }
+<span class="lineNum">     233 </span>            :       desc+=postfix;
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :       setCoeffDescription(i,desc);</span>
+<span class="lineNum">     235 </span>            :     }
+<span class="lineNum">     236 </span>            :   }
+<span class="lineNum">     237 </span><span class="lineCov">        294 : }</span>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 : void CoeffsBase::resizeIndices(const std::vector&lt;unsigned int&gt;&amp; indices_shape_new) {</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :   plumed_massert(coeffs_type_==Generic,&quot;Coeffs type must be Generic when resizeing based on a new indices shape vector&quot;);</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :   reinitializeIndices(indices_shape_new);</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :   setAllCoeffsDescriptions();</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 : void CoeffsBase::resizeIndices(std::vector&lt;BasisFunctions*&gt;&amp; basisf_new) {</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :   plumed_massert(coeffs_type_==LinearBasisSet,&quot;Coeffs type must be LinearBasisSet when resizeing based on a new basis function set&quot;);</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :   basisf_=basisf_new;</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :   std::vector&lt;unsigned int&gt; indices_shape_new(basisf_new.size());</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;basisf_new.size(); i++) {</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :     indices_shape_new[i]=basisf_new[i]-&gt;getNumberOfBasisFunctions();</span>
+<span class="lineNum">     253 </span>            :   }
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :   reinitializeIndices(indices_shape_new);</span>
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :   setupBasisFunctionsInfo();</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 : }</span>
+<a name="257"><span class="lineNum">     257 </span>            : </a>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineCov">          6 : bool CoeffsBase::sameShape(const CoeffsBase&amp; coeffsbase_in) const {</span>
+<span class="lineNum">     260 </span><span class="lineCov">          6 :   if(numberOfDimensions()!=coeffsbase_in.numberOfDimensions()) {</span>
+<span class="lineNum">     261 </span>            :     return false;
+<span class="lineNum">     262 </span>            :   }
+<span class="lineNum">     263 </span><span class="lineCov">          6 :   if(numberOfCoeffs()!=coeffsbase_in.numberOfCoeffs()) {</span>
+<span class="lineNum">     264 </span>            :     return false;
+<span class="lineNum">     265 </span>            :   }
+<span class="lineNum">     266 </span><span class="lineCov">         18 :   for(unsigned int k=0; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     267 </span><span class="lineCov">          6 :     if(shapeOfIndices(k)!=coeffsbase_in.shapeOfIndices(k)) {</span>
+<span class="lineNum">     268 </span>            :       return false;
+<span class="lineNum">     269 </span>            :     }
+<span class="lineNum">     270 </span>            :   }
+<span class="lineNum">     271 </span>            :   return true;
+<span class="lineNum">     272 </span>            : }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 : void CoeffsBase::setLabel(const std::string&amp; label) {</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :   label_=label;</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 : void CoeffsBase::setDataLabel(const std::string&amp; data_label) {</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :   data_label_=data_label;</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">        685 : void CoeffsBase::setLabels(const std::string&amp; label) {</span>
+<span class="lineNum">     286 </span><span class="lineCov">        685 :   label_=label;</span>
+<span class="lineNum">     287 </span><span class="lineCov">        685 :   data_label_=label;</span>
+<span class="lineNum">     288 </span><span class="lineCov">        685 : }</span>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 : void CoeffsBase::setLabels(const std::string&amp; label, const std::string&amp; data_label) {</span>
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :   label_=label;</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :   data_label_=data_label;</span>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineCov">       3199 : std::string CoeffsBase::getTypeStr() const {</span>
+<span class="lineNum">     298 </span><span class="lineCov">       3199 :   std::string type_str=&quot;&quot;;</span>
+<span class="lineNum">     299 </span><span class="lineCov">       3199 :   if(coeffs_type_==Generic) {</span>
+<span class="lineNum">     300 </span>            :     type_str = &quot;Generic&quot;;
+<span class="lineNum">     301 </span>            :   }
+<span class="lineNum">     302 </span><span class="lineCov">       3199 :   else if(coeffs_type_==LinearBasisSet) {</span>
+<span class="lineNum">     303 </span>            :     type_str = &quot;LinearBasisSet&quot;;
+<span class="lineNum">     304 </span>            :   }
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :   else if(coeffs_type_==MultiCoeffs_LinearBasisSet) {</span>
+<span class="lineNum">     306 </span>            :     type_str = &quot;MultiCoeffs_LinearBasisSet&quot;;
+<span class="lineNum">     307 </span>            :   }
+<span class="lineNum">     308 </span><span class="lineCov">       3199 :   return type_str;</span>
+<span class="lineNum">     309 </span>            : }
+<a name="310"><span class="lineNum">     310 </span>            : </a>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 : void CoeffsBase::setType(const CoeffsType coeffs_type) {</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :   coeffs_type_=coeffs_type;</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 : }</span>
+<a name="315"><span class="lineNum">     315 </span>            : </a>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">         82 : void CoeffsBase::linkVesBias(VesBias* vesbias_pntr_in) {</span>
+<span class="lineNum">     318 </span><span class="lineCov">         82 :   vesbias_pntr_ = vesbias_pntr_in;</span>
+<span class="lineNum">     319 </span><span class="lineCov">         82 :   action_pntr_ = static_cast&lt;Action*&gt;(vesbias_pntr_in);</span>
+<span class="lineNum">     320 </span><span class="lineCov">         82 : }</span>
+<a name="321"><span class="lineNum">     321 </span>            : </a>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 : void CoeffsBase::linkAction(Action* action_pntr_in) {</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :   action_pntr_ = action_pntr_in;</span>
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 : }</span>
+<a name="326"><span class="lineNum">     326 </span>            : </a>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 : bool CoeffsBase::indicesExist(const std::vector&lt;unsigned int&gt;&amp; indices) const {</span>
+<span class="lineNum">     329 </span>            :   plumed_dbg_assert(indices.size()==ndimensions_);
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :   for(unsigned int k=0; k&lt;ndimensions_; k++) {</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :     if(indices[k]&gt;=indices_shape_[k]) {</span>
+<span class="lineNum">     332 </span>            :       return false;
+<span class="lineNum">     333 </span>            :     }
+<span class="lineNum">     334 </span>            :   }
+<span class="lineNum">     335 </span>            :   return true;
+<span class="lineNum">     336 </span>            : }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">       6034 : void CoeffsBase::setCoeffDescription(const size_t index, const std::string&amp; description) {</span>
+<span class="lineNum">     340 </span>            :   coeffs_descriptions_[index]=description;
+<span class="lineNum">     341 </span><span class="lineCov">       6034 : }</span>
+<a name="342"><span class="lineNum">     342 </span>            : </a>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 : void CoeffsBase::setCoeffDescription(const std::vector&lt;unsigned int&gt;&amp; indices, const std::string&amp; description) {</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :   setCoeffDescription(getIndex(indices), description);</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 : void CoeffsBase::setAllCoeffsDescriptions(const std::string&amp; description_prefix) {</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;numberOfCoeffs(); i++) {</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :     std::vector&lt;unsigned int&gt; indices=getIndices(i);</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :     std::string is; Tools::convert(indices[0],is);</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :     std::string desc=description_prefix+&quot;(&quot;+is;</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :     for(unsigned int k=1; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :       Tools::convert(indices[k],is); desc+=&quot;,&quot;+is;</span>
+<span class="lineNum">     356 </span>            :     }
+<span class="lineNum">     357 </span>            :     desc+=&quot;)&quot;;
+<span class="lineNum">     358 </span>            :     coeffs_descriptions_[i]=desc;
+<span class="lineNum">     359 </span>            :   }
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 : void CoeffsBase::setAllCoeffsDescriptions(const std::vector&lt;std::string&gt;&amp; coeffs_descriptions) {</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :   plumed_massert(coeffs_descriptions.size()==numberOfCoeffs(),&quot;The coeffs description vector doesn't match the number of coeffs&quot;);</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :   for(size_t i=0; i&lt;numberOfCoeffs(); i++) {</span>
+<span class="lineNum">     366 </span>            :     coeffs_descriptions_[i]=coeffs_descriptions[i];
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 : void CoeffsBase::setDimensionLabel(const unsigned int dim_index, const std::string&amp; label) {</span>
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :   plumed_massert(dim_index&lt;numberOfDimensions(),&quot;Trying to set the label of a dimension outside the number of dimensions&quot;);</span>
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :   dimension_labels_[dim_index]=label;</span>
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : void CoeffsBase::setAllDimensionLabels(const std::string&amp; label_prefix) {</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;numberOfDimensions(); i++) {</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :     std::string is; Tools::convert(i,is);</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :     dimension_labels_[i]=label_prefix + is;</span>
+<span class="lineNum">     381 </span>            :   }
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 : void CoeffsBase::setAllDimensionLabels(const std::vector&lt;std::string&gt;&amp; labels) {</span>
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :   for(unsigned int i=0; i&lt;numberOfDimensions(); i++) {</span>
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :     dimension_labels_[i]=labels[i];</span>
+<span class="lineNum">     388 </span>            :   }
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineCov">       2831 : void CoeffsBase::writeCoeffsInfoToFile(OFile&amp; ofile) const {</span>
+<span class="lineNum">     393 </span><span class="lineCov">       5662 :   ofile.addConstantField(field_type_).printField(field_type_,getTypeStr());</span>
+<span class="lineNum">     394 </span><span class="lineCov">       5662 :   ofile.addConstantField(field_ndimensions_).printField(field_ndimensions_,(int) numberOfDimensions());</span>
+<span class="lineNum">     395 </span><span class="lineCov">       5662 :   ofile.addConstantField(field_ncoeffs_total_).printField(field_ncoeffs_total_,(int) numberOfCoeffs());</span>
+<span class="lineNum">     396 </span><span class="lineCov">       9991 :   for(unsigned int k=0; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     397 </span><span class="lineCov">      10740 :     ofile.addConstantField(field_shape_prefix_+getDimensionLabel(k));</span>
+<span class="lineNum">     398 </span><span class="lineCov">      14320 :     ofile.printField(field_shape_prefix_+getDimensionLabel(k),(int) shapeOfIndices(k));</span>
+<span class="lineNum">     399 </span>            :   }
+<span class="lineNum">     400 </span><span class="lineCov">       2831 : }</span>
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineCov">        368 : void CoeffsBase::getCoeffsInfoFromFile(IFile&amp; ifile, const bool ignore_coeffs_info) {</span>
+<span class="lineNum">     404 </span>            :   int int_tmp;
+<span class="lineNum">     405 </span>            :   // label
+<span class="lineNum">     406 </span>            :   std::string coeffs_type_f;
+<span class="lineNum">     407 </span><span class="lineCov">        368 :   if(ifile.scanField(field_type_,coeffs_type_f)) {</span>
+<span class="lineNum">     408 </span>            :     // empty for now
+<span class="lineNum">     409 </span>            :   }
+<span class="lineNum">     410 </span>            :   else {
+<span class="lineNum">     411 </span>            :     return;
+<span class="lineNum">     412 </span>            :   }
+<span class="lineNum">     413 </span>            :   // number of dimensions
+<span class="lineNum">     414 </span>            :   unsigned int ndimensions_f = 0;
+<span class="lineNum">     415 </span><span class="lineCov">        368 :   if(ifile.scanField(field_ndimensions_,int_tmp)) {</span>
+<span class="lineNum">     416 </span><span class="lineCov">        368 :     ndimensions_f=(unsigned int) int_tmp;</span>
+<span class="lineNum">     417 </span>            :   }
+<span class="lineNum">     418 </span>            :   else {
+<span class="lineNum">     419 </span>            :     return;
+<span class="lineNum">     420 </span>            :   }
+<span class="lineNum">     421 </span>            :   // total number of coeffs
+<span class="lineNum">     422 </span>            :   size_t ncoeffs_total_f = 0;
+<span class="lineNum">     423 </span><span class="lineCov">        368 :   if(ifile.scanField(field_ncoeffs_total_,int_tmp)) {</span>
+<span class="lineNum">     424 </span><span class="lineCov">        368 :     ncoeffs_total_f=(size_t) int_tmp;</span>
+<span class="lineNum">     425 </span>            :   }
+<span class="lineNum">     426 </span>            :   else {
+<span class="lineNum">     427 </span>            :     return;
+<span class="lineNum">     428 </span>            :   }
+<span class="lineNum">     429 </span>            :   // shape of indices
+<span class="lineNum">     430 </span><span class="lineCov">        368 :   std::vector&lt;unsigned int&gt; indices_shape_f(numberOfDimensions());</span>
+<span class="lineNum">     431 </span><span class="lineCov">       1126 :   for(unsigned int k=0; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     432 </span><span class="lineCov">       1137 :     if(ifile.scanField(field_shape_prefix_+getDimensionLabel(k),int_tmp)) {</span>
+<span class="lineNum">     433 </span><span class="lineCov">        758 :       indices_shape_f[k]=(unsigned int) int_tmp;</span>
+<span class="lineNum">     434 </span>            :     }
+<span class="lineNum">     435 </span>            :     else {
+<span class="lineNum">     436 </span>            :       return;
+<span class="lineNum">     437 </span>            :     }
+<span class="lineNum">     438 </span>            :   }
+<span class="lineNum">     439 </span><span class="lineCov">        368 :   if(!ignore_coeffs_info) {</span>
+<span class="lineNum">     440 </span><span class="lineCov">       1472 :     std::string msg_header=&quot;Error when reading in coeffs from file &quot; + ifile.getPath() + &quot;: &quot;;</span>
+<span class="lineNum">     441 </span><span class="lineCov">        368 :     checkCoeffsInfo(msg_header, coeffs_type_f, ndimensions_f, ncoeffs_total_f, indices_shape_f);</span>
+<span class="lineNum">     442 </span>            :   }
+<span class="lineNum">     443 </span>            : }
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span><span class="lineCov">        368 : void CoeffsBase::checkCoeffsInfo(const std::string&amp; msg_header, const std::string&amp; coeffs_type_f, const unsigned int ndimensions_f, const size_t ncoeffs_total_f, const std::vector&lt;unsigned int&gt;&amp; indices_shape_f) {</span>
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span><span class="lineCov">        736 :   if(coeffs_type_f != getTypeStr()) {</span>
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :     std::string msg = msg_header + &quot; coeffs type &quot; + coeffs_type_f + &quot; from file doesn't match the defined value &quot; + getTypeStr();</span>
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :     plumed_merror(msg);</span>
+<span class="lineNum">     451 </span>            :   }
+<span class="lineNum">     452 </span><span class="lineCov">        368 :   if(ndimensions_f != numberOfDimensions() ) {</span>
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :     std::string s1; Tools::convert(ndimensions_f,s1);</span>
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :     std::string s2; Tools::convert(numberOfDimensions(),s2);</span>
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :     std::string msg = msg_header + &quot; the number of dimensions &quot; + s1 + &quot; in file doesn't match the defined value &quot; + s2;</span>
+<span class="lineNum">     456 </span><span class="lineNoCov">          0 :     plumed_merror(msg);</span>
+<span class="lineNum">     457 </span>            :   }
+<span class="lineNum">     458 </span><span class="lineCov">        368 :   if(ncoeffs_total_f != numberOfCoeffs() ) {</span>
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :     std::string s1; Tools::convert(ncoeffs_total_f,s1);</span>
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 :     std::string s2; Tools::convert(numberOfCoeffs(),s2);</span>
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :     std::string msg = msg_header + &quot; the number of coeffs &quot; + s1 + &quot; in file doesn't match the defined value &quot; + s2;</span>
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :     plumed_merror(msg);</span>
+<span class="lineNum">     463 </span>            :   }
+<span class="lineNum">     464 </span><span class="lineCov">       1126 :   for(unsigned int k=0; k&lt;numberOfDimensions(); k++) {</span>
+<span class="lineNum">     465 </span><span class="lineCov">       1137 :     if(indices_shape_f[k] != shapeOfIndices(k) ) {</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :       std::string s1; Tools::convert(indices_shape_f[k],s1);</span>
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :       std::string s2; Tools::convert(shapeOfIndices(k),s2);</span>
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :       std::string msg = msg_header + &quot; for dimension labeled &quot; + getDimensionLabel(k) + &quot; the shape of indices &quot; + s1 + &quot; in file doesn't match defined value &quot; + s2;</span>
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :       plumed_merror(msg);</span>
+<span class="lineNum">     470 </span>            :     }
+<span class="lineNum">     471 </span>            :   }
+<span class="lineNum">     472 </span><span class="lineCov">        368 : }</span>
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span><span class="lineCov">       2619 : void CoeffsBase::writeIterationCounterAndTimeToFile(OFile&amp; ofile) const {</span>
+<span class="lineNum">     476 </span><span class="lineCov">       2619 :   if(time_md&gt;=0.0) {</span>
+<span class="lineNum">     477 </span><span class="lineCov">       5238 :     ofile.fmtField(&quot;%f&quot;);</span>
+<span class="lineNum">     478 </span><span class="lineCov">       2619 :     ofile.addConstantField(field_time_).printField(field_time_,time_md);</span>
+<span class="lineNum">     479 </span><span class="lineCov">       2619 :     ofile.fmtField();</span>
+<span class="lineNum">     480 </span>            :   }
+<span class="lineNum">     481 </span><span class="lineCov">       2619 :   ofile.addConstantField(field_iteration_).printField(field_iteration_,(int) iteration_opt);</span>
+<span class="lineNum">     482 </span><span class="lineCov">       2619 : }</span>
+<a name="483"><span class="lineNum">     483 </span>            : </a>
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineCov">        406 : bool CoeffsBase::getIterationCounterAndTimeFromFile(IFile&amp; ifile) {</span>
+<span class="lineNum">     486 </span>            :   bool field_found=false;
+<span class="lineNum">     487 </span><span class="lineCov">        406 :   if(ifile.FieldExist(field_time_)) {</span>
+<span class="lineNum">     488 </span>            :     field_found=true;
+<span class="lineNum">     489 </span>            :     double time_tmp;
+<span class="lineNum">     490 </span><span class="lineCov">        368 :     ifile.scanField(field_time_,time_tmp);</span>
+<span class="lineNum">     491 </span><span class="lineCov">        368 :     time_md=time_tmp;</span>
+<span class="lineNum">     492 </span>            :   }
+<span class="lineNum">     493 </span><span class="lineCov">        406 :   if(ifile.FieldExist(field_iteration_)) {</span>
+<span class="lineNum">     494 </span>            :     field_found=true;
+<span class="lineNum">     495 </span>            :     int iter_tmp;
+<span class="lineNum">     496 </span><span class="lineCov">        368 :     ifile.scanField(field_iteration_,iter_tmp);</span>
+<span class="lineNum">     497 </span><span class="lineCov">        368 :     iteration_opt=(unsigned int) iter_tmp;</span>
+<span class="lineNum">     498 </span>            :   }
+<span class="lineNum">     499 </span><span class="lineCov">        406 :   return field_found;</span>
+<span class="lineNum">     500 </span>            : }
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            : }
+<span class="lineNum">     504 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

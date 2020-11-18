@@ -1,0 +1,941 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - isdb/EMMI.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">isdb</a> - EMMI.cpp<span style="font-size: 80%;"> (source / <a href="EMMI.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">310</td>
+            <td class="headerCovTableEntry">342</td>
+            <td class="headerCovTableEntryHi">90.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryHi">95.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2017-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;colvar/Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;colvar/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/SetupMolInfo.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/ActionSet.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/File.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;string&gt;
+<span class="lineNum">      31 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      32 </span>            : #include &lt;map&gt;
+<span class="lineNum">      33 </span>            : #include &lt;numeric&gt;
+<span class="lineNum">      34 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">      35 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : using namespace std;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace PLMD {
+<span class="lineNum">      40 </span>            : namespace isdb {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : //+PLUMEDOC ISDB_COLVAR EMMI
+<span class="lineNum">      43 </span>            : /*
+<span class="lineNum">      44 </span>            : Calculate the fit of a structure or ensemble of structures with a cryo-EM density map.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : This action implements the multi-scale Bayesian approach to cryo-EM data fitting introduced in  Ref. \cite Hanot113951 .
+<span class="lineNum">      47 </span>            : This method allows efficient and accurate structural modeling of cryo-electron microscopy density maps at multiple scales, from coarse-grained to atomistic resolution, by addressing the presence of random and systematic errors in the data, sample heterogeneity, data correlation, and noise correlation.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : The experimental density map is fit by a Gaussian Mixture Model (GMM), which is provided as an external file specified by the keyword
+<span class="lineNum">      50 </span>            : GMM_FILE. We are currently working on a web server to perform
+<span class="lineNum">      51 </span>            : this operation. In the meantime, the user can request a stand-alone version of the GMM code at massimiliano.bonomi_AT_gmail.com.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : When run in single-replica mode, this action allows atomistic, flexible refinement of an individual structure into a density map.
+<span class="lineNum">      54 </span>            : Combined with a multi-replica framework (such as the -multi option in GROMACS), the user can model an esemble of structures using
+<span class="lineNum">      55 </span>            : the Metainference approach \cite Bonomi:2016ip .
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \warning
+<span class="lineNum">      58 </span>            : To use \ref EMMI, the user should always add a \ref MOLINFO line and specify a pdb file of the system.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : \note
+<span class="lineNum">      61 </span>            : To enhance sampling in single-structure refinement, one can use a Replica Exchange Method, such as Parallel Tempering.
+<span class="lineNum">      62 </span>            : In this case, the user should add the NO_AVER flag to the input line.
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : \note
+<span class="lineNum">      65 </span>            : \ref EMMI can be used in combination with periodic and non-periodic systems. In the latter case, one should
+<span class="lineNum">      66 </span>            : add the NOPBC flag to the input line
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : \par Examples
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : In this example, we perform a single-structure refinement based on an experimental cryo-EM map. The map is fit with a GMM, whose
+<span class="lineNum">      71 </span>            : parameters are listed in the file GMM_fit.dat. This file contains one line per GMM component in the following format:
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : \verbatim
+<span class="lineNum">      74 </span>            : #! FIELDS Id Weight Mean_0 Mean_1 Mean_2 Cov_00 Cov_01 Cov_02 Cov_11 Cov_12 Cov_22 Beta
+<span class="lineNum">      75 </span>            :      0  2.9993805e+01   6.54628 10.37820 -0.92988  2.078920e-02 1.216254e-03 5.990827e-04 2.556246e-02 8.411835e-03 2.486254e-02  1
+<span class="lineNum">      76 </span>            :      1  2.3468312e+01   6.56095 10.34790 -0.87808  1.879859e-02 6.636049e-03 3.682865e-04 3.194490e-02 1.750524e-03 3.017100e-02  1
+<span class="lineNum">      77 </span>            :      ...
+<span class="lineNum">      78 </span>            : \endverbatim
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : To accelerate the computation of the Bayesian score, one can:
+<span class="lineNum">      81 </span>            : - use neighbor lists, specified by the keywords NL_CUTOFF and NL_STRIDE;
+<span class="lineNum">      82 </span>            : - calculate the restraint every other step (or more).
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : All the heavy atoms of the system are used to calculate the density map. This list can conveniently be provided
+<span class="lineNum">      85 </span>            : using a GROMACS index file.
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : The input file looks as follows:
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : \plumedfile
+<span class="lineNum">      90 </span>            : # include pdb info
+<span class="lineNum">      91 </span>            : MOLINFO STRUCTURE=prot.pdb
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : #  all heavy atoms
+<span class="lineNum">      94 </span>            : protein-h: GROUP NDX_FILE=index.ndx NDX_GROUP=Protein-H
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : # create EMMI score
+<span class="lineNum">      97 </span>            : gmm: EMMI NOPBC SIGMA_MEAN=0.01 TEMP=300.0 NL_STRIDE=100 NL_CUTOFF=0.01 GMM_FILE=GMM_fit.dat ATOMS=protein-h
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : # translate into bias - apply every 2 steps
+<span class="lineNum">     100 </span>            : emr: BIASVALUE ARG=gmm.scoreb STRIDE=2
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : PRINT ARG=emr.* FILE=COLVAR STRIDE=500 FMT=%20.10f
+<span class="lineNum">     103 </span>            : \endplumedfile
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : */
+<a name="107"><span class="lineNum">     107 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">         12 : class EMMI : public Colvar {</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : private:
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : // temperature in kbt
+<span class="lineNum">     114 </span>            :   double kbt_;
+<span class="lineNum">     115 </span>            : // model GMM - weights and atom types
+<span class="lineNum">     116 </span>            :   vector&lt;double&gt;   GMM_m_w_;
+<span class="lineNum">     117 </span>            :   vector&lt;unsigned&gt; GMM_m_type_;
+<span class="lineNum">     118 </span>            : // data GMM - means, weights, and covariances + beta option
+<span class="lineNum">     119 </span>            :   vector&lt;Vector&gt;             GMM_d_m_;
+<span class="lineNum">     120 </span>            :   vector&lt;double&gt;             GMM_d_w_;
+<span class="lineNum">     121 </span>            :   vector&lt; VectorGeneric&lt;6&gt; &gt; GMM_d_cov_;
+<span class="lineNum">     122 </span>            :   vector&lt;int&gt;                GMM_d_beta_;
+<span class="lineNum">     123 </span>            : // overlaps
+<span class="lineNum">     124 </span>            :   vector&lt;double&gt; ovmd_;
+<span class="lineNum">     125 </span>            :   vector&lt;double&gt; ovdd_;
+<span class="lineNum">     126 </span>            :   vector&lt;double&gt; ovmd_ave_;
+<span class="lineNum">     127 </span>            :   double ov_cut_;
+<span class="lineNum">     128 </span>            :   vector&lt;double&gt; ovdd_cut_;
+<span class="lineNum">     129 </span>            : // and derivatives
+<span class="lineNum">     130 </span>            :   vector&lt;Vector&gt; ovmd_der_;
+<span class="lineNum">     131 </span>            :   vector&lt;Vector&gt; atom_der_;
+<span class="lineNum">     132 </span>            :   vector&lt;Vector&gt; atom_der_b_;
+<span class="lineNum">     133 </span>            :   vector&lt;double&gt; err_f_;
+<span class="lineNum">     134 </span>            : // constant quantities;
+<span class="lineNum">     135 </span>            :   double cfact_;
+<span class="lineNum">     136 </span>            :   double inv_sqrt2_, sqrt2_pi_;
+<span class="lineNum">     137 </span>            : // metainference
+<span class="lineNum">     138 </span>            :   unsigned nrep_;
+<span class="lineNum">     139 </span>            :   unsigned replica_;
+<span class="lineNum">     140 </span>            :   vector&lt;double&gt; sigma_mean_;
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : // auxiliary stuff
+<span class="lineNum">     143 </span>            : // list of atom sigmas
+<span class="lineNum">     144 </span>            :   vector&lt;double&gt; s_map_;
+<span class="lineNum">     145 </span>            : // list of prefactors for overlap between two components of model and data GMM
+<span class="lineNum">     146 </span>            : // fact_md = w_m * w_d / (2pi)**1.5 / sqrt(det_md)
+<span class="lineNum">     147 </span>            :   vector&lt; double &gt; fact_md_;
+<span class="lineNum">     148 </span>            : // inverse of the sum of model and data covariances matrices
+<span class="lineNum">     149 </span>            :   vector&lt; VectorGeneric&lt;6&gt; &gt; inv_cov_md_;
+<span class="lineNum">     150 </span>            : // neighbor list
+<span class="lineNum">     151 </span>            :   double   nl_cutoff_;
+<span class="lineNum">     152 </span>            :   unsigned nl_stride_;
+<span class="lineNum">     153 </span>            :   bool first_time_, no_aver_;
+<span class="lineNum">     154 </span>            :   vector &lt; unsigned &gt; nl_;
+<span class="lineNum">     155 </span>            : // parallel stuff
+<span class="lineNum">     156 </span>            :   unsigned size_;
+<span class="lineNum">     157 </span>            :   unsigned rank_;
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : // analysis mode
+<span class="lineNum">     160 </span>            :   bool analysis_;
+<span class="lineNum">     161 </span>            :   OFile Devfile_;
+<span class="lineNum">     162 </span>            :   double nframe_;
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : // pbc
+<span class="lineNum">     165 </span>            :   bool pbc_;
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : // calculate model GMM weights and covariances - these are constants
+<span class="lineNum">     168 </span>            :   void get_GMM_m(vector&lt;AtomNumber&gt; &amp;atoms);
+<span class="lineNum">     169 </span>            : // read data GMM file
+<span class="lineNum">     170 </span>            :   void get_GMM_d(string gmm_file);
+<span class="lineNum">     171 </span>            : // normalize GMM
+<span class="lineNum">     172 </span>            :   void normalize_GMM(vector&lt;double&gt; &amp;w);
+<span class="lineNum">     173 </span>            : // check GMM data
+<span class="lineNum">     174 </span>            :   void check_GMM_d(VectorGeneric&lt;6&gt; &amp;cov, double w);
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : // get auxiliary stuff
+<span class="lineNum">     177 </span>            :   void get_auxiliary_stuff();
+<span class="lineNum">     178 </span>            : // get cutoff in overlap
+<span class="lineNum">     179 </span>            :   void get_cutoff_ov();
+<span class="lineNum">     180 </span>            : // get fact_md and inv_cov_md
+<span class="lineNum">     181 </span>            :   double get_prefactor_inverse (const VectorGeneric&lt;6&gt; &amp;GMM_cov_0, const VectorGeneric&lt;6&gt; &amp;GMM_cov_1,
+<span class="lineNum">     182 </span>            :                                 double &amp;GMM_w_0, double &amp;GMM_w_1,
+<span class="lineNum">     183 </span>            :                                 VectorGeneric&lt;6&gt; &amp;sum, VectorGeneric&lt;6&gt; &amp;inv_sum);
+<span class="lineNum">     184 </span>            : // calculate self overlaps between data GMM components - ovdd_
+<span class="lineNum">     185 </span>            :   double get_self_overlap(unsigned id);
+<span class="lineNum">     186 </span>            : // calculate overlap between two components
+<span class="lineNum">     187 </span>            :   double get_overlap(const Vector &amp;m_m, const Vector &amp;d_m, double &amp;fact_md,
+<span class="lineNum">     188 </span>            :                      const VectorGeneric&lt;6&gt; &amp;inv_cov_md, Vector &amp;ov_der);
+<span class="lineNum">     189 </span>            :   double get_overlap(const Vector &amp;m_m, const Vector &amp;d_m, double &amp;fact_md,
+<span class="lineNum">     190 </span>            :                      const VectorGeneric&lt;6&gt; &amp;inv_cov_md);
+<span class="lineNum">     191 </span>            : // update the neighbor list
+<span class="lineNum">     192 </span>            :   void update_neighbor_list();
+<span class="lineNum">     193 </span>            : // calculate overlap
+<span class="lineNum">     194 </span>            :   void calculate_overlap();
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : public:
+<span class="lineNum">     197 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     198 </span>            :   explicit EMMI(const ActionOptions&amp;);
+<span class="lineNum">     199 </span>            : // active methods:
+<span class="lineNum">     200 </span>            :   void prepare();
+<span class="lineNum">     201 </span>            :   virtual void calculate();
+<a name="202"><span class="lineNum">     202 </span>            : };</a>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">       6456 : PLUMED_REGISTER_ACTION(EMMI,&quot;EMMI&quot;)</span>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">          5 : void EMMI::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     207 </span><span class="lineCov">          5 :   Colvar::registerKeywords( keys );</span>
+<span class="lineNum">     208 </span><span class="lineCov">         20 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;atoms for which we calculate the density map, typically all heavy atoms&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;GMM_FILE&quot;,&quot;file with the parameters of the GMM components&quot;);</span>
+<span class="lineNum">     210 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;TEMP&quot;,&quot;temperature&quot;);</span>
+<span class="lineNum">     211 </span><span class="lineCov">         15 :   keys.addFlag(&quot;NO_AVER&quot;,false,&quot;don't do ensemble averaging in multi-replica mode&quot;);</span>
+<span class="lineNum">     212 </span><span class="lineCov">         15 :   keys.addFlag(&quot;ANALYSIS&quot;,false,&quot;run in analysis mode&quot;);</span>
+<span class="lineNum">     213 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;NL_CUTOFF&quot;,&quot;The cutoff in overlap for the neighbor list&quot;);</span>
+<span class="lineNum">     214 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;NL_STRIDE&quot;,&quot;The frequency with which we are updating the neighbor list&quot;);</span>
+<span class="lineNum">     215 </span><span class="lineCov">         20 :   keys.add(&quot;compulsory&quot;,&quot;SIGMA_MEAN&quot;,&quot;starting value for the uncertainty in the mean estimate&quot;);</span>
+<span class="lineNum">     216 </span><span class="lineCov">          5 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     217 </span><span class="lineCov">         20 :   keys.addOutputComponent(&quot;score&quot;,   &quot;default&quot;,&quot;Bayesian score&quot;);</span>
+<span class="lineNum">     218 </span><span class="lineCov">         20 :   keys.addOutputComponent(&quot;scoreb&quot;,  &quot;default&quot;,&quot;Beta Bayesian score&quot;);</span>
+<span class="lineNum">     219 </span><span class="lineCov">          5 : }</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">          4 : EMMI::EMMI(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     222 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">     223 </span>            :   inv_sqrt2_(0.707106781186548),
+<span class="lineNum">     224 </span>            :   sqrt2_pi_(0.797884560802865),
+<span class="lineNum">     225 </span>            :   nl_cutoff_(-1.0), nl_stride_(0),
+<span class="lineNum">     226 </span>            :   first_time_(true), no_aver_(false),
+<span class="lineNum">     227 </span><span class="lineCov">         40 :   analysis_(false), nframe_(0.0), pbc_(true)</span>
+<span class="lineNum">     228 </span>            : {
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">          4 :   bool nopbc=!pbc_;</span>
+<span class="lineNum">     231 </span><span class="lineCov">          8 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     232 </span><span class="lineCov">          4 :   pbc_=!nopbc;</span>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     235 </span><span class="lineCov">          8 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   string GMM_file;
+<span class="lineNum">     238 </span><span class="lineCov">          8 :   parse(&quot;GMM_FILE&quot;,GMM_file);</span>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            :   // uncertainty stuff
+<span class="lineNum">     241 </span>            :   double sigma_mean;
+<span class="lineNum">     242 </span><span class="lineCov">          8 :   parse(&quot;SIGMA_MEAN&quot;,sigma_mean);</span>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            :   // temperature
+<span class="lineNum">     245 </span><span class="lineCov">          4 :   double temp=0.0;</span>
+<span class="lineNum">     246 </span><span class="lineCov">          8 :   parse(&quot;TEMP&quot;,temp);</span>
+<span class="lineNum">     247 </span>            :   // convert temp to kbt
+<span class="lineNum">     248 </span><span class="lineCov">          8 :   if(temp&gt;0.0) kbt_=plumed.getAtoms().getKBoltzmann()*temp;</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :   else kbt_=plumed.getAtoms().getKbT();</span>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :   // neighbor list stuff
+<span class="lineNum">     252 </span><span class="lineCov">          8 :   parse(&quot;NL_CUTOFF&quot;,nl_cutoff_);</span>
+<span class="lineNum">     253 </span><span class="lineCov">          4 :   if(nl_cutoff_&lt;=0.0) error(&quot;NL_CUTOFF should be explicitly specified and positive&quot;);</span>
+<span class="lineNum">     254 </span><span class="lineCov">          8 :   parse(&quot;NL_STRIDE&quot;,nl_stride_);</span>
+<span class="lineNum">     255 </span><span class="lineCov">          4 :   if(nl_stride_&lt;=0) error(&quot;NL_STRIDE should be explicitly specified and positive&quot;);</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span><span class="lineCov">          8 :   parseFlag(&quot;NO_AVER&quot;,no_aver_);</span>
+<span class="lineNum">     258 </span><span class="lineCov">          8 :   parseFlag(&quot;ANALYSIS&quot;,analysis_);</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineCov">          4 :   checkRead();</span>
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            :   // set parallel stuff
+<span class="lineNum">     263 </span><span class="lineCov">          4 :   size_=comm.Get_size();</span>
+<span class="lineNum">     264 </span><span class="lineCov">          4 :   rank_=comm.Get_rank();</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :   // get number of replicas
+<span class="lineNum">     267 </span><span class="lineCov">          4 :   if(rank_==0) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">          3 :     if(no_aver_) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">          3 :       nrep_ = 1;</span>
+<span class="lineNum">     270 </span><span class="lineCov">          3 :       replica_ = 0;</span>
+<span class="lineNum">     271 </span>            :     } else {
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :       nrep_ = multi_sim_comm.Get_size();</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :       replica_ = multi_sim_comm.Get_rank();</span>
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span>            :   } else {
+<span class="lineNum">     276 </span><span class="lineCov">          1 :     nrep_ = 0;</span>
+<span class="lineNum">     277 </span><span class="lineCov">          1 :     replica_ = 0;</span>
+<span class="lineNum">     278 </span>            :   }
+<span class="lineNum">     279 </span><span class="lineCov">          4 :   comm.Sum(&amp;nrep_,1);</span>
+<span class="lineNum">     280 </span><span class="lineCov">          4 :   comm.Sum(&amp;replica_,1);</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">          4 :   log.printf(&quot;  atoms involved : &quot;);</span>
+<span class="lineNum">     283 </span><span class="lineCov">       7232 :   for(unsigned i=0; i&lt;atoms.size(); ++i) log.printf(&quot;%d &quot;,atoms[i].serial());</span>
+<span class="lineNum">     284 </span><span class="lineCov">          4 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     285 </span><span class="lineCov">          8 :   log.printf(&quot;  GMM data file : %s\n&quot;, GMM_file.c_str());</span>
+<span class="lineNum">     286 </span><span class="lineCov">          4 :   if(no_aver_) log.printf(&quot;  without ensemble averaging\n&quot;);</span>
+<span class="lineNum">     287 </span><span class="lineCov">          4 :   log.printf(&quot;  neighbor list overlap cutoff : %lf\n&quot;, nl_cutoff_);</span>
+<span class="lineNum">     288 </span><span class="lineCov">          4 :   log.printf(&quot;  neighbor list stride : %u\n&quot;,  nl_stride_);</span>
+<span class="lineNum">     289 </span><span class="lineCov">          4 :   log.printf(&quot;  uncertainty in the mean estimate %f\n&quot;,sigma_mean);</span>
+<span class="lineNum">     290 </span><span class="lineCov">          4 :   log.printf(&quot;  temperature of the system in energy unit %f\n&quot;,kbt_);</span>
+<span class="lineNum">     291 </span><span class="lineCov">          4 :   log.printf(&quot;  number of replicas %u\n&quot;,nrep_);</span>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :   // set constant quantity before calculating stuff
+<span class="lineNum">     295 </span><span class="lineCov">          4 :   cfact_ = 1.0/pow( 2.0*pi, 1.5 );</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :   // calculate model GMM constant parameters
+<span class="lineNum">     298 </span><span class="lineCov">          4 :   get_GMM_m(atoms);</span>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :   // read data GMM parameters
+<span class="lineNum">     301 </span><span class="lineCov">          8 :   get_GMM_d(GMM_file);</span>
+<span class="lineNum">     302 </span><span class="lineCov">          8 :   log.printf(&quot;  number of GMM components : %u\n&quot;, static_cast&lt;unsigned&gt;(GMM_d_m_.size()));</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            :   // normalize GMMs
+<span class="lineNum">     305 </span><span class="lineCov">          4 :   normalize_GMM(GMM_m_w_);</span>
+<span class="lineNum">     306 </span><span class="lineCov">          4 :   normalize_GMM(GMM_d_w_);</span>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :   // get self overlaps between data GMM components
+<span class="lineNum">     309 </span><span class="lineCov">       4712 :   for(unsigned i=0; i&lt;GMM_d_w_.size(); ++i) {</span>
+<span class="lineNum">     310 </span><span class="lineCov">       1568 :     double ov = get_self_overlap(i);</span>
+<span class="lineNum">     311 </span><span class="lineCov">       1568 :     ovdd_.push_back(ov);</span>
+<span class="lineNum">     312 </span><span class="lineCov">       3136 :     sigma_mean_.push_back(sigma_mean*ov);</span>
+<span class="lineNum">     313 </span>            :   }
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :   // calculate auxiliary stuff
+<span class="lineNum">     316 </span><span class="lineCov">          4 :   get_auxiliary_stuff();</span>
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :   // get cutoff for overlap calculation - avoid millions of exp calculations
+<span class="lineNum">     319 </span><span class="lineCov">          4 :   get_cutoff_ov();</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            :   // and prepare temporary vectors
+<span class="lineNum">     322 </span><span class="lineCov">          4 :   ovmd_.resize(GMM_d_w_.size());</span>
+<span class="lineNum">     323 </span><span class="lineCov">          4 :   err_f_.resize(GMM_d_w_.size());</span>
+<span class="lineNum">     324 </span><span class="lineCov">          4 :   atom_der_.resize(GMM_m_w_.size());</span>
+<span class="lineNum">     325 </span><span class="lineCov">          4 :   atom_der_b_.resize(GMM_m_w_.size());</span>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            :   // clear things that are not needed anymore
+<span class="lineNum">     328 </span>            :   GMM_d_cov_.clear();
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            :   // add components
+<span class="lineNum">     331 </span><span class="lineCov">         12 :   addComponentWithDerivatives(&quot;score&quot;);  componentIsNotPeriodic(&quot;score&quot;);</span>
+<span class="lineNum">     332 </span><span class="lineCov">         12 :   addComponentWithDerivatives(&quot;scoreb&quot;); componentIsNotPeriodic(&quot;scoreb&quot;);</span>
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :   // request the atoms
+<span class="lineNum">     335 </span><span class="lineCov">          4 :   requestAtoms(atoms);</span>
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span><span class="lineCov">         12 :   log&lt;&lt;&quot;  Bibliography &quot;&lt;&lt;plumed.cite(&quot;Bonomi, Camilloni, Cavalli, Vendruscolo, Sci. Adv. 2, e150117 (2016)&quot;);</span>
+<span class="lineNum">     338 </span><span class="lineCov">         12 :   log&lt;&lt;plumed.cite(&quot;Hanot, Bonomi, Greenberg, Sali, Nilges, Vendruscolo, Pellarin, bioRxiv doi: 10.1101/113951 (2017)&quot;);</span>
+<span class="lineNum">     339 </span><span class="lineCov">         12 :   log&lt;&lt;plumed.cite(&quot;Bonomi, Camilloni, Bioinformatics, 33, 3999 (2017)&quot;);</span>
+<span class="lineNum">     340 </span><span class="lineCov">          4 :   log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     341 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineCov">          4 : void EMMI::get_GMM_m(vector&lt;AtomNumber&gt; &amp;atoms)</span>
+<span class="lineNum">     344 </span>            : {
+<span class="lineNum">     345 </span><span class="lineCov">          8 :   vector&lt;SetupMolInfo*&gt; moldat=plumed.getActionSet().select&lt;SetupMolInfo*&gt;();</span>
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            :   // map of atom types to A and B coefficients of scattering factor
+<span class="lineNum">     348 </span>            :   // f(s) = A * exp(-B*s**2)
+<span class="lineNum">     349 </span>            :   // B is in Angstrom squared
+<span class="lineNum">     350 </span>            :   map&lt;string, double&gt; w_map;
+<span class="lineNum">     351 </span><span class="lineCov">          8 :   w_map[&quot;C&quot;] = 2.49982; // type 0</span>
+<span class="lineNum">     352 </span><span class="lineCov">          8 :   w_map[&quot;O&quot;] = 1.97692;  // type 1</span>
+<span class="lineNum">     353 </span><span class="lineCov">          8 :   w_map[&quot;N&quot;] = 2.20402; // type 2</span>
+<span class="lineNum">     354 </span><span class="lineCov">          8 :   w_map[&quot;S&quot;] = 5.14099;  // type 3</span>
+<span class="lineNum">     355 </span>            :   // map between an atom type and an index
+<span class="lineNum">     356 </span>            :   map&lt;string, unsigned&gt; type_map;
+<span class="lineNum">     357 </span><span class="lineCov">          8 :   type_map[&quot;C&quot;]=0;</span>
+<span class="lineNum">     358 </span><span class="lineCov">          8 :   type_map[&quot;O&quot;]=1;</span>
+<span class="lineNum">     359 </span><span class="lineCov">          8 :   type_map[&quot;N&quot;]=2;</span>
+<span class="lineNum">     360 </span><span class="lineCov">          8 :   type_map[&quot;S&quot;]=3;</span>
+<span class="lineNum">     361 </span>            :   // fill in the sigma vector
+<span class="lineNum">     362 </span><span class="lineCov">          8 :   s_map_.push_back(15.146);</span>
+<span class="lineNum">     363 </span><span class="lineCov">          8 :   s_map_.push_back(8.59722);</span>
+<span class="lineNum">     364 </span><span class="lineCov">          8 :   s_map_.push_back(11.1116);</span>
+<span class="lineNum">     365 </span><span class="lineCov">          8 :   s_map_.push_back(15.8952);</span>
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :   // check if MOLINFO line is present
+<span class="lineNum">     368 </span><span class="lineCov">          4 :   if( moldat.size()==1 ) {</span>
+<span class="lineNum">     369 </span><span class="lineCov">          4 :     log&lt;&lt;&quot;  MOLINFO DATA found, using proper atom names\n&quot;;</span>
+<span class="lineNum">     370 </span><span class="lineCov">       7232 :     for(unsigned i=0; i&lt;atoms.size(); ++i) {</span>
+<span class="lineNum">     371 </span>            :       // get atom name
+<span class="lineNum">     372 </span><span class="lineCov">       4816 :       string name = moldat[0]-&gt;getAtomName(atoms[i]);</span>
+<span class="lineNum">     373 </span>            :       char type;
+<span class="lineNum">     374 </span>            :       // get atom type
+<span class="lineNum">     375 </span><span class="lineCov">       2408 :       char first = name.at(0);</span>
+<span class="lineNum">     376 </span>            :       // GOLDEN RULE: type is first letter, if not a number
+<span class="lineNum">     377 </span><span class="lineCov">       2408 :       if (!isdigit(first)) {</span>
+<span class="lineNum">     378 </span>            :         type = first;
+<span class="lineNum">     379 </span>            :         // otherwise is the second
+<span class="lineNum">     380 </span>            :       } else {
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         type = name.at(1);</span>
+<span class="lineNum">     382 </span>            :       }
+<span class="lineNum">     383 </span>            :       // check if key in map
+<span class="lineNum">     384 </span><span class="lineCov">       2408 :       std::string type_s = std::string(1,type);</span>
+<span class="lineNum">     385 </span><span class="lineCov">       2408 :       if(w_map.find(type_s) != w_map.end()) {</span>
+<span class="lineNum">     386 </span>            :         // save atom type
+<span class="lineNum">     387 </span><span class="lineCov">       2408 :         GMM_m_type_.push_back(type_map[type_s]);</span>
+<span class="lineNum">     388 </span>            :         // this will be normalized to 1 in the final density
+<span class="lineNum">     389 </span><span class="lineCov">       2408 :         GMM_m_w_.push_back(w_map[type_s]);</span>
+<span class="lineNum">     390 </span>            :       } else {
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :         error(&quot;Wrong atom type &quot;+type_s+&quot; from atom name &quot;+name+&quot;\n&quot;);</span>
+<span class="lineNum">     392 </span>            :       }
+<span class="lineNum">     393 </span>            :     }
+<span class="lineNum">     394 </span>            :   } else {
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :     error(&quot;MOLINFO DATA not found\n&quot;);</span>
+<span class="lineNum">     396 </span>            :   }
+<span class="lineNum">     397 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span><span class="lineCov">       1568 : void EMMI::check_GMM_d(VectorGeneric&lt;6&gt; &amp;cov, double w)</span>
+<span class="lineNum">     401 </span>            : {
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            : // check if positive defined, by calculating the 3 leading principal minors
+<span class="lineNum">     404 </span><span class="lineCov">       1568 :   double pm1 = cov[0];</span>
+<span class="lineNum">     405 </span><span class="lineCov">       1568 :   double pm2 = cov[0]*cov[3]-cov[1]*cov[1];</span>
+<span class="lineNum">     406 </span><span class="lineCov">       1568 :   double pm3 = cov[0]*(cov[3]*cov[5]-cov[4]*cov[4])-cov[1]*(cov[1]*cov[5]-cov[4]*cov[2])+cov[2]*(cov[1]*cov[4]-cov[3]*cov[2]);</span>
+<span class="lineNum">     407 </span>            : // apply Sylvester’s criterion
+<span class="lineNum">     408 </span><span class="lineCov">       1568 :   if(pm1&lt;=0.0 || pm2&lt;=0.0 || pm3&lt;=0.0)</span>
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :     error(&quot;check data GMM: covariance matrix is not positive defined&quot;);</span>
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : // check if weight is positive
+<span class="lineNum">     412 </span><span class="lineCov">       1568 :   if(w&lt;0.0) error(&quot;check data GMM: weight must be positive&quot;);</span>
+<span class="lineNum">     413 </span><span class="lineCov">       1568 : }</span>
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            : // read GMM data file in PLUMED format:
+<span class="lineNum">     417 </span><span class="lineCov">          4 : void EMMI::get_GMM_d(string GMM_file)</span>
+<span class="lineNum">     418 </span>            : {
+<span class="lineNum">     419 </span><span class="lineCov">          4 :   VectorGeneric&lt;6&gt; cov;</span>
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span>            : // open file
+<span class="lineNum">     422 </span><span class="lineCov">          4 :   IFile *ifile = new IFile();</span>
+<span class="lineNum">     423 </span><span class="lineCov">          4 :   if(ifile-&gt;FileExist(GMM_file)) {</span>
+<span class="lineNum">     424 </span><span class="lineCov">          4 :     ifile-&gt;open(GMM_file);</span>
+<span class="lineNum">     425 </span>            :     int idcomp;
+<span class="lineNum">     426 </span><span class="lineCov">       4712 :     while(ifile-&gt;scanField(&quot;Id&quot;,idcomp)) {</span>
+<span class="lineNum">     427 </span>            :       int beta;
+<span class="lineNum">     428 </span>            :       double w, m0, m1, m2;
+<span class="lineNum">     429 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Weight&quot;,w);</span>
+<span class="lineNum">     430 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Mean_0&quot;,m0);</span>
+<span class="lineNum">     431 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Mean_1&quot;,m1);</span>
+<span class="lineNum">     432 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Mean_2&quot;,m2);</span>
+<span class="lineNum">     433 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Cov_00&quot;,cov[0]);</span>
+<span class="lineNum">     434 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Cov_01&quot;,cov[1]);</span>
+<span class="lineNum">     435 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Cov_02&quot;,cov[2]);</span>
+<span class="lineNum">     436 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Cov_11&quot;,cov[3]);</span>
+<span class="lineNum">     437 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Cov_12&quot;,cov[4]);</span>
+<span class="lineNum">     438 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Cov_22&quot;,cov[5]);</span>
+<span class="lineNum">     439 </span><span class="lineCov">       3136 :       ifile-&gt;scanField(&quot;Beta&quot;,beta);</span>
+<span class="lineNum">     440 </span>            :       // check input
+<span class="lineNum">     441 </span><span class="lineCov">       1568 :       check_GMM_d(cov, w);</span>
+<span class="lineNum">     442 </span>            :       // center of the Gaussian
+<span class="lineNum">     443 </span><span class="lineCov">       3136 :       GMM_d_m_.push_back(Vector(m0,m1,m2));</span>
+<span class="lineNum">     444 </span>            :       // covariance matrix
+<span class="lineNum">     445 </span><span class="lineCov">       1568 :       GMM_d_cov_.push_back(cov);</span>
+<span class="lineNum">     446 </span>            :       // weights
+<span class="lineNum">     447 </span><span class="lineCov">       1568 :       GMM_d_w_.push_back(w);</span>
+<span class="lineNum">     448 </span>            :       // beta
+<span class="lineNum">     449 </span><span class="lineCov">       1568 :       GMM_d_beta_.push_back(beta);</span>
+<span class="lineNum">     450 </span>            :       // new line
+<span class="lineNum">     451 </span><span class="lineCov">       1568 :       ifile-&gt;scanField();</span>
+<span class="lineNum">     452 </span>            :     }
+<span class="lineNum">     453 </span><span class="lineCov">          4 :     ifile-&gt;close();</span>
+<span class="lineNum">     454 </span>            :   } else {
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :     error(&quot;Cannot find GMM_FILE &quot;+GMM_file+&quot;\n&quot;);</span>
+<span class="lineNum">     456 </span>            :   }
+<span class="lineNum">     457 </span><span class="lineCov">          4 :   delete ifile;</span>
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span>            : // normalize GMM to sum to 1
+<a name="462"><span class="lineNum">     462 </span>            : // since all the GMM components are individually normalized, we just need to</a>
+<span class="lineNum">     463 </span>            : // divide each weight for the sum of the weights
+<span class="lineNum">     464 </span><span class="lineCov">          8 : void EMMI::normalize_GMM(vector&lt;double&gt; &amp;w)</span>
+<span class="lineNum">     465 </span>            : {
+<span class="lineNum">     466 </span>            :   double norm = accumulate(w.begin(), w.end(), 0.0);
+<span class="lineNum">     467 </span><span class="lineCov">      11944 :   for(unsigned i=0; i&lt;w.size(); ++i) w[i] /= norm;</span>
+<a name="468"><span class="lineNum">     468 </span><span class="lineCov">          8 : }</span></a>
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span><span class="lineCov">          4 : void EMMI::get_auxiliary_stuff()</span>
+<span class="lineNum">     471 </span>            : {
+<span class="lineNum">     472 </span><span class="lineCov">          4 :   VectorGeneric&lt;6&gt; cov, sum, inv_sum;</span>
+<span class="lineNum">     473 </span>            :   // cycle on all atoms types
+<span class="lineNum">     474 </span><span class="lineCov">         36 :   for(unsigned i=0; i&lt;4; ++i) {</span>
+<span class="lineNum">     475 </span>            :     // the Gaussian in density (real) space is the FT of scattering factor
+<span class="lineNum">     476 </span>            :     // f(r) = A * (pi/B)**1.5 * exp(-pi**2/B*r**2)
+<span class="lineNum">     477 </span><span class="lineCov">         32 :     double s = sqrt ( 0.5 * s_map_[i] ) / pi * 0.1;</span>
+<span class="lineNum">     478 </span>            :     // covariance matrix for spherical Gaussian
+<span class="lineNum">     479 </span><span class="lineCov">         16 :     cov[0]=s*s; cov[1]=0.0; cov[2]=0.0;</span>
+<span class="lineNum">     480 </span><span class="lineCov">         16 :     cov[3]=s*s; cov[4]=0.0;</span>
+<span class="lineNum">     481 </span><span class="lineCov">         16 :     cov[5]=s*s;</span>
+<span class="lineNum">     482 </span>            :     // cycle on all data GMM
+<span class="lineNum">     483 </span><span class="lineCov">      18848 :     for(unsigned j=0; j&lt;GMM_d_m_.size(); ++j) {</span>
+<span class="lineNum">     484 </span>            :       // we need the sum of the covariance matrices
+<span class="lineNum">     485 </span><span class="lineCov">      81536 :       for(unsigned k=0; k&lt;6; ++k) sum[k] = cov[k] + GMM_d_cov_[j][k];</span>
+<span class="lineNum">     486 </span>            :       // and to calculate its determinant
+<span class="lineNum">     487 </span><span class="lineCov">       6272 :       double det = sum[0]*(sum[3]*sum[5]-sum[4]*sum[4]);</span>
+<span class="lineNum">     488 </span><span class="lineCov">       6272 :       det -= sum[1]*(sum[1]*sum[5]-sum[4]*sum[2]);</span>
+<span class="lineNum">     489 </span><span class="lineCov">       6272 :       det += sum[2]*(sum[1]*sum[4]-sum[3]*sum[2]);</span>
+<span class="lineNum">     490 </span>            :       // the constant part of the prefactor is
+<span class="lineNum">     491 </span><span class="lineCov">       6272 :       double pre_fact =  cfact_ / sqrt(det);</span>
+<span class="lineNum">     492 </span>            :       // and its inverse
+<span class="lineNum">     493 </span><span class="lineCov">       6272 :       inv_sum[0] = (sum[3]*sum[5] - sum[4]*sum[4])/det;</span>
+<span class="lineNum">     494 </span><span class="lineCov">       6272 :       inv_sum[1] = (sum[2]*sum[4] - sum[1]*sum[5])/det;</span>
+<span class="lineNum">     495 </span><span class="lineCov">       6272 :       inv_sum[2] = (sum[1]*sum[4] - sum[2]*sum[3])/det;</span>
+<span class="lineNum">     496 </span><span class="lineCov">       6272 :       inv_sum[3] = (sum[0]*sum[5] - sum[2]*sum[2])/det;</span>
+<span class="lineNum">     497 </span><span class="lineCov">       6272 :       inv_sum[4] = (sum[2]*sum[1] - sum[0]*sum[4])/det;</span>
+<span class="lineNum">     498 </span><span class="lineCov">       6272 :       inv_sum[5] = (sum[0]*sum[3] - sum[1]*sum[1])/det;</span>
+<span class="lineNum">     499 </span>            :       // now we store the pre_fact
+<span class="lineNum">     500 </span><span class="lineCov">       6272 :       fact_md_.push_back(pre_fact);</span>
+<span class="lineNum">     501 </span>            :       // and the inverse of the sum
+<span class="lineNum">     502 </span><span class="lineCov">       6272 :       inv_cov_md_.push_back(inv_sum);</span>
+<span class="lineNum">     503 </span>            :     }
+<span class="lineNum">     504 </span>            :   }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineCov">          4 : }</span>
+<a name="507"><span class="lineNum">     507 </span>            : </a>
+<span class="lineNum">     508 </span>            : // get prefactors
+<span class="lineNum">     509 </span><span class="lineCov">     614656 : double EMMI::get_prefactor_inverse</span>
+<span class="lineNum">     510 </span>            : (const VectorGeneric&lt;6&gt; &amp;GMM_cov_0, const VectorGeneric&lt;6&gt; &amp;GMM_cov_1,
+<span class="lineNum">     511 </span>            :  double &amp;GMM_w_0, double &amp;GMM_w_1,
+<span class="lineNum">     512 </span>            :  VectorGeneric&lt;6&gt; &amp;sum, VectorGeneric&lt;6&gt; &amp;inv_sum)
+<span class="lineNum">     513 </span>            : {
+<span class="lineNum">     514 </span>            : // we need the sum of the covariance matrices
+<span class="lineNum">     515 </span><span class="lineCov">    4302592 :   for(unsigned k=0; k&lt;6; ++k) sum[k] = GMM_cov_0[k] + GMM_cov_1[k];</span>
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span>            : // and to calculate its determinant
+<span class="lineNum">     518 </span><span class="lineCov">     614656 :   double det = sum[0]*(sum[3]*sum[5]-sum[4]*sum[4]);</span>
+<span class="lineNum">     519 </span><span class="lineCov">     614656 :   det -= sum[1]*(sum[1]*sum[5]-sum[4]*sum[2]);</span>
+<span class="lineNum">     520 </span><span class="lineCov">     614656 :   det += sum[2]*(sum[1]*sum[4]-sum[3]*sum[2]);</span>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span>            : // the prefactor is
+<span class="lineNum">     523 </span><span class="lineCov">     614656 :   double pre_fact =  cfact_ / sqrt(det) * GMM_w_0 * GMM_w_1;</span>
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span>            : // and its inverse
+<span class="lineNum">     526 </span><span class="lineCov">     614656 :   inv_sum[0] = (sum[3]*sum[5] - sum[4]*sum[4])/det;</span>
+<span class="lineNum">     527 </span><span class="lineCov">     614656 :   inv_sum[1] = (sum[2]*sum[4] - sum[1]*sum[5])/det;</span>
+<span class="lineNum">     528 </span><span class="lineCov">     614656 :   inv_sum[2] = (sum[1]*sum[4] - sum[2]*sum[3])/det;</span>
+<span class="lineNum">     529 </span><span class="lineCov">     614656 :   inv_sum[3] = (sum[0]*sum[5] - sum[2]*sum[2])/det;</span>
+<span class="lineNum">     530 </span><span class="lineCov">     614656 :   inv_sum[4] = (sum[2]*sum[1] - sum[0]*sum[4])/det;</span>
+<span class="lineNum">     531 </span><span class="lineCov">     614656 :   inv_sum[5] = (sum[0]*sum[3] - sum[1]*sum[1])/det;</span>
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span>            : // return pre-factor
+<span class="lineNum">     534 </span><span class="lineCov">     614656 :   return pre_fact;</span>
+<span class="lineNum">     535 </span>            : }
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span><span class="lineCov">       1568 : double EMMI::get_self_overlap(unsigned id)</span>
+<span class="lineNum">     538 </span>            : {
+<span class="lineNum">     539 </span>            :   vector&lt;double&gt; ov;
+<span class="lineNum">     540 </span><span class="lineCov">       1568 :   VectorGeneric&lt;6&gt; sum, inv_sum;</span>
+<span class="lineNum">     541 </span><span class="lineCov">       1568 :   Vector ov_der;</span>
+<span class="lineNum">     542 </span>            : // start loop
+<span class="lineNum">     543 </span><span class="lineCov">    1847104 :   for(unsigned i=0; i&lt;GMM_d_w_.size(); ++i) {</span>
+<span class="lineNum">     544 </span>            :     // call auxiliary method
+<span class="lineNum">     545 </span><span class="lineCov">     614656 :     double pre_fact = get_prefactor_inverse(GMM_d_cov_[id], GMM_d_cov_[i],</span>
+<span class="lineNum">     546 </span><span class="lineCov">    1229312 :                                             GMM_d_w_[id],   GMM_d_w_[i], sum, inv_sum);</span>
+<span class="lineNum">     547 </span>            :     // calculate overlap
+<span class="lineNum">     548 </span><span class="lineCov">     614656 :     double ov_tmp = get_overlap(GMM_d_m_[id], GMM_d_m_[i], pre_fact, inv_sum, ov_der);</span>
+<span class="lineNum">     549 </span>            :     // add to list
+<span class="lineNum">     550 </span><span class="lineCov">     614656 :     ov.push_back(ov_tmp);</span>
+<span class="lineNum">     551 </span>            :   }
+<span class="lineNum">     552 </span>            : // calculate total
+<span class="lineNum">     553 </span>            :   double ov_tot = accumulate(ov.begin(), ov.end(), 0.0);
+<span class="lineNum">     554 </span>            : // sort in ascending order
+<span class="lineNum">     555 </span>            :   std::sort(ov.begin(), ov.end());
+<span class="lineNum">     556 </span>            : // get cutoff = nl_cutoff_ * ov_tot
+<span class="lineNum">     557 </span><span class="lineCov">       1568 :   double ov_cut = ov_tot * nl_cutoff_;</span>
+<span class="lineNum">     558 </span>            : // integrate tail of ov
+<span class="lineNum">     559 </span>            :   double ov_sum = 0.0;
+<span class="lineNum">     560 </span><span class="lineCov">    1769872 :   for(unsigned i=1; i&lt;ov.size(); ++i) {</span>
+<span class="lineNum">     561 </span><span class="lineCov">     590480 :     ov_sum += ov[i];</span>
+<span class="lineNum">     562 </span><span class="lineCov">     590480 :     if(ov_sum &gt;= ov_cut) {</span>
+<span class="lineNum">     563 </span><span class="lineCov">       3136 :       ov_cut = ov[i-1];</span>
+<span class="lineNum">     564 </span><span class="lineCov">       1568 :       break;</span>
+<span class="lineNum">     565 </span>            :     }
+<span class="lineNum">     566 </span>            :   }
+<span class="lineNum">     567 </span>            : // store
+<span class="lineNum">     568 </span><span class="lineCov">       1568 :   ovdd_cut_.push_back(ov_cut);</span>
+<span class="lineNum">     569 </span>            : // and return it
+<span class="lineNum">     570 </span><span class="lineCov">       1568 :   return ov_tot;</span>
+<span class="lineNum">     571 </span>            : }
+<span class="lineNum">     572 </span>            : 
+<a name="573"><span class="lineNum">     573 </span>            : // this is to avoid the calculation of millions of exp function</a>
+<span class="lineNum">     574 </span>            : // when updating the neighbor list using calculate_overlap
+<span class="lineNum">     575 </span><span class="lineCov">          4 : void EMMI::get_cutoff_ov()</span>
+<span class="lineNum">     576 </span>            : {
+<span class="lineNum">     577 </span>            :   // temporary stuff
+<span class="lineNum">     578 </span><span class="lineCov">          4 :   unsigned GMM_d_w_size = GMM_d_w_.size();</span>
+<span class="lineNum">     579 </span>            :   // set ov_cut_ to a huge number
+<span class="lineNum">     580 </span><span class="lineCov">          4 :   ov_cut_ = 1.0+9;</span>
+<span class="lineNum">     581 </span>            :   // calculate minimum value needed for cutoff
+<span class="lineNum">     582 </span><span class="lineCov">       3140 :   for(unsigned i=0; i&lt;GMM_d_w_.size(); ++i) {</span>
+<span class="lineNum">     583 </span><span class="lineCov">    2834944 :     for(unsigned j=0; j&lt;GMM_m_w_.size(); ++j) {</span>
+<span class="lineNum">     584 </span>            :       // get atom type
+<span class="lineNum">     585 </span><span class="lineCov">     943936 :       unsigned jtype = GMM_m_type_[j];</span>
+<span class="lineNum">     586 </span>            :       // get index in auxiliary lists
+<span class="lineNum">     587 </span><span class="lineCov">     943936 :       unsigned kaux = jtype * GMM_d_w_size + i;</span>
+<span class="lineNum">     588 </span>            :       // get prefactor and multiply by weights
+<span class="lineNum">     589 </span><span class="lineCov">    3775744 :       double pre_fact = fact_md_[kaux] * GMM_d_w_[i] * GMM_m_w_[j];</span>
+<span class="lineNum">     590 </span>            :       // calculate ov
+<span class="lineNum">     591 </span><span class="lineCov">     943936 :       double ov = ovdd_cut_[i] / pre_fact;</span>
+<span class="lineNum">     592 </span>            :       // check
+<span class="lineNum">     593 </span><span class="lineCov">     943936 :       if(ov &lt; ov_cut_) ov_cut_ = ov;</span>
+<span class="lineNum">     594 </span>            :     }
+<span class="lineNum">     595 </span>            :   }
+<span class="lineNum">     596 </span>            :   // set cutoff
+<span class="lineNum">     597 </span><span class="lineCov">          4 :   ov_cut_ = -2.0 * std::log(ov_cut_);</span>
+<span class="lineNum">     598 </span><span class="lineCov">          4 : }</span>
+<a name="599"><span class="lineNum">     599 </span>            : </a>
+<span class="lineNum">     600 </span>            : // version with derivatives
+<span class="lineNum">     601 </span><span class="lineCov">   10788184 : double EMMI::get_overlap(const Vector &amp;m_m, const Vector &amp;d_m, double &amp;fact_md,</span>
+<span class="lineNum">     602 </span>            :                          const VectorGeneric&lt;6&gt; &amp;inv_cov_md, Vector &amp;ov_der)
+<span class="lineNum">     603 </span>            : {
+<span class="lineNum">     604 </span><span class="lineCov">   10788184 :   Vector md;</span>
+<span class="lineNum">     605 </span>            :   // calculate vector difference m_m-d_m with/without pbc
+<span class="lineNum">     606 </span><span class="lineCov">   10788184 :   if(pbc_) md = pbcDistance(d_m, m_m);</span>
+<span class="lineNum">     607 </span><span class="lineCov">   10788184 :   else     md = delta(d_m, m_m);</span>
+<span class="lineNum">     608 </span>            :   // calculate product of transpose of md and inv_cov_md
+<span class="lineNum">     609 </span><span class="lineCov">   10788184 :   double p_x = md[0]*inv_cov_md[0]+md[1]*inv_cov_md[1]+md[2]*inv_cov_md[2];</span>
+<span class="lineNum">     610 </span><span class="lineCov">   10788184 :   double p_y = md[0]*inv_cov_md[1]+md[1]*inv_cov_md[3]+md[2]*inv_cov_md[4];</span>
+<span class="lineNum">     611 </span><span class="lineCov">   10788184 :   double p_z = md[0]*inv_cov_md[2]+md[1]*inv_cov_md[4]+md[2]*inv_cov_md[5];</span>
+<span class="lineNum">     612 </span>            :   // calculate product of prod and md
+<span class="lineNum">     613 </span><span class="lineCov">   10788184 :   double ov = md[0]*p_x+md[1]*p_y+md[2]*p_z;</span>
+<span class="lineNum">     614 </span>            :   // final calculation
+<span class="lineNum">     615 </span><span class="lineCov">   10788184 :   ov = fact_md * exp(-0.5*ov);</span>
+<span class="lineNum">     616 </span>            :   // derivatives
+<span class="lineNum">     617 </span><span class="lineCov">   10788184 :   ov_der = ov * Vector(p_x, p_y, p_z);</span>
+<span class="lineNum">     618 </span><span class="lineCov">   10788184 :   return ov;</span>
+<span class="lineNum">     619 </span>            : }
+<a name="620"><span class="lineNum">     620 </span>            : </a>
+<span class="lineNum">     621 </span>            : // fast version without derivatives and cutoff used for neighbor list
+<span class="lineNum">     622 </span><span class="lineCov">  429018912 : double EMMI::get_overlap(const Vector &amp;m_m, const Vector &amp;d_m, double &amp;fact_md,</span>
+<span class="lineNum">     623 </span>            :                          const VectorGeneric&lt;6&gt; &amp;inv_cov_md)
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span>            : {
+<span class="lineNum">     626 </span><span class="lineCov">  429018912 :   Vector md;</span>
+<span class="lineNum">     627 </span>            :   // calculate vector difference m_m-d_m with/without pbc
+<span class="lineNum">     628 </span><span class="lineCov">  429018912 :   if(pbc_) md = pbcDistance(d_m, m_m);</span>
+<span class="lineNum">     629 </span><span class="lineCov">  429018912 :   else     md = delta(d_m, m_m);</span>
+<span class="lineNum">     630 </span>            :   // calculate product of transpose of md and inv_cov_md
+<span class="lineNum">     631 </span><span class="lineCov">  429018912 :   double p_x = md[0]*inv_cov_md[0]+md[1]*inv_cov_md[1]+md[2]*inv_cov_md[2];</span>
+<span class="lineNum">     632 </span><span class="lineCov">  429018912 :   double p_y = md[0]*inv_cov_md[1]+md[1]*inv_cov_md[3]+md[2]*inv_cov_md[4];</span>
+<span class="lineNum">     633 </span><span class="lineCov">  429018912 :   double p_z = md[0]*inv_cov_md[2]+md[1]*inv_cov_md[4]+md[2]*inv_cov_md[5];</span>
+<span class="lineNum">     634 </span>            :   // calculate product of prod and md
+<span class="lineNum">     635 </span><span class="lineCov">  429018912 :   double ov = md[0]*p_x+md[1]*p_y+md[2]*p_z;</span>
+<span class="lineNum">     636 </span>            :   // final calculation
+<span class="lineNum">     637 </span><span class="lineCov">  429018912 :   if( ov &gt; ov_cut_ ) {</span>
+<span class="lineNum">     638 </span>            :     ov = 0.0;
+<span class="lineNum">     639 </span>            :   } else {
+<span class="lineNum">     640 </span><span class="lineCov">   24333930 :     ov = fact_md * exp(-0.5*ov);</span>
+<span class="lineNum">     641 </span>            :   }
+<span class="lineNum">     642 </span><span class="lineCov">  429018912 :   return ov;</span>
+<span class="lineNum">     643 </span>            : }
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span><span class="lineCov">       1819 : void EMMI::update_neighbor_list()</span>
+<span class="lineNum">     646 </span>            : {
+<span class="lineNum">     647 </span>            :   // temp stuff
+<span class="lineNum">     648 </span><span class="lineCov">       1819 :   unsigned GMM_d_w_size = GMM_d_w_.size();</span>
+<span class="lineNum">     649 </span><span class="lineCov">       1819 :   unsigned GMM_m_w_size = GMM_m_w_.size();</span>
+<span class="lineNum">     650 </span>            :   // local neighbor list
+<span class="lineNum">     651 </span>            :   vector &lt; unsigned &gt; nl_l;
+<span class="lineNum">     652 </span>            :   // clear old neighbor list
+<span class="lineNum">     653 </span><span class="lineCov">       1819 :   nl_.clear();</span>
+<span class="lineNum">     654 </span>            :   // cycle on all overlaps (in parallel)
+<span class="lineNum">     655 </span><span class="lineCov">       1819 :   unsigned nover = GMM_d_w_size * GMM_m_w_size;</span>
+<span class="lineNum">     656 </span><span class="lineCov">  429020731 :   for(unsigned k=rank_; k&lt;nover; k=k+size_) {</span>
+<span class="lineNum">     657 </span>            :     // get indexes
+<span class="lineNum">     658 </span><span class="lineCov">  429018912 :     unsigned i = k / GMM_m_w_size;</span>
+<span class="lineNum">     659 </span><span class="lineCov">  429018912 :     unsigned j = k % GMM_m_w_size;</span>
+<span class="lineNum">     660 </span>            :     // get atom type
+<span class="lineNum">     661 </span><span class="lineCov">  858037824 :     unsigned jtype = GMM_m_type_[j];</span>
+<span class="lineNum">     662 </span>            :     // get index in auxiliary lists
+<span class="lineNum">     663 </span><span class="lineCov">  429018912 :     unsigned kaux = jtype * GMM_d_w_size + i;</span>
+<span class="lineNum">     664 </span>            :     // get prefactor and multiply by weights
+<span class="lineNum">     665 </span><span class="lineCov"> 1716075648 :     double pre_fact = fact_md_[kaux] * GMM_d_w_[i] * GMM_m_w_[j];</span>
+<span class="lineNum">     666 </span>            :     // calculate overlap
+<span class="lineNum">     667 </span><span class="lineCov">  858037824 :     double ov = get_overlap(GMM_d_m_[i], getPosition(j), pre_fact, inv_cov_md_[kaux]);</span>
+<span class="lineNum">     668 </span>            :     // fill the neighbor list
+<span class="lineNum">     669 </span><span class="lineCov">  429018912 :     if(ov &gt;= ovdd_cut_[i]) nl_l.push_back(k);</span>
+<span class="lineNum">     670 </span>            :   }
+<span class="lineNum">     671 </span>            :   // find total dimension of neighborlist
+<span class="lineNum">     672 </span><span class="lineCov">       1819 :   vector &lt;int&gt; recvcounts(size_, 0);</span>
+<span class="lineNum">     673 </span><span class="lineCov">       3638 :   recvcounts[rank_] = nl_l.size();</span>
+<span class="lineNum">     674 </span><span class="lineCov">       3638 :   comm.Sum(&amp;recvcounts[0], size_);</span>
+<span class="lineNum">     675 </span>            :   int tot_size = accumulate(recvcounts.begin(), recvcounts.end(), 0);
+<span class="lineNum">     676 </span>            :   // resize neighbor stuff
+<span class="lineNum">     677 </span><span class="lineCov">       1819 :   nl_.resize(tot_size);</span>
+<span class="lineNum">     678 </span>            :   // calculate vector of displacement
+<span class="lineNum">     679 </span><span class="lineCov">       1819 :   vector&lt;int&gt; disp(size_);</span>
+<span class="lineNum">     680 </span><span class="lineCov">       1819 :   disp[0] = 0;</span>
+<span class="lineNum">     681 </span>            :   int rank_size = 0;
+<span class="lineNum">     682 </span><span class="lineCov">       1823 :   for(unsigned i=0; i&lt;size_-1; ++i) {</span>
+<span class="lineNum">     683 </span><span class="lineCov">          4 :     rank_size += recvcounts[i];</span>
+<span class="lineNum">     684 </span><span class="lineCov">          4 :     disp[i+1] = rank_size;</span>
+<span class="lineNum">     685 </span>            :   }
+<span class="lineNum">     686 </span>            :   // Allgather neighbor list
+<span class="lineNum">     687 </span><span class="lineCov">       7276 :   comm.Allgatherv(&amp;nl_l[0], recvcounts[rank_], &amp;nl_[0], &amp;recvcounts[0], &amp;disp[0]);</span>
+<span class="lineNum">     688 </span>            :   // now resize derivatives
+<span class="lineNum">     689 </span><span class="lineCov">       1819 :   ovmd_der_.resize(tot_size);</span>
+<a name="690"><span class="lineNum">     690 </span><span class="lineCov">       1819 : }</span></a>
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span><span class="lineCov">          4 : void EMMI::prepare()</span>
+<span class="lineNum">     693 </span>            : {
+<span class="lineNum">     694 </span><span class="lineCov">          4 :   if(getExchangeStep()) first_time_=true;</span>
+<span class="lineNum">     695 </span><span class="lineCov">          4 : }</span>
+<span class="lineNum">     696 </span>            : 
+<a name="697"><span class="lineNum">     697 </span>            : </a>
+<span class="lineNum">     698 </span>            : // overlap calculator
+<span class="lineNum">     699 </span><span class="lineCov">       1819 : void EMMI::calculate_overlap() {</span>
+<span class="lineNum">     700 </span>            : 
+<span class="lineNum">     701 </span><span class="lineCov">       1819 :   if(first_time_ || getExchangeStep() || getStep()%nl_stride_==0) {</span>
+<span class="lineNum">     702 </span><span class="lineCov">       1819 :     update_neighbor_list();</span>
+<span class="lineNum">     703 </span><span class="lineCov">       1819 :     first_time_=false;</span>
+<span class="lineNum">     704 </span>            :   }
+<span class="lineNum">     705 </span>            : 
+<span class="lineNum">     706 </span>            :   // clean temporary vectors
+<span class="lineNum">     707 </span><span class="lineCov">    2142782 :   for(unsigned i=0; i&lt;ovmd_.size(); ++i)     ovmd_[i] = 0.0;</span>
+<span class="lineNum">     708 </span><span class="lineCov">   30541010 :   for(unsigned i=0; i&lt;ovmd_der_.size(); ++i) ovmd_der_[i] = Vector(0,0,0);</span>
+<span class="lineNum">     709 </span>            : 
+<span class="lineNum">     710 </span>            :   // we have to cycle over all model and data GMM components in the neighbor list
+<span class="lineNum">     711 </span><span class="lineCov">       1819 :   unsigned GMM_d_w_size = GMM_d_w_.size();</span>
+<span class="lineNum">     712 </span><span class="lineCov">       1819 :   unsigned GMM_m_w_size = GMM_m_w_.size();</span>
+<span class="lineNum">     713 </span><span class="lineCov">   20350694 :   for(unsigned i=rank_; i&lt;nl_.size(); i=i+size_) {</span>
+<span class="lineNum">     714 </span>            :     // get indexes of data and model component
+<span class="lineNum">     715 </span><span class="lineCov">   10173528 :     unsigned id = nl_[i] / GMM_m_w_size;</span>
+<span class="lineNum">     716 </span><span class="lineCov">   10173528 :     unsigned im = nl_[i] % GMM_m_w_size;</span>
+<span class="lineNum">     717 </span>            :     // get atom type
+<span class="lineNum">     718 </span><span class="lineCov">   20347056 :     unsigned jtype = GMM_m_type_[im];</span>
+<span class="lineNum">     719 </span>            :     // get index in auxiliary lists
+<span class="lineNum">     720 </span><span class="lineCov">   10173528 :     unsigned kaux = jtype * GMM_d_w_size + id;</span>
+<span class="lineNum">     721 </span>            :     // get prefactor and multiply by weights
+<span class="lineNum">     722 </span><span class="lineCov">   40694112 :     double pre_fact = fact_md_[kaux] * GMM_d_w_[id] * GMM_m_w_[im];</span>
+<span class="lineNum">     723 </span>            :     // add overlap with im component of model GMM
+<span class="lineNum">     724 </span><span class="lineCov">   30520584 :     ovmd_[id] += get_overlap(GMM_d_m_[id], getPosition(im), pre_fact,</span>
+<span class="lineNum">     725 </span>            :                              inv_cov_md_[kaux], ovmd_der_[i]);
+<span class="lineNum">     726 </span>            :   }
+<span class="lineNum">     727 </span>            :   // communicate stuff
+<span class="lineNum">     728 </span><span class="lineCov">       3638 :   comm.Sum(&amp;ovmd_[0], ovmd_.size());</span>
+<span class="lineNum">     729 </span><span class="lineCov">       3638 :   comm.Sum(&amp;ovmd_der_[0][0], 3*ovmd_der_.size());</span>
+<span class="lineNum">     730 </span><span class="lineCov">       1819 : }</span>
+<span class="lineNum">     731 </span>            : 
+<span class="lineNum">     732 </span>            : 
+<span class="lineNum">     733 </span><span class="lineCov">       1819 : void EMMI::calculate() {</span>
+<span class="lineNum">     734 </span>            : 
+<span class="lineNum">     735 </span>            : // calculate CV
+<span class="lineNum">     736 </span><span class="lineCov">       1819 :   calculate_overlap();</span>
+<span class="lineNum">     737 </span>            : 
+<span class="lineNum">     738 </span><span class="lineCov">       1819 :   if(!analysis_) {</span>
+<span class="lineNum">     739 </span>            : 
+<span class="lineNum">     740 </span>            :     // BIASING MODE
+<span class="lineNum">     741 </span>            :     // rescale factor for ensemble average
+<span class="lineNum">     742 </span><span class="lineCov">       1819 :     double escale = 1.0 / static_cast&lt;double&gt;(nrep_);</span>
+<span class="lineNum">     743 </span>            : 
+<span class="lineNum">     744 </span>            :     // calculate average of ovmd_ across replicas
+<span class="lineNum">     745 </span><span class="lineCov">       1819 :     if(!no_aver_) {</span>
+<span class="lineNum">     746 </span><span class="lineNoCov">          0 :       if(comm.Get_rank()==0) {</span>
+<span class="lineNum">     747 </span><span class="lineNoCov">          0 :         multi_sim_comm.Sum(&amp;ovmd_[0], ovmd_.size());</span>
+<span class="lineNum">     748 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;ovmd_.size(); ++i) ovmd_[i] *= escale;</span>
+<span class="lineNum">     749 </span>            :       } else {
+<span class="lineNum">     750 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;ovmd_.size(); ++i) ovmd_[i]  = 0.0;</span>
+<span class="lineNum">     751 </span>            :       }
+<span class="lineNum">     752 </span><span class="lineNoCov">          0 :       comm.Sum(&amp;ovmd_[0], ovmd_.size());</span>
+<span class="lineNum">     753 </span>            :     }
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            :     // calculate score and scoreb
+<span class="lineNum">     756 </span>            :     double ene = 0.0;
+<span class="lineNum">     757 </span>            :     double ene_b = 0.0;
+<span class="lineNum">     758 </span><span class="lineCov">    2142782 :     for(unsigned i=0; i&lt;ovmd_.size(); ++i) {</span>
+<span class="lineNum">     759 </span>            :       // calculate and store err function
+<span class="lineNum">     760 </span><span class="lineCov">    2852192 :       err_f_[i] = erf ( ( ovmd_[i]-ovdd_[i] ) * inv_sqrt2_ / sigma_mean_[i] );</span>
+<span class="lineNum">     761 </span>            :       // energy term
+<span class="lineNum">     762 </span><span class="lineCov">    2852192 :       double ene_tmp = -kbt_ * std::log ( 0.5 / (ovmd_[i]-ovdd_[i]) * err_f_[i]) ;</span>
+<span class="lineNum">     763 </span>            :       // increment energy
+<span class="lineNum">     764 </span><span class="lineCov">     713048 :       if(GMM_d_beta_[i] == 1) ene_b += ene_tmp;</span>
+<span class="lineNum">     765 </span><span class="lineNoCov">          0 :       else                    ene   += ene_tmp;</span>
+<span class="lineNum">     766 </span>            :     }
+<span class="lineNum">     767 </span>            : 
+<span class="lineNum">     768 </span>            :     // multiply by number of replicas
+<span class="lineNum">     769 </span><span class="lineCov">       1819 :     ene   /= escale;</span>
+<span class="lineNum">     770 </span><span class="lineCov">       1819 :     ene_b /= escale;</span>
+<span class="lineNum">     771 </span>            : 
+<span class="lineNum">     772 </span>            :     // clear temporary vector
+<span class="lineNum">     773 </span><span class="lineCov">    3288752 :     for(unsigned i=0; i&lt;atom_der_.size(); ++i) {</span>
+<span class="lineNum">     774 </span><span class="lineCov">    1095038 :       atom_der_[i]   = Vector(0,0,0);</span>
+<span class="lineNum">     775 </span><span class="lineCov">    1095038 :       atom_der_b_[i] = Vector(0,0,0);</span>
+<span class="lineNum">     776 </span>            :     }
+<span class="lineNum">     777 </span>            :     // virial
+<span class="lineNum">     778 </span><span class="lineCov">       1819 :     Tensor virial, virialb;</span>
+<span class="lineNum">     779 </span>            : 
+<span class="lineNum">     780 </span>            :     // get derivatives of bias with respect to atoms
+<span class="lineNum">     781 </span><span class="lineCov">   20350694 :     for(unsigned i=rank_; i&lt;nl_.size(); i=i+size_) {</span>
+<span class="lineNum">     782 </span>            :       // get indexes of data and model component
+<span class="lineNum">     783 </span><span class="lineCov">   20347056 :       unsigned id = nl_[i] / GMM_m_w_.size();</span>
+<span class="lineNum">     784 </span><span class="lineCov">   10173528 :       unsigned im = nl_[i] % GMM_m_w_.size();</span>
+<span class="lineNum">     785 </span>            :       // first part of derivative
+<span class="lineNum">     786 </span><span class="lineCov">   61041168 :       double der = - kbt_/err_f_[id]*sqrt2_pi_*exp(-0.5*(ovmd_[id]-ovdd_[id])*(ovmd_[id]-ovdd_[id])/sigma_mean_[id]/sigma_mean_[id])/sigma_mean_[id];</span>
+<span class="lineNum">     787 </span>            :       // second part
+<span class="lineNum">     788 </span><span class="lineCov">   30520584 :       der += kbt_ / (ovmd_[id]-ovdd_[id]);</span>
+<span class="lineNum">     789 </span>            :       // chain rule
+<span class="lineNum">     790 </span><span class="lineCov">   10173528 :       Vector tot_der = der * ovmd_der_[i];</span>
+<span class="lineNum">     791 </span>            :       // atom's position in GMM cell
+<span class="lineNum">     792 </span><span class="lineCov">   10173528 :       Vector pos;</span>
+<span class="lineNum">     793 </span><span class="lineCov">   10173528 :       if(pbc_) pos = pbcDistance(GMM_d_m_[id], getPosition(im)) + GMM_d_m_[id];</span>
+<span class="lineNum">     794 </span><span class="lineCov">   20347056 :       else     pos = getPosition(im);</span>
+<span class="lineNum">     795 </span>            :       // add derivative and virial
+<span class="lineNum">     796 </span><span class="lineCov">   10173528 :       if(GMM_d_beta_[id] == 1) {</span>
+<span class="lineNum">     797 </span><span class="lineCov">   10173528 :         atom_der_b_[im] += tot_der;</span>
+<span class="lineNum">     798 </span><span class="lineCov">   10173528 :         virialb         += Tensor(pos, -tot_der);</span>
+<span class="lineNum">     799 </span>            :       } else {
+<span class="lineNum">     800 </span><span class="lineNoCov">          0 :         atom_der_[im] += tot_der;</span>
+<span class="lineNum">     801 </span><span class="lineNoCov">          0 :         virial        += Tensor(pos, -tot_der);</span>
+<span class="lineNum">     802 </span>            :       }
+<span class="lineNum">     803 </span>            :     }
+<span class="lineNum">     804 </span>            : 
+<span class="lineNum">     805 </span>            :     // communicate stuff
+<span class="lineNum">     806 </span><span class="lineCov">       3638 :     comm.Sum(&amp;atom_der_[0][0],   3*atom_der_.size());</span>
+<span class="lineNum">     807 </span><span class="lineCov">       3638 :     comm.Sum(&amp;atom_der_b_[0][0], 3*atom_der_b_.size());</span>
+<span class="lineNum">     808 </span><span class="lineCov">       1819 :     comm.Sum(virial);</span>
+<span class="lineNum">     809 </span><span class="lineCov">       1819 :     comm.Sum(virialb);</span>
+<span class="lineNum">     810 </span>            : 
+<span class="lineNum">     811 </span>            :     // set derivatives
+<span class="lineNum">     812 </span><span class="lineCov">    3288752 :     for(unsigned i=0; i&lt;atom_der_.size(); ++i) {</span>
+<span class="lineNum">     813 </span><span class="lineCov">    3285114 :       setAtomsDerivatives(getPntrToComponent(&quot;score&quot;),  i, atom_der_[i]);</span>
+<span class="lineNum">     814 </span><span class="lineCov">    2190076 :       setAtomsDerivatives(getPntrToComponent(&quot;scoreb&quot;), i, atom_der_b_[i]);</span>
+<span class="lineNum">     815 </span>            :     }
+<span class="lineNum">     816 </span>            : 
+<span class="lineNum">     817 </span>            :     // and set virial
+<span class="lineNum">     818 </span><span class="lineCov">       3638 :     setBoxDerivatives(getPntrToComponent(&quot;score&quot;),  virial);</span>
+<span class="lineNum">     819 </span><span class="lineCov">       3638 :     setBoxDerivatives(getPntrToComponent(&quot;scoreb&quot;), virialb);</span>
+<span class="lineNum">     820 </span>            : 
+<span class="lineNum">     821 </span>            :     // set value of the score
+<span class="lineNum">     822 </span><span class="lineCov">       3638 :     getPntrToComponent(&quot;score&quot;)-&gt;set(ene);</span>
+<span class="lineNum">     823 </span>            :     // set value of the beta score
+<span class="lineNum">     824 </span><span class="lineCov">       3638 :     getPntrToComponent(&quot;scoreb&quot;)-&gt;set(ene_b);</span>
+<span class="lineNum">     825 </span>            : 
+<span class="lineNum">     826 </span>            :   } else {
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span>            :     // ANALYSIS MODE
+<span class="lineNum">     829 </span>            :     // prepare stuff for the first time
+<span class="lineNum">     830 </span><span class="lineNoCov">          0 :     if(nframe_ &lt;= 0.0) {</span>
+<span class="lineNum">     831 </span><span class="lineNoCov">          0 :       Devfile_.link(*this);</span>
+<span class="lineNum">     832 </span><span class="lineNoCov">          0 :       Devfile_.open(&quot;ovmd_deviations.dat&quot;);</span>
+<span class="lineNum">     833 </span>            :       Devfile_.setHeavyFlush();
+<span class="lineNum">     834 </span><span class="lineNoCov">          0 :       Devfile_.fmtField(&quot;%12.6f&quot;);</span>
+<span class="lineNum">     835 </span><span class="lineNoCov">          0 :       ovmd_ave_.resize(GMM_d_w_.size());</span>
+<span class="lineNum">     836 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;ovmd_ave_.size(); ++i) ovmd_ave_[i] = 0.0;</span>
+<span class="lineNum">     837 </span>            :     }
+<span class="lineNum">     838 </span>            : 
+<span class="lineNum">     839 </span>            :     // increment number of frames
+<span class="lineNum">     840 </span><span class="lineNoCov">          0 :     nframe_ += 1.0;</span>
+<span class="lineNum">     841 </span>            : 
+<span class="lineNum">     842 </span>            :     // add average ovmd_
+<span class="lineNum">     843 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;ovmd_.size(); ++i) ovmd_ave_[i] += ovmd_[i];</span>
+<span class="lineNum">     844 </span>            : 
+<span class="lineNum">     845 </span>            :     // print stuff
+<span class="lineNum">     846 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;ovmd_.size(); ++i) {</span>
+<span class="lineNum">     847 </span>            :       // convert i to string
+<span class="lineNum">     848 </span><span class="lineNoCov">          0 :       stringstream ss;</span>
+<span class="lineNum">     849 </span>            :       ss &lt;&lt; i;
+<span class="lineNum">     850 </span>            :       // labels
+<span class="lineNum">     851 </span><span class="lineNoCov">          0 :       string label = &quot;ovmd_&quot; + ss.str();</span>
+<span class="lineNum">     852 </span>            :       // print entry
+<span class="lineNum">     853 </span><span class="lineNoCov">          0 :       double ave = ovmd_ave_[i] / nframe_;</span>
+<span class="lineNum">     854 </span><span class="lineNoCov">          0 :       double dev2 = (ave-ovdd_[i])*(ave-ovdd_[i])/ovdd_[i]/ovdd_[i];</span>
+<span class="lineNum">     855 </span><span class="lineNoCov">          0 :       double dev = sqrt(dev2);</span>
+<span class="lineNum">     856 </span><span class="lineNoCov">          0 :       Devfile_.printField(label, dev);</span>
+<span class="lineNum">     857 </span>            :     }
+<span class="lineNum">     858 </span><span class="lineNoCov">          0 :     Devfile_.printField();</span>
+<span class="lineNum">     859 </span>            :   }
+<span class="lineNum">     860 </span>            : 
+<span class="lineNum">     861 </span><span class="lineCov">       1819 : }</span>
+<a name="862"><span class="lineNum">     862 </span>            : </a>
+<span class="lineNum">     863 </span>            : }
+<span class="lineNum">     864 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

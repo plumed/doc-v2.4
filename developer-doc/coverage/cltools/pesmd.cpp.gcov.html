@@ -1,0 +1,399 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - cltools/pesmd.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">cltools</a> - pesmd.cpp<span style="font-size: 80%;"> (source / <a href="pesmd.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">100</td>
+            <td class="headerCovTableEntry">109</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CLTool.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;CLToolRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;wrapper/Plumed.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      31 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //+PLUMEDOC TOOLS pesmd
+<span class="lineNum">      34 </span>            : /*
+<span class="lineNum">      35 </span>            : Pesmd allows one to do (biased) Langevin dynamics on a two-dimensional potential energy surface.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : The energy landscape that you are moving about on is specified using a plumed input file.
+<span class="lineNum">      38 </span>            : The directives that are available for this command line tool are as follows:
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \par Examples
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : You run a Langevin simulation using pesmd with the following command:
+<span class="lineNum">      43 </span>            : \verbatim
+<span class="lineNum">      44 </span>            : plumed pesmd &lt; input
+<span class="lineNum">      45 </span>            : \endverbatim
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : The following is an example of an input file for a pesmd simulation. This file
+<span class="lineNum">      48 </span>            : instructs pesmd to do 50 steps of Langevin dynamics on a 2D potential energy surface
+<span class="lineNum">      49 </span>            : at a temperature of 0.722
+<span class="lineNum">      50 </span>            : \verbatim
+<span class="lineNum">      51 </span>            : temperature 0.722
+<span class="lineNum">      52 </span>            : tstep 0.005
+<span class="lineNum">      53 </span>            : friction 1
+<span class="lineNum">      54 </span>            : dimension 2
+<span class="lineNum">      55 </span>            : nstep 50
+<span class="lineNum">      56 </span>            : ipos 0.0 0.0
+<span class="lineNum">      57 </span>            : \endverbatim
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : If you run the following a description of all the directives that can be used in the
+<span class="lineNum">      60 </span>            : input file will be output.
+<span class="lineNum">      61 </span>            : \verbatim
+<span class="lineNum">      62 </span>            : plumed pesmd --help
+<span class="lineNum">      63 </span>            : \endverbatim
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : The energy landscape to explore is given within the plumed input file.  For example the following
+<span class="lineNum">      66 </span>            : example input uses \ref MATHEVAL to define a two dimensional potential.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : \verbatim
+<span class="lineNum">      69 </span>            : d1: DISTANCE ATOMS=1,2 COMPONENTS
+<span class="lineNum">      70 </span>            : ff: MATHEVAL ARG=d1.x,d1,y PERIODIC=NO FUNC=()
+<span class="lineNum">      71 </span>            : bb: BIASVALUE ARG=ff
+<span class="lineNum">      72 </span>            : \endverbatim
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : Atom 1 is placed at the origin.  The x and y components on our surface are the
+<span class="lineNum">      75 </span>            : positions of the particle on our two dimensional energy landscape.  By calculating the
+<span class="lineNum">      76 </span>            : vector connecting atom 1 (the origin) to atom 2 (the position of our particle) we are thus
+<span class="lineNum">      77 </span>            : getting the position of the atom on the energy landscape.  This is then inserted into the function
+<span class="lineNum">      78 </span>            : that is calculated on the second line.  The value of this function is then used as a bias.
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : We can also specify a potential on a grid and look at the dynamics on this function using pesmd.
+<span class="lineNum">      81 </span>            : A plumed input for an example such as this one might look something like this:
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : \verbatim
+<span class="lineNum">      84 </span>            : d1: DISTANCE ATOMS=1,2 COMPONENTS
+<span class="lineNum">      85 </span>            : bb: EXTERNAL ARG=d1.x,d1,y FILE=fes.dat
+<span class="lineNum">      86 </span>            : \endverbatim
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : In this way we can use pesmd to do a dynamics on a free energy surface calculated using metadynamics
+<span class="lineNum">      89 </span>            : and sum_hills.  On a final note once we have defined our potential we can use all the biasing functions
+<span class="lineNum">      90 </span>            : within plumed in addition in order to do a biased dynamics on the potential energy landscape of interest.
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : */
+<span class="lineNum">      93 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : using namespace std;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : namespace PLMD {
+<a name="98"><span class="lineNum">      98 </span>            : namespace cltools {</a>
+<a name="99"><span class="lineNum">      99 </span>            : </a>
+<span class="lineNum">     100 </span><span class="lineCov">          1 : class PesMD  : public PLMD::CLTool {</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :   string description() const {</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     return &quot;langevin dynamics on PLUMED energy landscape&quot;;</span>
+<a name="103"><span class="lineNum">     103 </span>            :   }</a>
+<span class="lineNum">     104 </span>            : public:
+<span class="lineNum">     105 </span><span class="lineCov">       1613 :   static void registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">       6452 :     keys.add(&quot;compulsory&quot;,&quot;nstep&quot;,&quot;The number of steps of dynamics you want to run&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;temperature&quot;,&quot;NVE&quot;,&quot;the temperature at which you wish to run the simulation in LJ units&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;friction&quot;,&quot;off&quot;,&quot;The friction (in LJ units) for the langevin thermostat that is used to keep the temperature constant&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;tstep&quot;,&quot;0.005&quot;,&quot;the integration timestep in LJ units&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       6452 :     keys.add(&quot;compulsory&quot;,&quot;dimension&quot;,&quot;the dimension of your energy landscape&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;plumed&quot;,&quot;plumed.dat&quot;,&quot;the name of the plumed input file containing the potential&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;ipos&quot;,&quot;0.0&quot;,&quot;the initial position of the system&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">       8065 :     keys.add(&quot;compulsory&quot;,&quot;idum&quot;,&quot;0&quot;,&quot;The random number seed&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">       4839 :     keys.addFlag(&quot;periodic&quot;,&quot;false&quot;,&quot;are your input coordinates periodic&quot;);</span>
+<span class="lineNum">     115 </span><span class="lineCov">       6452 :     keys.add(&quot;optional&quot;,&quot;min&quot;,&quot;minimum value the coordinates can take for a periodic domain&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineCov">       6452 :     keys.add(&quot;optional&quot;,&quot;max&quot;,&quot;maximum value the coordinates can take for a periodic domain&quot;);</span>
+<span class="lineNum">     117 </span><span class="lineCov">       1613 :   }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">          1 :   explicit PesMD( const CLToolOptions&amp; co ) :</span>
+<span class="lineNum">     120 </span><span class="lineCov">          1 :     CLTool(co)</span>
+<span class="lineNum">     121 </span>            :   {
+<span class="lineNum">     122 </span><span class="lineCov">          1 :     inputdata=ifile;</span>
+<span class="lineNum">     123 </span>            :   }
+<span class="lineNum">     124 </span>            : 
+<a name="125"><span class="lineNum">     125 </span>            : private:</a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">          1 :   void read_input(double&amp; temperature,</span>
+<span class="lineNum">     128 </span>            :                   double&amp; tstep,
+<span class="lineNum">     129 </span>            :                   double&amp; friction,
+<span class="lineNum">     130 </span>            :                   int&amp;    dim,
+<span class="lineNum">     131 </span>            :                   std::string&amp; plumedin,
+<span class="lineNum">     132 </span>            :                   std::vector&lt;double&gt;&amp; ipos,
+<span class="lineNum">     133 </span>            :                   int&amp;    nstep,
+<span class="lineNum">     134 </span>            :                   bool&amp;   lperiod,
+<span class="lineNum">     135 </span>            :                   std::vector&lt;double&gt;&amp; periods,
+<span class="lineNum">     136 </span>            :                   int&amp;    idum)
+<span class="lineNum">     137 </span>            :   {
+<span class="lineNum">     138 </span>            :     // Read everything from input file
+<span class="lineNum">     139 </span><span class="lineCov">          2 :     std::string tempstr; parse(&quot;temperature&quot;,tempstr);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          1 :     if( tempstr!=&quot;NVE&quot; ) Tools::convert(tempstr,temperature);</span>
+<span class="lineNum">     141 </span><span class="lineCov">          2 :     parse(&quot;tstep&quot;,tstep);</span>
+<span class="lineNum">     142 </span><span class="lineCov">          2 :     std::string frictionstr; parse(&quot;friction&quot;,frictionstr);</span>
+<span class="lineNum">     143 </span><span class="lineCov">          1 :     if( tempstr!=&quot;NVE&quot; ) {</span>
+<span class="lineNum">     144 </span><span class="lineCov">          1 :       if(frictionstr==&quot;off&quot;) { fprintf(stderr,&quot;Specify friction for thermostat\n&quot;); exit(1); }</span>
+<span class="lineNum">     145 </span><span class="lineCov">          1 :       Tools::convert(frictionstr,friction);</span>
+<span class="lineNum">     146 </span>            :     }
+<span class="lineNum">     147 </span><span class="lineCov">          3 :     parse(&quot;plumed&quot;,plumedin); parse(&quot;dimension&quot;,dim);</span>
+<span class="lineNum">     148 </span><span class="lineCov">          3 :     parse(&quot;nstep&quot;,nstep); parse(&quot;idum&quot;,idum);</span>
+<span class="lineNum">     149 </span><span class="lineCov">          2 :     ipos.resize( dim ); parseVector(&quot;ipos&quot;,ipos);</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">          2 :     parseFlag(&quot;periodic&quot;,lperiod);</span>
+<span class="lineNum">     152 </span><span class="lineCov">          1 :     if( lperiod ) {</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :       if( dim&gt;3 ) error(&quot;can only do three dimensional periodic functions&quot;);</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :       std::vector&lt;double&gt; min( dim ); parseVector(&quot;min&quot;,min);</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :       std::vector&lt;double&gt; max( dim ); parseVector(&quot;max&quot;,max);</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :       periods.resize( dim );</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :       for(unsigned i=0; i&lt;dim; ++i) {</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :         if( max[i]&lt;min[i] ) error(&quot;invalid periods specified max is less than min&quot;);</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         periods[i]=max[i]-min[i];</span>
+<span class="lineNum">     160 </span>            :       }
+<span class="lineNum">     161 </span>            :     }
+<span class="lineNum">     162 </span><span class="lineCov">          1 :   }</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : 
+<a name="165"><span class="lineNum">     165 </span>            : public:</a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">          1 :   int main( FILE* in, FILE* out, PLMD::Communicator&amp; pc) {</span>
+<span class="lineNum">     168 </span>            :     std::string plumedin; std::vector&lt;double&gt; ipos;
+<span class="lineNum">     169 </span>            :     double temp, tstep, friction; bool lperiod;
+<span class="lineNum">     170 </span>            :     int dim, nsteps, seed; std::vector&lt;double&gt; periods;
+<span class="lineNum">     171 </span>            :     int plumedWantsToStop;
+<span class="lineNum">     172 </span><span class="lineCov">          1 :     Random random;</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">          1 :     read_input( temp, tstep, friction, dim, plumedin, ipos, nsteps, lperiod, periods, seed );</span>
+<span class="lineNum">     175 </span>            :     // Setup random number generator
+<span class="lineNum">     176 </span><span class="lineCov">          1 :     random.setSeed(seed);</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :     // Setup box if we have periodic domain
+<span class="lineNum">     179 </span><span class="lineCov">          1 :     std::vector&lt;double&gt; box(9, 0.0);</span>
+<span class="lineNum">     180 </span><span class="lineCov">          1 :     if( lperiod &amp;&amp; dim==1 ) { box[0]=box[5]=box[9]=periods[0]; }</span>
+<span class="lineNum">     181 </span><span class="lineCov">          1 :     else if( lperiod &amp;&amp; dim==2 ) { box[0]=periods[0]; box[5]=box[9]=periods[1]; }</span>
+<span class="lineNum">     182 </span><span class="lineCov">          1 :     else if( lperiod &amp;&amp; dim==3 ) { box[0]=periods[0]; box[5]=periods[1]; box[9]=periods[2]; }</span>
+<span class="lineNum">     183 </span><span class="lineCov">          1 :     else if( lperiod ) error(&quot;invalid dimension for periodic potential must be 1, 2 or 3&quot;);</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :     // Create plumed object and initialize
+<span class="lineNum">     186 </span><span class="lineCov">          2 :     PLMD::Plumed* plumed=new PLMD::Plumed; int s=sizeof(double);</span>
+<span class="lineNum">     187 </span>            :     plumed-&gt;cmd(&quot;setRealPrecision&quot;,&amp;s);
+<span class="lineNum">     188 </span><span class="lineCov">          1 :     if(Communicator::initialized()) plumed-&gt;cmd(&quot;setMPIComm&quot;,&amp;pc.Get_comm());</span>
+<span class="lineNum">     189 </span>            :     plumed-&gt;cmd(&quot;setNoVirial&quot;);
+<span class="lineNum">     190 </span><span class="lineCov">          2 :     int natoms=( std::floor(dim/3) +  2 );</span>
+<span class="lineNum">     191 </span>            :     plumed-&gt;cmd(&quot;setNatoms&quot;,&amp;natoms);
+<span class="lineNum">     192 </span>            :     plumed-&gt;cmd(&quot;setMDEngine&quot;,&quot;pesmd&quot;);
+<span class="lineNum">     193 </span>            :     plumed-&gt;cmd(&quot;setTimestep&quot;,&amp;tstep);
+<span class="lineNum">     194 </span>            :     plumed-&gt;cmd(&quot;setPlumedDat&quot;,plumedin.c_str());
+<span class="lineNum">     195 </span>            :     plumed-&gt;cmd(&quot;init&quot;);
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :     // Now create some fake atoms
+<span class="lineNum">     198 </span><span class="lineCov">          2 :     unsigned nat = std::floor( dim/3 ) + 1;</span>
+<span class="lineNum">     199 </span><span class="lineCov">          1 :     std::vector&lt;double&gt; masses( 1+nat, 1 );</span>
+<span class="lineNum">     200 </span><span class="lineCov">          1 :     std::vector&lt;Vector&gt; velocities( nat ), positions( nat+1 ), forces( nat+1 );</span>
+<span class="lineNum">     201 </span>            :     // Will set these properly eventually
+<span class="lineNum">     202 </span><span class="lineCov">          1 :     unsigned k=0; positions[0].zero(); // Atom zero is fixed at origin</span>
+<span class="lineNum">     203 </span><span class="lineCov">          5 :     for(unsigned i=0; i&lt;nat; ++i) for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     204 </span><span class="lineCov">          7 :         if( k&lt;dim ) { positions[1+i][j]=ipos[k]; } else { positions[1+i][j]=0;}</span>
+<span class="lineNum">     205 </span><span class="lineCov">          3 :         k++;</span>
+<span class="lineNum">     206 </span>            :       }
+<span class="lineNum">     207 </span>            :     // And initialize the velocities
+<span class="lineNum">     208 </span><span class="lineCov">          5 :     for(unsigned i=0; i&lt;nat; ++i) for(unsigned j=0; j&lt;3; ++j) velocities[i][j]=random.Gaussian() * sqrt( temp );</span>
+<span class="lineNum">     209 </span>            :     // And calcualte the kinetic energy
+<span class="lineNum">     210 </span>            :     double tke=0;
+<span class="lineNum">     211 </span><span class="lineCov">          3 :     for(unsigned i=0; i&lt;nat; ++i) {</span>
+<span class="lineNum">     212 </span><span class="lineCov">          5 :       for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     213 </span><span class="lineCov">          3 :         if( 3*i+j&gt;dim ) break;</span>
+<span class="lineNum">     214 </span>            :         tke += 0.5*velocities[i][j]*velocities[i][j];
+<span class="lineNum">     215 </span>            :       }
+<span class="lineNum">     216 </span>            :     }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :     // Now call plumed to get initial forces
+<span class="lineNum">     219 </span><span class="lineCov">          1 :     int istep=0; double zero=0;</span>
+<span class="lineNum">     220 </span>            :     plumed-&gt;cmd(&quot;setStep&quot;,&amp;istep);
+<span class="lineNum">     221 </span>            :     plumed-&gt;cmd(&quot;setMasses&quot;,&amp;masses[0]);
+<span class="lineNum">     222 </span><span class="lineCov">          8 :     for(unsigned i=0; i&lt;forces.size(); ++i) forces[i].zero();</span>
+<span class="lineNum">     223 </span>            :     plumed-&gt;cmd(&quot;setForces&quot;,&amp;forces[0]);
+<span class="lineNum">     224 </span>            :     plumed-&gt;cmd(&quot;setEnergy&quot;,&amp;zero);
+<span class="lineNum">     225 </span><span class="lineCov">          1 :     if( lperiod ) plumed-&gt;cmd(&quot;setBox&quot;,&amp;box[0]);</span>
+<span class="lineNum">     226 </span>            :     plumed-&gt;cmd(&quot;setPositions&quot;,&amp;positions[0]);
+<span class="lineNum">     227 </span>            :     plumed-&gt;cmd(&quot;calc&quot;);
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : //      potential=calc_energy(positions,forces);
+<span class="lineNum">     231 </span>            :     double therm_eng=0;
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">          1 :     FILE* fp=fopen(&quot;stats.out&quot;,&quot;w+&quot;);</span>
+<span class="lineNum">     234 </span>            : //     double conserved = potential+1.5*ttt+therm_eng; FILE* fp=fopen(&quot;stats.out&quot;,&quot;w+&quot;);
+<span class="lineNum">     235 </span>            : //     if( pc.Get_rank()==0 ) fprintf(fp,&quot;%d %f %f \n&quot;, 0, 0., tke, therm_eng );
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineCov">        101 :     for(unsigned istep=0; istep&lt;nsteps; ++istep) {</span>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineCov">         50 :       if( istep%20==0 &amp;&amp; pc.Get_rank()==0 ) printf(&quot;Doing step %u\n&quot;,istep);</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :       // Langevin thermostat
+<span class="lineNum">     242 </span><span class="lineCov">         50 :       double lscale=exp(-0.5*tstep/friction);</span>
+<span class="lineNum">     243 </span><span class="lineCov">         50 :       double lrand=sqrt((1.-lscale*lscale)*temp);</span>
+<span class="lineNum">     244 </span><span class="lineCov">        150 :       for(unsigned j=0; j&lt;nat; ++j) {</span>
+<span class="lineNum">     245 </span><span class="lineCov">        150 :         for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">        100 :           if( 3*j+k&gt;dim-1 ) break;</span>
+<span class="lineNum">     247 </span><span class="lineCov">        100 :           therm_eng=therm_eng+0.5*velocities[j][k]*velocities[j][k];</span>
+<span class="lineNum">     248 </span><span class="lineCov">        100 :           velocities[j][k]=lscale*velocities[j][k]+lrand*random.Gaussian();</span>
+<span class="lineNum">     249 </span><span class="lineCov">         50 :           therm_eng=therm_eng-0.5*velocities[j][k]*velocities[0][k];</span>
+<span class="lineNum">     250 </span>            :         }
+<span class="lineNum">     251 </span>            :       }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :       // First step of velocity verlet
+<span class="lineNum">     254 </span><span class="lineCov">        150 :       for(unsigned j=0; j&lt;nat; ++j) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">        150 :         for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     256 </span><span class="lineCov">        100 :           if( 3*j+k&gt;dim-1 ) break;</span>
+<span class="lineNum">     257 </span><span class="lineCov">        150 :           velocities[j][k] = velocities[j][k] + 0.5*tstep*forces[1+j][k];</span>
+<span class="lineNum">     258 </span><span class="lineCov">        100 :           positions[1+j][k] = positions[1+j][k] + tstep*velocities[j][k];</span>
+<span class="lineNum">     259 </span>            :           // Apply pbc
+<span class="lineNum">     260 </span>            :           // if( positions[0][k]&gt;pi ) positions[0][k]-=2*pi;
+<span class="lineNum">     261 </span>            :           // if( positions[0][k]&lt;=-pi ) positions[0][k]+=2*pi;
+<span class="lineNum">     262 </span>            :         }
+<span class="lineNum">     263 </span>            :       }
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span><span class="lineCov">         50 :       int istepplusone=istep+1;</span>
+<span class="lineNum">     266 </span><span class="lineCov">         50 :       plumedWantsToStop=0;</span>
+<span class="lineNum">     267 </span>            :       plumed-&gt;cmd(&quot;setStep&quot;,&amp;istepplusone);
+<span class="lineNum">     268 </span>            :       plumed-&gt;cmd(&quot;setMasses&quot;,&amp;masses[0]);
+<span class="lineNum">     269 </span><span class="lineCov">        400 :       for(unsigned i=0; i&lt;forces.size(); ++i) forces[i].zero();</span>
+<span class="lineNum">     270 </span>            :       plumed-&gt;cmd(&quot;setForces&quot;,&amp;forces[0]);
+<span class="lineNum">     271 </span><span class="lineCov">         50 :       double fenergy=0.0;</span>
+<span class="lineNum">     272 </span>            :       plumed-&gt;cmd(&quot;setEnergy&quot;,&amp;fenergy);
+<span class="lineNum">     273 </span>            :       plumed-&gt;cmd(&quot;setPositions&quot;,&amp;positions[0]);
+<span class="lineNum">     274 </span>            :       plumed-&gt;cmd(&quot;setStopFlag&quot;,&amp;plumedWantsToStop);
+<span class="lineNum">     275 </span>            :       plumed-&gt;cmd(&quot;calc&quot;);
+<span class="lineNum">     276 </span>            :       // if(istep%2000==0) plumed-&gt;cmd(&quot;writeCheckPointFile&quot;);
+<span class="lineNum">     277 </span><span class="lineCov">         50 :       if(plumedWantsToStop) nsteps=istep;</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :       // Second step of velocity verlet
+<span class="lineNum">     280 </span><span class="lineCov">        150 :       for(unsigned j=0; j&lt;nat; ++j) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">        150 :         for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     282 </span><span class="lineCov">        100 :           if( 3*j+k&gt;dim-1 ) break;</span>
+<span class="lineNum">     283 </span><span class="lineCov">        150 :           velocities[j][k] = velocities[j][k] + 0.5*tstep*forces[1+j][k];</span>
+<span class="lineNum">     284 </span>            :         }
+<span class="lineNum">     285 </span>            :       }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :       // Langevin thermostat
+<span class="lineNum">     288 </span><span class="lineCov">         50 :       lscale=exp(-0.5*tstep/friction);</span>
+<span class="lineNum">     289 </span><span class="lineCov">         50 :       lrand=sqrt((1.-lscale*lscale)*temp);</span>
+<span class="lineNum">     290 </span><span class="lineCov">        150 :       for(unsigned j=0; j&lt;nat; ++j) {</span>
+<span class="lineNum">     291 </span><span class="lineCov">        150 :         for(unsigned k=0; k&lt;3; ++k) {</span>
+<span class="lineNum">     292 </span><span class="lineCov">        100 :           if( 3*j+k&gt;dim-1 ) break;</span>
+<span class="lineNum">     293 </span><span class="lineCov">        100 :           therm_eng=therm_eng+0.5*velocities[j][k]*velocities[j][k];</span>
+<span class="lineNum">     294 </span><span class="lineCov">        100 :           velocities[j][k]=lscale*velocities[j][k]+lrand*random.Gaussian();</span>
+<span class="lineNum">     295 </span><span class="lineCov">         50 :           therm_eng=therm_eng-0.5*velocities[j][k]*velocities[j][k];</span>
+<span class="lineNum">     296 </span>            :         }
+<span class="lineNum">     297 </span>            :       }
+<span class="lineNum">     298 </span>            :       // Calculate total kinetic energy
+<span class="lineNum">     299 </span>            :       tke=0;
+<span class="lineNum">     300 </span><span class="lineCov">        150 :       for(unsigned i=0; i&lt;nat; ++i) {</span>
+<span class="lineNum">     301 </span><span class="lineCov">        150 :         for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     302 </span><span class="lineCov">        100 :           if( 3*i+j&gt;dim-1 ) break;</span>
+<span class="lineNum">     303 </span><span class="lineCov">        100 :           tke += 0.5*velocities[i][j]*velocities[i][j];</span>
+<span class="lineNum">     304 </span>            :         }
+<span class="lineNum">     305 </span>            :       }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :       // Print everything
+<span class="lineNum">     308 </span>            :       // conserved = potential+1.5*ttt+therm_eng;
+<span class="lineNum">     309 </span><span class="lineCov">         50 :       if( pc.Get_rank()==0 ) fprintf(fp,&quot;%u %f %f %f \n&quot;, istep, istep*tstep, tke, therm_eng );</span>
+<span class="lineNum">     310 </span>            :     }
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">          1 :     delete plumed;</span>
+<span class="lineNum">     313 </span><span class="lineCov">          1 :     fclose(fp);</span>
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     316 </span>            :   }
+<a name="317"><span class="lineNum">     317 </span>            : };</a>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span><span class="lineCov">       6454 : PLUMED_REGISTER_CLTOOL(PesMD,&quot;pesmd&quot;)</span>
+<a name="320"><span class="lineNum">     320 </span>            : </a>
+<span class="lineNum">     321 </span>            : }
+<span class="lineNum">     322 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

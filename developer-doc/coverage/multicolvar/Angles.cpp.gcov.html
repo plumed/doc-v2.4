@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/Angles.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - Angles.cpp<span style="font-size: 80%;"> (source / <a href="Angles.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">65</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntryMed">84.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Angle.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : namespace multicolvar {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : //+PLUMEDOC MCOLVAR ANGLES
+<span class="lineNum">      37 </span>            : /*
+<span class="lineNum">      38 </span>            : Calculate functions of the distribution of angles .
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : You can use this command to calculate functions such as:
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : \f[
+<span class="lineNum">      43 </span>            :  f(x) = \sum_{ijk} g( \theta_{ijk} )
+<span class="lineNum">      44 </span>            : \f]
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : Alternatively you can use this command to calculate functions such as:
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \f[
+<span class="lineNum">      49 </span>            : f(x) = \sum_{ijk} s(r_{ij})s(r_{jk}) g(\theta_{ijk})
+<span class="lineNum">      50 </span>            : \f]
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : where \f$s(r)\f$ is a \ref switchingfunction.  This second form means that you can
+<span class="lineNum">      53 </span>            : use this to calculate functions of the angles in the first coordination sphere of
+<span class="lineNum">      54 </span>            : an atom / molecule \cite lj-recon.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \par Examples
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : The following example instructs plumed to find the average of two angles and to
+<span class="lineNum">      59 </span>            : print it to a file
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : \plumedfile
+<span class="lineNum">      62 </span>            : ANGLES ATOMS1=1,2,3 ATOMS2=4,5,6 MEAN LABEL=a1
+<span class="lineNum">      63 </span>            : PRINT ARG=a1.mean FILE=colvar
+<span class="lineNum">      64 </span>            : \endplumedfile
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : The following example tells plumed to calculate all angles involving
+<span class="lineNum">      67 </span>            : at least one atom from GROUPA and two atoms from GROUPB in which the distances
+<span class="lineNum">      68 </span>            : are less than 1.0. The number of angles between \f$\frac{\pi}{4}\f$ and
+<span class="lineNum">      69 </span>            : \f$\frac{3\pi}{4}\f$ is then output
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : \plumedfile
+<span class="lineNum">      72 </span>            : ANGLES GROUPA=1-10 GROUPB=11-100 BETWEEN={GAUSSIAN LOWER=0.25pi UPPER=0.75pi} SWITCH={GAUSSIAN R_0=1.0} LABEL=a1
+<span class="lineNum">      73 </span>            : PRINT ARG=a1.between FILE=colvar
+<span class="lineNum">      74 </span>            : \endplumedfile
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : This final example instructs plumed to calculate all the angles in the first coordination
+<span class="lineNum">      77 </span>            : spheres of the atoms. A discretized-normalized histogram of the distribution is then output
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : \plumedfile
+<span class="lineNum">      80 </span>            : ANGLES GROUP=1-38 HISTOGRAM={GAUSSIAN LOWER=0.0 UPPER=pi NBINS=20} SWITCH={GAUSSIAN R_0=1.0} LABEL=a1
+<span class="lineNum">      81 </span>            : PRINT ARG=a1.* FILE=colvar
+<span class="lineNum">      82 </span>            : \endplumedfile
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : */
+<a name="85"><span class="lineNum">      85 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          4 : class Angles : public MultiColvarBase {</span>
+<span class="lineNum">      88 </span>            : private:
+<span class="lineNum">      89 </span>            :   bool use_sf;
+<span class="lineNum">      90 </span>            :   double rcut2_1, rcut2_2;
+<span class="lineNum">      91 </span>            :   SwitchingFunction sf1;
+<span class="lineNum">      92 </span>            :   SwitchingFunction sf2;
+<span class="lineNum">      93 </span>            : public:
+<span class="lineNum">      94 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      95 </span>            :   explicit Angles(const ActionOptions&amp;);
+<span class="lineNum">      96 </span>            : /// Updates neighbor list
+<span class="lineNum">      97 </span>            :   virtual double compute( const unsigned&amp; tindex, AtomValuePack&amp; ) const ;
+<a name="98"><span class="lineNum">      98 </span>            : /// Returns the number of coordinates of the field</a>
+<span class="lineNum">      99 </span>            :   double calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, AtomValuePack&amp; ) const ;
+<span class="lineNum">     100 </span><span class="lineCov">          6 :   bool isPeriodic() { return false; }</span>
+<a name="101"><span class="lineNum">     101 </span>            : };</a>
+<span class="lineNum">     102 </span>            : 
+<a name="103"><span class="lineNum">     103 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(Angles,&quot;ANGLES&quot;)</span></a>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">          3 : void Angles::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">          3 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">     107 </span><span class="lineCov">          9 :   keys.use(&quot;MEAN&quot;); keys.use(&quot;LESS_THAN&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         12 :   keys.use(&quot;BETWEEN&quot;); keys.use(&quot;HISTOGRAM&quot;); keys.use(&quot;MORE_THAN&quot;);</span>
+<span class="lineNum">     109 </span>            :   // Could also add Region here in theory
+<span class="lineNum">     110 </span><span class="lineCov">         12 :   keys.add(&quot;numbered&quot;,&quot;ATOMS&quot;,&quot;the atoms involved in each of the angles you wish to calculate. &quot;</span>
+<span class="lineNum">     111 </span>            :            &quot;Keywords like ATOMS1, ATOMS2, ATOMS3,... should be listed and one angle will be &quot;
+<span class="lineNum">     112 </span>            :            &quot;calculated for each ATOM keyword you specify (all ATOM keywords should &quot;
+<span class="lineNum">     113 </span>            :            &quot;provide the indices of three atoms).  The eventual number of quantities calculated by this &quot;
+<span class="lineNum">     114 </span>            :            &quot;action will depend on what functions of the distribution you choose to calculate.&quot;);
+<span class="lineNum">     115 </span><span class="lineCov">          9 :   keys.reset_style(&quot;ATOMS&quot;,&quot;atoms&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-1&quot;,&quot;GROUP&quot;,&quot;Calculate angles for each distinct set of three atoms in the group&quot;);</span>
+<span class="lineNum">     117 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-2&quot;,&quot;GROUPA&quot;,&quot;A group of central atoms about which angles should be calculated&quot;);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-2&quot;,&quot;GROUPB&quot;,&quot;When used in conjuction with GROUPA this keyword instructs plumed &quot;</span>
+<span class="lineNum">     119 </span>            :            &quot;to calculate all distinct angles involving one atom from GROUPA &quot;
+<span class="lineNum">     120 </span>            :            &quot;and two atoms from GROUPB. The atom from GROUPA is the central atom.&quot;);
+<span class="lineNum">     121 </span><span class="lineCov">         12 :   keys.add(&quot;atoms-3&quot;,&quot;GROUPC&quot;,&quot;This must be used in conjuction with GROUPA and GROUPB.  All angles &quot;</span>
+<span class="lineNum">     122 </span>            :            &quot;involving one atom from GROUPA, one atom from GROUPB and one atom from &quot;
+<span class="lineNum">     123 </span>            :            &quot;GROUPC are calculated. The GROUPA atoms are assumed to be the central &quot;
+<span class="lineNum">     124 </span>            :            &quot;atoms&quot;);
+<span class="lineNum">     125 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;SWITCH&quot;,&quot;A switching function that ensures that only angles between atoms that &quot;</span>
+<span class="lineNum">     126 </span>            :            &quot;are within a certain fixed cutoff are calculated. The following provides &quot;
+<span class="lineNum">     127 </span>            :            &quot;information on the \\ref switchingfunction that are available.&quot;);
+<span class="lineNum">     128 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;SWITCHA&quot;,&quot;A switching function on the distance between the atoms in group A and the atoms in &quot;</span>
+<span class="lineNum">     129 </span>            :            &quot;group B&quot;);
+<span class="lineNum">     130 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;SWITCHB&quot;,&quot;A switching function on the distance between the atoms in group A and the atoms in &quot;</span>
+<span class="lineNum">     131 </span>            :            &quot;group B&quot;);
+<a name="132"><span class="lineNum">     132 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">          2 : Angles::Angles(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     135 </span>            :   Action(ao),
+<span class="lineNum">     136 </span>            :   MultiColvarBase(ao),
+<span class="lineNum">     137 </span><span class="lineCov">          2 :   use_sf(false)</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineCov">          4 :   std::string sfinput,errors; parse(&quot;SWITCH&quot;,sfinput);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          2 :   if( sfinput.length()&gt;0 ) {</span>
+<span class="lineNum">     141 </span><span class="lineCov">          2 :     use_sf=true;</span>
+<span class="lineNum">     142 </span><span class="lineCov">          2 :     weightHasDerivatives=true;</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :     sf1.set(sfinput,errors);</span>
+<span class="lineNum">     144 </span><span class="lineCov">          2 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :     sf2.set(sfinput,errors);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          2 :     if( errors.length()!=0 ) error(&quot;problem reading SWITCH keyword : &quot; + errors );</span>
+<span class="lineNum">     147 </span><span class="lineCov">          6 :     log.printf(&quot;  only calculating angles for atoms separated by less than %s\n&quot;, sf1.description().c_str() );</span>
+<span class="lineNum">     148 </span>            :   } else {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :     parse(&quot;SWITCHA&quot;,sfinput);</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :     if(sfinput.length()&gt;0) {</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :       use_sf=true;</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :       weightHasDerivatives=true;</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :       sf1.set(sfinput,errors);</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :       if( errors.length()!=0 ) error(&quot;problem reading SWITCHA keyword : &quot; + errors );</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :       sfinput.clear(); parse(&quot;SWITCHB&quot;,sfinput);</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :       if(sfinput.length()==0) error(&quot;found SWITCHA keyword without SWITCHB&quot;);</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :       sf2.set(sfinput,errors);</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :       if( errors.length()!=0 ) error(&quot;problem reading SWITCHB keyword : &quot; + errors );</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :       log.printf(&quot;  only calculating angles when the distance between GROUPA and GROUPB atoms is less than %s\n&quot;, sf1.description().c_str() );</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :       log.printf(&quot;  only calculating angles when the distance between GROUPA and GROUPC atoms is less than %s\n&quot;, sf2.description().c_str() );</span>
+<span class="lineNum">     161 </span>            :     }
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            :   // Read in the atoms
+<span class="lineNum">     164 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">     165 </span><span class="lineCov">         10 :   readGroupKeywords( &quot;GROUP&quot;, &quot;GROUPA&quot;, &quot;GROUPB&quot;, &quot;GROUPC&quot;, false, true, all_atoms );</span>
+<span class="lineNum">     166 </span><span class="lineCov">          2 :   if( atom_lab.size()==0 ) readAtomsLikeKeyword( &quot;ATOMS&quot;, 3, all_atoms );</span>
+<span class="lineNum">     167 </span><span class="lineCov">          2 :   setupMultiColvarBase( all_atoms );</span>
+<span class="lineNum">     168 </span>            :   // Set cutoff for link cells
+<span class="lineNum">     169 </span><span class="lineCov">          2 :   if( use_sf ) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">          2 :     setLinkCellCutoff( sf1.get_dmax() );</span>
+<span class="lineNum">     171 </span><span class="lineCov">          2 :     rcut2_1=sf1.get_dmax()*sf1.get_dmax();</span>
+<span class="lineNum">     172 </span><span class="lineCov">          2 :     rcut2_2=sf2.get_dmax()*sf2.get_dmax();</span>
+<span class="lineNum">     173 </span>            :   }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :   // And check everything has been read in correctly
+<span class="lineNum">     176 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     177 </span>            :   // Setup stuff for central atom
+<span class="lineNum">     178 </span><span class="lineCov">          2 :   std::vector&lt;bool&gt; catom_ind(3, false); catom_ind[0]=true;</span>
+<span class="lineNum">     179 </span><span class="lineCov">          2 :   setAtomsForCentralAtom( catom_ind );</span>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">      48510 : double Angles::calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     183 </span><span class="lineCov">      48510 :   if(!use_sf) return 1.0;</span>
+<span class="lineNum">     184 </span><span class="lineCov">      97020 :   Vector dij=getSeparation( myatoms.getPosition(0), myatoms.getPosition(2) );</span>
+<span class="lineNum">     185 </span><span class="lineCov">      48510 :   Vector dik=getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) );</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :   double w1, w2, dw1, dw2, wtot;
+<span class="lineNum">     188 </span><span class="lineCov">      48510 :   double ldij = dij.modulo2(), ldik = dik.modulo2();</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">      48510 :   if( use_sf ) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">      48510 :     if( ldij&gt;rcut2_1 || ldik&gt;rcut2_2 ) return 0.0;</span>
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">      48510 :   w1=sf1.calculateSqr( ldij, dw1 );</span>
+<span class="lineNum">     195 </span><span class="lineCov">      48510 :   w2=sf2.calculateSqr( ldik, dw2 );</span>
+<span class="lineNum">     196 </span><span class="lineCov">      48510 :   wtot=w1*w2; dw1*=weight*w2; dw2*=weight*w1;</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">      48510 :   addAtomDerivatives( 0, 1, dw2*dik, myatoms );</span>
+<span class="lineNum">     199 </span><span class="lineCov">      48510 :   addAtomDerivatives( 0, 0, -dw1*dij - dw2*dik, myatoms );</span>
+<span class="lineNum">     200 </span><span class="lineCov">      48510 :   addAtomDerivatives( 0, 2, dw1*dij, myatoms );</span>
+<span class="lineNum">     201 </span><span class="lineCov">      48510 :   myatoms.addBoxDerivatives( 0, (-dw1)*Tensor(dij,dij) + (-dw2)*Tensor(dik,dik) );</span>
+<span class="lineNum">     202 </span><span class="lineCov">      48510 :   return wtot;</span>
+<a name="203"><span class="lineNum">     203 </span>            : }</a>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">      26964 : double Angles::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     206 </span><span class="lineCov">      53928 :   Vector dij=getSeparation( myatoms.getPosition(0), myatoms.getPosition(2) );</span>
+<span class="lineNum">     207 </span><span class="lineCov">      26964 :   Vector dik=getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) );</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">      26964 :   Vector ddij,ddik; PLMD::Angle a;</span>
+<span class="lineNum">     210 </span><span class="lineCov">      26964 :   double angle=a.compute(dij,dik,ddij,ddik);</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :   // And finish the calculation
+<span class="lineNum">     213 </span><span class="lineCov">      26964 :   addAtomDerivatives( 1, 1, ddik, myatoms );</span>
+<span class="lineNum">     214 </span><span class="lineCov">      26964 :   addAtomDerivatives( 1, 0, - ddik - ddij, myatoms );</span>
+<span class="lineNum">     215 </span><span class="lineCov">      26964 :   addAtomDerivatives( 1, 2, ddij, myatoms );</span>
+<span class="lineNum">     216 </span><span class="lineCov">      26964 :   myatoms.addBoxDerivatives( 1, -(Tensor(dij,ddij)+Tensor(dik,ddik)) );</span>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">      26964 :   return angle;</span>
+<span class="lineNum">     219 </span>            : }
+<a name="220"><span class="lineNum">     220 </span>            : </a>
+<span class="lineNum">     221 </span>            : }
+<span class="lineNum">     222 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

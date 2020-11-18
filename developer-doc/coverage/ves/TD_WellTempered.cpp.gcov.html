@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/TD_WellTempered.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - TD_WellTempered.cpp<span style="font-size: 80%;"> (source / <a href="TD_WellTempered.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">33</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;TargetDistribution.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;GridIntegrationWeights.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : namespace ves {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //+PLUMEDOC VES_TARGETDIST TD_WELLTEMPERED
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            : Well-tempered target distribution (dynamic).
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : Use as a target distribution the well-tempered distribution \cite Barducci:2008
+<span class="lineNum">      40 </span>            : given by
+<span class="lineNum">      41 </span>            : \f[
+<span class="lineNum">      42 </span>            : p(\mathbf{s}) =
+<span class="lineNum">      43 </span>            : \frac{e^{-(\beta/\gamma) F(\mathbf{s})}}
+<span class="lineNum">      44 </span>            : {\int d\mathbf{s}\, e^{-(\beta/\gamma) F(\mathbf{s})}} =
+<span class="lineNum">      45 </span>            : \frac{[P_{0}(\mathbf{s})]^{1/\gamma}}
+<span class="lineNum">      46 </span>            : {\int d\mathbf{s}\, [P_{0}(\mathbf{s})]^{1/\gamma}}
+<span class="lineNum">      47 </span>            : \f]
+<span class="lineNum">      48 </span>            : where \f$\gamma\f$ is a so-called bias factor and \f$P_{0}(\mathbf{s})\f$ is the
+<span class="lineNum">      49 </span>            : unbiased canonical distribution of the CVs. This target distribution thus
+<span class="lineNum">      50 </span>            : correponds to a biased ensemble where, as compared to the unbiased one,
+<span class="lineNum">      51 </span>            : the probability peaks have been broaden and the fluctations of the CVs are
+<span class="lineNum">      52 </span>            : enhanced.
+<span class="lineNum">      53 </span>            : The value of the bias factor \f$\gamma\f$ determines by how much the fluctations
+<span class="lineNum">      54 </span>            : are enhanced.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : The well-tempered distribution can be view as sampling on
+<span class="lineNum">      57 </span>            : an effective free energy surface \f$\tilde{F}(\mathbf{s}) = (1/\gamma) F(\mathbf{s})\f$
+<span class="lineNum">      58 </span>            : which has largely the same metastable states as the original \f$F(\mathbf{s})\f$
+<span class="lineNum">      59 </span>            : but with barriers that have been reduced by a factor of \f$\gamma\f$.
+<span class="lineNum">      60 </span>            : Generally one should use a value of \f$\gamma\f$ that results in
+<span class="lineNum">      61 </span>            : effective barriers on the order of few \f$k_{\mathrm{B}}T\f$
+<span class="lineNum">      62 </span>            : such that thermal fluctuations can easily induce transitions
+<span class="lineNum">      63 </span>            : between different metastable states.
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : At convergence the relationship between the bias potential and the free
+<span class="lineNum">      66 </span>            : energy surface is given by
+<span class="lineNum">      67 </span>            : \f[
+<span class="lineNum">      68 </span>            : F(\mathbf{s}) = - \left(\frac{1}{1-\gamma^{-1}} \right) V(\mathbf{s})
+<span class="lineNum">      69 </span>            : \f]
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : This target distribution depends directly on the free energy surface
+<span class="lineNum">      72 </span>            : \f$F(\mathbf{s})\f$ which is quantity that we do not know a-priori and
+<span class="lineNum">      73 </span>            : want to obtain. Therefore, this target distribution
+<span class="lineNum">      74 </span>            : is iteratively updated \cite Valsson-JCTC-2015 according to
+<span class="lineNum">      75 </span>            : \f[
+<span class="lineNum">      76 </span>            : p^{(m+1)}(\mathbf{s}) =
+<span class="lineNum">      77 </span>            : \frac{e^{-(\beta/\gamma) F^{(m+1)}(\mathbf{s})}}
+<span class="lineNum">      78 </span>            : {\int d\mathbf{s}\, e^{-(\beta/\gamma) F^{(m+1)}(\mathbf{s})}}
+<span class="lineNum">      79 </span>            : \f]
+<span class="lineNum">      80 </span>            : where \f$F^{(m+1)}(\mathbf{s})\f$ is the current best estimate of the
+<span class="lineNum">      81 </span>            : free energy surface obtained according to
+<span class="lineNum">      82 </span>            : \f[
+<span class="lineNum">      83 </span>            : F^{(m+1)}(\mathbf{s}) =
+<span class="lineNum">      84 </span>            : - V^{(m+1)}(\mathbf{s}) - \frac{1}{\beta} \log p^{(m)}(\mathbf{s}) =
+<span class="lineNum">      85 </span>            : - V^{(m+1)}(\mathbf{s}) + \frac{1}{\gamma} F^{(m)}(\mathbf{s})
+<span class="lineNum">      86 </span>            : \f]
+<span class="lineNum">      87 </span>            : The frequency of performing this update needs to be set in the
+<span class="lineNum">      88 </span>            : optimizer used in the calculation. Normally it is sufficient
+<span class="lineNum">      89 </span>            : to do it every 100-1000 bias update iterations.
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : \par Examples
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : Employ a well-tempered target distribution with a bias factor of 10
+<span class="lineNum">      94 </span>            : \plumedfile
+<span class="lineNum">      95 </span>            : td_welltemp: TD_WELLTEMPERED BIASFACTOR=10
+<span class="lineNum">      96 </span>            : \endplumedfile
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : */
+<span class="lineNum">      99 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : class TD_WellTempered: public TargetDistribution {
+<span class="lineNum">     102 </span>            : private:
+<span class="lineNum">     103 </span>            :   double bias_factor_;
+<span class="lineNum">     104 </span>            : public:
+<span class="lineNum">     105 </span>            :   static void registerKeywords(Keywords&amp;);
+<span class="lineNum">     106 </span>            :   explicit TD_WellTempered(const ActionOptions&amp; ao);
+<a name="107"><span class="lineNum">     107 </span>            :   void updateGrid();</a>
+<span class="lineNum">     108 </span>            :   double getValue(const std::vector&lt;double&gt;&amp;) const;
+<span class="lineNum">     109 </span><span class="lineCov">         28 :   ~TD_WellTempered() {}</span>
+<span class="lineNum">     110 </span>            : };
+<a name="111"><span class="lineNum">     111 </span>            : </a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">       6480 : PLUMED_REGISTER_ACTION(TD_WellTempered,&quot;TD_WELLTEMPERED&quot;)</span>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         29 : void TD_WellTempered::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">         29 :   TargetDistribution::registerKeywords(keys);</span>
+<span class="lineNum">     118 </span><span class="lineCov">        116 :   keys.add(&quot;compulsory&quot;,&quot;BIASFACTOR&quot;,&quot;The bias factor used for the well-tempered distribution.&quot;);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         29 : }</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">         28 : TD_WellTempered::TD_WellTempered(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     123 </span>            :   PLUMED_VES_TARGETDISTRIBUTION_INIT(ao),
+<span class="lineNum">     124 </span><span class="lineCov">         28 :   bias_factor_(0.0)</span>
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span><span class="lineCov">         28 :   log.printf(&quot;  Well-tempered target distribution, see and cite &quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         84 :   log &lt;&lt; plumed.cite(&quot;Valsson and Parrinello, J. Chem. Theory Comput. 11, 1996-2002 (2015)&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">         84 :   log &lt;&lt; plumed.cite(&quot;Barducci, Bussi, and Parrinello, Phys. Rev. Lett. 100, 020603 (2008)&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         28 :   log.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">         56 :   parse(&quot;BIASFACTOR&quot;,bias_factor_);</span>
+<span class="lineNum">     131 </span><span class="lineCov">         28 :   if(bias_factor_&lt;=1.0) {</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;TD_WELLTEMPERED target distribution: the value of the bias factor doesn't make sense, it should be larger than 1.0&quot;);</span>
+<span class="lineNum">     133 </span>            :   }
+<span class="lineNum">     134 </span>            :   setDynamic();
+<span class="lineNum">     135 </span>            :   setFesGridNeeded();
+<span class="lineNum">     136 </span><span class="lineCov">         28 :   checkRead();</span>
+<span class="lineNum">     137 </span><span class="lineCov">         28 : }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 : double TD_WellTempered::getValue(const std::vector&lt;double&gt;&amp; argument) const {</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;getValue not implemented for TD_WellTempered&quot;);</span>
+<span class="lineNum">     142 </span>            :   return 0.0;
+<span class="lineNum">     143 </span>            : }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">        308 : void TD_WellTempered::updateGrid() {</span>
+<span class="lineNum">     147 </span><span class="lineCov">        308 :   double beta_prime = getBeta()/bias_factor_;</span>
+<span class="lineNum">     148 </span><span class="lineCov">        308 :   plumed_massert(getFesGridPntr()!=NULL,&quot;the FES grid has to be linked to use TD_WellTempered!&quot;);</span>
+<span class="lineNum">     149 </span><span class="lineCov">       1232 :   std::vector&lt;double&gt; integration_weights = GridIntegrationWeights::getIntegrationWeights(getTargetDistGridPntr());</span>
+<span class="lineNum">     150 </span>            :   double norm = 0.0;
+<span class="lineNum">     151 </span><span class="lineCov">    2253240 :   for(Grid::index_t l=0; l&lt;targetDistGrid().getSize(); l++) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">    1126466 :     double value = beta_prime * getFesGridPntr()-&gt;getValue(l);</span>
+<span class="lineNum">     153 </span><span class="lineCov">    1126466 :     logTargetDistGrid().setValue(l,value);</span>
+<span class="lineNum">     154 </span><span class="lineCov">    1126466 :     value = exp(-value);</span>
+<span class="lineNum">     155 </span><span class="lineCov">    1126466 :     norm += integration_weights[l]*value;</span>
+<span class="lineNum">     156 </span><span class="lineCov">    1126466 :     targetDistGrid().setValue(l,value);</span>
+<span class="lineNum">     157 </span>            :   }
+<span class="lineNum">     158 </span><span class="lineCov">        308 :   targetDistGrid().scaleAllValuesAndDerivatives(1.0/norm);</span>
+<span class="lineNum">     159 </span><span class="lineCov">        308 :   logTargetDistGrid().setMinToZero();</span>
+<span class="lineNum">     160 </span><span class="lineCov">        308 : }</span>
+<span class="lineNum">     161 </span>            : 
+<a name="162"><span class="lineNum">     162 </span>            : </a>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

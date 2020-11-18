@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/PropertyMap.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - PropertyMap.cpp<span style="font-size: 80%;"> (source / <a href="PropertyMap.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntryHi">93.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;PathMSDBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : using namespace std;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<span class="lineNum">      28 </span>            : namespace colvar {
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //+PLUMEDOC COLVAR PROPERTYMAP
+<span class="lineNum">      31 </span>            : /*
+<span class="lineNum">      32 </span>            : Calculate generic property maps.
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : This Colvar calculates the property maps according to the work of Spiwok \cite Spiwok:2011ce.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : Basically it calculates
+<span class="lineNum">      38 </span>            : \f{eqnarray}
+<span class="lineNum">      39 </span>            : X=\frac{\sum_i X_i*\exp(-\lambda D_i(x))}{\sum_i  \exp(-\lambda D_i(x))} \\
+<span class="lineNum">      40 </span>            : Y=\frac{\sum_i Y_i*\exp(-\lambda D_i(x))}{\sum_i  \exp(-\lambda D_i(x))} \\
+<span class="lineNum">      41 </span>            : \cdots\\
+<span class="lineNum">      42 </span>            : zzz=-\frac{1}{\lambda}\log(\sum_i  \exp(-\lambda D_i(x)))
+<span class="lineNum">      43 </span>            : \f}
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : where the parameters \f$X_i\f$  and  \f$Y_i\f$ are provided in the input pdb (allv.pdb in this case) and
+<span class="lineNum">      46 </span>            :  \f$D_i(x)\f$  is the MSD after optimal alignment calculated on the pdb frames you input (see Kearsley).
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \warning
+<span class="lineNum">      49 </span>            : The molecule used for \ref PROPERTYMAP calculation should be whole (both atoms used in alignment and in displacement calculation).
+<span class="lineNum">      50 </span>            : In case it is broken by the host MD code, please use \ref WHOLEMOLECULES to reconstruct it before \ref PROPERTYMAP calculation.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : \par Examples
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : \plumedfile
+<span class="lineNum">      55 </span>            : p3: PROPERTYMAP REFERENCE=../../trajectories/path_msd/allv.pdb PROPERTY=X,Y LAMBDA=69087 NEIGH_SIZE=8 NEIGH_STRIDE=4
+<span class="lineNum">      56 </span>            : PRINT ARG=p3.X,p3.Y,p3.zzz STRIDE=1 FILE=colvar FMT=%8.4f
+<span class="lineNum">      57 </span>            : \endplumedfile
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : note that NEIGH_STRIDE=4 NEIGH_SIZE=8 control the neighborlist parameter (optional but
+<span class="lineNum">      60 </span>            : recommended for performance) and states that the neighbor list will be calculated every 4
+<span class="lineNum">      61 </span>            : timesteps and consider only the closest 8 member to the actual md snapshots.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : In this case the input line instructs plumed to look for two properties X and Y with attached values in the REMARK
+<span class="lineNum">      64 </span>            : line of the reference pdb (Note: No spaces from X and = and 1 !!!!).
+<span class="lineNum">      65 </span>            : e.g.
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : \verbatim
+<span class="lineNum">      68 </span>            : REMARK X=1 Y=2
+<span class="lineNum">      69 </span>            : ATOM      1  CL  ALA     1      -3.171   0.295   2.045  1.00  1.00
+<span class="lineNum">      70 </span>            : ATOM      5  CLP ALA     1      -1.819  -0.143   1.679  1.00  1.00
+<span class="lineNum">      71 </span>            : .......
+<span class="lineNum">      72 </span>            : END
+<span class="lineNum">      73 </span>            : REMARK X=2 Y=3
+<span class="lineNum">      74 </span>            : ATOM      1  CL  ALA     1      -3.175   0.365   2.024  1.00  1.00
+<span class="lineNum">      75 </span>            : ATOM      5  CLP ALA     1      -1.814  -0.106   1.685  1.00  1.00
+<span class="lineNum">      76 </span>            : ....
+<span class="lineNum">      77 </span>            : END
+<span class="lineNum">      78 </span>            : \endverbatim
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : \note
+<span class="lineNum">      81 </span>            : The implementation of this collective variable and of \ref PATHMSD
+<span class="lineNum">      82 </span>            : is shared, as well as most input options.
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : */
+<a name="85"><span class="lineNum">      85 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">         22 : class PropertyMap : public PathMSDBase {</span>
+<span class="lineNum">      88 </span>            : public:
+<span class="lineNum">      89 </span>            :   explicit PropertyMap(const ActionOptions&amp;);
+<span class="lineNum">      90 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="91"><span class="lineNum">      91 </span>            : };</a>
+<span class="lineNum">      92 </span>            : 
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">       6463 : PLUMED_REGISTER_ACTION(PropertyMap,&quot;PROPERTYMAP&quot;)</span></a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">         12 : void PropertyMap::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">         12 :   PathMSDBase::registerKeywords(keys);</span>
+<span class="lineNum">      97 </span><span class="lineCov">         48 :   keys.add(&quot;compulsory&quot;,&quot;PROPERTY&quot;,&quot;the property to be used in the indexing: this goes in the REMARK field of the reference&quot;);</span>
+<span class="lineNum">      98 </span><span class="lineCov">         12 :   ActionWithValue::useCustomisableComponents(keys);</span>
+<span class="lineNum">      99 </span><span class="lineCov">         48 :   keys.addOutputComponent(&quot;zzz&quot;,&quot;default&quot;,&quot;the minimum distance from the reference points&quot;);</span>
+<a name="100"><span class="lineNum">     100 </span><span class="lineCov">         12 : }</span></a>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">         11 : PropertyMap::PropertyMap(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     103 </span>            :   Action(ao),
+<span class="lineNum">     104 </span><span class="lineCov">         11 :   PathMSDBase(ao)</span>
+<span class="lineNum">     105 </span>            : {
+<span class="lineNum">     106 </span>            :   // this is the only additional keyword needed
+<span class="lineNum">     107 </span><span class="lineCov">         22 :   parseVector(&quot;PROPERTY&quot;,labels);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         11 :   checkRead();</span>
+<span class="lineNum">     109 </span><span class="lineCov">         11 :   log&lt;&lt;&quot;  Bibliography &quot;</span>
+<span class="lineNum">     110 </span><span class="lineCov">         33 :      &lt;&lt;plumed.cite(&quot;Spiwok V, Kralova B  J. Chem. Phys. 135,  224504 (2011)&quot;)</span>
+<span class="lineNum">     111 </span><span class="lineCov">         22 :      &lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     112 </span><span class="lineCov">         11 :   if(labels.size()==0) {</span>
+<span class="lineNum">     113 </span>            :     char buf[500];
+<span class="lineNum">     114 </span>            :     sprintf(buf,&quot;Need to specify PROPERTY with this action\n&quot;);
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :     plumed_merror(buf);</span>
+<span class="lineNum">     116 </span>            :   } else {
+<span class="lineNum">     117 </span><span class="lineCov">         88 :     for(unsigned i=0; i&lt;labels.size(); i++) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">         44 :       log&lt;&lt;&quot; found custom propety to be found in the REMARK line: &quot;&lt;&lt;labels[i].c_str()&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     119 </span><span class="lineCov">         66 :       addComponentWithDerivatives(labels[i]); componentIsNotPeriodic(labels[i]);</span>
+<span class="lineNum">     120 </span>            :     }
+<span class="lineNum">     121 </span>            :     // add distance anyhow
+<span class="lineNum">     122 </span><span class="lineCov">         33 :     addComponentWithDerivatives(&quot;zzz&quot;); componentIsNotPeriodic(&quot;zzz&quot;);</span>
+<span class="lineNum">     123 </span>            :     //reparse the REMARK field and pick the index
+<span class="lineNum">     124 </span><span class="lineCov">       1408 :     for(unsigned i=0; i&lt;pdbv.size(); i++) {</span>
+<span class="lineNum">     125 </span><span class="lineCov">        924 :       vector&lt;std::string&gt; myv(pdbv[i].getRemark());</span>
+<span class="lineNum">     126 </span>            :       // now look for X=1.34555 Y=5.6677
+<span class="lineNum">     127 </span>            :       vector&lt;double&gt; labelvals;
+<span class="lineNum">     128 </span><span class="lineCov">       3696 :       for(unsigned j=0; j&lt;labels.size(); j++) {</span>
+<span class="lineNum">     129 </span>            :         double val;
+<span class="lineNum">     130 </span><span class="lineCov">        924 :         if(Tools::parse(myv,labels[j],val)) {labelvals.push_back(val);}</span>
+<span class="lineNum">     131 </span>            :         else {
+<span class="lineNum">     132 </span>            :           char buf[500];
+<span class="lineNum">     133 </span>            :           sprintf(buf,&quot;PROPERTY LABEL \&quot; %s \&quot; NOT FOUND IN REMARK FOR FRAME %u \n&quot;,labels[j].c_str(),i);
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :           plumed_merror(buf);</span>
+<span class="lineNum">     135 </span>            :         };
+<span class="lineNum">     136 </span>            :       }
+<span class="lineNum">     137 </span><span class="lineCov">        462 :       indexvec.push_back(labelvals);</span>
+<span class="lineNum">     138 </span>            :     }
+<span class="lineNum">     139 </span>            :   }
+<span class="lineNum">     140 </span><span class="lineCov">         11 :   requestAtoms(pdbv[0].getAtomNumbers());</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">         11 : }</span>
+<a name="143"><span class="lineNum">     143 </span>            : </a>
+<span class="lineNum">     144 </span>            : }
+<span class="lineNum">     145 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

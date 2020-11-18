@@ -1,0 +1,482 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/MolDataClass.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - MolDataClass.cpp<span style="font-size: 80%;"> (source / <a href="MolDataClass.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">279</td>
+            <td class="headerCovTableEntry">339</td>
+            <td class="headerCovTableEntryMed">82.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MolDataClass.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Tools.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;PDB.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span><span class="lineCov">         25 : unsigned MolDataClass::numberOfAtomsPerResidueInBackbone( const std::string&amp; type ) {</span>
+<span class="lineNum">      30 </span><span class="lineCov">         25 :   if( type==&quot;protein&quot; ) return 5;</span>
+<span class="lineNum">      31 </span><span class="lineNoCov">          0 :   else if( type==&quot;dna&quot; ) return 6;</span>
+<span class="lineNum">      32 </span><span class="lineNoCov">          0 :   else if( type==&quot;rna&quot; ) return 6;</span>
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :   else return 0;</span>
+<span class="lineNum">      34 </span>            : }
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">       6285 : bool MolDataClass::allowedResidue( const std::string&amp; type, const std::string&amp; residuename ) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">       6285 :   if( type==&quot;protein&quot; ) {</span>
+<span class="lineNum">      38 </span><span class="lineCov">       5806 :     if(residuename==&quot;ALA&quot;) return true;</span>
+<span class="lineNum">      39 </span><span class="lineCov">       5670 :     else if(residuename==&quot;ARG&quot;) return true;</span>
+<span class="lineNum">      40 </span><span class="lineCov">       5670 :     else if(residuename==&quot;ASN&quot;) return true;</span>
+<span class="lineNum">      41 </span><span class="lineCov">       5670 :     else if(residuename==&quot;ASP&quot;) return true;</span>
+<span class="lineNum">      42 </span><span class="lineCov">       5670 :     else if(residuename==&quot;CYS&quot;) return true;</span>
+<span class="lineNum">      43 </span><span class="lineCov">       5670 :     else if(residuename==&quot;GLN&quot;) return true;</span>
+<span class="lineNum">      44 </span><span class="lineCov">       5670 :     else if(residuename==&quot;GLU&quot;) return true;</span>
+<span class="lineNum">      45 </span><span class="lineCov">       5670 :     else if(residuename==&quot;GLY&quot;) return true;</span>
+<span class="lineNum">      46 </span><span class="lineCov">       5666 :     else if(residuename==&quot;HIS&quot;) return true;</span>
+<span class="lineNum">      47 </span><span class="lineCov">       5666 :     else if(residuename==&quot;ILE&quot;) return true;</span>
+<span class="lineNum">      48 </span><span class="lineCov">       5666 :     else if(residuename==&quot;LEU&quot;) return true;</span>
+<span class="lineNum">      49 </span><span class="lineCov">       5666 :     else if(residuename==&quot;LYS&quot;) return true;</span>
+<span class="lineNum">      50 </span><span class="lineCov">       5666 :     else if(residuename==&quot;MET&quot;) return true;</span>
+<span class="lineNum">      51 </span><span class="lineCov">       5666 :     else if(residuename==&quot;PHE&quot;) return true;</span>
+<span class="lineNum">      52 </span><span class="lineCov">       5666 :     else if(residuename==&quot;PRO&quot;) return true;</span>
+<span class="lineNum">      53 </span><span class="lineCov">       5665 :     else if(residuename==&quot;SER&quot;) return true;</span>
+<span class="lineNum">      54 </span><span class="lineCov">       5661 :     else if(residuename==&quot;THR&quot;) return true;</span>
+<span class="lineNum">      55 </span><span class="lineCov">       5661 :     else if(residuename==&quot;TRP&quot;) return true;</span>
+<span class="lineNum">      56 </span><span class="lineCov">       5657 :     else if(residuename==&quot;TYR&quot;) return true;</span>
+<span class="lineNum">      57 </span><span class="lineCov">       5657 :     else if(residuename==&quot;VAL&quot;) return true;</span>
+<span class="lineNum">      58 </span>            : // Terminal groups
+<span class="lineNum">      59 </span><span class="lineCov">        473 :     else if(residuename==&quot;ACE&quot;) return true;</span>
+<span class="lineNum">      60 </span><span class="lineCov">        473 :     else if(residuename==&quot;NME&quot;) return true;</span>
+<span class="lineNum">      61 </span><span class="lineCov">        473 :     else if(residuename==&quot;NH2&quot;) return true;</span>
+<span class="lineNum">      62 </span>            : // Alternative residue names in common force fiels
+<span class="lineNum">      63 </span><span class="lineCov">        473 :     else if(residuename==&quot;GLH&quot;) return true; // neutral GLU</span>
+<span class="lineNum">      64 </span><span class="lineCov">        473 :     else if(residuename==&quot;ASH&quot;) return true; // neutral ASP</span>
+<span class="lineNum">      65 </span><span class="lineCov">        473 :     else if(residuename==&quot;HID&quot;) return true; // HIS-D amber</span>
+<span class="lineNum">      66 </span><span class="lineCov">        473 :     else if(residuename==&quot;HSD&quot;) return true; // HIS-D charmm</span>
+<span class="lineNum">      67 </span><span class="lineCov">        473 :     else if(residuename==&quot;HIE&quot;) return true; // HIS-E amber</span>
+<span class="lineNum">      68 </span><span class="lineCov">        473 :     else if(residuename==&quot;HSE&quot;) return true; // HIS-E charmm</span>
+<span class="lineNum">      69 </span><span class="lineCov">        473 :     else if(residuename==&quot;HIP&quot;) return true; // HIS-P amber</span>
+<span class="lineNum">      70 </span><span class="lineCov">        473 :     else if(residuename==&quot;HSP&quot;) return true; // HIS-P charmm</span>
+<span class="lineNum">      71 </span><span class="lineCov">        473 :     else return false;</span>
+<span class="lineNum">      72 </span><span class="lineCov">        479 :   } else if( type==&quot;dna&quot; ) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">          6 :     if(residuename==&quot;A&quot;) return true;</span>
+<span class="lineNum">      74 </span><span class="lineCov">          6 :     else if(residuename==&quot;A5&quot;) return true;</span>
+<span class="lineNum">      75 </span><span class="lineCov">          6 :     else if(residuename==&quot;A3&quot;) return true;</span>
+<span class="lineNum">      76 </span><span class="lineCov">          6 :     else if(residuename==&quot;AN&quot;) return true;</span>
+<span class="lineNum">      77 </span><span class="lineCov">          6 :     else if(residuename==&quot;G&quot;) return true;</span>
+<span class="lineNum">      78 </span><span class="lineCov">          6 :     else if(residuename==&quot;G5&quot;) return true;</span>
+<span class="lineNum">      79 </span><span class="lineCov">          6 :     else if(residuename==&quot;G3&quot;) return true;</span>
+<span class="lineNum">      80 </span><span class="lineCov">          6 :     else if(residuename==&quot;GN&quot;) return true;</span>
+<span class="lineNum">      81 </span><span class="lineCov">          6 :     else if(residuename==&quot;T&quot;) return true;</span>
+<span class="lineNum">      82 </span><span class="lineCov">          2 :     else if(residuename==&quot;T5&quot;) return true;</span>
+<span class="lineNum">      83 </span><span class="lineCov">          2 :     else if(residuename==&quot;T3&quot;) return true;</span>
+<span class="lineNum">      84 </span><span class="lineCov">          2 :     else if(residuename==&quot;TN&quot;) return true;</span>
+<span class="lineNum">      85 </span><span class="lineCov">          2 :     else if(residuename==&quot;C&quot;) return true;</span>
+<span class="lineNum">      86 </span><span class="lineCov">          2 :     else if(residuename==&quot;C5&quot;) return true;</span>
+<span class="lineNum">      87 </span><span class="lineCov">          2 :     else if(residuename==&quot;C3&quot;) return true;</span>
+<span class="lineNum">      88 </span><span class="lineCov">          2 :     else if(residuename==&quot;CN&quot;) return true;</span>
+<span class="lineNum">      89 </span><span class="lineCov">          2 :     else if(residuename==&quot;DA&quot;) return true;</span>
+<span class="lineNum">      90 </span><span class="lineCov">          2 :     else if(residuename==&quot;DA5&quot;) return true;</span>
+<span class="lineNum">      91 </span><span class="lineCov">          2 :     else if(residuename==&quot;DA3&quot;) return true;</span>
+<span class="lineNum">      92 </span><span class="lineCov">          2 :     else if(residuename==&quot;DAN&quot;) return true;</span>
+<span class="lineNum">      93 </span><span class="lineCov">          2 :     else if(residuename==&quot;DG&quot;) return true;</span>
+<span class="lineNum">      94 </span><span class="lineCov">          1 :     else if(residuename==&quot;DG5&quot;) return true;</span>
+<span class="lineNum">      95 </span><span class="lineCov">          1 :     else if(residuename==&quot;DG3&quot;) return true;</span>
+<span class="lineNum">      96 </span><span class="lineCov">          1 :     else if(residuename==&quot;DGN&quot;) return true;</span>
+<span class="lineNum">      97 </span><span class="lineCov">          1 :     else if(residuename==&quot;DT&quot;) return true;</span>
+<span class="lineNum">      98 </span><span class="lineCov">          1 :     else if(residuename==&quot;DT5&quot;) return true;</span>
+<span class="lineNum">      99 </span><span class="lineCov">          1 :     else if(residuename==&quot;DT3&quot;) return true;</span>
+<span class="lineNum">     100 </span><span class="lineCov">          1 :     else if(residuename==&quot;DTN&quot;) return true;</span>
+<span class="lineNum">     101 </span><span class="lineCov">          1 :     else if(residuename==&quot;DC&quot;) return true;</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     else if(residuename==&quot;DC5&quot;) return true;</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     else if(residuename==&quot;DC3&quot;) return true;</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :     else if(residuename==&quot;DCN&quot;) return true;</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     else return false;</span>
+<span class="lineNum">     106 </span><span class="lineCov">        473 :   } else if( type==&quot;rna&quot; ) {</span>
+<span class="lineNum">     107 </span><span class="lineCov">        473 :     if(residuename==&quot;A&quot;) return true;</span>
+<span class="lineNum">     108 </span><span class="lineCov">        416 :     else if(residuename==&quot;A5&quot;) return true;</span>
+<span class="lineNum">     109 </span><span class="lineCov">        416 :     else if(residuename==&quot;A3&quot;) return true;</span>
+<span class="lineNum">     110 </span><span class="lineCov">        416 :     else if(residuename==&quot;AN&quot;) return true;</span>
+<span class="lineNum">     111 </span><span class="lineCov">        416 :     else if(residuename==&quot;G&quot;) return true;</span>
+<span class="lineNum">     112 </span><span class="lineCov">        394 :     else if(residuename==&quot;G5&quot;) return true;</span>
+<span class="lineNum">     113 </span><span class="lineCov">        390 :     else if(residuename==&quot;G3&quot;) return true;</span>
+<span class="lineNum">     114 </span><span class="lineCov">        390 :     else if(residuename==&quot;GN&quot;) return true;</span>
+<span class="lineNum">     115 </span><span class="lineCov">        390 :     else if(residuename==&quot;U&quot;) return true;</span>
+<span class="lineNum">     116 </span><span class="lineCov">        368 :     else if(residuename==&quot;U5&quot;) return true;</span>
+<span class="lineNum">     117 </span><span class="lineCov">        368 :     else if(residuename==&quot;U3&quot;) return true;</span>
+<span class="lineNum">     118 </span><span class="lineCov">        368 :     else if(residuename==&quot;UN&quot;) return true;</span>
+<span class="lineNum">     119 </span><span class="lineCov">        368 :     else if(residuename==&quot;C&quot;) return true;</span>
+<span class="lineNum">     120 </span><span class="lineCov">        353 :     else if(residuename==&quot;C5&quot;) return true;</span>
+<span class="lineNum">     121 </span><span class="lineCov">        353 :     else if(residuename==&quot;C3&quot;) return true;</span>
+<span class="lineNum">     122 </span><span class="lineCov">        349 :     else if(residuename==&quot;CN&quot;) return true;</span>
+<span class="lineNum">     123 </span><span class="lineCov">        349 :     else if(residuename==&quot;RA&quot;) return true;</span>
+<span class="lineNum">     124 </span><span class="lineCov">        241 :     else if(residuename==&quot;RA5&quot;) return true;</span>
+<span class="lineNum">     125 </span><span class="lineCov">        241 :     else if(residuename==&quot;RA3&quot;) return true;</span>
+<span class="lineNum">     126 </span><span class="lineCov">        241 :     else if(residuename==&quot;RAN&quot;) return true;</span>
+<span class="lineNum">     127 </span><span class="lineCov">        241 :     else if(residuename==&quot;RG&quot;) return true;</span>
+<span class="lineNum">     128 </span><span class="lineCov">        189 :     else if(residuename==&quot;RG5&quot;) return true;</span>
+<span class="lineNum">     129 </span><span class="lineCov">        189 :     else if(residuename==&quot;RG3&quot;) return true;</span>
+<span class="lineNum">     130 </span><span class="lineCov">        185 :     else if(residuename==&quot;RGN&quot;) return true;</span>
+<span class="lineNum">     131 </span><span class="lineCov">        185 :     else if(residuename==&quot;RU&quot;) return true;</span>
+<span class="lineNum">     132 </span><span class="lineCov">         85 :     else if(residuename==&quot;RU5&quot;) return true;</span>
+<span class="lineNum">     133 </span><span class="lineCov">         85 :     else if(residuename==&quot;RU3&quot;) return true;</span>
+<span class="lineNum">     134 </span><span class="lineCov">         85 :     else if(residuename==&quot;RUN&quot;) return true;</span>
+<span class="lineNum">     135 </span><span class="lineCov">         85 :     else if(residuename==&quot;RC&quot;) return true;</span>
+<span class="lineNum">     136 </span><span class="lineCov">         13 :     else if(residuename==&quot;RC5&quot;) return true;</span>
+<span class="lineNum">     137 </span><span class="lineCov">          9 :     else if(residuename==&quot;RC3&quot;) return true;</span>
+<span class="lineNum">     138 </span><span class="lineCov">          9 :     else if(residuename==&quot;RCN&quot;) return true;</span>
+<span class="lineNum">     139 </span><span class="lineCov">          6 :     else return false;</span>
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span>            :   return false;
+<span class="lineNum">     142 </span>            : }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">       2652 : void MolDataClass::getBackboneForResidue( const std::string&amp; type, const unsigned&amp; residuenum, const PDB&amp; mypdb, std::vector&lt;AtomNumber&gt;&amp; atoms ) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">       2652 :   std::string residuename=mypdb.getResidueName( residuenum );</span>
+<span class="lineNum">     146 </span><span class="lineCov">       2652 :   plumed_massert( MolDataClass::allowedResidue( type, residuename ), &quot;residue &quot; + residuename + &quot; unrecognized for molecule type &quot; + type );</span>
+<span class="lineNum">     147 </span><span class="lineCov">       2652 :   if( type==&quot;protein&quot; ) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">       2652 :     if( residuename==&quot;GLY&quot;) {</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :       atoms.resize(5);</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :       atoms[0]=mypdb.getNamedAtomFromResidue(&quot;N&quot;,residuenum);</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :       atoms[1]=mypdb.getNamedAtomFromResidue(&quot;CA&quot;,residuenum);</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :       atoms[2]=mypdb.getNamedAtomFromResidue(&quot;HA1&quot;,residuenum);</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :       atoms[3]=mypdb.getNamedAtomFromResidue(&quot;C&quot;,residuenum);</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :       atoms[4]=mypdb.getNamedAtomFromResidue(&quot;O&quot;,residuenum);</span>
+<span class="lineNum">     155 </span><span class="lineCov">       2652 :     } else if( residuename==&quot;ACE&quot;) {</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :       atoms.resize(1);</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :       atoms[0]=mypdb.getNamedAtomFromResidue(&quot;C&quot;,residuenum);</span>
+<span class="lineNum">     158 </span><span class="lineCov">       5304 :     } else if( residuename==&quot;NME&quot;||residuename==&quot;NH2&quot;) {</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :       atoms.resize(1);</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :       atoms[0]=mypdb.getNamedAtomFromResidue(&quot;N&quot;,residuenum);</span>
+<span class="lineNum">     161 </span>            :     } else {
+<span class="lineNum">     162 </span><span class="lineCov">       2652 :       atoms.resize(5);</span>
+<span class="lineNum">     163 </span><span class="lineCov">       7956 :       atoms[0]=mypdb.getNamedAtomFromResidue(&quot;N&quot;,residuenum);</span>
+<span class="lineNum">     164 </span><span class="lineCov">       7956 :       atoms[1]=mypdb.getNamedAtomFromResidue(&quot;CA&quot;,residuenum);</span>
+<span class="lineNum">     165 </span><span class="lineCov">       7956 :       atoms[2]=mypdb.getNamedAtomFromResidue(&quot;CB&quot;,residuenum);</span>
+<span class="lineNum">     166 </span><span class="lineCov">       7956 :       atoms[3]=mypdb.getNamedAtomFromResidue(&quot;C&quot;,residuenum);</span>
+<span class="lineNum">     167 </span><span class="lineCov">       7956 :       atoms[4]=mypdb.getNamedAtomFromResidue(&quot;O&quot;,residuenum);</span>
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   } else if( type==&quot;dna&quot; || type==&quot;rna&quot; ) {</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     atoms.resize(6);</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     atoms[0]=mypdb.getNamedAtomFromResidue(&quot;P&quot;,residuenum);</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :     atoms[1]=mypdb.getNamedAtomFromResidue(&quot;O5\'&quot;,residuenum);</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :     atoms[2]=mypdb.getNamedAtomFromResidue(&quot;C5\'&quot;,residuenum);</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :     atoms[3]=mypdb.getNamedAtomFromResidue(&quot;C4\'&quot;,residuenum);</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :     atoms[4]=mypdb.getNamedAtomFromResidue(&quot;C3\'&quot;,residuenum);</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :     atoms[5]=mypdb.getNamedAtomFromResidue(&quot;O3\'&quot;,residuenum);</span>
+<span class="lineNum">     177 </span>            :   }
+<span class="lineNum">     178 </span>            :   else {
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     plumed_merror(type + &quot; is not a valid molecule type&quot;);</span>
+<span class="lineNum">     180 </span>            :   }
+<span class="lineNum">     181 </span><span class="lineCov">       2652 : }</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">       3335 : bool MolDataClass::isTerminalGroup( const std::string&amp; type, const std::string&amp; residuename ) {</span>
+<span class="lineNum">     184 </span><span class="lineCov">       3335 :   if( type==&quot;protein&quot; ) {</span>
+<span class="lineNum">     185 </span><span class="lineCov">       3335 :     if( residuename==&quot;ACE&quot; ) return true;</span>
+<span class="lineNum">     186 </span><span class="lineCov">       3008 :     else if( residuename==&quot;NME&quot; ) return true;</span>
+<span class="lineNum">     187 </span><span class="lineCov">       2681 :     else if( residuename==&quot;NH2&quot; ) return true;</span>
+<span class="lineNum">     188 </span><span class="lineCov">       2681 :     else return false;</span>
+<span class="lineNum">     189 </span>            :   } else {
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :     plumed_merror(type + &quot; is not a valid molecule type&quot;);</span>
+<span class="lineNum">     191 </span>            :   }
+<span class="lineNum">     192 </span>            :   return false;
+<span class="lineNum">     193 </span>            : }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">        502 : void MolDataClass::specialSymbol( const std::string&amp; type, const std::string&amp; symbol, const PDB&amp; mypdb, std::vector&lt;AtomNumber&gt;&amp; numbers ) {</span>
+<span class="lineNum">     196 </span><span class="lineCov">        724 :   if(type==&quot;protein&quot; || type==&quot;rna&quot; || type==&quot;dna&quot;) {</span>
+<span class="lineNum">     197 </span>            : // symbol should be something like
+<span class="lineNum">     198 </span>            : // phi-123 i.e. phi torsion of residue 123 of first chain
+<span class="lineNum">     199 </span>            : // psi-A321 i.e. psi torsion of residue 321 of chain A
+<span class="lineNum">     200 </span><span class="lineCov">        502 :     numbers.resize(0);</span>
+<span class="lineNum">     201 </span>            :     std::size_t dash=symbol.find_first_of('-');
+<span class="lineNum">     202 </span><span class="lineCov">        502 :     std::size_t firstnum=symbol.find_first_of(&quot;0123456789&quot;,dash+1);</span>
+<span class="lineNum">     203 </span><span class="lineCov">        502 :     std::string name=symbol.substr(0,dash);</span>
+<span class="lineNum">     204 </span>            :     unsigned resnum;
+<span class="lineNum">     205 </span>            :     std::string resname;
+<span class="lineNum">     206 </span>            :     std::string chainid;
+<span class="lineNum">     207 </span><span class="lineCov">        502 :     if(firstnum==dash+1) {</span>
+<span class="lineNum">     208 </span><span class="lineCov">        976 :       Tools::convert( symbol.substr(dash+1), resnum );</span>
+<span class="lineNum">     209 </span>            :       chainid=&quot;*&quot;; // this is going to match the first chain
+<span class="lineNum">     210 </span>            :     } else {
+<span class="lineNum">     211 </span>            :       // if chain id is provided:
+<span class="lineNum">     212 </span><span class="lineCov">         28 :       Tools::convert( symbol.substr(firstnum), resnum );</span>
+<span class="lineNum">     213 </span><span class="lineCov">         28 :       chainid=symbol.substr(dash+1,firstnum-(dash+1)); // this is going to match the proper chain</span>
+<span class="lineNum">     214 </span>            :     }
+<span class="lineNum">     215 </span><span class="lineCov">       1004 :     resname= mypdb.getResidueName(resnum,chainid);</span>
+<span class="lineNum">     216 </span><span class="lineCov">        502 :     Tools::stripLeadingAndTrailingBlanks(resname);</span>
+<span class="lineNum">     217 </span><span class="lineCov">       1004 :     if(allowedResidue(&quot;protein&quot;,resname)) {</span>
+<span class="lineNum">     218 </span><span class="lineCov">         58 :       if( name==&quot;phi&quot; &amp;&amp; !isTerminalGroup(&quot;protein&quot;,resname) ) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">          6 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C&quot;,resnum-1,chainid));</span>
+<span class="lineNum">     220 </span><span class="lineCov">          6 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N&quot;,resnum,chainid));</span>
+<span class="lineNum">     221 </span><span class="lineCov">          6 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CA&quot;,resnum,chainid));</span>
+<span class="lineNum">     222 </span><span class="lineCov">          6 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C&quot;,resnum,chainid));</span>
+<span class="lineNum">     223 </span><span class="lineCov">         54 :       } else if( name==&quot;psi&quot; &amp;&amp; !isTerminalGroup(&quot;protein&quot;,resname) ) {</span>
+<span class="lineNum">     224 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N&quot;,resnum,chainid));</span>
+<span class="lineNum">     225 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CA&quot;,resnum,chainid));</span>
+<span class="lineNum">     226 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C&quot;,resnum,chainid));</span>
+<span class="lineNum">     227 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N&quot;,resnum+1,chainid));</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :       } else if( name==&quot;omega&quot; &amp;&amp; !isTerminalGroup(&quot;protein&quot;,resname) ) {</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CA&quot;,resnum,chainid));</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C&quot;,resnum,chainid));</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N&quot;,resnum+1,chainid));</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CA&quot;,resnum+1,chainid));</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :       } else if( name==&quot;chi1&quot; &amp;&amp; !isTerminalGroup(&quot;protein&quot;,resname) ) {</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :         if ( resname==&quot;GLY&quot; || resname==&quot;ALA&quot; ) plumed_merror(&quot;chi-1 is not defined for Alanine and Glycine&quot;);</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N&quot;,resnum,chainid));</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CA&quot;,resnum,chainid));</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CB&quot;,resnum,chainid));</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :         if(resname==&quot;ILE&quot;||resname==&quot;VAL&quot;)</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CG1&quot;,resnum,chainid));</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         else if(resname==&quot;CYS&quot;)</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;SG&quot;,resnum,chainid));</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :         else if(resname==&quot;THR&quot;)</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;OG1&quot;,resnum,chainid));</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :         else if(resname==&quot;SER&quot;)</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;OG&quot;,resnum,chainid));</span>
+<span class="lineNum">     246 </span>            :         else
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;CG&quot;,resnum,chainid));</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :       } else numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(name,resnum,chainid));</span>
+<span class="lineNum">     249 </span><span class="lineCov">       1419 :     } else if( allowedResidue(&quot;rna&quot;,resname) || allowedResidue(&quot;dna&quot;,resname)) {</span>
+<span class="lineNum">     250 </span>            :       std::string basetype;
+<span class="lineNum">     251 </span><span class="lineCov">        473 :       if(resname.find_first_of(&quot;A&quot;)!=std::string::npos) basetype+=&quot;A&quot;;</span>
+<span class="lineNum">     252 </span><span class="lineCov">        473 :       if(resname.find_first_of(&quot;U&quot;)!=std::string::npos) basetype+=&quot;U&quot;;</span>
+<span class="lineNum">     253 </span><span class="lineCov">        473 :       if(resname.find_first_of(&quot;T&quot;)!=std::string::npos) basetype+=&quot;T&quot;;</span>
+<span class="lineNum">     254 </span><span class="lineCov">        473 :       if(resname.find_first_of(&quot;C&quot;)!=std::string::npos) basetype+=&quot;C&quot;;</span>
+<span class="lineNum">     255 </span><span class="lineCov">        473 :       if(resname.find_first_of(&quot;G&quot;)!=std::string::npos) basetype+=&quot;G&quot;;</span>
+<span class="lineNum">     256 </span><span class="lineCov">        473 :       plumed_massert(basetype.length()==1,&quot;cannot find type of rna/dna residue &quot;+resname+&quot; &quot;+basetype);</span>
+<span class="lineNum">     257 </span><span class="lineCov">        473 :       if( name==&quot;chi&quot; ) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">         99 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     259 </span><span class="lineCov">         99 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C1\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     260 </span><span class="lineCov">         97 :         if(basetype==&quot;T&quot; || basetype==&quot;U&quot; || basetype==&quot;C&quot;) {</span>
+<span class="lineNum">     261 </span><span class="lineCov">         24 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N1&quot;,resnum,chainid));</span>
+<span class="lineNum">     262 </span><span class="lineCov">         24 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     263 </span><span class="lineCov">         47 :         } else if(basetype==&quot;G&quot; || basetype==&quot;A&quot;) {</span>
+<span class="lineNum">     264 </span><span class="lineCov">         75 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N9&quot;,resnum,chainid));</span>
+<span class="lineNum">     265 </span><span class="lineCov">         75 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :         } else plumed_error();</span>
+<span class="lineNum">     267 </span><span class="lineCov">        440 :       } else if( name==&quot;alpha&quot; ) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O3\'&quot;,resnum-1,chainid));</span>
+<span class="lineNum">     269 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;P&quot;,resnum,chainid));</span>
+<span class="lineNum">     270 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     271 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     272 </span><span class="lineCov">        433 :       } else if( name==&quot;beta&quot; ) {</span>
+<span class="lineNum">     273 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;P&quot;,resnum,chainid));</span>
+<span class="lineNum">     274 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     275 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     276 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     277 </span><span class="lineCov">        426 :       } else if( name==&quot;gamma&quot; ) {</span>
+<span class="lineNum">     278 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     279 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     280 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     281 </span><span class="lineCov">         81 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     282 </span><span class="lineCov">        399 :       } else if( name==&quot;delta&quot; ) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     284 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     285 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     286 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     287 </span><span class="lineCov">        398 :       } else if( name==&quot;epsilon&quot; ) {</span>
+<span class="lineNum">     288 </span><span class="lineCov">         24 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     289 </span><span class="lineCov">         24 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     290 </span><span class="lineCov">         24 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     291 </span><span class="lineCov">         24 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;P&quot;,resnum+1,chainid));</span>
+<span class="lineNum">     292 </span><span class="lineCov">        390 :       } else if( name==&quot;zeta&quot; ) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     294 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     295 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;P&quot;,resnum+1,chainid));</span>
+<span class="lineNum">     296 </span><span class="lineCov">         21 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O5\'&quot;,resnum+1,chainid));</span>
+<span class="lineNum">     297 </span><span class="lineCov">        383 :       } else if( name==&quot;v0&quot; ) {</span>
+<span class="lineNum">     298 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     299 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     300 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C1\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     301 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     302 </span><span class="lineCov">        380 :       } else if( name==&quot;v1&quot; ) {</span>
+<span class="lineNum">     303 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     304 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C1\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     305 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     306 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     307 </span><span class="lineCov">        377 :       } else if( name==&quot;v2&quot; ) {</span>
+<span class="lineNum">     308 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C1\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     309 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     310 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     311 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     312 </span><span class="lineCov">        374 :       } else if( name==&quot;v3&quot; ) {</span>
+<span class="lineNum">     313 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     314 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     315 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     316 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     317 </span><span class="lineCov">        371 :       } else if( name==&quot;v4&quot; ) {</span>
+<span class="lineNum">     318 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     319 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     320 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     321 </span><span class="lineCov">          9 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C1\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     322 </span><span class="lineCov">        368 :       } else if( name==&quot;back&quot; ) {</span>
+<span class="lineNum">     323 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;P&quot;,resnum,chainid));</span>
+<span class="lineNum">     324 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     325 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     326 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     327 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     328 </span><span class="lineCov">          3 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     329 </span><span class="lineCov">        367 :       } else if( name==&quot;sugar&quot; ) {</span>
+<span class="lineNum">     330 </span><span class="lineCov">        156 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     331 </span><span class="lineCov">        156 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     332 </span><span class="lineCov">        156 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C1\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     333 </span><span class="lineCov">        156 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     334 </span><span class="lineCov">        156 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C3\'&quot;,resnum,chainid));</span>
+<span class="lineNum">     335 </span><span class="lineCov">        315 :       } else if( name==&quot;base&quot; ) {</span>
+<span class="lineNum">     336 </span><span class="lineCov">         25 :         if(basetype==&quot;C&quot;) {</span>
+<span class="lineNum">     337 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N1&quot;,resnum,chainid));</span>
+<span class="lineNum">     338 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     339 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O2&quot;,resnum,chainid));</span>
+<span class="lineNum">     340 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N3&quot;,resnum,chainid));</span>
+<span class="lineNum">     341 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     342 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N4&quot;,resnum,chainid));</span>
+<span class="lineNum">     343 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5&quot;,resnum,chainid));</span>
+<span class="lineNum">     344 </span><span class="lineCov">         27 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     345 </span><span class="lineCov">         16 :         } else if(basetype==&quot;U&quot;) {</span>
+<span class="lineNum">     346 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N1&quot;,resnum,chainid));</span>
+<span class="lineNum">     347 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     348 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O2&quot;,resnum,chainid));</span>
+<span class="lineNum">     349 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N3&quot;,resnum,chainid));</span>
+<span class="lineNum">     350 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     351 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4&quot;,resnum,chainid));</span>
+<span class="lineNum">     352 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5&quot;,resnum,chainid));</span>
+<span class="lineNum">     353 </span><span class="lineCov">          6 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     354 </span><span class="lineCov">         14 :         } else if(basetype==&quot;T&quot;) {</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N1&quot;,resnum,chainid));</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O2&quot;,resnum,chainid));</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N3&quot;,resnum,chainid));</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O4&quot;,resnum,chainid));</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5&quot;,resnum,chainid));</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C7&quot;,resnum,chainid));</span>
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     364 </span><span class="lineCov">         14 :         } else if(basetype==&quot;G&quot;) {</span>
+<span class="lineNum">     365 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N9&quot;,resnum,chainid));</span>
+<span class="lineNum">     366 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     367 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N3&quot;,resnum,chainid));</span>
+<span class="lineNum">     368 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     369 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N2&quot;,resnum,chainid));</span>
+<span class="lineNum">     370 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N1&quot;,resnum,chainid));</span>
+<span class="lineNum">     371 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     372 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;O6&quot;,resnum,chainid));</span>
+<span class="lineNum">     373 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5&quot;,resnum,chainid));</span>
+<span class="lineNum">     374 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N7&quot;,resnum,chainid));</span>
+<span class="lineNum">     375 </span><span class="lineCov">          9 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C8&quot;,resnum,chainid));</span>
+<span class="lineNum">     376 </span><span class="lineCov">         11 :         } else if(basetype==&quot;A&quot;) {</span>
+<span class="lineNum">     377 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N9&quot;,resnum,chainid));</span>
+<span class="lineNum">     378 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     379 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N1&quot;,resnum,chainid));</span>
+<span class="lineNum">     380 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     381 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N3&quot;,resnum,chainid));</span>
+<span class="lineNum">     382 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     383 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N6&quot;,resnum,chainid));</span>
+<span class="lineNum">     384 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C5&quot;,resnum,chainid));</span>
+<span class="lineNum">     385 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;N7&quot;,resnum,chainid));</span>
+<span class="lineNum">     386 </span><span class="lineCov">         33 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C8&quot;,resnum,chainid));</span>
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         } else plumed_error();</span>
+<span class="lineNum">     388 </span><span class="lineCov">        290 :       } else if( name==&quot;lcs&quot; ) {</span>
+<span class="lineNum">     389 </span><span class="lineCov">        852 :         numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C2&quot;,resnum,chainid));</span>
+<span class="lineNum">     390 </span><span class="lineCov">        752 :         if(basetype==&quot;T&quot; || basetype==&quot;U&quot; || basetype==&quot;C&quot;) {</span>
+<span class="lineNum">     391 </span><span class="lineCov">        444 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     392 </span><span class="lineCov">        444 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     393 </span><span class="lineCov">        216 :         } else if(basetype==&quot;G&quot; || basetype==&quot;A&quot;) {</span>
+<span class="lineNum">     394 </span><span class="lineCov">        408 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C6&quot;,resnum,chainid));</span>
+<span class="lineNum">     395 </span><span class="lineCov">        408 :           numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(&quot;C4&quot;,resnum,chainid));</span>
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :         } else plumed_error();</span>
+<span class="lineNum">     397 </span><span class="lineCov">         12 :       } else numbers.push_back(mypdb.getNamedAtomFromResidueAndChain(name,resnum,chainid));</span>
+<span class="lineNum">     398 </span>            :     }
+<span class="lineNum">     399 </span>            :   }
+<span class="lineNum">     400 </span>            :   else {
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :     plumed_merror(type + &quot; is not a valid molecule type&quot;);</span>
+<span class="lineNum">     402 </span>            :   }
+<span class="lineNum">     403 </span><span class="lineCov">        502 : }</span>
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

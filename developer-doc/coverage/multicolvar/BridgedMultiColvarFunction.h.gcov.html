@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/BridgedMultiColvarFunction.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - BridgedMultiColvarFunction.h<span style="font-size: 80%;"> (source / <a href="BridgedMultiColvarFunction.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryLo">54.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryLo">61.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_multicolvar_BridgedMultiColvarFunction_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_multicolvar_BridgedMultiColvarFunction_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;vesselbase/BridgeVessel.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<a name="29"><span class="lineNum">      29 </span>            : namespace multicolvar {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         44 : class BridgedMultiColvarFunction : public MultiColvarBase {</span>
+<span class="lineNum">      32 </span>            :   friend class MultiColvarBase;
+<span class="lineNum">      33 </span>            :   friend class MultiColvarFunction;
+<span class="lineNum">      34 </span>            : private:
+<span class="lineNum">      35 </span>            : /// This is used for storing positions properly
+<span class="lineNum">      36 </span>            :   Vector tmp_p;
+<span class="lineNum">      37 </span>            : /// The action that is calculating the colvars of interest
+<span class="lineNum">      38 </span>            :   MultiColvarBase* mycolv;
+<span class="lineNum">      39 </span>            : /// The vessel that bridges
+<span class="lineNum">      40 </span>            :   vesselbase::BridgeVessel* myBridgeVessel;
+<span class="lineNum">      41 </span>            : /// Everything for controlling the updating of neighbor lists
+<span class="lineNum">      42 </span>            :   bool firsttime;
+<span class="lineNum">      43 </span>            :   int updateFreq;
+<span class="lineNum">      44 </span>            : protected:
+<span class="lineNum">      45 </span>            : /// Deactivate all the atoms in the list
+<span class="lineNum">      46 </span>            :   void deactivateAllAtoms();
+<span class="lineNum">      47 </span>            : /// Activate the nth atom in the list
+<span class="lineNum">      48 </span>            :   void setAtomActive( const unsigned&amp; n );
+<span class="lineNum">      49 </span>            : public:
+<span class="lineNum">      50 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      51 </span>            :   explicit BridgedMultiColvarFunction(const ActionOptions&amp;);
+<span class="lineNum">      52 </span>            : /// Get a pointer to the base multicolvar
+<span class="lineNum">      53 </span>            :   MultiColvarBase* getPntrToMultiColvar() const ;
+<a name="54"><span class="lineNum">      54 </span>            : /// Don't actually clear the derivatives when this is called from plumed main.</a>
+<span class="lineNum">      55 </span>            : /// They are calculated inside another action and clearing them would be bad
+<span class="lineNum">      56 </span><span class="lineCov">        785 :   void clearDerivatives() {}</span>
+<span class="lineNum">      57 </span>            : /// Check nothing impossible being done with derivatives
+<span class="lineNum">      58 </span>            :   virtual void turnOnDerivatives();
+<span class="lineNum">      59 </span>            : /// Get the number of derivatives for this action
+<span class="lineNum">      60 </span>            :   unsigned getNumberOfDerivatives();
+<span class="lineNum">      61 </span>            : /// Get the size of the atoms with derivatives array
+<span class="lineNum">      62 </span>            :   unsigned getSizeOfAtomsWithDerivatives();
+<span class="lineNum">      63 </span>            : /// Is the output quantity periodic
+<span class="lineNum">      64 </span>            :   bool isPeriodic();
+<a name="65"><span class="lineNum">      65 </span>            : /// Routines that have to be defined so as not to have problems with virtual methods</a>
+<span class="lineNum">      66 </span>            :   void deactivate_task( const unsigned&amp; taskno );
+<span class="lineNum">      67 </span><span class="lineCov">        725 :   void calculate() {}</span>
+<span class="lineNum">      68 </span>            : /// This does the task
+<span class="lineNum">      69 </span>            :   void transformBridgedDerivatives( const unsigned&amp; current, MultiValue&amp; invals, MultiValue&amp; outvals ) const ;
+<span class="lineNum">      70 </span>            :   void performTask( const unsigned&amp;, const unsigned&amp;, MultiValue&amp; ) const ;
+<span class="lineNum">      71 </span>            :   virtual void completeTask( const unsigned&amp; curr, MultiValue&amp; invals, MultiValue&amp; outvals ) const=0;
+<span class="lineNum">      72 </span>            : /// Get the central atom position
+<span class="lineNum">      73 </span>            :   Vector retrieveCentralAtomPos();
+<span class="lineNum">      74 </span>            : /// Get the index of the central atom
+<span class="lineNum">      75 </span>            :   AtomNumber getAbsoluteIndexOfCentralAtom( const unsigned&amp; i ) const ;
+<span class="lineNum">      76 </span>            : /// Get indicecs involved in this colvar
+<span class="lineNum">      77 </span>            :   const std::vector&lt;AtomNumber&gt; &amp; getAbsoluteIndexes()const ;
+<a name="78"><span class="lineNum">      78 </span>            : /// We need our own calculate numerical derivatives here</a>
+<span class="lineNum">      79 </span>            :   void calculateNumericalDerivatives( ActionWithValue* a=NULL );
+<span class="lineNum">      80 </span><span class="lineCov">        785 :   void apply() {};</span>
+<span class="lineNum">      81 </span>            : /// Is this atom currently being copied
+<span class="lineNum">      82 </span>            :   bool isCurrentlyActive( const unsigned&amp; );
+<a name="83"><span class="lineNum">      83 </span>            : /// This should not be called</a>
+<span class="lineNum">      84 </span>            :   Vector calculateCentralAtomPosition() { plumed_error(); }
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :   double compute( const unsigned&amp; tindex, AtomValuePack&amp; myvals ) const { plumed_error(); }</span>
+<span class="lineNum">      86 </span>            :   Vector getPositionOfAtomForLinkCells( const unsigned&amp; iatom ) const ;
+<span class="lineNum">      87 </span>            :   void getIndexList( const unsigned&amp; ntotal, const unsigned&amp; jstore, const unsigned&amp; maxder, std::vector&lt;unsigned&gt;&amp; indices );
+<span class="lineNum">      88 </span>            :   void applyBridgeForces( const std::vector&lt;double&gt;&amp; bb );
+<span class="lineNum">      89 </span>            :   Vector getCentralAtomPos( const unsigned&amp; curr );
+<span class="lineNum">      90 </span>            :   void normalizeVector( std::vector&lt;double&gt;&amp; vals ) const ;
+<span class="lineNum">      91 </span>            :   void normalizeVectorDerivatives( MultiValue&amp; myvals ) const ;
+<span class="lineNum">      92 </span>            :   void getCentralAtomPack( const unsigned&amp; basn, const unsigned&amp; curr, CatomPack&amp; mypack );
+<span class="lineNum">      93 </span>            : };
+<a name="94"><span class="lineNum">      94 </span>            : </a>
+<span class="lineNum">      95 </span>            : inline
+<span class="lineNum">      96 </span><span class="lineCov">          5 : const std::vector&lt;AtomNumber&gt; &amp; BridgedMultiColvarFunction::getAbsoluteIndexes() const {</span>
+<span class="lineNum">      97 </span><span class="lineCov">          5 :   return mycolv-&gt;getAbsoluteIndexes();</span>
+<span class="lineNum">      98 </span>            : }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : inline
+<span class="lineNum">     101 </span>            : MultiColvarBase* BridgedMultiColvarFunction::getPntrToMultiColvar() const {
+<span class="lineNum">     102 </span><span class="lineCov">     889859 :   return mycolv;</span>
+<span class="lineNum">     103 </span>            : }
+<a name="104"><span class="lineNum">     104 </span>            : </a>
+<span class="lineNum">     105 </span>            : inline
+<span class="lineNum">     106 </span><span class="lineCov">     128406 : unsigned BridgedMultiColvarFunction::getNumberOfDerivatives() {</span>
+<span class="lineNum">     107 </span><span class="lineCov">     256812 :   return mycolv-&gt;getNumberOfDerivatives() + 3*getNumberOfAtoms();</span>
+<span class="lineNum">     108 </span>            : }
+<a name="109"><span class="lineNum">     109 </span>            : </a>
+<span class="lineNum">     110 </span>            : inline
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 : bool BridgedMultiColvarFunction::isCurrentlyActive( const unsigned&amp; code ) {</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :   return mycolv-&gt;isCurrentlyActive( code );</span>
+<span class="lineNum">     113 </span>            : }
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : inline
+<span class="lineNum">     116 </span>            : unsigned BridgedMultiColvarFunction::getSizeOfAtomsWithDerivatives() {
+<span class="lineNum">     117 </span>            :   return mycolv-&gt;getNumberOfAtoms();
+<span class="lineNum">     118 </span>            : }
+<a name="119"><span class="lineNum">     119 </span>            : </a>
+<span class="lineNum">     120 </span>            : inline
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 : Vector BridgedMultiColvarFunction::getPositionOfAtomForLinkCells( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :   return mycolv-&gt;getPositionOfAtomForLinkCells(iatom);</span>
+<span class="lineNum">     123 </span>            : }
+<a name="124"><span class="lineNum">     124 </span>            : </a>
+<span class="lineNum">     125 </span>            : inline
+<span class="lineNum">     126 </span><span class="lineCov">      78336 : Vector BridgedMultiColvarFunction::getCentralAtomPos( const unsigned&amp; curr ) {</span>
+<span class="lineNum">     127 </span><span class="lineCov">      78336 :   return mycolv-&gt;getCentralAtomPos( curr );</span>
+<span class="lineNum">     128 </span>            : }
+<a name="129"><span class="lineNum">     129 </span>            : </a>
+<span class="lineNum">     130 </span>            : inline
+<span class="lineNum">     131 </span><span class="lineCov">        156 : AtomNumber BridgedMultiColvarFunction::getAbsoluteIndexOfCentralAtom(const unsigned&amp; i) const {</span>
+<span class="lineNum">     132 </span><span class="lineCov">        156 :   return mycolv-&gt;getAbsoluteIndexOfCentralAtom(i);</span>
+<span class="lineNum">     133 </span>            : }
+<a name="134"><span class="lineNum">     134 </span>            : </a>
+<span class="lineNum">     135 </span>            : inline
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 : void BridgedMultiColvarFunction::normalizeVector( std::vector&lt;double&gt;&amp; vals ) const {</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :   mycolv-&gt;normalizeVector( vals );</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 : }</span>
+<a name="139"><span class="lineNum">     139 </span>            : </a>
+<span class="lineNum">     140 </span>            : inline
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 : void BridgedMultiColvarFunction::normalizeVectorDerivatives( MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   mycolv-&gt;normalizeVectorDerivatives( myvals );</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

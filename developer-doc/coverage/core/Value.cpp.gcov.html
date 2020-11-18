@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/Value.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - Value.cpp<span style="font-size: 80%;"> (source / <a href="Value.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntry">86</td>
+            <td class="headerCovTableEntryMed">81.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">82.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Value.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionWithValue.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;ActionAtomistic.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ActionWithArguments.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;ActionWithVirtualAtom.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;Atoms.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;PlumedMain.h&quot;
+<span class="lineNum">      30 </span>            : 
+<a name="31"><span class="lineNum">      31 </span>            : namespace PLMD {</a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">    1135539 : Value::Value():</span>
+<span class="lineNum">      34 </span>            :   action(NULL),
+<span class="lineNum">      35 </span>            :   value_set(false),
+<span class="lineNum">      36 </span>            :   value(0.0),
+<span class="lineNum">      37 </span>            :   inputForce(0.0),
+<span class="lineNum">      38 </span>            :   hasForce(false),
+<span class="lineNum">      39 </span>            :   hasDeriv(true),
+<span class="lineNum">      40 </span>            :   periodicity(unset),
+<span class="lineNum">      41 </span>            :   min(0.0),
+<span class="lineNum">      42 </span>            :   max(0.0),
+<span class="lineNum">      43 </span>            :   max_minus_min(0.0),
+<span class="lineNum">      44 </span><span class="lineCov">    3406617 :   inv_max_minus_min(0.0)</span>
+<span class="lineNum">      45 </span>            : {
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">    1135539 : }</span></a>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">      46671 : Value::Value(ActionWithValue* av, const std::string&amp; name, const bool withderiv):</span>
+<span class="lineNum">      49 </span>            :   action(av),
+<span class="lineNum">      50 </span>            :   value_set(false),
+<span class="lineNum">      51 </span>            :   value(0.0),
+<span class="lineNum">      52 </span>            :   inputForce(0.0),
+<span class="lineNum">      53 </span>            :   hasForce(false),
+<span class="lineNum">      54 </span>            :   name(name),
+<span class="lineNum">      55 </span>            :   hasDeriv(withderiv),
+<span class="lineNum">      56 </span>            :   periodicity(unset),
+<span class="lineNum">      57 </span>            :   min(0.0),
+<span class="lineNum">      58 </span>            :   max(0.0),
+<span class="lineNum">      59 </span>            :   max_minus_min(0.0),
+<span class="lineNum">      60 </span><span class="lineCov">     186684 :   inv_max_minus_min(0.0)</span>
+<span class="lineNum">      61 </span>            : {
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">      46671 : }</span></a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">    1127152 : void Value::setupPeriodicity() {</span>
+<span class="lineNum">      65 </span><span class="lineCov">    1127152 :   if( min==0 &amp;&amp; max==0 ) {</span>
+<span class="lineNum">      66 </span><span class="lineCov">      30595 :     periodicity=notperiodic;</span>
+<span class="lineNum">      67 </span>            :   } else {
+<span class="lineNum">      68 </span><span class="lineCov">    1096557 :     periodicity=periodic;</span>
+<span class="lineNum">      69 </span><span class="lineCov">    1096557 :     max_minus_min=max-min;</span>
+<span class="lineNum">      70 </span><span class="lineCov">    1096557 :     plumed_massert(max_minus_min&gt;0, &quot;your function has a very strange domain?&quot;);</span>
+<span class="lineNum">      71 </span><span class="lineCov">    1096557 :     inv_max_minus_min=1.0/max_minus_min;</span>
+<span class="lineNum">      72 </span>            :   }
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">    1127152 : }</span></a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">     145612 : bool Value::isPeriodic()const {</span>
+<span class="lineNum">      76 </span><span class="lineCov">     145612 :   plumed_massert(periodicity!=unset,&quot;periodicity should be set&quot;);</span>
+<span class="lineNum">      77 </span><span class="lineCov">     145612 :   return periodicity==periodic;</span>
+<a name="78"><span class="lineNum">      78 </span>            : }</a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">     419938 : bool Value::applyForce(std::vector&lt;double&gt;&amp; forces ) const {</span>
+<span class="lineNum">      81 </span><span class="lineCov">     419938 :   if( !hasForce ) return false;</span>
+<span class="lineNum">      82 </span>            :   plumed_dbg_massert( derivatives.size()==forces.size(),&quot; forces array has wrong size&quot; );
+<span class="lineNum">      83 </span><span class="lineCov">      81272 :   const unsigned N=derivatives.size();</span>
+<span class="lineNum">      84 </span><span class="lineCov">  133373711 :   for(unsigned i=0; i&lt;N; ++i) forces[i]=inputForce*derivatives[i];</span>
+<span class="lineNum">      85 </span>            :   return true;
+<a name="86"><span class="lineNum">      86 </span>            : }</a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">      61309 : void Value::setNotPeriodic() {</span>
+<span class="lineNum">      89 </span><span class="lineCov">      61309 :   min=0; max=0; periodicity=notperiodic;</span>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">      61309 : }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">    1096557 : void Value::setDomain(const std::string&amp; pmin,const std::string&amp; pmax) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">    1096557 :   str_min=pmin;</span>
+<span class="lineNum">      94 </span><span class="lineCov">    1096557 :   if( !Tools::convert(str_min,min) ) action-&gt;error(&quot;could not convert period string &quot; + str_min + &quot; to real&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">    1096557 :   str_max=pmax;</span>
+<span class="lineNum">      96 </span><span class="lineCov">    1096557 :   if( !Tools::convert(str_max,max) ) action-&gt;error(&quot;could not convert period string &quot; + str_max + &quot; to read&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">    1096557 :   setupPeriodicity();</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">    1096557 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">      18067 : void Value::getDomain(std::string&amp;minout,std::string&amp;maxout) const {</span>
+<span class="lineNum">     101 </span><span class="lineCov">      18067 :   plumed_massert(periodicity==periodic,&quot;function should be periodic&quot;);</span>
+<span class="lineNum">     102 </span><span class="lineCov">      18067 :   minout=str_min;</span>
+<span class="lineNum">     103 </span><span class="lineCov">      18067 :   maxout=str_max;</span>
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">      18067 : }</span></a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">         12 : void Value::getDomain(double&amp;minout,double&amp;maxout) const {</span>
+<span class="lineNum">     107 </span><span class="lineCov">         12 :   plumed_massert(periodicity==periodic,&quot;function should be periodic&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         12 :   minout=min;</span>
+<span class="lineNum">     109 </span><span class="lineCov">         12 :   maxout=max;</span>
+<a name="110"><span class="lineNum">     110 </span><span class="lineCov">         12 : }</span></a>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">        266 : void Value::setGradients() {</span>
+<span class="lineNum">     113 </span><span class="lineCov">        266 :   gradients.clear();</span>
+<span class="lineNum">     114 </span><span class="lineCov">        266 :   ActionAtomistic*aa=dynamic_cast&lt;ActionAtomistic*&gt;(action);</span>
+<span class="lineNum">     115 </span><span class="lineCov">        266 :   ActionWithArguments*aw=dynamic_cast&lt;ActionWithArguments*&gt;(action);</span>
+<span class="lineNum">     116 </span><span class="lineCov">        266 :   if(aa) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">        100 :     Atoms&amp;atoms((aa-&gt;plumed).getAtoms());</span>
+<span class="lineNum">     118 </span><span class="lineCov">      16084 :     for(unsigned j=0; j&lt;aa-&gt;getNumberOfAtoms(); ++j) {</span>
+<span class="lineNum">     119 </span><span class="lineCov">      15984 :       AtomNumber an=aa-&gt;getAbsoluteIndex(j);</span>
+<span class="lineNum">     120 </span><span class="lineCov">       7992 :       if(atoms.isVirtualAtom(an)) {</span>
+<span class="lineNum">     121 </span>            :         const ActionWithVirtualAtom* a=atoms.getVirtualAtomsAction(an);
+<span class="lineNum">     122 </span><span class="lineCov">         33 :         for(const auto &amp; p : a-&gt;getGradients()) {</span>
+<span class="lineNum">     123 </span>            : // controllare l'ordine del matmul:
+<span class="lineNum">     124 </span><span class="lineCov">        150 :           gradients[p.first]+=matmul(Vector(derivatives[3*j],derivatives[3*j+1],derivatives[3*j+2]),p.second);</span>
+<span class="lineNum">     125 </span>            :         }
+<span class="lineNum">     126 </span>            :       } else {
+<span class="lineNum">     127 </span><span class="lineCov">      55923 :         for(unsigned i=0; i&lt;3; i++) gradients[an][i]+=derivatives[3*j+i];</span>
+<span class="lineNum">     128 </span>            :       }
+<span class="lineNum">     129 </span>            :     }
+<span class="lineNum">     130 </span><span class="lineCov">        166 :   } else if(aw) {</span>
+<span class="lineNum">     131 </span><span class="lineCov">        166 :     std::vector&lt;Value*&gt; values=aw-&gt;getArguments();</span>
+<span class="lineNum">     132 </span><span class="lineCov">        830 :     for(unsigned j=0; j&lt;derivatives.size(); j++) {</span>
+<span class="lineNum">     133 </span><span class="lineCov">       8340 :       for(const auto &amp; p : values[j]-&gt;gradients) {</span>
+<span class="lineNum">     134 </span><span class="lineCov">       8008 :         AtomNumber iatom=p.first;</span>
+<span class="lineNum">     135 </span><span class="lineCov">       8008 :         gradients[iatom]+=p.second*derivatives[j];</span>
+<span class="lineNum">     136 </span>            :       }
+<span class="lineNum">     137 </span>            :     }
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :   } else plumed_error();</span>
+<a name="139"><span class="lineNum">     139 </span><span class="lineCov">        266 : }</span></a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">        261 : double Value::projection(const Value&amp; v1,const Value&amp;v2) {</span>
+<span class="lineNum">     142 </span>            :   double proj=0.0;
+<span class="lineNum">     143 </span>            :   const std::map&lt;AtomNumber,Vector&gt; &amp; grad1(v1.gradients);
+<span class="lineNum">     144 </span>            :   const std::map&lt;AtomNumber,Vector&gt; &amp; grad2(v2.gradients);
+<span class="lineNum">     145 </span><span class="lineCov">      16167 :   for(const auto &amp; p1 : grad1) {</span>
+<span class="lineNum">     146 </span><span class="lineCov">      15906 :     AtomNumber a=p1.first;</span>
+<span class="lineNum">     147 </span>            :     const auto p2=grad2.find(a);
+<span class="lineNum">     148 </span><span class="lineCov">      15906 :     if(p2!=grad2.end()) {</span>
+<span class="lineNum">     149 </span><span class="lineCov">       8224 :       proj+=dotProduct(p1.second,(*p2).second);</span>
+<span class="lineNum">     150 </span>            :     }
+<span class="lineNum">     151 </span>            :   }
+<span class="lineNum">     152 </span><span class="lineCov">        261 :   return proj;</span>
+<a name="153"><span class="lineNum">     153 </span>            : }</a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">       4197 : ActionWithValue* Value::getPntrToAction() {</span>
+<span class="lineNum">     156 </span><span class="lineCov">       4197 :   plumed_assert( action!=NULL );</span>
+<span class="lineNum">     157 </span><span class="lineCov">       4197 :   return action;</span>
+<a name="158"><span class="lineNum">     158 </span>            : }</a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 : void copy( const Value&amp; val1, Value&amp; val2 ) {</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :   unsigned nder=val1.getNumberOfDerivatives();</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   if( nder!=val2.getNumberOfDerivatives() ) { val2.resizeDerivatives( nder ); }</span>
+<span class="lineNum">     163 </span>            :   val2.clearDerivatives();
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;val1.getNumberOfDerivatives(); ++i) val2.addDerivative( i, val1.getDerivative(i) );</span>
+<span class="lineNum">     165 </span>            :   val2.set( val1.get() );
+<a name="166"><span class="lineNum">     166 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 : void copy( const Value&amp; val1, Value* val2 ) {</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   unsigned nder=val1.getNumberOfDerivatives();</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :   if( nder!=val2-&gt;getNumberOfDerivatives() ) { val2-&gt;resizeDerivatives( nder ); }</span>
+<span class="lineNum">     171 </span>            :   val2-&gt;clearDerivatives();
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;val1.getNumberOfDerivatives(); ++i) val2-&gt;addDerivative( i, val1.getDerivative(i) );</span>
+<span class="lineNum">     173 </span>            :   val2-&gt;set( val1.get() );
+<a name="174"><span class="lineNum">     174 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 : void add( const Value&amp; val1, Value* val2 ) {</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :   plumed_assert( val1.getNumberOfDerivatives()==val2-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;val1.getNumberOfDerivatives(); ++i) val2-&gt;addDerivative( i, val1.getDerivative(i) );</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :   val2-&gt;set( val1.get() + val2-&gt;get() );</span>
+<a name="180"><span class="lineNum">     180 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

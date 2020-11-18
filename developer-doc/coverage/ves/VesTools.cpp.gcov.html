@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - ves/VesTools.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">ves</a> - VesTools.cpp<span style="font-size: 80%;"> (source / <a href="VesTools.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryHi">92.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2018 The VES code team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE-VES file at the root of this folder for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.ves-code.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of VES code module.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The VES code module is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    The VES code module is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with the VES code module.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;VesTools.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;tools/Grid.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/IFile.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace PLMD {
+<span class="lineNum">      31 </span>            : namespace ves {
+<a name="32"><span class="lineNum">      32 </span>            : </a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">          8 : void VesTools::copyGridValues(Grid* grid_pntr_orig, Grid* grid_pntr_copy) {</span>
+<span class="lineNum">      35 </span>            :   // plumed_massert(grid_pntr_orig!=NULL,&quot;grid not defined&quot;);
+<span class="lineNum">      36 </span>            :   // plumed_massert(grid_pntr_copy!=NULL,&quot;grid not defined&quot;);
+<span class="lineNum">      37 </span><span class="lineCov">          8 :   plumed_massert(grid_pntr_orig-&gt;getSize()==grid_pntr_copy-&gt;getSize(),&quot;the two grids are not of the same size&quot;);</span>
+<span class="lineNum">      38 </span><span class="lineCov">          8 :   plumed_massert(grid_pntr_orig-&gt;getDimension()==grid_pntr_copy-&gt;getDimension(),&quot;the two grids are not of the same dimension&quot;);</span>
+<span class="lineNum">      39 </span>            :   //
+<span class="lineNum">      40 </span><span class="lineCov">       1608 :   for(Grid::index_t i=0; i&lt;grid_pntr_orig-&gt;getSize(); i++) {</span>
+<span class="lineNum">      41 </span><span class="lineCov">        800 :     double value = grid_pntr_orig-&gt;getValue(i);</span>
+<span class="lineNum">      42 </span><span class="lineCov">        800 :     grid_pntr_copy-&gt;setValue(i,value);</span>
+<span class="lineNum">      43 </span>            :   }
+<span class="lineNum">      44 </span><span class="lineCov">          8 : }</span>
+<a name="45"><span class="lineNum">      45 </span>            : </a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">          9 : unsigned int VesTools::getGridFileInfo(const std::string&amp; filepath, std::string&amp; grid_label, std::vector&lt;std::string&gt;&amp; arg_labels, std::vector&lt;std::string&gt;&amp; arg_min, std::vector&lt;std::string&gt;&amp; arg_max, std::vector&lt;bool&gt;&amp; arg_periodic, std::vector&lt;unsigned int&gt;&amp; arg_nbins, bool&amp; derivatives) {</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">         18 :   IFile ifile; ifile.open(filepath);</span>
+<span class="lineNum">      50 </span><span class="lineCov">          9 :   std::vector&lt;std::string&gt; fields;</span>
+<span class="lineNum">      51 </span><span class="lineCov">          9 :   ifile.scanFieldList(fields);</span>
+<span class="lineNum">      52 </span><span class="lineCov">          9 :   ifile.allowIgnoredFields();</span>
+<span class="lineNum">      53 </span><span class="lineCov">          9 :   ifile.scanField();</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   unsigned int nargs=0;
+<span class="lineNum">      56 </span><span class="lineCov">         84 :   for(unsigned int i=0; i&lt;fields.size(); i++) {</span>
+<span class="lineNum">      57 </span><span class="lineCov">         93 :     if(fields[i]==&quot;min_&quot;+fields[0]) {</span>
+<span class="lineNum">      58 </span><span class="lineCov">          9 :       derivatives = false;</span>
+<span class="lineNum">      59 </span><span class="lineCov">          9 :       nargs = i-1;</span>
+<span class="lineNum">      60 </span><span class="lineCov">          9 :       break;</span>
+<span class="lineNum">      61 </span>            :     }
+<span class="lineNum">      62 </span><span class="lineCov">         66 :     else if(fields[i]==&quot;der_&quot;+fields[0]) {</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :       derivatives = true;</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :       nargs = i-1;</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">      66 </span>            :     }
+<span class="lineNum">      67 </span>            :   }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">          9 :   grid_label = fields[nargs];</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">         18 :   arg_labels.assign(nargs,&quot;&quot;);</span>
+<span class="lineNum">      72 </span><span class="lineCov">         18 :   arg_min.assign(nargs,&quot;&quot;);</span>
+<span class="lineNum">      73 </span><span class="lineCov">         18 :   arg_max.assign(nargs,&quot;&quot;);</span>
+<span class="lineNum">      74 </span>            :   arg_periodic.assign(nargs,false);
+<span class="lineNum">      75 </span><span class="lineCov">         18 :   arg_nbins.assign(nargs,0);</span>
+<span class="lineNum">      76 </span><span class="lineCov">         35 :   for(unsigned int i=0; i&lt;nargs; i++) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">         13 :     arg_labels[i] = fields[i];</span>
+<span class="lineNum">      78 </span><span class="lineCov">         26 :     ifile.scanField(&quot;min_&quot;+arg_labels[i],arg_min[i]);</span>
+<span class="lineNum">      79 </span><span class="lineCov">         26 :     ifile.scanField(&quot;max_&quot;+arg_labels[i],arg_max[i]);</span>
+<span class="lineNum">      80 </span>            :     std::string str_periodic;
+<span class="lineNum">      81 </span><span class="lineCov">         26 :     ifile.scanField(&quot;periodic_&quot;+arg_labels[i],str_periodic);</span>
+<span class="lineNum">      82 </span><span class="lineCov">         13 :     if(str_periodic==&quot;true&quot;) {arg_periodic[i]=true;}</span>
+<span class="lineNum">      83 </span>            :     int nbins;
+<span class="lineNum">      84 </span><span class="lineCov">         26 :     ifile.scanField(&quot;nbins_&quot;+arg_labels[i],nbins);</span>
+<span class="lineNum">      85 </span><span class="lineCov">         26 :     arg_nbins[i] = static_cast&lt;unsigned int&gt;(nbins);</span>
+<span class="lineNum">      86 </span>            :   }
+<span class="lineNum">      87 </span><span class="lineCov">          9 :   ifile.scanField();</span>
+<span class="lineNum">      88 </span><span class="lineCov">          9 :   ifile.close();</span>
+<span class="lineNum">      89 </span><span class="lineCov">          9 :   return nargs;</span>
+<span class="lineNum">      90 </span>            : }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : }
+<span class="lineNum">      94 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

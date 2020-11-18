@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/Exception.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - Exception.cpp<span style="font-size: 80%;"> (source / <a href="Exception.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryLo">71.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #if defined(__PLUMED_HAS_EXECINFO)
+<span class="lineNum">      25 </span>            : #include &lt;execinfo.h&gt;
+<span class="lineNum">      26 </span>            : #endif
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : namespace PLMD {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">         96 : std::string Exception::trace() {</span>
+<span class="lineNum">      35 </span><span class="lineCov">         96 :   std::string message=&quot;\n\n********** STACK DUMP **********\n&quot;;</span>
+<span class="lineNum">      36 </span>            : #ifdef __PLUMED_HAS_EXECINFO
+<span class="lineNum">      37 </span>            :   void* callstack[128];
+<span class="lineNum">      38 </span><span class="lineCov">         96 :   int frames = backtrace(callstack, 128);</span>
+<span class="lineNum">      39 </span><span class="lineCov">         96 :   char** strs = backtrace_symbols(callstack, frames);</span>
+<span class="lineNum">      40 </span><span class="lineCov">       2964 :   for (int i = 0; i &lt; frames; ++i) {message+=strs[i]; message+=&quot;\n&quot;;}</span>
+<span class="lineNum">      41 </span><span class="lineCov">         96 :   free(strs);</span>
+<span class="lineNum">      42 </span>            : #else
+<span class="lineNum">      43 </span>            :   message+=&quot;not available\n&quot;;
+<span class="lineNum">      44 </span>            : #endif
+<span class="lineNum">      45 </span>            :   message+=&quot;********** END STACK DUMP **********\n&quot;;
+<span class="lineNum">      46 </span><span class="lineCov">         96 :   return message;</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">         48 : std::string Exception::format(const std::string&amp;msg,const std::string&amp;file,unsigned line,const std::string&amp;function) {</span>
+<span class="lineNum">      50 </span>            :   std::string message;
+<span class="lineNum">      51 </span><span class="lineCov">         96 :   if(getenv(&quot;PLUMED_STACK_TRACE&quot;))message+=trace();</span>
+<span class="lineNum">      52 </span>            :   message+=&quot;\n+++ Internal PLUMED error&quot;;
+<span class="lineNum">      53 </span><span class="lineCov">         48 :   if(file.length()&gt;0) {</span>
+<span class="lineNum">      54 </span>            :     char cline[1000];
+<span class="lineNum">      55 </span>            :     sprintf(cline,&quot;%u&quot;,line);
+<span class="lineNum">      56 </span><span class="lineCov">        192 :     message += &quot;\n+++ file &quot;+file+&quot;, line &quot;+cline;</span>
+<span class="lineNum">      57 </span><span class="lineCov">         48 :     if(function.length()&gt;0) message +=&quot;, function &quot;+function;</span>
+<span class="lineNum">      58 </span>            :   }
+<span class="lineNum">      59 </span><span class="lineCov">         96 :   if(msg.length()&gt;0) message +=&quot;\n+++ message: &quot;+msg;</span>
+<span class="lineNum">      60 </span><span class="lineCov">         48 :   return message;</span>
+<span class="lineNum">      61 </span>            : }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 : Exception::Exception():</span>
+<span class="lineNum">      65 </span>            :   stackString(trace()),
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :   msg(format(&quot;&quot;,&quot;&quot;,0,&quot;&quot;))</span>
+<span class="lineNum">      67 </span>            : {
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :   abortIfExceptionsAreDisabled();</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 : Exception::Exception(const std::string&amp;msg):</span>
+<span class="lineNum">      72 </span>            :   stackString(trace()),
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :   msg(format(msg,&quot;&quot;,0,&quot;&quot;))</span>
+<span class="lineNum">      74 </span>            : {
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :   abortIfExceptionsAreDisabled();</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">         48 : Exception::Exception(const std::string&amp;msg,const std::string&amp;file,unsigned line,const std::string&amp;function):</span>
+<span class="lineNum">      79 </span>            :   stackString(trace()),
+<span class="lineNum">      80 </span><span class="lineCov">         96 :   msg(format(msg,file,line,function))</span>
+<span class="lineNum">      81 </span>            : {
+<span class="lineNum">      82 </span><span class="lineCov">         48 :   abortIfExceptionsAreDisabled();</span>
+<a name="83"><span class="lineNum">      83 </span><span class="lineCov">         48 : }</span></a>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">         48 : void Exception::abortIfExceptionsAreDisabled() {</span>
+<span class="lineNum">      86 </span>            : #if ! defined(__PLUMED_HAS_EXCEPTIONS)
+<span class="lineNum">      87 </span>            :   fprintf(stderr,&quot;%s&quot;,&quot;Exceptions are disabled, aborting now\n&quot;);
+<span class="lineNum">      88 </span>            :   fprintf(stderr,&quot;%s&quot;,Exception::what());
+<span class="lineNum">      89 </span>            :   fprintf(stderr,&quot;\n&quot;);
+<span class="lineNum">      90 </span>            :   std::abort();
+<span class="lineNum">      91 </span>            : #endif
+<span class="lineNum">      92 </span><span class="lineCov">         48 : }</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : }
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

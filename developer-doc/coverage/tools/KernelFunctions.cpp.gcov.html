@@ -1,0 +1,390 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/KernelFunctions.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - KernelFunctions.cpp<span style="font-size: 80%;"> (source / <a href="KernelFunctions.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">104</td>
+            <td class="headerCovTableEntry">130</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;KernelFunctions.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;IFile.h&quot;
+<span class="lineNum">      24 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      25 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //+PLUMEDOC INTERNAL kernelfunctions
+<span class="lineNum">      30 </span>            : /*
+<span class="lineNum">      31 </span>            : Functions that are used to construct histograms
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : Constructing histograms is something you learnt to do relatively early in life. You perform an experiment a number of times,
+<span class="lineNum">      34 </span>            : count the number of times each result comes up and then draw a bar graph that describes how often each of the results came up.
+<span class="lineNum">      35 </span>            : This only works when there are a finite number of possible results.  If the result a number between 0 and 1 the bar chart is
+<span class="lineNum">      36 </span>            : less easy to draw as there are as many possible results as there are numbers between zero and one - an infinite number.
+<span class="lineNum">      37 </span>            : To resolve this problem we replace probability, \f$P\f$ with probability density, \f$\pi\f$, and write the probability of getting
+<span class="lineNum">      38 </span>            : a number between \f$a\f$ and \f$b\f$ as:
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \f[
+<span class="lineNum">      41 </span>            : P = \int_{a}^b \textrm{d}x \pi(x)
+<span class="lineNum">      42 </span>            : \f]
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : To calculate probability densities from a set of results we use a process called kernel density estimation.
+<span class="lineNum">      45 </span>            : Histograms are accumulated by adding up kernel functions, \f$K\f$, with finite spatial extent, that integrate to one.
+<span class="lineNum">      46 </span>            : These functions are centered on each of the \f$n\f$-dimensional data points, \f$\mathbf{x}_i\f$. The overall effect of this
+<span class="lineNum">      47 </span>            : is that each result we obtain in our experiments contributes to the probability density in a finite sized region of the space.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : Expressing all this mathematically in kernel density estimation we write the probability density as:
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \f[
+<span class="lineNum">      52 </span>            : \pi(\mathbf{x}) =  \sum_i K\left[ (\mathbf{x} - \mathbf{x}_i)^T \Sigma (\mathbf{x} - \mathbf{x}_i) \right]
+<span class="lineNum">      53 </span>            : \f]
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : where \f$\Sigma\f$ is an \f$n \times n\f$ matrix called the bandwidth that controls the spatial extent of
+<span class="lineNum">      56 </span>            : the kernel. Whenever we accumulate a histogram (e.g. in \ref HISTOGRAM or in \ref METAD) we use this
+<span class="lineNum">      57 </span>            : technique.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : There is thus some flexibility in the particular function we use for \f$K[\mathbf{r}]\f$ in the above.
+<span class="lineNum">      60 </span>            : The following variants are available.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : &lt;table align=center frame=void width=95%% cellpadding=5%%&gt;
+<span class="lineNum">      63 </span>            : &lt;tr&gt;
+<span class="lineNum">      64 </span>            : &lt;td&gt; TYPE &lt;/td&gt; &lt;td&gt; FUNCTION &lt;/td&gt;
+<span class="lineNum">      65 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      66 </span>            : &lt;td&gt; gaussian &lt;/td&gt; &lt;td&gt; \f$f(r) = \frac{1}{(2 \pi)^{n} \sqrt{|\Sigma^{-1}|}} \exp\left(-0.5 r^2 \right)\f$ &lt;/td&gt;
+<span class="lineNum">      67 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      68 </span>            : &lt;td&gt; truncated-gaussian &lt;/td&gt; &lt;td&gt; \f$f(r) = \frac{1}{(2 \pi)^{n} \sqrt{|\Sigma^{-1}|} \left(\frac{\mathrm{erf}(-6.25/sqrt{2}) - \mathrm{erf}(-6.25/sqrt{2})}{2}\right)^n} \exp\left(-0.5 r^2 \right)\f$ &lt;/td&gt;
+<span class="lineNum">      69 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      70 </span>            : &lt;td&gt; triangular &lt;/td&gt; &lt;td&gt; \f$f(r) = \frac{3}{V} ( 1 - | r | )H(1-|r|) \f$ &lt;/td&gt;
+<span class="lineNum">      71 </span>            : &lt;/tr&gt; &lt;tr&gt;
+<span class="lineNum">      72 </span>            : &lt;td&gt; uniform &lt;/td&gt; &lt;td&gt; \f$f(r) = \frac{1}{V}H(1-|r|)\f$ &lt;/td&gt;
+<span class="lineNum">      73 </span>            : &lt;/tr&gt;
+<span class="lineNum">      74 </span>            : &lt;/table&gt;
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : In the above \f$H(y)\f$ is a function that is equal to one when \f$y&gt;0\f$ and zero when \f$y \le 0\f$. \f$n\f$ is
+<span class="lineNum">      77 </span>            : the dimensionality of the vector \f$\mathbf{x}\f$ and \f$V\f$ is the volume of an elipse in an \f$n\f$ dimensional
+<span class="lineNum">      78 </span>            : space which is given by:
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : \f{eqnarray*}{
+<span class="lineNum">      81 </span>            : V &amp;=&amp; | \Sigma^{-1} | \frac{ \pi^{\frac{n}{2}} }{\left( \frac{n}{2} \right)! } \qquad \textrm{for even} \quad n \\
+<span class="lineNum">      82 </span>            : V &amp;=&amp; | \Sigma^{-1} | \frac{ 2^{\frac{n+1}{2}} \pi^{\frac{n-1}{2}} }{ n!! }
+<span class="lineNum">      83 </span>            : \f}
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : In \ref METAD the normalization constants are ignored so that the value of the function at \f$r=0\f$ is equal
+<span class="lineNum">      86 </span>            : to one.  In addition in \ref METAD we must be able to differentiate the bias in order to get forces.  This limits
+<span class="lineNum">      87 </span>            : the kernels we can use in this method.  Notice also that Gaussian kernels should have infinite support.  When used
+<span class="lineNum">      88 </span>            : with grids, however, they are assumed to only be non-zero over a finite range.  The difference between the
+<span class="lineNum">      89 </span>            : truncated-gaussian and regular gaussian is that the trucated gaussian is scaled so that its integral over the grid
+<span class="lineNum">      90 </span>            : is equal to one when it is normalised.  The integral of a regular gaussian when it is evaluated on a grid will be
+<span class="lineNum">      91 </span>            : slightly less that one because of the truncation of a function that should have infinite support.
+<span class="lineNum">      92 </span>            : */
+<a name="93"><span class="lineNum">      93 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">         12 : KernelFunctions::KernelFunctions( const std::string&amp; input, const bool&amp; normed ) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">         24 :   std::vector&lt;std::string&gt; data=Tools::getWords(input);</span>
+<span class="lineNum">      97 </span>            :   std::string name=data[0];
+<span class="lineNum">      98 </span>            :   data.erase(data.begin());
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :   std::vector&lt;double&gt; at;
+<span class="lineNum">     101 </span><span class="lineCov">         24 :   bool foundc = Tools::parseVector(data,&quot;CENTER&quot;,at);</span>
+<span class="lineNum">     102 </span><span class="lineCov">         12 :   if(!foundc) plumed_merror(&quot;failed to find center keyword in definition of kernel&quot;);</span>
+<span class="lineNum">     103 </span>            :   std::vector&lt;double&gt; sig;
+<span class="lineNum">     104 </span><span class="lineCov">         24 :   bool founds = Tools::parseVector(data,&quot;SIGMA&quot;,sig);</span>
+<span class="lineNum">     105 </span><span class="lineCov">         12 :   if(!founds) plumed_merror(&quot;failed to find sigma keyword in definition of kernel&quot;);</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">         24 :   bool multi=false; Tools::parseFlag(data,&quot;MULTIVARIATE&quot;,multi);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         12 :   if( center.size()==1 &amp;&amp; multi ) plumed_merror(&quot;one dimensional kernel cannot be multivariate&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         12 :   if( center.size()==1 &amp;&amp; sig.size()!=1 ) plumed_merror(&quot;size mismatch between center size and sigma size&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         12 :   if( multi &amp;&amp; center.size()&gt;1 &amp;&amp; sig.size()!=0.5*center.size()*(center.size()-1) ) plumed_merror(&quot;size mismatch between center size and sigma size&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">         24 :   if( !multi &amp;&amp; center.size()&gt;1 &amp;&amp; sig.size()!=center.size() ) plumed_merror(&quot;size mismatch between center size and sigma size&quot;);</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :   double h;
+<span class="lineNum">     114 </span><span class="lineCov">         36 :   bool foundh = Tools::parse(data,&quot;HEIGHT&quot;,h);</span>
+<span class="lineNum">     115 </span><span class="lineCov">         12 :   if( !foundh) h=1.0;</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">         12 :   setData( at, sig, name, multi, h, normed );</span>
+<a name="118"><span class="lineNum">     118 </span><span class="lineCov">         12 : }</span></a>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">      30120 : KernelFunctions::KernelFunctions( const std::vector&lt;double&gt;&amp; at, const std::vector&lt;double&gt;&amp; sig, const std::string&amp; type, const bool multivariate, const double&amp; w, const bool norm ) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">      30120 :   setData( at, sig, type, multivariate, w, norm );</span>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">      30120 : }</span></a>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">      30132 : void KernelFunctions::setData( const std::vector&lt;double&gt;&amp; at, const std::vector&lt;double&gt;&amp; sig, const std::string&amp; type, const bool multivariate, const double&amp; w, const bool norm ) {</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">     259048 :   center.resize( at.size() ); for(unsigned i=0; i&lt;at.size(); ++i) center[i]=at[i];</span>
+<span class="lineNum">     127 </span><span class="lineCov">     267784 :   width.resize( sig.size() ); for(unsigned i=0; i&lt;sig.size(); ++i) width[i]=sig[i];</span>
+<span class="lineNum">     128 </span><span class="lineCov">      30132 :   diagonal=false;</span>
+<span class="lineNum">     129 </span><span class="lineCov">      30132 :   if (multivariate==false ) diagonal=true;</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :   // Setup the kernel type
+<span class="lineNum">     132 </span><span class="lineCov">      60264 :   if(type==&quot;GAUSSIAN&quot; || type==&quot;gaussian&quot; || type==&quot;TRUNCATED-GAUSSIAN&quot; || type==&quot;truncated-gaussian&quot; ) {</span>
+<span class="lineNum">     133 </span><span class="lineCov">      30128 :     ktype=gaussian;</span>
+<span class="lineNum">     134 </span><span class="lineCov">          8 :   } else if(type==&quot;UNIFORM&quot; || type==&quot;uniform&quot;) {</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :     ktype=uniform;</span>
+<span class="lineNum">     136 </span><span class="lineCov">          4 :   } else if(type==&quot;TRIANGULAR&quot; || type==&quot;triangular&quot;) {</span>
+<span class="lineNum">     137 </span><span class="lineCov">          4 :     ktype=triangular;</span>
+<span class="lineNum">     138 </span>            :   } else {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :     plumed_merror(type+&quot; is an invalid kernel type\n&quot;);</span>
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">      30132 :   if( norm ) {</span>
+<span class="lineNum">     143 </span>            :     double det; unsigned ncv=ndim();
+<span class="lineNum">     144 </span><span class="lineCov">      24566 :     if(diagonal) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">     268750 :       det=1; for(unsigned i=0; i&lt;width.size(); ++i) det*=width[i]*width[i];</span>
+<span class="lineNum">     146 </span>            :     } else {
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :       Matrix&lt;double&gt; mymatrix( getMatrix() ), myinv( ncv, ncv );</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :       Invert(mymatrix,myinv); double logd;</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :       logdet( myinv, logd );</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :       det=std::exp(logd);</span>
+<span class="lineNum">     151 </span>            :     }
+<span class="lineNum">     152 </span>            :     double volume;
+<span class="lineNum">     153 </span><span class="lineCov">      24566 :     if( ktype==gaussian ) {</span>
+<span class="lineNum">     154 </span><span class="lineCov">      73698 :       if( type==&quot;GAUSSIAN&quot; || type==&quot;gaussian&quot; ) volume=pow( 2*pi, 0.5*ncv ) * pow( det, 0.5 );</span>
+<span class="lineNum">     155 </span>            :       else {
+<span class="lineNum">     156 </span>            :         // This makes it so the gaussian integrates to one over the range over which it has support
+<span class="lineNum">     157 </span>            :         const double DP2CUTOFF=sqrt(6.25);
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :         volume=pow( 2*pi, 0.5*ncv ) * pow( det, 0.5 ) * pow( 0.5 * ( erf(DP2CUTOFF) - erf(-DP2CUTOFF) ), ncv);</span>
+<span class="lineNum">     159 </span>            :       }
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     } else if( ktype==uniform || ktype==triangular ) {</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :       if( ncv%2==1 ) {</span>
+<span class="lineNum">     162 </span>            :         double dfact=1;
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :         for(unsigned i=1; i&lt;ncv; i+=2) dfact*=static_cast&lt;double&gt;(i);</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :         volume=( pow( pi, (ncv-1)/2 ) ) * ( pow( 2., (ncv+1)/2 ) ) / dfact;</span>
+<span class="lineNum">     165 </span>            :       } else {
+<span class="lineNum">     166 </span>            :         double fact=1.;
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :         for(unsigned i=1; i&lt;ncv/2; ++i) fact*=static_cast&lt;double&gt;(i);</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :         volume=pow( pi,ncv/2 ) / fact;</span>
+<span class="lineNum">     169 </span>            :       }
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :       if(ktype==uniform) volume*=det;</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :       else if(ktype==triangular) volume*=det / 3.;</span>
+<span class="lineNum">     172 </span>            :     } else {
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;not a valid kernel type&quot;);</span>
+<span class="lineNum">     174 </span>            :     }
+<span class="lineNum">     175 </span><span class="lineCov">      24566 :     height=w / volume;</span>
+<span class="lineNum">     176 </span>            :   } else {
+<span class="lineNum">     177 </span><span class="lineCov">       5566 :     height=w;</span>
+<span class="lineNum">     178 </span>            :   }
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">      30132 : }</span></a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">      10137 : double KernelFunctions::getCutoff( const double&amp; width ) const {</span>
+<span class="lineNum">     182 </span>            :   const double DP2CUTOFF=6.25;
+<span class="lineNum">     183 </span><span class="lineCov">      10137 :   if( ktype==gaussian ) return sqrt(2.0*DP2CUTOFF)*width;</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :   else if(ktype==triangular ) return width;</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :   else if(ktype==uniform) return width;</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :   else plumed_merror(&quot;No valid kernel type&quot;);</span>
+<span class="lineNum">     187 </span>            :   return 0.0;
+<a name="188"><span class="lineNum">     188 </span>            : }</a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">       5082 : std::vector&lt;double&gt; KernelFunctions::getContinuousSupport( ) const {</span>
+<span class="lineNum">     191 </span>            :   unsigned ncv=ndim();
+<span class="lineNum">     192 </span><span class="lineCov">       5082 :   std::vector&lt;double&gt; support( ncv );</span>
+<span class="lineNum">     193 </span><span class="lineCov">       5082 :   if(diagonal) {</span>
+<span class="lineNum">     194 </span><span class="lineCov">       3510 :     for(unsigned i=0; i&lt;ncv; ++i) support[i]=getCutoff(width[i]);</span>
+<span class="lineNum">     195 </span>            :   } else {
+<span class="lineNum">     196 </span><span class="lineCov">       4368 :     Matrix&lt;double&gt; mymatrix( getMatrix() ), myinv( ncv,ncv );</span>
+<span class="lineNum">     197 </span><span class="lineCov">       4368 :     Invert(mymatrix,myinv);</span>
+<span class="lineNum">     198 </span><span class="lineCov">       4368 :     Matrix&lt;double&gt; myautovec(ncv,ncv); std::vector&lt;double&gt; myautoval(ncv);</span>
+<span class="lineNum">     199 </span><span class="lineCov">       4368 :     diagMat(myinv,myautoval,myautovec);</span>
+<span class="lineNum">     200 </span>            :     double maxautoval; maxautoval=0.;
+<span class="lineNum">     201 </span>            :     unsigned ind_maxautoval;
+<span class="lineNum">     202 </span><span class="lineCov">      21840 :     for (unsigned i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">      17472 :       if(myautoval[i]&gt;maxautoval) {maxautoval=myautoval[i]; ind_maxautoval=i;}</span>
+<span class="lineNum">     204 </span>            :     }
+<span class="lineNum">     205 </span><span class="lineCov">      21840 :     for(unsigned i=0; i&lt;ncv; ++i) {</span>
+<span class="lineNum">     206 </span><span class="lineCov">      17472 :       double extent=fabs(sqrt(maxautoval)*myautovec(i,ind_maxautoval));</span>
+<span class="lineNum">     207 </span><span class="lineCov">      17472 :       support[i]=getCutoff( extent );</span>
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            :   }
+<span class="lineNum">     210 </span><span class="lineCov">       5082 :   return support;</span>
+<a name="211"><span class="lineNum">     211 </span>            : }</a>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineCov">       3407 : std::vector&lt;unsigned&gt; KernelFunctions::getSupport( const std::vector&lt;double&gt;&amp; dx ) const {</span>
+<span class="lineNum">     214 </span><span class="lineCov">       3407 :   plumed_assert( ndim()==dx.size() );</span>
+<span class="lineNum">     215 </span><span class="lineCov">       3407 :   std::vector&lt;unsigned&gt; support( dx.size() );</span>
+<span class="lineNum">     216 </span><span class="lineCov">       3407 :   std::vector&lt;double&gt; vv=getContinuousSupport( );</span>
+<span class="lineNum">     217 </span><span class="lineCov">      40809 :   for(unsigned i=0; i&lt;dx.size(); ++i) support[i]=static_cast&lt;unsigned&gt;(ceil( vv[i]/dx[i] ));</span>
+<span class="lineNum">     218 </span><span class="lineCov">       3407 :   return support;</span>
+<a name="219"><span class="lineNum">     219 </span>            : }</a>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">   14946197 : double KernelFunctions::evaluate( const std::vector&lt;Value*&gt;&amp; pos, std::vector&lt;double&gt;&amp; derivatives, bool usederiv, bool doInt, double lowI_, double uppI_) const {</span>
+<span class="lineNum">     222 </span>            :   plumed_dbg_assert( pos.size()==ndim() &amp;&amp; derivatives.size()==ndim() );
+<span class="lineNum">     223 </span>            : #ifndef NDEBUG
+<span class="lineNum">     224 </span>            :   if( usederiv ) plumed_massert( ktype!=uniform, &quot;step function can not be differentiated&quot; );
+<span class="lineNum">     225 </span>            : #endif
+<span class="lineNum">     226 </span><span class="lineCov">   14946197 :   if(doInt) {</span>
+<span class="lineNum">     227 </span>            :     plumed_dbg_assert(center.size()==1);
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :     if(pos[0]-&gt;get()&lt;lowI_) pos[0]-&gt;set(lowI_);</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :     if(pos[0]-&gt;get()&gt;uppI_) pos[0]-&gt;set(uppI_);</span>
+<span class="lineNum">     230 </span>            :   }
+<span class="lineNum">     231 </span>            :   double r2=0;
+<span class="lineNum">     232 </span><span class="lineCov">   14946197 :   if(diagonal) {</span>
+<span class="lineNum">     233 </span><span class="lineCov">   89423657 :     for(unsigned i=0; i&lt;ndim(); ++i) {</span>
+<span class="lineNum">     234 </span><span class="lineCov">  226343892 :       derivatives[i]=-pos[i]-&gt;difference( center[i] ) / width[i];</span>
+<span class="lineNum">     235 </span><span class="lineCov">   37723982 :       r2+=derivatives[i]*derivatives[i];</span>
+<span class="lineNum">     236 </span><span class="lineCov">   37723982 :       derivatives[i] /= width[i];</span>
+<span class="lineNum">     237 </span>            :     }
+<span class="lineNum">     238 </span>            :   } else {
+<span class="lineNum">     239 </span><span class="lineCov">     970504 :     Matrix&lt;double&gt; mymatrix( getMatrix() );</span>
+<span class="lineNum">     240 </span><span class="lineCov">    4852520 :     for(unsigned i=0; i&lt;mymatrix.nrows(); ++i) {</span>
+<span class="lineNum">     241 </span><span class="lineCov">    3882016 :       double dp_i, dp_j; derivatives[i]=0;</span>
+<span class="lineNum">     242 </span><span class="lineCov">    5823024 :       dp_i=-pos[i]-&gt;difference( center[i] );</span>
+<span class="lineNum">     243 </span><span class="lineCov">    9705040 :       for(unsigned j=0; j&lt;mymatrix.ncols(); ++j) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">    3882016 :         if(i==j) dp_j=dp_i;</span>
+<span class="lineNum">     245 </span><span class="lineCov">    7764032 :         else dp_j=-pos[j]-&gt;difference( center[j] );</span>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineCov">    7764032 :         derivatives[i]+=mymatrix(i,j)*dp_j;</span>
+<span class="lineNum">     248 </span><span class="lineCov">    7764032 :         r2+=dp_i*dp_j*mymatrix(i,j);</span>
+<span class="lineNum">     249 </span>            :       }
+<span class="lineNum">     250 </span>            :     }
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span>            :   double kderiv, kval;
+<span class="lineNum">     253 </span><span class="lineCov">   14946197 :   if(ktype==gaussian) {</span>
+<span class="lineNum">     254 </span><span class="lineCov">   14911361 :     kval=height*std::exp(-0.5*r2); kderiv=-kval;</span>
+<span class="lineNum">     255 </span>            :   } else {
+<span class="lineNum">     256 </span><span class="lineCov">      34836 :     double r=sqrt(r2);</span>
+<span class="lineNum">     257 </span><span class="lineCov">      34836 :     if(ktype==triangular) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">      34836 :       if( r&lt;1.0 ) {</span>
+<span class="lineNum">     259 </span>            :         if(r==0) kderiv=0;
+<span class="lineNum">     260 </span><span class="lineCov">       9753 :         kderiv=-1; kval=height*( 1. - fabs(r) );</span>
+<span class="lineNum">     261 </span>            :       } else {
+<span class="lineNum">     262 </span>            :         kval=0.; kderiv=0.;
+<span class="lineNum">     263 </span>            :       }
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :     } else if(ktype==uniform) {</span>
+<span class="lineNum">     265 </span>            :       kderiv=0.;
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :       if(r&lt;1.0) kval=height;</span>
+<span class="lineNum">     267 </span>            :       else kval=0;
+<span class="lineNum">     268 </span>            :     } else {
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;Not a valid kernel type&quot;);</span>
+<span class="lineNum">     270 </span>            :     }
+<span class="lineNum">     271 </span><span class="lineCov">      34836 :     kderiv*=height / r ;</span>
+<span class="lineNum">     272 </span>            :   }
+<span class="lineNum">     273 </span><span class="lineCov">   94276177 :   for(unsigned i=0; i&lt;ndim(); ++i) derivatives[i]*=kderiv;</span>
+<span class="lineNum">     274 </span><span class="lineCov">   14946197 :   if(doInt) {</span>
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :     if((pos[0]-&gt;get() &lt;= lowI_ || pos[0]-&gt;get() &gt;= uppI_) &amp;&amp; usederiv ) for(unsigned i=0; i&lt;ndim(); ++i)derivatives[i]=0;</span>
+<span class="lineNum">     276 </span>            :   }
+<span class="lineNum">     277 </span><span class="lineCov">   14946197 :   return kval;</span>
+<a name="278"><span class="lineNum">     278 </span>            : }</a>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">       4462 : KernelFunctions* KernelFunctions::read( IFile* ifile, const std::vector&lt;std::string&gt;&amp; valnames ) {</span>
+<span class="lineNum">     281 </span><span class="lineCov">       8924 :   std::string sss; ifile-&gt;scanField(&quot;multivariate&quot;,sss);</span>
+<span class="lineNum">     282 </span><span class="lineCov">       4462 :   std::vector&lt;double&gt; cc( valnames.size() ), sig;</span>
+<span class="lineNum">     283 </span>            :   bool multivariate;
+<span class="lineNum">     284 </span><span class="lineCov">       4462 :   if( sss==&quot;false&quot; ) {</span>
+<span class="lineNum">     285 </span>            :     multivariate=false;
+<span class="lineNum">     286 </span><span class="lineCov">         94 :     sig.resize( valnames.size() );</span>
+<span class="lineNum">     287 </span><span class="lineCov">        752 :     for(unsigned i=0; i&lt;valnames.size(); ++i) {</span>
+<span class="lineNum">     288 </span><span class="lineCov">        188 :       ifile-&gt;scanField(valnames[i],cc[i]);</span>
+<span class="lineNum">     289 </span><span class="lineCov">        376 :       ifile-&gt;scanField(&quot;sigma_&quot;+valnames[i],sig[i]);</span>
+<span class="lineNum">     290 </span>            :     }
+<span class="lineNum">     291 </span><span class="lineCov">       4368 :   } else if( sss==&quot;true&quot; ) {</span>
+<span class="lineNum">     292 </span>            :     multivariate=true;
+<span class="lineNum">     293 </span><span class="lineCov">       4368 :     unsigned ncv=valnames.size();</span>
+<span class="lineNum">     294 </span><span class="lineCov">       4368 :     sig.resize( (ncv*(ncv+1))/2 );</span>
+<span class="lineNum">     295 </span>            :     Matrix&lt;double&gt; upper(ncv,ncv), lower(ncv,ncv);
+<span class="lineNum">     296 </span><span class="lineCov">      21840 :     for(unsigned i=0; i&lt;ncv; ++i) {</span>
+<span class="lineNum">     297 </span><span class="lineCov">      17472 :       ifile-&gt;scanField(valnames[i],cc[i]);</span>
+<span class="lineNum">     298 </span><span class="lineCov">     113568 :       for(unsigned j=0; j&lt;ncv-i; j++) { ifile-&gt;scanField(&quot;sigma_&quot; +valnames[j+i] + &quot;_&quot; + valnames[j], lower(j+i,j) ); upper(j,j+i)=lower(j+i,j); }</span>
+<span class="lineNum">     299 </span>            :     }
+<span class="lineNum">     300 </span>            :     Matrix&lt;double&gt; mymult( ncv, ncv ), invmatrix(ncv,ncv);
+<span class="lineNum">     301 </span><span class="lineCov">       4368 :     mult(lower,upper,mymult); Invert( mymult, invmatrix );</span>
+<span class="lineNum">     302 </span>            :     unsigned k=0;
+<span class="lineNum">     303 </span><span class="lineCov">      21840 :     for(unsigned i=0; i&lt;ncv; i++) {</span>
+<span class="lineNum">     304 </span><span class="lineCov">      48048 :       for(unsigned j=i; j&lt;ncv; j++) { sig[k]=invmatrix(i,j); k++; }</span>
+<span class="lineNum">     305 </span>            :     }
+<span class="lineNum">     306 </span>            :   } else {
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;multivariate flag should equal true or false&quot;);</span>
+<span class="lineNum">     308 </span>            :   }
+<span class="lineNum">     309 </span><span class="lineCov">       8924 :   double h; ifile-&gt;scanField(&quot;height&quot;,h);</span>
+<span class="lineNum">     310 </span><span class="lineCov">      13386 :   return new KernelFunctions( cc, sig, &quot;gaussian&quot;, multivariate,h, false);</span>
+<a name="311"><span class="lineNum">     311 </span>            : }</a>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

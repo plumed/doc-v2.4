@@ -1,0 +1,402 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/TopologyMatrix.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - TopologyMatrix.cpp<span style="font-size: 80%;"> (source / <a href="TopologyMatrix.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">159</td>
+            <td class="headerCovTableEntry">159</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryHi">93.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;AdjacencyMatrixBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;multicolvar/AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/HistogramBead.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //+PLUMEDOC MATRIX TOPOLOGY_MATRIX
+<span class="lineNum">      30 </span>            : /*
+<span class="lineNum">      31 </span>            : Adjacency matrix in which two atoms are adjacent if they are connected topologically
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : \par Examples
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : */
+<span class="lineNum">      37 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace PLMD {
+<a name="40"><span class="lineNum">      40 </span>            : namespace adjmat {</a>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">         18 : class TopologyMatrix : public AdjacencyMatrixBase {</span>
+<span class="lineNum">      43 </span>            : private:
+<span class="lineNum">      44 </span>            : /// The width to use for the kernel density estimation and the
+<span class="lineNum">      45 </span>            : /// sizes of the bins to be used in kernel density estimation
+<span class="lineNum">      46 </span>            :   double sigma;
+<span class="lineNum">      47 </span>            :   std::string kerneltype;
+<span class="lineNum">      48 </span>            : /// The maximum number of bins that will be used
+<span class="lineNum">      49 </span>            : /// This is calculated based on the dmax of the switching functions
+<span class="lineNum">      50 </span>            :   unsigned maxbins;
+<span class="lineNum">      51 </span>            : /// The volume of the cells
+<span class="lineNum">      52 </span>            :   Matrix&lt;double&gt; cell_volume;
+<span class="lineNum">      53 </span>            : /// switching function
+<span class="lineNum">      54 </span>            :   Matrix&lt;SwitchingFunction&gt; switchingFunction;
+<span class="lineNum">      55 </span>            :   Matrix&lt;SwitchingFunction&gt; cylinder_sw;
+<span class="lineNum">      56 </span>            :   Matrix&lt;SwitchingFunction&gt; low_sf;
+<span class="lineNum">      57 </span>            :   double beadrad, lsfmax;
+<span class="lineNum">      58 </span>            :   Matrix&lt;double&gt; binw_mat;
+<span class="lineNum">      59 </span>            :   SwitchingFunction threshold_switch;
+<span class="lineNum">      60 </span>            : public:
+<span class="lineNum">      61 </span>            : /// Create manual
+<span class="lineNum">      62 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      63 </span>            : /// Constructor
+<span class="lineNum">      64 </span>            :   explicit TopologyMatrix(const ActionOptions&amp;);
+<span class="lineNum">      65 </span>            : /// Get the number of quantities that we must compute
+<span class="lineNum">      66 </span>            :   unsigned getNumberOfQuantities() const ;
+<span class="lineNum">      67 </span>            : /// Create the ith, ith switching function
+<span class="lineNum">      68 </span>            :   void setupConnector( const unsigned&amp; id, const unsigned&amp; i, const unsigned&amp; j, const std::vector&lt;std::string&gt;&amp; desc );
+<span class="lineNum">      69 </span>            : /// This actually calculates the value of the contact function
+<span class="lineNum">      70 </span>            :   double calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      71 </span>            : /// This does nothing
+<span class="lineNum">      72 </span>            :   double compute( const unsigned&amp; tindex, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      73 </span>            : /// Calculate the contribution from one of the atoms in the third element of the pack
+<span class="lineNum">      74 </span>            :   void calculateForThreeAtoms( const unsigned&amp; iat, const Vector&amp; d1, const double&amp; d1_len,
+<span class="lineNum">      75 </span>            :                                HistogramBead&amp; bead, multicolvar::AtomValuePack&amp; myatoms ) const ;
+<a name="76"><span class="lineNum">      76 </span>            : };</a>
+<span class="lineNum">      77 </span>            : 
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">       6458 : PLUMED_REGISTER_ACTION(TopologyMatrix,&quot;TOPOLOGY_MATRIX&quot;)</span></a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          7 : void TopologyMatrix::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">          7 :   AdjacencyMatrixBase::registerKeywords( keys );</span>
+<span class="lineNum">      82 </span><span class="lineCov">         28 :   keys.add(&quot;atoms&quot;,&quot;NODES&quot;,&quot;The list of atoms for which you would like to calculate the contact matrix.  The atoms involved must be specified &quot;</span>
+<span class="lineNum">      83 </span>            :            &quot;as a list of labels of \\ref mcolv or labels of a \\ref multicolvarfunction actions.  If you would just like to use &quot;
+<span class="lineNum">      84 </span>            :            &quot;the atomic positions you can use a \\ref DENSITY command to specify a group of atoms.  Specifying your atomic positions using labels of &quot;
+<span class="lineNum">      85 </span>            :            &quot;other \\ref mcolv or \\ref multicolvarfunction commands is useful, however, as you can then exploit a much wider &quot;
+<span class="lineNum">      86 </span>            :            &quot;variety of functions of the contact matrix as described in \\ref contactmatrix&quot;);
+<span class="lineNum">      87 </span><span class="lineCov">         28 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;&quot;);</span>
+<span class="lineNum">      88 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;SWITCH&quot;,&quot;This keyword is used if you want to employ an alternative to the continuous swiching function defined above. &quot;</span>
+<span class="lineNum">      89 </span>            :            &quot;The following provides information on the \\ref switchingfunction that are available. &quot;
+<span class="lineNum">      90 </span>            :            &quot;When this keyword is present you no longer need the NN, MM, D_0 and R_0 keywords.&quot;);
+<span class="lineNum">      91 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;RADIUS&quot;,&quot;&quot;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;CYLINDER_SWITCH&quot;,&quot;a switching function on ( r_ij . r_ik - 1 )/r_ij&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">         28 :   keys.add(&quot;numbered&quot;,&quot;BIN_SIZE&quot;,&quot;the size to use for the bins&quot;);</span>
+<span class="lineNum">      94 </span><span class="lineCov">         28 :   keys.add(&quot;compulsory&quot;,&quot;DENSITY_THRESHOLD&quot;,&quot;&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         28 :   keys.add(&quot;compulsory&quot;,&quot;SIGMA&quot;,&quot;the width of the function to be used for kernel density estimation&quot;);</span>
+<span class="lineNum">      96 </span><span class="lineCov">         35 :   keys.add(&quot;compulsory&quot;,&quot;KERNEL&quot;,&quot;gaussian&quot;,&quot;the type of kernel function to be used&quot;);</span>
+<span class="lineNum">      97 </span><span class="lineCov">         28 :   keys.add(&quot;hidden&quot;,&quot;FAKE&quot;,&quot;&quot;);</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          6 : TopologyMatrix::TopologyMatrix( const ActionOptions&amp; ao ):</span>
+<span class="lineNum">     101 </span>            :   Action(ao),
+<span class="lineNum">     102 </span>            :   AdjacencyMatrixBase(ao),
+<span class="lineNum">     103 </span><span class="lineCov">         18 :   maxbins(0)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineCov">         30 :   readMaxThreeSpeciesMatrix(&quot;NODES&quot;, &quot;FAKE&quot;, &quot;FAKE&quot;, &quot;ATOMS&quot;, true );</span>
+<span class="lineNum">     106 </span><span class="lineCov">          6 :   unsigned nrows, ncols, ndonor_types; retrieveTypeDimensions( nrows, ncols, ndonor_types );</span>
+<span class="lineNum">     107 </span><span class="lineCov">         18 :   switchingFunction.resize( nrows, ncols ); parseConnectionDescriptions(&quot;SWITCH&quot;,false,ndonor_types);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         18 :   cylinder_sw.resize( nrows, ncols ); parseConnectionDescriptions(&quot;RADIUS&quot;,false,ndonor_types);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         18 :   low_sf.resize( nrows, ncols ); parseConnectionDescriptions(&quot;CYLINDER_SWITCH&quot;,false,ndonor_types);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         12 :   binw_mat.resize( nrows, ncols ); cell_volume.resize( nrows, ncols );</span>
+<span class="lineNum">     111 </span><span class="lineCov">         12 :   parseConnectionDescriptions(&quot;BIN_SIZE&quot;,false,ndonor_types);</span>
+<span class="lineNum">     112 </span>            :   // Read in stuff for grid
+<span class="lineNum">     113 </span><span class="lineCov">         18 :   parse(&quot;SIGMA&quot;,sigma); parse(&quot;KERNEL&quot;,kerneltype);</span>
+<span class="lineNum">     114 </span>            :   // Read in threshold for density cutoff
+<span class="lineNum">     115 </span><span class="lineCov">         12 :   std::string errors, thresh_sw_str; parse(&quot;DENSITY_THRESHOLD&quot;,thresh_sw_str);</span>
+<span class="lineNum">     116 </span><span class="lineCov">          6 :   threshold_switch.set(thresh_sw_str, errors );</span>
+<span class="lineNum">     117 </span><span class="lineCov">          6 :   if( errors.length()&gt;0 ) error(&quot;errors in DENSITY_THRESHOLD switching function : &quot; + errors );</span>
+<span class="lineNum">     118 </span><span class="lineCov">         18 :   log.printf(&quot;  threshold on density of atoms in cylinder equals %s\n&quot;,threshold_switch.description().c_str() );</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">         18 :   for(unsigned i=0; i&lt;getNumberOfNodeTypes(); ++i) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">         18 :     for(unsigned j=0; j&lt;getNumberOfNodeTypes(); ++j) {</span>
+<span class="lineNum">     122 </span><span class="lineCov">         12 :       double r=cylinder_sw(i,j).get_d0() + cylinder_sw(i,j).get_r0();</span>
+<span class="lineNum">     123 </span><span class="lineCov">         12 :       cell_volume(i,j)=binw_mat(i,j)*pi*r*r;</span>
+<span class="lineNum">     124 </span>            :     }
+<span class="lineNum">     125 </span>            :   }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :   // Find the largest sf cutoff
+<span class="lineNum">     128 </span><span class="lineCov">          6 :   lsfmax=low_sf(0,0).get_dmax();</span>
+<span class="lineNum">     129 </span><span class="lineCov">          6 :   double sfmax=switchingFunction(0,0).get_dmax();</span>
+<span class="lineNum">     130 </span><span class="lineCov">          6 :   double rfmax=cylinder_sw(0,0).get_dmax();</span>
+<span class="lineNum">     131 </span><span class="lineCov">         18 :   for(unsigned i=0; i&lt;getNumberOfNodeTypes(); ++i) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">         18 :     for(unsigned j=0; j&lt;getNumberOfNodeTypes(); ++j) {</span>
+<span class="lineNum">     133 </span><span class="lineCov">          6 :       double tsf=switchingFunction(i,j).get_dmax();</span>
+<span class="lineNum">     134 </span><span class="lineCov">          6 :       if( tsf&gt;sfmax ) sfmax=tsf;</span>
+<span class="lineNum">     135 </span><span class="lineCov">          6 :       double rsf=cylinder_sw(i,j).get_dmax();</span>
+<span class="lineNum">     136 </span><span class="lineCov">          6 :       if( rsf&gt;rfmax ) rfmax=rsf;</span>
+<span class="lineNum">     137 </span><span class="lineCov">          6 :       double lsf=low_sf(i,j).get_dmax();</span>
+<span class="lineNum">     138 </span><span class="lineCov">          6 :       if( lsf&gt;lsfmax ) lsfmax=lsf;</span>
+<span class="lineNum">     139 </span>            :     }
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span>            :   // Get the width of the bead
+<span class="lineNum">     142 </span><span class="lineCov">          6 :   HistogramBead bead; bead.isNotPeriodic();</span>
+<span class="lineNum">     143 </span><span class="lineCov">          6 :   bead.setKernelType( kerneltype ); bead.set( 0.0, 1.0, sigma );</span>
+<span class="lineNum">     144 </span><span class="lineCov">          6 :   beadrad = bead.getCutoff();</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :   // Set the link cell cutoff
+<span class="lineNum">     147 </span><span class="lineCov">          6 :   log.printf(&quot;  setting cutoff %f \n&quot;, sfmax );</span>
+<span class="lineNum">     148 </span><span class="lineCov">          6 :   setLinkCellCutoff( sfmax, std::numeric_limits&lt;double&gt;::max() );</span>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :   double maxsize=0;
+<span class="lineNum">     151 </span><span class="lineCov">         18 :   for(unsigned i=0; i&lt;getNumberOfNodeTypes(); ++i) {</span>
+<span class="lineNum">     152 </span><span class="lineCov">         18 :     for(unsigned j=0; j&lt;getNumberOfNodeTypes(); ++j) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">          6 :       if( binw_mat(i,j)&gt;maxsize ) maxsize=binw_mat(i,j);</span>
+<span class="lineNum">     154 </span>            :     }
+<span class="lineNum">     155 </span>            :   }
+<span class="lineNum">     156 </span>            :   // Set the maximum number of bins that we will need to compute
+<span class="lineNum">     157 </span><span class="lineCov">          6 :   maxbins = std::floor( sfmax / maxsize ) + 1;</span>
+<span class="lineNum">     158 </span>            :   // Need to resize functions again here to ensure that vector sizes
+<span class="lineNum">     159 </span>            :   // are set correctly in AdjacencyMatrixVessel
+<span class="lineNum">     160 </span><span class="lineCov">          6 :   resizeFunctions();</span>
+<a name="161"><span class="lineNum">     161 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">        100 : unsigned TopologyMatrix::getNumberOfQuantities() const {</span>
+<span class="lineNum">     164 </span><span class="lineCov">        100 :   return maxbins+3;</span>
+<a name="165"><span class="lineNum">     165 </span>            : }</a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">         24 : void TopologyMatrix::setupConnector( const unsigned&amp; id, const unsigned&amp; i, const unsigned&amp; j, const std::vector&lt;std::string&gt;&amp; desc ) {</span>
+<span class="lineNum">     168 </span><span class="lineCov">         24 :   plumed_assert( id&lt;4 );</span>
+<span class="lineNum">     169 </span><span class="lineCov">         24 :   if( id==0 ) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">          6 :     std::string errors; switchingFunction(j,i).set(desc[0],errors);</span>
+<span class="lineNum">     171 </span><span class="lineCov">          6 :     if( errors.length()!=0 ) error(&quot;problem reading switching function description &quot; + errors);</span>
+<span class="lineNum">     172 </span><span class="lineCov">          6 :     if( j!=i) switchingFunction(i,j).set(desc[0],errors);</span>
+<span class="lineNum">     173 </span><span class="lineCov">         24 :     log.printf(&quot;  %u th and %u th multicolvar groups must be within %s\n&quot;,i+1,j+1,(switchingFunction(i,j).description()).c_str() );</span>
+<span class="lineNum">     174 </span><span class="lineCov">         18 :   } else if( id==1 ) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">          6 :     std::string errors; cylinder_sw(j,i).set(desc[0],errors);</span>
+<span class="lineNum">     176 </span><span class="lineCov">          6 :     if( errors.length()!=0 ) error(&quot;problem reading switching function description &quot; + errors);</span>
+<span class="lineNum">     177 </span><span class="lineCov">          6 :     if( j!=i) cylinder_sw(i,j).set(desc[0],errors);</span>
+<span class="lineNum">     178 </span><span class="lineCov">         24 :     log.printf(&quot;  there must be not atoms within the cylinder connections atoms of multicolvar groups %u th and %u th.  This cylinder has radius %s \n&quot;,i+1,j+1,(cylinder_sw(i,j).description()).c_str() );</span>
+<span class="lineNum">     179 </span><span class="lineCov">         12 :   } else if( id==2 ) {</span>
+<span class="lineNum">     180 </span><span class="lineCov">          6 :     std::string errors; low_sf(j,i).set(desc[0],errors);</span>
+<span class="lineNum">     181 </span><span class="lineCov">          6 :     if( errors.length()!=0 ) error(&quot;problem reading switching function description &quot; + errors);</span>
+<span class="lineNum">     182 </span><span class="lineCov">          6 :     if( j!=i ) low_sf(i,j).set(desc[0],errors);</span>
+<span class="lineNum">     183 </span><span class="lineCov">         24 :     log.printf(&quot;  %u th and %u th multicolvar groups must be further apart than %s\n&quot;,i+1,j+1,(low_sf(j,i).description()).c_str() );</span>
+<span class="lineNum">     184 </span><span class="lineCov">          6 :   } else if( id==3 ) {</span>
+<span class="lineNum">     185 </span><span class="lineCov">          6 :     Tools::convert( desc[0], binw_mat(j,i) );</span>
+<span class="lineNum">     186 </span><span class="lineCov">          6 :     if( i!=j ) binw_mat(i,j)=binw_mat(j,i);</span>
+<span class="lineNum">     187 </span><span class="lineCov">         12 :     log.printf(&quot;  cylinder for %u th and %u th multicolvar groups is split into bins of length %f \n&quot;,i,j,binw_mat(i,j) );</span>
+<span class="lineNum">     188 </span>            :   }
+<a name="189"><span class="lineNum">     189 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">      31203 : double TopologyMatrix::calculateWeight( const unsigned&amp; taskCode, const double&amp; weight, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     192 </span><span class="lineCov">      62406 :   Vector distance = getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) );</span>
+<span class="lineNum">     193 </span><span class="lineCov">      62406 :   if( distance.modulo2()&lt;switchingFunction( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) ).get_dmax2() ) return 1.0;</span>
+<span class="lineNum">     194 </span><span class="lineCov">      21587 :   return 0.0;</span>
+<a name="195"><span class="lineNum">     195 </span>            : }</a>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineCov">       9616 : double TopologyMatrix::compute( const unsigned&amp; tindex, multicolvar::AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     198 </span><span class="lineCov">      19232 :   HistogramBead bead; bead.isNotPeriodic(); bead.setKernelType( kerneltype );</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :   // Initialise to zero density on all bins
+<span class="lineNum">     201 </span><span class="lineCov">      86784 :   for(unsigned bin=0; bin&lt;maxbins; ++bin) myatoms.setValue(bin+1,0);</span>
+<span class="lineNum">     202 </span>            :   // Calculate whether or not atoms 1 and 2 are within cutoff (can use delta here as pbc are done in atom setup)
+<span class="lineNum">     203 </span><span class="lineCov">      19232 :   Vector d1 = getSeparation( myatoms.getPosition(0), myatoms.getPosition(1) ); double d1_len = d1.modulo();</span>
+<span class="lineNum">     204 </span><span class="lineCov">       9616 :   d1 = d1 / d1_len;  // Convert vector into director</span>
+<span class="lineNum">     205 </span><span class="lineCov">       9616 :   AtomNumber a1 = myatoms.getAbsoluteIndex( 0 );</span>
+<span class="lineNum">     206 </span><span class="lineCov">       9616 :   AtomNumber a2 = myatoms.getAbsoluteIndex( 1 );</span>
+<span class="lineNum">     207 </span><span class="lineCov">  235854830 :   for(unsigned i=2; i&lt;myatoms.getNumberOfAtoms(); ++i) {</span>
+<span class="lineNum">     208 </span><span class="lineCov">  117917799 :     AtomNumber a3 = myatoms.getAbsoluteIndex( i );</span>
+<span class="lineNum">     209 </span><span class="lineCov">  235835598 :     if( a3!=a1 &amp;&amp; a3!=a2 ) calculateForThreeAtoms( i, d1, d1_len, bead, myatoms );</span>
+<span class="lineNum">     210 </span>            :   }
+<span class="lineNum">     211 </span>            :   // std::vector&lt;double&gt; binvals( 1+maxbins ); for(unsigned i=1;i&lt;maxbins;++i) binvals[i]=myatoms.getValue(i);
+<span class="lineNum">     212 </span>            :   // unsigned ii; double fdf;
+<span class="lineNum">     213 </span>            :   //std::cout&lt;&lt;&quot;HELLO DENSITY &quot;&lt;&lt;myatoms.getIndex(0)&lt;&lt;&quot; &quot;&lt;&lt;myatoms.getIndex(1)&lt;&lt;&quot; &quot;&lt;&lt;transformStoredValues( binvals, ii, fdf )&lt;&lt;std::endl;
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :   // Now find the element for which the density is maximal
+<span class="lineNum">     216 </span>            :   unsigned vout=2; double max=myatoms.getValue( 2 );
+<span class="lineNum">     217 </span><span class="lineCov">      67552 :   for(unsigned i=3; i&lt;myatoms.getUnderlyingMultiValue().getNumberOfValues()-1; ++i) {</span>
+<span class="lineNum">     218 </span><span class="lineCov">      28968 :     if( myatoms.getValue(i)&gt;max ) { max=myatoms.getValue(i); vout=i; }</span>
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span>            :   // Calculate value and derivative of switching function between atoms 1 and 2
+<span class="lineNum">     221 </span><span class="lineCov">       9616 :   double dfuncl, sw = switchingFunction( getBaseColvarNumber( myatoms.getIndex(0) ),</span>
+<span class="lineNum">     222 </span><span class="lineCov">       9616 :                                          getBaseColvarNumber( myatoms.getIndex(1) ) ).calculate( d1_len, dfuncl );</span>
+<span class="lineNum">     223 </span>            :   // Transform the density
+<span class="lineNum">     224 </span><span class="lineCov">       9616 :   double df, tsw = threshold_switch.calculate( max, df );</span>
+<span class="lineNum">     225 </span><span class="lineCov">       9616 :   if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     226 </span>            :     // Factor of d1_len is required here because d1 is normalized
+<span class="lineNum">     227 </span><span class="lineCov">         60 :     d1 *= d1_len;</span>
+<span class="lineNum">     228 </span><span class="lineCov">         60 :     addAtomDerivatives( 2+maxbins, 0, -dfuncl*d1, myatoms );</span>
+<span class="lineNum">     229 </span><span class="lineCov">         60 :     addAtomDerivatives( 2+maxbins, 1, dfuncl*d1, myatoms );</span>
+<span class="lineNum">     230 </span><span class="lineCov">         60 :     myatoms.addBoxDerivatives( 2+maxbins, (-dfuncl)*Tensor(d1,d1) );</span>
+<span class="lineNum">     231 </span>            :     // Update active atoms so that next bit works
+<span class="lineNum">     232 </span><span class="lineCov">         60 :     updateActiveAtoms( myatoms );</span>
+<span class="lineNum">     233 </span>            :     // Now finish caclulation of derivatives
+<span class="lineNum">     234 </span>            :     MultiValue&amp; myvals=myatoms.getUnderlyingMultiValue();
+<span class="lineNum">     235 </span><span class="lineCov">      25998 :     for(unsigned jd=0; jd&lt;myvals.getNumberActive(); ++jd) {</span>
+<span class="lineNum">     236 </span><span class="lineCov">      12969 :       unsigned ider=myvals.getActiveIndex(jd);</span>
+<span class="lineNum">     237 </span><span class="lineCov">      38907 :       myvals.addDerivative( 1, ider, sw*df*max*myvals.getDerivative( vout, ider ) + tsw*myvals.getDerivative( 2+maxbins, ider ) );</span>
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span>            :   }
+<span class="lineNum">     240 </span><span class="lineCov">       9616 :   return sw*tsw;</span>
+<a name="241"><span class="lineNum">     241 </span>            : }</a>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span><span class="lineCov">  117917799 : void TopologyMatrix::calculateForThreeAtoms( const unsigned&amp; iat, const Vector&amp; d1, const double&amp; d1_len,</span>
+<span class="lineNum">     244 </span>            :     HistogramBead&amp; bead, multicolvar::AtomValuePack&amp; myatoms ) const {
+<span class="lineNum">     245 </span>            :   // Calculate if there are atoms in the cylinder (can use delta here as pbc are done in atom setup)
+<span class="lineNum">     246 </span><span class="lineCov">  235835598 :   Vector d2 = getSeparation( myatoms.getPosition(0), myatoms.getPosition(iat) );</span>
+<span class="lineNum">     247 </span>            :   // Now calculate projection of d2 on d1
+<span class="lineNum">     248 </span><span class="lineCov">  117917799 :   double proj=dotProduct(d2,d1);</span>
+<span class="lineNum">     249 </span>            :   // This tells us if we are outside the end of the cylinder
+<span class="lineNum">     250 </span><span class="lineCov">  117917799 :   double excess = proj - d1_len;</span>
+<span class="lineNum">     251 </span>            :   // Return if we are outside of the cylinder as calculated based on excess
+<span class="lineNum">     252 </span><span class="lineCov">  212090079 :   if( excess&gt;low_sf( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) ).get_dmax() ) return;</span>
+<span class="lineNum">     253 </span>            :   // Find the length of the cylinder
+<span class="lineNum">     254 </span>            :   double binw = binw_mat( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) );
+<span class="lineNum">     255 </span><span class="lineCov">   81802351 :   double lcylinder = (std::floor( d1_len / binw ) + 1)*binw;</span>
+<span class="lineNum">     256 </span>            :   // Return if the projection is outside the length of interest
+<span class="lineNum">     257 </span><span class="lineCov">   81802351 :   if( proj&lt;-bead.getCutoff() || proj&gt;(lcylinder+bead.getCutoff()) ) return;</span>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :   // Calculate the excess swiching function
+<span class="lineNum">     260 </span><span class="lineCov">   23745519 :   double edf, eval = low_sf( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) ).calculate( excess, edf );</span>
+<span class="lineNum">     261 </span>            :   // Calculate the projection on the perpendicular distance from the center of the tube
+<span class="lineNum">     262 </span><span class="lineCov">   23745519 :   double cm = d2.modulo2() - proj*proj;</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :   // Now calculate the density in the cylinder
+<span class="lineNum">     265 </span><span class="lineCov">   23745519 :   if( cm&lt;cylinder_sw( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) ).get_dmax2() ) {</span>
+<span class="lineNum">     266 </span><span class="lineCov">     104467 :     double dfuncr, val = cylinder_sw( getBaseColvarNumber( myatoms.getIndex(0) ),</span>
+<span class="lineNum">     267 </span><span class="lineCov">     104467 :                                       getBaseColvarNumber( myatoms.getIndex(1) ) ).calculateSqr( cm, dfuncr );</span>
+<span class="lineNum">     268 </span>            :     double cellv = cell_volume( getBaseColvarNumber( myatoms.getIndex(0) ), getBaseColvarNumber( myatoms.getIndex(1) ) );
+<span class="lineNum">     269 </span><span class="lineCov">     104467 :     Vector dc1, dc2, dc3, dd1, dd2, dd3, de1, de2, de3;</span>
+<span class="lineNum">     270 </span><span class="lineCov">     104467 :     if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     271 </span><span class="lineCov">       4023 :       Tensor d1_a1;</span>
+<span class="lineNum">     272 </span>            :       // Derivative of director connecting atom1 - atom2 wrt the position of atom 1
+<span class="lineNum">     273 </span><span class="lineCov">       4023 :       d1_a1(0,0) = ( -(d1[1]*d1[1]+d1[2]*d1[2])/d1_len );   // dx/dx</span>
+<span class="lineNum">     274 </span><span class="lineCov">       4023 :       d1_a1(0,1) = (  d1[0]*d1[1]/d1_len );                 // dx/dy</span>
+<span class="lineNum">     275 </span><span class="lineCov">       4023 :       d1_a1(0,2) = (  d1[0]*d1[2]/d1_len );                 // dx/dz</span>
+<span class="lineNum">     276 </span><span class="lineCov">       4023 :       d1_a1(1,0) = (  d1[1]*d1[0]/d1_len );                 // dy/dx</span>
+<span class="lineNum">     277 </span><span class="lineCov">       4023 :       d1_a1(1,1) = ( -(d1[0]*d1[0]+d1[2]*d1[2])/d1_len );   // dy/dy</span>
+<span class="lineNum">     278 </span><span class="lineCov">       4023 :       d1_a1(1,2) = (  d1[1]*d1[2]/d1_len );</span>
+<span class="lineNum">     279 </span><span class="lineCov">       4023 :       d1_a1(2,0) = (  d1[2]*d1[0]/d1_len );</span>
+<span class="lineNum">     280 </span><span class="lineCov">       4023 :       d1_a1(2,1) = (  d1[2]*d1[1]/d1_len );</span>
+<span class="lineNum">     281 </span><span class="lineCov">       4023 :       d1_a1(2,2) = ( -(d1[1]*d1[1]+d1[0]*d1[0])/d1_len );</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            :       // Calculate derivatives of dot product
+<span class="lineNum">     284 </span><span class="lineCov">       4023 :       dd1 = matmul(d2, d1_a1) - d1;</span>
+<span class="lineNum">     285 </span><span class="lineCov">       4023 :       dd2 = matmul(d2, -d1_a1);</span>
+<span class="lineNum">     286 </span><span class="lineCov">       4023 :       dd3 = d1;</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :       // Calculate derivatives of cross product
+<span class="lineNum">     289 </span><span class="lineCov">       4023 :       dc1 = dfuncr*( -d2 - proj*dd1 );</span>
+<span class="lineNum">     290 </span><span class="lineCov">       4023 :       dc2 = dfuncr*( -proj*dd2 );</span>
+<span class="lineNum">     291 </span><span class="lineCov">       4023 :       dc3 = dfuncr*( d2 - proj*dd3 );</span>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :       // Calculate derivatives of excess
+<span class="lineNum">     294 </span><span class="lineCov">       4023 :       de1 = edf*excess*( dd1 + d1 );</span>
+<span class="lineNum">     295 </span><span class="lineCov">       4023 :       de2 = edf*excess*( dd2 - d1 );</span>
+<span class="lineNum">     296 </span><span class="lineCov">       4023 :       de3 = edf*excess*dd3;</span>
+<span class="lineNum">     297 </span>            :     }
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineCov">     208934 :     Vector pos1 = myatoms.getPosition(0) + d1_len*d1;</span>
+<span class="lineNum">     300 </span><span class="lineCov">     104467 :     Vector pos2 = myatoms.getPosition(0) + d2;</span>
+<span class="lineNum">     301 </span><span class="lineCov">     104467 :     Vector g1derivf,g2derivf,lderivf; Tensor vir;</span>
+<span class="lineNum">     302 </span><span class="lineCov">     530381 :     for(unsigned bin=0; bin&lt;maxbins; ++bin) {</span>
+<span class="lineNum">     303 </span><span class="lineCov">     425914 :       bead.set( bin*binw, (bin+1)*binw, sigma );</span>
+<span class="lineNum">     304 </span><span class="lineCov">     719410 :       if( proj&lt;(bin*binw-bead.getCutoff()) || proj&gt;binw*(bin+1)+bead.getCutoff() ) continue;</span>
+<span class="lineNum">     305 </span><span class="lineCov">     132418 :       double der, contr=bead.calculateWithCutoff( proj, der ) / cellv; der /= cellv;</span>
+<span class="lineNum">     306 </span><span class="lineCov">     132418 :       myatoms.addValue( 2+bin, contr*val*eval );</span>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineCov">     132418 :       if( !doNotCalculateDerivatives() ) {</span>
+<span class="lineNum">     309 </span><span class="lineCov">       5835 :         g1derivf=contr*eval*dc1 + val*eval*der*dd1 + contr*val*de1;</span>
+<span class="lineNum">     310 </span><span class="lineCov">       5835 :         addAtomDerivatives( 2+bin, 0, g1derivf, myatoms );</span>
+<span class="lineNum">     311 </span><span class="lineCov">       5835 :         g2derivf=contr*eval*dc2 + val*eval*der*dd2 + contr*val*de2;</span>
+<span class="lineNum">     312 </span><span class="lineCov">       5835 :         addAtomDerivatives( 2+bin, 1, g2derivf, myatoms );</span>
+<span class="lineNum">     313 </span><span class="lineCov">       5835 :         lderivf=contr*eval*dc3 + val*eval*der*dd3 + contr*val*de3;</span>
+<span class="lineNum">     314 </span><span class="lineCov">       5835 :         addAtomDerivatives( 2+bin, iat, lderivf, myatoms );</span>
+<span class="lineNum">     315 </span>            :         // Virial
+<span class="lineNum">     316 </span><span class="lineCov">      11670 :         vir = -Tensor( myatoms.getPosition(0), g1derivf ) - Tensor( pos1, g2derivf ) - Tensor( pos2, lderivf );</span>
+<span class="lineNum">     317 </span><span class="lineCov">       5835 :         myatoms.addBoxDerivatives( 2+bin, vir );</span>
+<span class="lineNum">     318 </span>            :       }
+<span class="lineNum">     319 </span>            :     }
+<span class="lineNum">     320 </span>            :   }
+<span class="lineNum">     321 </span>            : }
+<a name="322"><span class="lineNum">     322 </span>            : </a>
+<span class="lineNum">     323 </span>            : }
+<span class="lineNum">     324 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     325 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

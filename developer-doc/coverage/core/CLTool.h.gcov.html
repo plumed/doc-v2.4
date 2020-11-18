@@ -1,0 +1,239 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/CLTool.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - CLTool.h<span style="font-size: 80%;"> (source / <a href="CLTool.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntryLo">73.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryMed">76.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_core_CLTool_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_core_CLTool_h
+<span class="lineNum">      24 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      25 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Keywords.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : class Communicator;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">       2490 : class CLToolOptions {</span>
+<span class="lineNum">      36 </span>            :   friend class CLTool;
+<span class="lineNum">      37 </span>            :   friend class CLToolRegister;
+<span class="lineNum">      38 </span>            : private:
+<span class="lineNum">      39 </span>            :   std::vector&lt;std::string&gt; line;
+<span class="lineNum">      40 </span>            : /// The documentation for this command line tool
+<span class="lineNum">      41 </span>            :   const Keywords&amp; keys;
+<span class="lineNum">      42 </span>            :   static Keywords emptyKeys;
+<span class="lineNum">      43 </span>            : public:
+<span class="lineNum">      44 </span>            :   explicit CLToolOptions(const std::string &amp;name);
+<span class="lineNum">      45 </span>            :   CLToolOptions(const CLToolOptions&amp; co, const Keywords&amp; k);
+<span class="lineNum">      46 </span>            : };
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : /**
+<span class="lineNum">      49 </span>            : \ingroup INHERIT
+<span class="lineNum">      50 </span>            : This is the abstract base class to use for implementing new command line tool, within it there
+<span class="lineNum">      51 </span>            : is \ref AddingACLTool &quot;information&quot; as to how to go about implemneting a new tool.
+<span class="lineNum">      52 </span>            : */
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : class CLTool {
+<span class="lineNum">      55 </span>            : private:
+<span class="lineNum">      56 </span>            : /// The name of this command line tool
+<span class="lineNum">      57 </span>            :   const std::string name;
+<span class="lineNum">      58 </span>            : /// The list of keywords for this CLTool
+<span class="lineNum">      59 </span>            :   const Keywords&amp; keywords;
+<span class="lineNum">      60 </span>            : /// The data read in from the command line stored in a map with the keywords
+<span class="lineNum">      61 </span>            :   std::map&lt;std::string,std::string&gt; inputData;
+<span class="lineNum">      62 </span>            : /// Read the arguments from the command line
+<span class="lineNum">      63 </span>            :   bool readCommandLineArgs( int argc, char**argv, FILE*out );
+<span class="lineNum">      64 </span>            : /// Read the arguments from an input file specified on the command line
+<span class="lineNum">      65 </span>            :   bool readInputFile( int argc, char**argv, FILE* in, FILE*out );
+<span class="lineNum">      66 </span>            : /// Set arguments from the default options provided to Keywords
+<span class="lineNum">      67 </span>            :   void setRemainingToDefault(FILE* out);
+<span class="lineNum">      68 </span>            : public:
+<span class="lineNum">      69 </span>            : /// Set the input data:
+<span class="lineNum">      70 </span>            :   void setInputData(const std::map&lt;std::string,std::string&gt;&amp;inputData) {
+<span class="lineNum">      71 </span>            :     this-&gt;inputData=inputData;
+<span class="lineNum">      72 </span>            :   }
+<span class="lineNum">      73 </span>            :   const std::map&lt;std::string,std::string&gt;&amp;getInputData() {
+<span class="lineNum">      74 </span>            :     return this-&gt;inputData;
+<span class="lineNum">      75 </span>            :   }
+<span class="lineNum">      76 </span>            : protected:
+<span class="lineNum">      77 </span>            : /// Get the value of one of the command line arguments
+<span class="lineNum">      78 </span>            :   template&lt;class T&gt;
+<span class="lineNum">      79 </span>            :   bool parse(const std::string&amp;key,T&amp;t);
+<span class="lineNum">      80 </span>            : /// Find out whether one of the command line flags is present or not
+<span class="lineNum">      81 </span>            :   void parseFlag(const std::string&amp;key,bool&amp;t);
+<span class="lineNum">      82 </span>            : /// Crash the command line tool with an error
+<span class="lineNum">      83 </span>            :   void error(const std::string&amp; msg);
+<span class="lineNum">      84 </span>            :   template&lt;class T&gt;
+<span class="lineNum">      85 </span>            :   bool parseVector(const std::string&amp;key,std::vector&lt;T&gt;&amp;t);
+<span class="lineNum">      86 </span>            : public:
+<span class="lineNum">      87 </span>            : /// How is the input specified on the command line or in an input file
+<span class="lineNum">      88 </span>            :   enum {unset,commandline,ifile} inputdata;
+<span class="lineNum">      89 </span>            : /// Create the help keywords
+<span class="lineNum">      90 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      91 </span>            :   explicit CLTool(const CLToolOptions&amp; co );
+<span class="lineNum">      92 </span>            : /// Read the arguments from the command line
+<span class="lineNum">      93 </span>            :   bool readInput( int argc, char**argv, FILE* in, FILE*out );
+<span class="lineNum">      94 </span>            : /// virtual function mapping to the specific main for each tool
+<a name="95"><span class="lineNum">      95 </span>            :   virtual int main( FILE* in, FILE*out, Communicator&amp;pc )=0;</a>
+<span class="lineNum">      96 </span>            : /// virtual function returning a one-line descriptor for the tool
+<a name="97"><span class="lineNum">      97 </span><span class="lineNoCov">          0 :   virtual std::string description()const {return &quot;(no description available)&quot;;}</span></a>
+<span class="lineNum">      98 </span>            : /// virtual destructor to allow inheritance
+<span class="lineNum">      99 </span><span class="lineCov">       2490 :   virtual ~CLTool() {}</span>
+<span class="lineNum">     100 </span>            : };
+<a name="101"><span class="lineNum">     101 </span>            : </a>
+<span class="lineNum">     102 </span>            : template&lt;class T&gt;
+<span class="lineNum">     103 </span><span class="lineCov">      16837 : bool CLTool::parse(const std::string&amp;key,T&amp;t) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">      16837 :   plumed_massert(keywords.exists(key),&quot;keyword &quot; + key + &quot; has not been registered&quot;);</span>
+<span class="lineNum">     105 </span><span class="lineCov">      33674 :   if(keywords.style(key,&quot;compulsory&quot;) ) {</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     if(inputData.count(key)==0) error(&quot;missing data for keyword &quot; + key);</span>
+<span class="lineNum">     107 </span><span class="lineCov">       2742 :     bool check=Tools::convert(inputData[key],t);</span>
+<span class="lineNum">     108 </span><span class="lineCov">       2742 :     if(!check) error(&quot;data input for keyword &quot; + key + &quot; has wrong type&quot;);</span>
+<span class="lineNum">     109 </span>            :     return true;
+<span class="lineNum">     110 </span>            :   }
+<span class="lineNum">     111 </span>            :   if( inputData.count(key)==0 ) return false;
+<span class="lineNum">     112 </span><span class="lineCov">       1290 :   Tools::convert(inputData[key],t);</span>
+<span class="lineNum">     113 </span><span class="lineCov">       1290 :   return true;</span>
+<span class="lineNum">     114 </span>            : }
+<a name="115"><span class="lineNum">     115 </span>            : // very limited support and check: take more from core/Action.h parseVector</a>
+<span class="lineNum">     116 </span>            : template&lt;class T&gt;
+<span class="lineNum">     117 </span><span class="lineCov">        318 : bool CLTool::parseVector(const std::string&amp;key,std::vector&lt;T&gt;&amp;t) {</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :   // Check keyword has been registered
+<span class="lineNum">     120 </span><span class="lineCov">        318 :   plumed_massert(keywords.exists(key), &quot;keyword &quot; + key + &quot; has not been registered&quot;);</span>
+<span class="lineNum">     121 </span>            :   // initial size
+<span class="lineNum">     122 </span><span class="lineCov">        318 :   unsigned size=t.size();</span>
+<span class="lineNum">     123 </span>            :   bool skipcheck=false;
+<span class="lineNum">     124 </span><span class="lineCov">        318 :   if(size==0) skipcheck=true; // if the vector in input has size zero, skip the check if size of input vector is the same of argument read</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   // check if there is some value
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">        636 :   plumed_massert(inputData[key]!=&quot;false&quot;,&quot;compulsory keyword &quot;+std::string(key)+&quot;has no data&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">        636 :   std::vector&lt;std::string&gt; words=Tools::getWords(inputData[key],&quot;\t\n ,&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">        318 :   t.resize(0);</span>
+<span class="lineNum">     131 </span><span class="lineCov">        318 :   if(words.size()==0)return false;</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">       1837 :   for(unsigned i=0; i&lt;words.size(); ++i) {</span>
+<span class="lineNum">     134 </span>            :     T v;
+<span class="lineNum">     135 </span><span class="lineCov">        443 :     Tools::convert(words[i],v);</span>
+<span class="lineNum">     136 </span><span class="lineCov">        443 :     t.push_back(v);</span>
+<span class="lineNum">     137 </span>            :   }
+<span class="lineNum">     138 </span>            :   // check the size
+<span class="lineNum">     139 </span><span class="lineCov">        266 :   if( !skipcheck &amp;&amp; t.size()!=size ) {</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;vector read in for keyword  &quot;+key+&quot; has wrong size&quot; );</span>
+<span class="lineNum">     141 </span>            :   }
+<span class="lineNum">     142 </span>            :   std::string def;
+<span class="lineNum">     143 </span>            :   T val;
+<span class="lineNum">     144 </span><span class="lineCov">        987 :   if ( keywords.style(key,&quot;compulsory&quot;) &amp;&amp; t.size()==0 ) {</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :     if( keywords.getDefaultValue(key,def) ) {</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :       if( def.length()==0 || !Tools::convert(def,val) ) {</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         plumed_merror(&quot;ERROR in keyword &quot;+key+ &quot; has weird default value&quot; );</span>
+<span class="lineNum">     148 </span>            :       } else {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         for(unsigned i=0; i&lt;t.size(); ++i) t[i]=val;</span>
+<span class="lineNum">     150 </span>            :       }
+<span class="lineNum">     151 </span>            :     } else {
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :       plumed_merror(&quot;keyword &quot; + key + &quot; is compulsory for this action&quot;);</span>
+<span class="lineNum">     153 </span>            :     }
+<span class="lineNum">     154 </span>            :   }
+<span class="lineNum">     155 </span>            :   return true;
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : }
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

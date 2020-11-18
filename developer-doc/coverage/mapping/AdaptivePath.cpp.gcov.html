@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - mapping/AdaptivePath.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">mapping</a> - AdaptivePath.cpp<span style="font-size: 80%;"> (source / <a href="AdaptivePath.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">89</td>
+            <td class="headerCovTableEntry">92</td>
+            <td class="headerCovTableEntryHi">96.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryHi">93.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2016-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Mapping.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;TrigonometricPathVessel.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;PathReparameterization.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;reference/Direction.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //+PLUMEDOC COLVAR ADAPTIVE_PATH
+<span class="lineNum">      30 </span>            : /*
+<span class="lineNum">      31 </span>            : Compute path collective variables that adapt to the lowest free energy path connecting states A and B.
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : The Path Collective Variables developed by Branduardi and co-workers \cite brand07 allow one
+<span class="lineNum">      34 </span>            : to compute the progress along a high-dimensional path and the distance from the high-dimensional
+<span class="lineNum">      35 </span>            : path.  The progress along the path (s) is computed using:
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : \f[
+<span class="lineNum">      38 </span>            : s = i_2 + \textrm{sign}(i_2-i_1) \frac{ \sqrt{( \mathbf{v}_1\cdot\mathbf{v}_2 )^2 - |\mathbf{v}_3|^2(|\mathbf{v}_1|^2 - |\mathbf{v}_2|^2) } }{2|\mathbf{v}_3|^2} - \frac{\mathbf{v}_1\cdot\mathbf{v}_3 - |\mathbf{v}_3|^2}{2|\mathbf{v}_3|^2}
+<span class="lineNum">      39 </span>            : \f]
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : In this expression \f$\mathbf{v}_1\f$ and \f$\mathbf{v}_3\f$ are the vectors connecting the current position to the closest and second closest node of the path,
+<span class="lineNum">      42 </span>            : respectfully and \f$i_1\f$ and \f$i_2\f$ are the projections of the closest and second closest frames of the path. \f$\mathbf{v}_2\f$, meanwhile, is the
+<span class="lineNum">      43 </span>            : vector connecting the closest frame to the second closest frame.  The distance from the path, \f$z\f$ is calculated using:
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : \f[
+<span class="lineNum">      46 </span>            : z = \sqrt{ \left[ |\mathbf{v}_1|^2 - |\mathbf{v}_2| \left( \frac{ \sqrt{( \mathbf{v}_1\cdot\mathbf{v}_2 )^2 - |\mathbf{v}_3|^2(|\mathbf{v}_1|^2 - |\mathbf{v}_2|^2) } }{2|\mathbf{v}_3|^2} - \frac{\mathbf{v}_1\cdot\mathbf{v}_3 - |\mathbf{v}_3|^2}{2|\mathbf{v}_3|^2} \right) \right]^2 }
+<span class="lineNum">      47 </span>            : \f]
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : Notice that these are the definitions of \f$s\f$ and \f$z\f$ that are used by \ref PATH when the GPATH option is employed.  The reason for this is that
+<span class="lineNum">      50 </span>            : the adaptive path method implemented in this action was inspired by the work of Diaz and Ensing in which these formula were used \cite BerndAdaptivePath.
+<span class="lineNum">      51 </span>            : To learn more about how the path is adapted we strongly recommend reading this paper.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : \par Examples
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : The input below provides an example of how the adaptive path works in practise. The path is updated every 50 steps of
+<span class="lineNum">      56 </span>            : MD based on the data accumulated during the preceding 50 time steps.
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : \plumedfile
+<span class="lineNum">      59 </span>            : d1: DISTANCE ATOMS=1,2 COMPONENTS
+<span class="lineNum">      60 </span>            : pp: ADAPTIVE_PATH TYPE=EUCLIDEAN FIXED=5,15 UPDATE=50 WFILE=out-path.pdb WSTRIDE=50 REFERENCE=mypath.pdb
+<span class="lineNum">      61 </span>            : PRINT ARG=d1.x,d1.y,pp.* FILE=colvar
+<span class="lineNum">      62 </span>            : \endplumedfile
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : In the case above the distance between frames is calculated based on the \f$x\f$ and \f$y\f$ components of the vector connecting
+<span class="lineNum">      65 </span>            : atoms 1 and 2.  As such an extract from the input reference path (mypath.pdb) would look as follows:
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : \verbatim
+<span class="lineNum">      68 </span>            : REMARK ARG=d1.x,d1.y d1.x=1.12 d1.y=-.60
+<span class="lineNum">      69 </span>            : END
+<span class="lineNum">      70 </span>            : REMARK ARG=d1.x,d1.y d1.x=.99 d1.y=-.45
+<span class="lineNum">      71 </span>            : END
+<span class="lineNum">      72 </span>            : \endverbatim
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : Notice that one can also use RMSD frames in place of arguments like those above.
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : */
+<span class="lineNum">      77 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : namespace PLMD {
+<a name="80"><span class="lineNum">      80 </span>            : namespace mapping {</a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">          3 : class AdaptivePath : public Mapping {</span>
+<span class="lineNum">      83 </span>            : private:
+<span class="lineNum">      84 </span>            :   OFile pathfile;
+<span class="lineNum">      85 </span>            :   std::string ofmt;
+<span class="lineNum">      86 </span>            :   double fadefact, tolerance;
+<span class="lineNum">      87 </span>            :   unsigned update_str, wstride;
+<span class="lineNum">      88 </span>            :   std::vector&lt;unsigned&gt; fixedn;
+<span class="lineNum">      89 </span>            :   TrigonometricPathVessel* mypathv;
+<span class="lineNum">      90 </span>            :   std::vector&lt;double&gt; wsum;
+<span class="lineNum">      91 </span>            :   Direction displacement,displacement2;
+<span class="lineNum">      92 </span>            :   std::vector&lt;Direction&gt; pdisplacements;
+<span class="lineNum">      93 </span>            : public:
+<span class="lineNum">      94 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      95 </span>            :   explicit AdaptivePath(const ActionOptions&amp;);
+<a name="96"><span class="lineNum">      96 </span>            :   void calculate();</a>
+<span class="lineNum">      97 </span>            :   void performTask( const unsigned&amp;, const unsigned&amp;, MultiValue&amp; ) const ;
+<span class="lineNum">      98 </span><span class="lineCov">        101 :   double getLambda() { return 0.0; }</span>
+<span class="lineNum">      99 </span>            :   double transformHD( const double&amp; dist, double&amp; df ) const ;
+<span class="lineNum">     100 </span>            :   void update();
+<a name="101"><span class="lineNum">     101 </span>            : };</a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">       6453 : PLUMED_REGISTER_ACTION(AdaptivePath,&quot;ADAPTIVE_PATH&quot;)</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">          2 : void AdaptivePath::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">          4 :   Mapping::registerKeywords( keys ); keys.remove(&quot;PROPERTY&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;FIXED&quot;,&quot;the positions in the list of input frames of the two path nodes whose positions remain fixed during the path optimization&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;HALFLIFE&quot;,&quot;-1&quot;,&quot;the number of MD steps after which a previously measured path distance weighs only 50% in the average. This option may increase convergence by allowing to \&quot;forget\&quot; the memory of a bad initial guess path. The default is to set this to infinity&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">          8 :   keys.add(&quot;compulsory&quot;,&quot;UPDATE&quot;,&quot;the frequency with which the path should be updated&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;TOLERANCE&quot;,&quot;1E-6&quot;,&quot;the tolerance to use for the path updating algorithm that makes all frames equidistant&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          8 :   keys.add(&quot;optional&quot;,&quot;WFILE&quot;,&quot;file on which to write out the path&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">         10 :   keys.add(&quot;compulsory&quot;,&quot;FMT&quot;,&quot;%f&quot;,&quot;the format to use for output files&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          8 :   keys.add(&quot;optional&quot;,&quot;WSTRIDE&quot;,&quot;frequency with which to write out the path&quot;);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">          1 : AdaptivePath::AdaptivePath(const ActionOptions&amp; ao):</span>
+<span class="lineNum">     117 </span>            :   Action(ao),
+<span class="lineNum">     118 </span>            :   Mapping(ao),
+<span class="lineNum">     119 </span>            :   fixedn(2),
+<span class="lineNum">     120 </span><span class="lineCov">          3 :   displacement(ReferenceConfigurationOptions(&quot;DIRECTION&quot;)),</span>
+<span class="lineNum">     121 </span><span class="lineCov">          7 :   displacement2(ReferenceConfigurationOptions(&quot;DIRECTION&quot;))</span>
+<span class="lineNum">     122 </span>            : {
+<span class="lineNum">     123 </span><span class="lineCov">          2 :   setLowMemOption( true ); parseVector(&quot;FIXED&quot;,fixedn);</span>
+<span class="lineNum">     124 </span><span class="lineCov">          2 :   if( fixedn[0]&lt;1 || fixedn[1]&gt;getNumberOfReferencePoints() ) error(&quot;fixed nodes must be in range from 0 to number of nodes&quot;);</span>
+<span class="lineNum">     125 </span><span class="lineCov">          1 :   if( fixedn[0]&gt;=fixedn[1] ) error(&quot;invalid selection for fixed nodes first index provided must be smaller than second index&quot;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">          2 :   log.printf(&quot;  fixing position of frames numbered %u and %u \n&quot;,fixedn[0],fixedn[1]);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          2 :   fixedn[0]--; fixedn[1]--;   // Set fixed notes with c++ indexing starting from zero</span>
+<span class="lineNum">     128 </span><span class="lineCov">          2 :   parse(&quot;UPDATE&quot;,update_str); if( update_str&lt;1 ) error(&quot;update frequency for path should be greater than or equal to one&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">          1 :   log.printf(&quot;  updating path every %u MD steps \n&quot;,update_str);</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">          2 :   double halflife; parse(&quot;HALFLIFE&quot;,halflife);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          1 :   log.printf(&quot;  weight of contribution to frame halves every %f steps \n&quot;,halflife);</span>
+<span class="lineNum">     133 </span><span class="lineCov">          1 :   if( halflife&lt;0 ) fadefact=1.0;</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :   else fadefact = exp( -0.693147180559945 / static_cast&lt;double&gt;(halflife) );</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :   // Create the list of tasks (and reset projections of frames)
+<span class="lineNum">     137 </span><span class="lineCov">          2 :   std::vector&lt;std::string&gt; argument_names( getNumberOfArguments() );</span>
+<span class="lineNum">     138 </span><span class="lineCov">          5 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) argument_names[i] = getPntrToArgument(i)-&gt;getName();</span>
+<span class="lineNum">     139 </span><span class="lineCov">          2 :   displacement.setNamesAndAtomNumbers( getAbsoluteIndexes(), argument_names );</span>
+<span class="lineNum">     140 </span><span class="lineCov">          1 :   displacement2.setNamesAndAtomNumbers( getAbsoluteIndexes(), argument_names );</span>
+<span class="lineNum">     141 </span><span class="lineCov">         41 :   for(int i=0; i&lt;getNumberOfReferencePoints(); ++i) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">         80 :     addTaskToList( i ); pdisplacements.push_back( Direction(ReferenceConfigurationOptions(&quot;DIRECTION&quot;)) );</span>
+<span class="lineNum">     143 </span><span class="lineCov">         20 :     setPropertyValue( i, 0, static_cast&lt;double&gt;( i - static_cast&lt;int&gt;(fixedn[0]) ) / static_cast&lt;double&gt;( fixedn[1] - fixedn[0] ) );</span>
+<span class="lineNum">     144 </span><span class="lineCov">         60 :     pdisplacements[i].setNamesAndAtomNumbers( getAbsoluteIndexes(), argument_names ); wsum.push_back( 0.0 );</span>
+<span class="lineNum">     145 </span>            :   }
+<span class="lineNum">     146 </span><span class="lineCov">          2 :   plumed_assert( getPropertyValue( fixedn[0], 0 )==0.0 &amp;&amp; getPropertyValue( fixedn[1], 0 )==1.0 );</span>
+<span class="lineNum">     147 </span>            :   // And activate them all
+<span class="lineNum">     148 </span><span class="lineCov">          1 :   deactivateAllTasks();</span>
+<span class="lineNum">     149 </span><span class="lineCov">         41 :   for(unsigned i=0; i&lt;getFullNumberOfTasks(); ++i) taskFlags[i]=1;</span>
+<span class="lineNum">     150 </span><span class="lineCov">          1 :   lockContributors();</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :   // Setup the vessel to hold the trig path
+<span class="lineNum">     153 </span><span class="lineCov">          2 :   std::string input; addVessel(&quot;GPATH&quot;, input, -1 );</span>
+<span class="lineNum">     154 </span><span class="lineCov">          1 :   readVesselKeywords();</span>
+<span class="lineNum">     155 </span>            :   // Check that there is only one vessel - the one holding the trig path
+<span class="lineNum">     156 </span>            :   plumed_dbg_assert( getNumberOfVessels()==1 );
+<span class="lineNum">     157 </span>            :   // Retrieve the path vessel
+<span class="lineNum">     158 </span><span class="lineCov">          1 :   mypathv = dynamic_cast&lt;TrigonometricPathVessel*&gt;( getPntrToVessel(0) );</span>
+<span class="lineNum">     159 </span><span class="lineCov">          1 :   plumed_assert( mypathv );</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :   // Information for write out
+<span class="lineNum">     162 </span><span class="lineCov">          2 :   std::string wfilename; parse(&quot;WFILE&quot;,wfilename);</span>
+<span class="lineNum">     163 </span><span class="lineCov">          1 :   if( wfilename.length()&gt;0 ) {</span>
+<span class="lineNum">     164 </span><span class="lineCov">          3 :     wstride=0; parse(&quot;WSTRIDE&quot;,wstride); parse(&quot;FMT&quot;,ofmt);</span>
+<span class="lineNum">     165 </span><span class="lineCov">          1 :     pathfile.link(*this); pathfile.open( wfilename ); pathfile.setHeavyFlush();</span>
+<span class="lineNum">     166 </span><span class="lineCov">          1 :     if( wstride&lt;update_str ) error(&quot;makes no sense to write out path more frequently than update stride&quot;);</span>
+<span class="lineNum">     167 </span><span class="lineCov">          2 :     log.printf(&quot;  writing path out every %u steps to file named %s with format %s \n&quot;,wstride,wfilename.c_str(),ofmt.c_str());</span>
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span><span class="lineCov">          3 :   log&lt;&lt;&quot;  Bibliography &quot;&lt;&lt;plumed.cite(&quot;Diaz Leines and Ensing, Phys. Rev. Lett. 109, 020601 (2012)&quot;)&lt;&lt;&quot;\n&quot;;</span>
+<a name="170"><span class="lineNum">     170 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">        101 : void AdaptivePath::calculate() {</span>
+<span class="lineNum">     173 </span><span class="lineCov">        101 :   runAllTasks();</span>
+<a name="174"><span class="lineNum">     174 </span><span class="lineCov">        101 : }</span></a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">       2020 : void AdaptivePath::performTask( const unsigned&amp; task_index, const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     177 </span>            :   // This builds a pack to hold the derivatives
+<span class="lineNum">     178 </span><span class="lineCov">       4040 :   ReferenceValuePack mypack( getNumberOfArguments(), getNumberOfAtoms(), myvals );</span>
+<span class="lineNum">     179 </span><span class="lineCov">       2020 :   finishPackSetup( current, mypack );</span>
+<span class="lineNum">     180 </span>            :   // Calculate the distance from the frame
+<span class="lineNum">     181 </span><span class="lineCov">       2020 :   double val=calculateDistanceFunction( current, mypack, true );</span>
+<span class="lineNum">     182 </span>            :   // Put the element value in element zero
+<span class="lineNum">     183 </span>            :   myvals.setValue( 0, val ); myvals.setValue( 1, 1.0 );
+<span class="lineNum">     184 </span><span class="lineCov">       2020 :   return;</span>
+<a name="185"><span class="lineNum">     185 </span>            : }</a>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">       2020 : double AdaptivePath::transformHD( const double&amp; dist, double&amp; df ) const {</span>
+<span class="lineNum">     188 </span><span class="lineCov">       2020 :   df=1.0; return dist;</span>
+<a name="189"><span class="lineNum">     189 </span>            : }</a>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">        101 : void AdaptivePath::update() {</span>
+<span class="lineNum">     192 </span><span class="lineCov">        101 :   double weight2 = -1.*mypathv-&gt;dx;</span>
+<span class="lineNum">     193 </span><span class="lineCov">        101 :   double weight1 = 1.0 + mypathv-&gt;dx;</span>
+<span class="lineNum">     194 </span><span class="lineCov">        101 :   if( weight1&gt;1.0 ) {</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     weight1=1.0; weight2=0.0;</span>
+<span class="lineNum">     196 </span><span class="lineCov">        101 :   } else if( weight2&gt;1.0 ) {</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :     weight1=0.0; weight2=1.0;</span>
+<span class="lineNum">     198 </span>            :   }
+<span class="lineNum">     199 </span>            :   // Add projections to dispalcement accumulators
+<span class="lineNum">     200 </span><span class="lineCov">        101 :   ReferenceConfiguration* myref = getReferenceConfiguration( mypathv-&gt;iclose1 );</span>
+<span class="lineNum">     201 </span><span class="lineCov">        202 :   myref-&gt;extractDisplacementVector( getPositions(), getArguments(), mypathv-&gt;cargs, false, displacement );</span>
+<span class="lineNum">     202 </span><span class="lineCov">        101 :   getReferenceConfiguration( mypathv-&gt;iclose2 )-&gt;extractDisplacementVector( myref-&gt;getReferencePositions(), getArguments(), myref-&gt;getReferenceArguments(), false, displacement2 );</span>
+<span class="lineNum">     203 </span><span class="lineCov">        101 :   displacement.addDirection( -mypathv-&gt;dx, displacement2 );</span>
+<span class="lineNum">     204 </span><span class="lineCov">        202 :   pdisplacements[mypathv-&gt;iclose1].addDirection( weight1, displacement );</span>
+<span class="lineNum">     205 </span><span class="lineCov">        202 :   pdisplacements[mypathv-&gt;iclose2].addDirection( weight2, displacement );</span>
+<span class="lineNum">     206 </span>            :   // Update weight accumulators
+<span class="lineNum">     207 </span><span class="lineCov">        202 :   wsum[mypathv-&gt;iclose1] *= fadefact;</span>
+<span class="lineNum">     208 </span><span class="lineCov">        202 :   wsum[mypathv-&gt;iclose2] *= fadefact;</span>
+<span class="lineNum">     209 </span><span class="lineCov">        202 :   wsum[mypathv-&gt;iclose1] += weight1;</span>
+<span class="lineNum">     210 </span><span class="lineCov">        202 :   wsum[mypathv-&gt;iclose2] += weight2;</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :   // This does the update of the path if it is time to
+<span class="lineNum">     213 </span><span class="lineCov">        101 :   if( (getStep()&gt;0) &amp;&amp; (getStep()%update_str==0) ) {</span>
+<span class="lineNum">     214 </span><span class="lineCov">          8 :     wsum[fixedn[0]]=wsum[fixedn[1]]=0.;</span>
+<span class="lineNum">     215 </span><span class="lineCov">         84 :     for(unsigned inode=0; inode&lt;getNumberOfReferencePoints(); ++inode) {</span>
+<span class="lineNum">     216 </span><span class="lineCov">         80 :       if( wsum[inode]&gt;0 ) {</span>
+<span class="lineNum">     217 </span>            :         // First displace the node by the weighted direction
+<span class="lineNum">     218 </span><span class="lineCov">         12 :         getReferenceConfiguration( inode )-&gt;displaceReferenceConfiguration( 1./wsum[inode], pdisplacements[inode] );</span>
+<span class="lineNum">     219 </span>            :         // Reset the displacement
+<span class="lineNum">     220 </span><span class="lineCov">         12 :         pdisplacements[inode].zeroDirection();</span>
+<span class="lineNum">     221 </span>            :       }
+<span class="lineNum">     222 </span>            :     }
+<span class="lineNum">     223 </span>            :     // Now ensure all the nodes of the path are equally spaced
+<span class="lineNum">     224 </span><span class="lineCov">          4 :     PathReparameterization myspacings( getPbc(), getArguments(), getAllReferenceConfigurations() );</span>
+<span class="lineNum">     225 </span><span class="lineCov">          4 :     myspacings.reparameterize( fixedn[0], fixedn[1], tolerance );</span>
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span><span class="lineCov">        101 :   if( (getStep()&gt;0) &amp;&amp; (getStep()%wstride==0) ) {</span>
+<span class="lineNum">     228 </span><span class="lineCov">          2 :     pathfile.printf(&quot;# PATH AT STEP %d TIME %f \n&quot;, getStep(), getTime() );</span>
+<span class="lineNum">     229 </span>            :     std::vector&lt;ReferenceConfiguration*&gt;&amp; myconfs=getAllReferenceConfigurations();
+<span class="lineNum">     230 </span><span class="lineCov">        124 :     for(unsigned i=0; i&lt;myconfs.size(); ++i) myconfs[i]-&gt;print( pathfile, ofmt, atoms.getUnits().getLength()/0.1 );</span>
+<span class="lineNum">     231 </span><span class="lineCov">          2 :     pathfile.flush();</span>
+<span class="lineNum">     232 </span>            :   }
+<span class="lineNum">     233 </span><span class="lineCov">        101 : }</span>
+<a name="234"><span class="lineNum">     234 </span>            : </a>
+<span class="lineNum">     235 </span>            : }
+<span class="lineNum">     236 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

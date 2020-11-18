@@ -1,0 +1,1121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - cltools/Driver.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">cltools</a> - Driver.cpp<span style="font-size: 80%;"> (source / <a href="Driver.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">436</td>
+            <td class="headerCovTableEntry">465</td>
+            <td class="headerCovTableEntryHi">93.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryLo">56.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;CLTool.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;CLToolRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;wrapper/Plumed.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/Communicator.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Random.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      29 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      31 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      32 </span>            : #include &lt;map&gt;
+<span class="lineNum">      33 </span>            : #include &quot;tools/Units.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;tools/FileBase.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;tools/IFile.h&quot;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : // when using molfile plugin
+<span class="lineNum">      39 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">      40 </span>            : #ifndef __PLUMED_HAS_EXTERNAL_MOLFILE_PLUGINS
+<span class="lineNum">      41 </span>            : /* Use the internal ones. Alternatively:
+<span class="lineNum">      42 </span>            :  *    ifeq (,$(findstring __PLUMED_HAS_EXTERNAL_MOLFILE_PLUGINS,$(CPPFLAGS)))
+<span class="lineNum">      43 </span>            :  *    CPPFLAGS+=-I../molfile
+<span class="lineNum">      44 </span>            :  */
+<span class="lineNum">      45 </span>            : #include &quot;molfile/libmolfile_plugin.h&quot;
+<span class="lineNum">      46 </span>            : #include &quot;molfile/molfile_plugin.h&quot;
+<span class="lineNum">      47 </span>            : using namespace PLMD::molfile;
+<span class="lineNum">      48 </span>            : #else
+<span class="lineNum">      49 </span>            : #include &lt;libmolfile_plugin.h&gt;
+<span class="lineNum">      50 </span>            : #include &lt;molfile_plugin.h&gt;
+<span class="lineNum">      51 </span>            : #endif
+<span class="lineNum">      52 </span>            : #endif
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">      55 </span>            : #include &lt;xdrfile/xdrfile_trr.h&gt;
+<span class="lineNum">      56 </span>            : #include &lt;xdrfile/xdrfile_xtc.h&gt;
+<span class="lineNum">      57 </span>            : #endif
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : using namespace std;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : namespace PLMD {
+<span class="lineNum">      62 </span>            : namespace cltools {
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : //+PLUMEDOC TOOLS driver-float
+<span class="lineNum">      65 </span>            : /*
+<span class="lineNum">      66 </span>            : Equivalent to \ref driver, but using single precision reals.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : The purpose of this tool is just to test what PLUMED does when linked from
+<span class="lineNum">      69 </span>            : a single precision code.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : \par Examples
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : \verbatim
+<span class="lineNum">      74 </span>            : plumed driver-float --plumed plumed.dat --ixyz trajectory.xyz
+<span class="lineNum">      75 </span>            : \endverbatim
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : See also examples in \ref driver
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : */
+<span class="lineNum">      80 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      81 </span>            : //
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : //+PLUMEDOC TOOLS driver
+<span class="lineNum">      85 </span>            : /*
+<span class="lineNum">      86 </span>            : driver is a tool that allows one to to use plumed to post-process an existing trajectory.
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : The input to driver is specified using the command line arguments described below.
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : In addition, you can use the special \subpage READ command inside your plumed input
+<span class="lineNum">      91 </span>            : to read in colvar files that were generated during your MD simulation.  The values
+<span class="lineNum">      92 </span>            : read in can then be treated like calculated colvars.
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : \warning
+<span class="lineNum">      95 </span>            : Notice that by default the driver has no knowledge about the masses and charges
+<span class="lineNum">      96 </span>            : of your atoms! Thus, if you want to compute quantities depending charges (e.g. \ref DHENERGY)
+<span class="lineNum">      97 </span>            : or masses (e.g. \ref COM) you should pass the proper information to the driver.
+<span class="lineNum">      98 </span>            : You can do it either with the --pdb option or with the --mc option. The latter
+<span class="lineNum">      99 </span>            : will read a file produced by \ref DUMPMASSCHARGE .
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : \par Examples
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : The following command tells plumed to postprocess the trajectory contained in `trajectory.xyz`
+<span class="lineNum">     105 </span>            :  by performing the actions described in the input file `plumed.dat`.  If an action that takes the
+<span class="lineNum">     106 </span>            : stride keyword is given a stride equal to \f$n\f$ then it will be performed only on every \f$n\f$th
+<span class="lineNum">     107 </span>            : frames in the trajectory file.
+<span class="lineNum">     108 </span>            : \verbatim
+<span class="lineNum">     109 </span>            : plumed driver --plumed plumed.dat --ixyz trajectory.xyz
+<span class="lineNum">     110 </span>            : \endverbatim
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : Notice that `xyz` files are expected to be in internal PLUMED units, that is by default nm.
+<span class="lineNum">     113 </span>            : You can change this behavior by using the `--length-units` option:
+<span class="lineNum">     114 </span>            : \verbatim
+<span class="lineNum">     115 </span>            : plumed driver --plumed plumed.dat --ixyz trajectory.xyz --length-units A
+<span class="lineNum">     116 </span>            : \endverbatim
+<span class="lineNum">     117 </span>            : The strings accepted by the `--length-units` options are the same ones accepted by the \ref UNITS action.
+<span class="lineNum">     118 </span>            : Other file formats typically have their default coordinates (e.g., `gro` files are always in nm)
+<span class="lineNum">     119 </span>            : and it thus should not be necessary to use the `--length-units` option. Additionally,
+<span class="lineNum">     120 </span>            : consider that the units used by the `driver` might be different by the units used in the PLUMED input
+<span class="lineNum">     121 </span>            : file `plumed.dat`. For instance consider the command:
+<span class="lineNum">     122 </span>            : \verbatim
+<span class="lineNum">     123 </span>            : plumed driver --plumed plumed.dat --ixyz trajectory.xyz --length-units A
+<span class="lineNum">     124 </span>            : \endverbatim
+<span class="lineNum">     125 </span>            : where `plumed.dat` is
+<span class="lineNum">     126 </span>            : \plumedfile
+<span class="lineNum">     127 </span>            : # no explicit UNITS action here
+<span class="lineNum">     128 </span>            : d: DISTANCE ATOMS=1,2
+<span class="lineNum">     129 </span>            : PRINT ARG=d FILE=colvar
+<span class="lineNum">     130 </span>            : \endplumedfile
+<span class="lineNum">     131 </span>            : In this case, the driver reads the `xyz` file assuming it to contain coordinates in Angstrom units.
+<span class="lineNum">     132 </span>            : However, the resulting `colvar` file contains a distance expressed in nm.
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : The following command tells plumed to postprocess the trajectory contained in trajectory.xyz.
+<span class="lineNum">     135 </span>            :  by performing the actions described in the input file plumed.dat.
+<span class="lineNum">     136 </span>            : \verbatim
+<span class="lineNum">     137 </span>            : plumed driver --plumed plumed.dat --ixyz trajectory.xyz --trajectory-stride 100 --timestep 0.001
+<span class="lineNum">     138 </span>            : \endverbatim
+<span class="lineNum">     139 </span>            : Here though
+<span class="lineNum">     140 </span>            : `--trajectory-stride` is set equal to the frequency with which frames were output during the trajectory
+<span class="lineNum">     141 </span>            : and the `--timestep` is equal to the simulation timestep.  As such the `STRIDE` parameters in the `plumed.dat`
+<span class="lineNum">     142 </span>            : files are referred to the original timestep and any files output resemble those that would have been generated
+<span class="lineNum">     143 </span>            : had we run the calculation we are running with driver when the MD simulation was running.
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : PLUMED can read natively xyz files (in PLUMED units) and gro files (in nm). In addition,
+<span class="lineNum">     146 </span>            : PLUMED includes by default support for a
+<span class="lineNum">     147 </span>            : subset of the trajectory file formats supported by VMD, e.g. xtc and dcd:
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : \verbatim
+<span class="lineNum">     150 </span>            : plumed driver --plumed plumed.dat --pdb diala.pdb --mf_xtc traj.xtc --trajectory-stride 100 --timestep 0.001
+<span class="lineNum">     151 </span>            : \endverbatim
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : where `--mf_` prefixes the extension of one of the accepted molfile plugin format.
+<span class="lineNum">     154 </span>            : If PLUMED has been \ref Installation &quot;installed&quot; with full molfile support, other formats will be available.
+<span class="lineNum">     155 </span>            : Just type `plumed driver --help` to see which plugins are available.
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : Molfile plugin require periodic cell to be triangular (i.e. first vector oriented along x and
+<span class="lineNum">     158 </span>            : second vector in xy plane). This is true for many MD codes. However, it could be false
+<span class="lineNum">     159 </span>            : if you rotate the coordinates in your trajectory before reading them in the driver.
+<span class="lineNum">     160 </span>            : Also notice that some formats (e.g. amber crd) do not specify atom number. In this case you can use
+<span class="lineNum">     161 </span>            : the `--natoms` option:
+<span class="lineNum">     162 </span>            : \verbatim
+<span class="lineNum">     163 </span>            : plumed driver --plumed plumed.dat --imf_crd trajectory.crd --natoms 128
+<span class="lineNum">     164 </span>            : \endverbatim
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : Check the available molfile plugins and limitations at [this link](http://www.ks.uiuc.edu/Research/vmd/plugins/molfile/).
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : Additionally, you can use the xdrfile implementation of xtc and trr. To this aim, just
+<span class="lineNum">     169 </span>            : download and install properly the xdrfile library (see [this link](http://www.gromacs.org/Developer_Zone/Programming_Guide/XTC_Library)).
+<span class="lineNum">     170 </span>            : If the xdrfile library is installed properly the PLUMED configure script should be able to
+<span class="lineNum">     171 </span>            : detect it and enable it.
+<span class="lineNum">     172 </span>            : Notice that the xdrfile implementation of xtc and trr
+<span class="lineNum">     173 </span>            : is more robust than the molfile one, since it provides support for generic cell shapes.
+<span class="lineNum">     174 </span>            : In addition, it allows \ref DUMPATOMS to write compressed xtc files.
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : */
+<span class="lineNum">     178 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     179 </span>            : //
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<a name="182"><span class="lineNum">     182 </span><span class="lineCov">       4839 : static vector&lt;molfile_plugin_t *&gt; plugins;</span></a>
+<span class="lineNum">     183 </span><span class="lineCov">       4839 : static map &lt;string, unsigned&gt; pluginmap;</span>
+<span class="lineNum">     184 </span><span class="lineCov">      29034 : static int register_cb(void *v, vmdplugin_t *p) {</span>
+<span class="lineNum">     185 </span>            :   //const char *key = p-&gt;name;
+<span class="lineNum">     186 </span><span class="lineCov">      87102 :   const auto ret = pluginmap.insert ( std::pair&lt;string,unsigned&gt;(string(p-&gt;name),plugins.size()) );</span>
+<span class="lineNum">     187 </span><span class="lineCov">      29034 :   if (ret.second==false) {</span>
+<span class="lineNum">     188 </span>            :     //cerr&lt;&lt;&quot;MOLFILE: found duplicate plugin for &quot;&lt;&lt;key&lt;&lt;&quot; : not inserted &quot;&lt;&lt;endl;
+<span class="lineNum">     189 </span>            :   } else {
+<span class="lineNum">     190 </span>            :     //cerr&lt;&lt;&quot;MOLFILE: loading plugin &quot;&lt;&lt;key&lt;&lt;&quot; number &quot;&lt;&lt;plugins.size()-1&lt;&lt;endl;
+<span class="lineNum">     191 </span><span class="lineCov">      58068 :     plugins.push_back(reinterpret_cast&lt;molfile_plugin_t *&gt;(p));</span>
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span><span class="lineCov">      29034 :   return VMDPLUGIN_SUCCESS;</span>
+<span class="lineNum">     194 </span>            : }
+<span class="lineNum">     195 </span>            : #endif
+<a name="196"><span class="lineNum">     196 </span>            : </a>
+<span class="lineNum">     197 </span>            : template&lt;typename real&gt;
+<span class="lineNum">     198 </span><span class="lineCov">        512 : class Driver : public CLTool {</span>
+<span class="lineNum">     199 </span>            : public:
+<span class="lineNum">     200 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     201 </span>            :   explicit Driver(const CLToolOptions&amp; co );
+<span class="lineNum">     202 </span>            :   int main(FILE* in,FILE*out,Communicator&amp; pc);
+<span class="lineNum">     203 </span>            :   void evaluateNumericalDerivatives( const long int&amp; step, Plumed&amp; p, const std::vector&lt;real&gt;&amp; coordinates,
+<span class="lineNum">     204 </span>            :                                      const std::vector&lt;real&gt;&amp; masses, const std::vector&lt;real&gt;&amp; charges,
+<span class="lineNum">     205 </span>            :                                      std::vector&lt;real&gt;&amp; cell, const double&amp; base, std::vector&lt;real&gt;&amp; numder );
+<span class="lineNum">     206 </span>            :   string description()const;
+<span class="lineNum">     207 </span>            : };
+<a name="208"><span class="lineNum">     208 </span>            : </a>
+<span class="lineNum">     209 </span>            : template&lt;typename real&gt;
+<span class="lineNum">     210 </span><span class="lineCov">       3226 : void Driver&lt;real&gt;::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     211 </span><span class="lineCov">       3226 :   CLTool::registerKeywords( keys ); keys.isDriver();</span>
+<span class="lineNum">     212 </span><span class="lineCov">       9678 :   keys.addFlag(&quot;--help-debug&quot;,false,&quot;print special options that can be used to create regtests&quot;);</span>
+<span class="lineNum">     213 </span><span class="lineCov">      16130 :   keys.add(&quot;compulsory&quot;,&quot;--plumed&quot;,&quot;plumed.dat&quot;,&quot;specify the name of the plumed input file&quot;);</span>
+<span class="lineNum">     214 </span><span class="lineCov">      16130 :   keys.add(&quot;compulsory&quot;,&quot;--timestep&quot;,&quot;1.0&quot;,&quot;the timestep that was used in the calculation that produced this trajectory in picoseconds&quot;);</span>
+<span class="lineNum">     215 </span><span class="lineCov">      16130 :   keys.add(&quot;compulsory&quot;,&quot;--trajectory-stride&quot;,&quot;1&quot;,&quot;the frequency with which frames were output to this trajectory during the simulation&quot;</span>
+<span class="lineNum">     216 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     217 </span>            :            &quot; (0 means that the number of the step is read from the trajectory file,&quot;
+<span class="lineNum">     218 </span>            :            &quot; currently working only for xtc/trr files read with --ixtc/--trr)&quot;
+<span class="lineNum">     219 </span>            : #endif
+<span class="lineNum">     220 </span>            :           );
+<span class="lineNum">     221 </span><span class="lineCov">      16130 :   keys.add(&quot;compulsory&quot;,&quot;--multi&quot;,&quot;0&quot;,&quot;set number of replicas for multi environment (needs mpi)&quot;);</span>
+<span class="lineNum">     222 </span><span class="lineCov">       9678 :   keys.addFlag(&quot;--noatoms&quot;,false,&quot;don't read in a trajectory.  Just use colvar files as specified in plumed.dat&quot;);</span>
+<span class="lineNum">     223 </span><span class="lineCov">      12904 :   keys.add(&quot;atoms&quot;,&quot;--ixyz&quot;,&quot;the trajectory in xyz format&quot;);</span>
+<span class="lineNum">     224 </span><span class="lineCov">      12904 :   keys.add(&quot;atoms&quot;,&quot;--igro&quot;,&quot;the trajectory in gro format&quot;);</span>
+<span class="lineNum">     225 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     226 </span><span class="lineCov">      12904 :   keys.add(&quot;atoms&quot;,&quot;--ixtc&quot;,&quot;the trajectory in xtc format (xdrfile implementation)&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">      12904 :   keys.add(&quot;atoms&quot;,&quot;--itrr&quot;,&quot;the trajectory in trr format (xdrfile implementation)&quot;);</span>
+<span class="lineNum">     228 </span>            : #endif
+<span class="lineNum">     229 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--length-units&quot;,&quot;units for length, either as a string or a number&quot;);</span>
+<span class="lineNum">     230 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--mass-units&quot;,&quot;units for mass in pdb and mc file, either as a string or a number&quot;);</span>
+<span class="lineNum">     231 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--charge-units&quot;,&quot;units for charge in pdb and mc file, either as a string or a number&quot;);</span>
+<span class="lineNum">     232 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--kt&quot;,&quot;set kBT, it will not be necessary to specify temperature in input file&quot;);</span>
+<span class="lineNum">     233 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--dump-forces&quot;,&quot;dump the forces on a file&quot;);</span>
+<span class="lineNum">     234 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--dump-forces-fmt&quot;,&quot;( default=%%f ) the format to use to dump the forces&quot;);</span>
+<span class="lineNum">     235 </span><span class="lineCov">       9678 :   keys.addFlag(&quot;--dump-full-virial&quot;,false,&quot;with --dump-forces, it dumps the 9 components of the virial&quot;);</span>
+<span class="lineNum">     236 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--pdb&quot;,&quot;provides a pdb with masses and charges&quot;);</span>
+<span class="lineNum">     237 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--mc&quot;,&quot;provides a file with masses and charges as produced with DUMPMASSCHARGE&quot;);</span>
+<span class="lineNum">     238 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--box&quot;,&quot;comma-separated box dimensions (3 for orthorombic, 9 for generic)&quot;);</span>
+<span class="lineNum">     239 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--natoms&quot;,&quot;provides number of atoms - only used if file format does not contain number of atoms&quot;);</span>
+<span class="lineNum">     240 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--initial-step&quot;,&quot;provides a number for the initial step, default is 0&quot;);</span>
+<span class="lineNum">     241 </span><span class="lineCov">      12904 :   keys.add(&quot;optional&quot;,&quot;--debug-forces&quot;,&quot;output a file containing the forces due to the bias evaluated using numerical derivatives &quot;</span>
+<span class="lineNum">     242 </span>            :            &quot;and using the analytical derivatives implemented in plumed&quot;);
+<span class="lineNum">     243 </span><span class="lineCov">      12904 :   keys.add(&quot;hidden&quot;,&quot;--debug-float&quot;,&quot;[yes/no] turns on the single precision version (to check float interface)&quot;);</span>
+<span class="lineNum">     244 </span><span class="lineCov">      12904 :   keys.add(&quot;hidden&quot;,&quot;--debug-dd&quot;,&quot;[yes/no] use a fake domain decomposition&quot;);</span>
+<span class="lineNum">     245 </span><span class="lineCov">      12904 :   keys.add(&quot;hidden&quot;,&quot;--debug-pd&quot;,&quot;[yes/no] use a fake particle decomposition&quot;);</span>
+<span class="lineNum">     246 </span><span class="lineCov">      12904 :   keys.add(&quot;hidden&quot;,&quot;--debug-grex&quot;,&quot;use a fake gromacs-like replica exchange, specify exchange stride&quot;);</span>
+<span class="lineNum">     247 </span><span class="lineCov">      12904 :   keys.add(&quot;hidden&quot;,&quot;--debug-grex-log&quot;,&quot;log file for debug=grex&quot;);</span>
+<span class="lineNum">     248 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     249 </span><span class="lineCov">       3226 :   MOLFILE_INIT_ALL</span>
+<span class="lineNum">     250 </span><span class="lineCov">       3226 :   MOLFILE_REGISTER_ALL(NULL, register_cb)</span>
+<span class="lineNum">     251 </span><span class="lineCov">      93554 :   for(int i=0; i&lt;plugins.size(); i++) {</span>
+<span class="lineNum">     252 </span><span class="lineCov">      58068 :     string kk=&quot;--mf_&quot;+string(plugins[i]-&gt;name);</span>
+<span class="lineNum">     253 </span><span class="lineCov">      87102 :     string mm=&quot; molfile: the trajectory in &quot;+string(plugins[i]-&gt;name)+&quot; format &quot; ;</span>
+<span class="lineNum">     254 </span>            :     //cerr&lt;&lt;&quot;REGISTERING &quot;&lt;&lt;kk&lt;&lt;mm&lt;&lt;endl;
+<span class="lineNum">     255 </span><span class="lineCov">      58068 :     keys.add(&quot;atoms&quot;,kk,mm);</span>
+<span class="lineNum">     256 </span>            :   }
+<span class="lineNum">     257 </span>            : #endif
+<a name="258"><span class="lineNum">     258 </span><span class="lineCov">       3226 : }</span></a>
+<span class="lineNum">     259 </span>            : template&lt;typename real&gt;
+<span class="lineNum">     260 </span><span class="lineCov">        512 : Driver&lt;real&gt;::Driver(const CLToolOptions&amp; co ):</span>
+<span class="lineNum">     261 </span><span class="lineCov">        512 :   CLTool(co)</span>
+<span class="lineNum">     262 </span>            : {
+<span class="lineNum">     263 </span><span class="lineCov">        512 :   inputdata=commandline;</span>
+<a name="264"><span class="lineNum">     264 </span><span class="lineCov">        512 : }</span></a>
+<span class="lineNum">     265 </span>            : template&lt;typename real&gt;
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 : string Driver&lt;real&gt;::description()const { return &quot;analyze trajectories with plumed&quot;; }</span>
+<a name="267"><span class="lineNum">     267 </span>            : </a>
+<span class="lineNum">     268 </span>            : template&lt;typename real&gt;
+<span class="lineNum">     269 </span><span class="lineCov">        512 : int Driver&lt;real&gt;::main(FILE* in,FILE*out,Communicator&amp; pc) {</span>
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span><span class="lineCov">       1024 :   Units units;</span>
+<span class="lineNum">     272 </span><span class="lineCov">       1024 :   PDB pdb;</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : // Parse everything
+<span class="lineNum">     275 </span><span class="lineCov">       1024 :   bool printhelpdebug; parseFlag(&quot;--help-debug&quot;,printhelpdebug);</span>
+<span class="lineNum">     276 </span><span class="lineCov">        512 :   if( printhelpdebug ) {</span>
+<span class="lineNum">     277 </span>            :     fprintf(out,&quot;%s&quot;,
+<span class="lineNum">     278 </span>            :             &quot;Additional options for debug (only to be used in regtest):\n&quot;
+<span class="lineNum">     279 </span>            :             &quot;  [--debug-float yes]     : turns on the single precision version (to check float interface)\n&quot;
+<span class="lineNum">     280 </span>            :             &quot;  [--debug-dd yes]        : use a fake domain decomposition\n&quot;
+<span class="lineNum">     281 </span>            :             &quot;  [--debug-pd yes]        : use a fake particle decomposition\n&quot;
+<span class="lineNum">     282 </span>            :            );
+<span class="lineNum">     283 </span>            :     return 0;
+<span class="lineNum">     284 </span>            :   }
+<span class="lineNum">     285 </span>            :   // Are we reading trajectory data
+<span class="lineNum">     286 </span><span class="lineCov">       1024 :   bool noatoms; parseFlag(&quot;--noatoms&quot;,noatoms);</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :   std::string fakein;
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :   bool debug_float=false;
+<span class="lineNum">     291 </span>            :   fakein=&quot;&quot;;
+<span class="lineNum">     292 </span><span class="lineCov">       1024 :   if(parse(&quot;--debug-float&quot;,fakein)) {</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :     if(fakein==&quot;yes&quot;) debug_float=true;</span>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :     else if(fakein==&quot;no&quot;) debug_float=false;</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     else error(&quot;--debug-float should have argument yes or no&quot;);</span>
+<span class="lineNum">     296 </span>            :   }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :   if(debug_float &amp;&amp; sizeof(real)!=sizeof(float)) {
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :     CLTool* cl=cltoolRegister().create(CLToolOptions(&quot;driver-float&quot;));    //new Driver&lt;float&gt;(*this);</span>
+<span class="lineNum">     300 </span>            :     cl-&gt;setInputData(this-&gt;getInputData());
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :     int ret=cl-&gt;main(in,out,pc);</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :     delete cl;</span>
+<span class="lineNum">     303 </span>            :     return ret;
+<span class="lineNum">     304 </span>            :   }
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            :   bool debug_pd=false;
+<span class="lineNum">     307 </span>            :   fakein=&quot;&quot;;
+<span class="lineNum">     308 </span><span class="lineCov">       1024 :   if(parse(&quot;--debug-pd&quot;,fakein)) {</span>
+<span class="lineNum">     309 </span><span class="lineCov">          8 :     if(fakein==&quot;yes&quot;) debug_pd=true;</span>
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :     else if(fakein==&quot;no&quot;) debug_pd=false;</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :     else error(&quot;--debug-pd should have argument yes or no&quot;);</span>
+<span class="lineNum">     312 </span>            :   }
+<span class="lineNum">     313 </span>            :   if(debug_pd) fprintf(out,&quot;DEBUGGING PARTICLE DECOMPOSITION\n&quot;);
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :   bool debug_dd=false;
+<span class="lineNum">     316 </span>            :   fakein=&quot;&quot;;
+<span class="lineNum">     317 </span><span class="lineCov">       1024 :   if(parse(&quot;--debug-dd&quot;,fakein)) {</span>
+<span class="lineNum">     318 </span><span class="lineCov">         52 :     if(fakein==&quot;yes&quot;) debug_dd=true;</span>
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :     else if(fakein==&quot;no&quot;) debug_dd=false;</span>
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :     else error(&quot;--debug-dd should have argument yes or no&quot;);</span>
+<span class="lineNum">     321 </span>            :   }
+<span class="lineNum">     322 </span>            :   if(debug_dd) fprintf(out,&quot;DEBUGGING DOMAIN DECOMPOSITION\n&quot;);
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineCov">        512 :   if( debug_pd || debug_dd ) {</span>
+<span class="lineNum">     325 </span><span class="lineCov">         60 :     if(noatoms) error(&quot;cannot debug without atoms&quot;);</span>
+<span class="lineNum">     326 </span>            :   }
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : // set up for multi replica driver:
+<span class="lineNum">     329 </span><span class="lineCov">        512 :   int multi=0;</span>
+<span class="lineNum">     330 </span><span class="lineCov">       1024 :   parse(&quot;--multi&quot;,multi);</span>
+<span class="lineNum">     331 </span><span class="lineCov">       1024 :   Communicator intracomm;</span>
+<span class="lineNum">     332 </span><span class="lineCov">       1024 :   Communicator intercomm;</span>
+<span class="lineNum">     333 </span><span class="lineCov">        512 :   if(multi) {</span>
+<span class="lineNum">     334 </span><span class="lineCov">        122 :     int ntot=pc.Get_size();</span>
+<span class="lineNum">     335 </span><span class="lineCov">        122 :     int nintra=ntot/multi;</span>
+<span class="lineNum">     336 </span><span class="lineCov">        122 :     if(multi*nintra!=ntot) error(&quot;invalid number of processes for multi environment&quot;);</span>
+<span class="lineNum">     337 </span><span class="lineCov">        122 :     pc.Split(pc.Get_rank()/nintra,pc.Get_rank(),intracomm);</span>
+<span class="lineNum">     338 </span><span class="lineCov">        122 :     pc.Split(pc.Get_rank()%nintra,pc.Get_rank(),intercomm);</span>
+<span class="lineNum">     339 </span>            :   } else {
+<span class="lineNum">     340 </span><span class="lineCov">        390 :     intracomm.Set_comm(pc.Get_comm());</span>
+<span class="lineNum">     341 </span>            :   }
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            : // set up for debug replica exchange:
+<span class="lineNum">     344 </span><span class="lineCov">       1024 :   bool debug_grex=parse(&quot;--debug-grex&quot;,fakein);</span>
+<span class="lineNum">     345 </span><span class="lineCov">        512 :   int  grex_stride=0;</span>
+<span class="lineNum">     346 </span>            :   FILE*grex_log=NULL;
+<span class="lineNum">     347 </span><span class="lineCov">        512 :   if(debug_grex) {</span>
+<span class="lineNum">     348 </span><span class="lineCov">         24 :     if(noatoms) error(&quot;must have atoms to debug_grex&quot;);</span>
+<span class="lineNum">     349 </span><span class="lineCov">         24 :     if(multi&lt;2)  error(&quot;--debug_grex needs --multi with at least two replicas&quot;);</span>
+<span class="lineNum">     350 </span><span class="lineCov">         24 :     Tools::convert(fakein,grex_stride);</span>
+<span class="lineNum">     351 </span><span class="lineCov">         24 :     string n; Tools::convert(intercomm.Get_rank(),n);</span>
+<span class="lineNum">     352 </span>            :     string file;
+<span class="lineNum">     353 </span><span class="lineCov">         48 :     parse(&quot;--debug-grex-log&quot;,file);</span>
+<span class="lineNum">     354 </span><span class="lineCov">         24 :     if(file.length()&gt;0) {</span>
+<span class="lineNum">     355 </span><span class="lineCov">         48 :       file+=&quot;.&quot;+n;</span>
+<span class="lineNum">     356 </span><span class="lineCov">         24 :       grex_log=fopen(file.c_str(),&quot;w&quot;);</span>
+<span class="lineNum">     357 </span>            :     }
+<span class="lineNum">     358 </span>            :   }
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : // Read the plumed input file name
+<span class="lineNum">     361 </span><span class="lineCov">       1024 :   string plumedFile; parse(&quot;--plumed&quot;,plumedFile);</span>
+<span class="lineNum">     362 </span>            : // the timestep
+<span class="lineNum">     363 </span><span class="lineCov">       1024 :   double t; parse(&quot;--timestep&quot;,t);</span>
+<span class="lineNum">     364 </span><span class="lineCov">        512 :   real timestep=real(t);</span>
+<span class="lineNum">     365 </span>            : // the stride
+<span class="lineNum">     366 </span><span class="lineCov">       1024 :   unsigned stride; parse(&quot;--trajectory-stride&quot;,stride);</span>
+<span class="lineNum">     367 </span>            : // are we writing forces
+<span class="lineNum">     368 </span><span class="lineCov">        512 :   string dumpforces(&quot;&quot;), debugforces(&quot;&quot;), dumpforcesFmt(&quot;%f&quot;);;</span>
+<span class="lineNum">     369 </span><span class="lineCov">        512 :   bool dumpfullvirial=false;</span>
+<span class="lineNum">     370 </span><span class="lineCov">        512 :   if(!noatoms) {</span>
+<span class="lineNum">     371 </span><span class="lineCov">        962 :     parse(&quot;--dump-forces&quot;,dumpforces);</span>
+<span class="lineNum">     372 </span><span class="lineCov">        962 :     parse(&quot;--debug-forces&quot;,debugforces);</span>
+<span class="lineNum">     373 </span>            :   }
+<span class="lineNum">     374 </span><span class="lineCov">       1033 :   if(dumpforces!=&quot;&quot; || debugforces!=&quot;&quot; ) parse(&quot;--dump-forces-fmt&quot;,dumpforcesFmt);</span>
+<span class="lineNum">     375 </span><span class="lineCov">        839 :   if(dumpforces!=&quot;&quot;) parseFlag(&quot;--dump-full-virial&quot;,dumpfullvirial);</span>
+<span class="lineNum">     376 </span><span class="lineCov">        512 :   if( debugforces!=&quot;&quot; &amp;&amp; (debug_dd || debug_pd) ) error(&quot;cannot debug forces and domain/particle decomposition at same time&quot;);</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :   if( debugforces!=&quot;&quot; &amp;&amp; sizeof(real)!=sizeof(double) ) error(&quot;cannot debug forces in single precision mode&quot;);</span>
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span><span class="lineCov">        512 :   real kt=-1.0;</span>
+<span class="lineNum">     380 </span><span class="lineCov">       1024 :   parse(&quot;--kt&quot;,kt);</span>
+<span class="lineNum">     381 </span>            :   string trajectory_fmt;
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            :   bool use_molfile=false;
+<span class="lineNum">     384 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     385 </span>            :   molfile_plugin_t *api=NULL;
+<span class="lineNum">     386 </span>            :   void *h_in=NULL;
+<span class="lineNum">     387 </span>            :   molfile_timestep_t ts_in; // this is the structure that has the timestep
+<span class="lineNum">     388 </span><span class="lineCov">        512 :   ts_in.coords=NULL;</span>
+<span class="lineNum">     389 </span><span class="lineCov">        512 :   ts_in.velocities=NULL;</span>
+<span class="lineNum">     390 </span><span class="lineCov">        512 :   ts_in.A=-1; // we use this to check whether cell is provided or not</span>
+<span class="lineNum">     391 </span>            : #endif
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            : // Read in an xyz file
+<span class="lineNum">     394 </span><span class="lineCov">        512 :   string trajectoryFile(&quot;&quot;), pdbfile(&quot;&quot;), mcfile(&quot;&quot;);</span>
+<span class="lineNum">     395 </span><span class="lineCov">        512 :   bool pbc_cli_given=false; vector&lt;double&gt; pbc_cli_box(9,0.0);</span>
+<span class="lineNum">     396 </span><span class="lineCov">        512 :   int command_line_natoms=-1;</span>
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span><span class="lineCov">        512 :   if(!noatoms) {</span>
+<span class="lineNum">     399 </span><span class="lineCov">        962 :     std::string traj_xyz; parse(&quot;--ixyz&quot;,traj_xyz);</span>
+<span class="lineNum">     400 </span><span class="lineCov">        962 :     std::string traj_gro; parse(&quot;--igro&quot;,traj_gro);</span>
+<span class="lineNum">     401 </span>            :     std::string traj_xtc;
+<span class="lineNum">     402 </span>            :     std::string traj_trr;
+<span class="lineNum">     403 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     404 </span><span class="lineCov">        962 :     parse(&quot;--ixtc&quot;,traj_xtc);</span>
+<span class="lineNum">     405 </span><span class="lineCov">        962 :     parse(&quot;--itrr&quot;,traj_trr);</span>
+<span class="lineNum">     406 </span>            : #endif
+<span class="lineNum">     407 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     408 </span><span class="lineCov">      13949 :     for(int i=0; i&lt;plugins.size(); i++) {</span>
+<span class="lineNum">     409 </span><span class="lineCov">       8658 :       string molfile_key=&quot;--mf_&quot;+string(plugins[i]-&gt;name);</span>
+<span class="lineNum">     410 </span>            :       string traj_molfile;
+<span class="lineNum">     411 </span><span class="lineCov">       4329 :       parse(molfile_key,traj_molfile);</span>
+<span class="lineNum">     412 </span><span class="lineCov">       4329 :       if(traj_molfile.length()&gt;0) {</span>
+<span class="lineNum">     413 </span><span class="lineCov">         54 :         fprintf(out,&quot;\nDRIVER: Found molfile format trajectory %s with name %s\n&quot;,plugins[i]-&gt;name,traj_molfile.c_str());</span>
+<span class="lineNum">     414 </span>            :         trajectoryFile=traj_molfile;
+<span class="lineNum">     415 </span><span class="lineCov">        108 :         trajectory_fmt=string(plugins[i]-&gt;name);</span>
+<span class="lineNum">     416 </span>            :         use_molfile=true;
+<span class="lineNum">     417 </span><span class="lineCov">         54 :         api = plugins[i];</span>
+<span class="lineNum">     418 </span>            :       }
+<span class="lineNum">     419 </span>            :     }
+<span class="lineNum">     420 </span>            : #endif
+<span class="lineNum">     421 </span>            :     { // check that only one fmt is specified
+<span class="lineNum">     422 </span>            :       int nn=0;
+<span class="lineNum">     423 </span><span class="lineCov">        481 :       if(traj_xyz.length()&gt;0) nn++;</span>
+<span class="lineNum">     424 </span><span class="lineCov">        481 :       if(traj_gro.length()&gt;0) nn++;</span>
+<span class="lineNum">     425 </span><span class="lineCov">        481 :       if(traj_xtc.length()&gt;0) nn++;</span>
+<span class="lineNum">     426 </span><span class="lineCov">        481 :       if(traj_trr.length()&gt;0) nn++;</span>
+<span class="lineNum">     427 </span><span class="lineCov">        481 :       if(nn&gt;1) {</span>
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :         fprintf(stderr,&quot;ERROR: cannot provide more than one trajectory file\n&quot;);</span>
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :         if(grex_log)fclose(grex_log);</span>
+<span class="lineNum">     430 </span>            :         return 1;
+<span class="lineNum">     431 </span>            :       }
+<span class="lineNum">     432 </span>            :     }
+<span class="lineNum">     433 </span><span class="lineCov">        804 :     if(traj_xyz.length()&gt;0 &amp;&amp; trajectoryFile.length()==0) {</span>
+<span class="lineNum">     434 </span>            :       trajectoryFile=traj_xyz;
+<span class="lineNum">     435 </span>            :       trajectory_fmt=&quot;xyz&quot;;
+<span class="lineNum">     436 </span>            :     }
+<span class="lineNum">     437 </span><span class="lineCov">        580 :     if(traj_gro.length()&gt;0 &amp;&amp; trajectoryFile.length()==0) {</span>
+<span class="lineNum">     438 </span>            :       trajectoryFile=traj_gro;
+<span class="lineNum">     439 </span>            :       trajectory_fmt=&quot;gro&quot;;
+<span class="lineNum">     440 </span>            :     }
+<span class="lineNum">     441 </span><span class="lineCov">        483 :     if(traj_xtc.length()&gt;0 &amp;&amp; trajectoryFile.length()==0) {</span>
+<span class="lineNum">     442 </span>            :       trajectoryFile=traj_xtc;
+<span class="lineNum">     443 </span>            :       trajectory_fmt=&quot;xdr-xtc&quot;;
+<span class="lineNum">     444 </span>            :     }
+<span class="lineNum">     445 </span><span class="lineCov">        484 :     if(traj_trr.length()&gt;0 &amp;&amp; trajectoryFile.length()==0) {</span>
+<span class="lineNum">     446 </span>            :       trajectoryFile=traj_trr;
+<span class="lineNum">     447 </span>            :       trajectory_fmt=&quot;xdr-trr&quot;;
+<span class="lineNum">     448 </span>            :     }
+<span class="lineNum">     449 </span><span class="lineCov">        481 :     if(trajectoryFile.length()==0) {</span>
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :       fprintf(stderr,&quot;ERROR: missing trajectory data\n&quot;);</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :       if(grex_log)fclose(grex_log);</span>
+<span class="lineNum">     452 </span>            :       return 1;
+<span class="lineNum">     453 </span>            :     }
+<span class="lineNum">     454 </span><span class="lineCov">        962 :     string lengthUnits(&quot;&quot;); parse(&quot;--length-units&quot;,lengthUnits);</span>
+<span class="lineNum">     455 </span><span class="lineCov">        481 :     if(lengthUnits.length()&gt;0) units.setLength(lengthUnits);</span>
+<span class="lineNum">     456 </span><span class="lineCov">        962 :     string chargeUnits(&quot;&quot;); parse(&quot;--charge-units&quot;,chargeUnits);</span>
+<span class="lineNum">     457 </span><span class="lineCov">        481 :     if(chargeUnits.length()&gt;0) units.setCharge(chargeUnits);</span>
+<span class="lineNum">     458 </span><span class="lineCov">        962 :     string massUnits(&quot;&quot;); parse(&quot;--mass-units&quot;,massUnits);</span>
+<span class="lineNum">     459 </span><span class="lineCov">        481 :     if(massUnits.length()&gt;0) units.setMass(massUnits);</span>
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span><span class="lineCov">        962 :     parse(&quot;--pdb&quot;,pdbfile);</span>
+<span class="lineNum">     462 </span><span class="lineCov">        481 :     if(pdbfile.length()&gt;0) {</span>
+<span class="lineNum">     463 </span><span class="lineCov">         57 :       bool check=pdb.read(pdbfile,false,1.0);</span>
+<span class="lineNum">     464 </span><span class="lineCov">         57 :       if(!check) error(&quot;error reading pdb file&quot;);</span>
+<span class="lineNum">     465 </span>            :     }
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span><span class="lineCov">        962 :     parse(&quot;--mc&quot;,mcfile);</span>
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span><span class="lineCov">        962 :     string pbc_cli_list; parse(&quot;--box&quot;,pbc_cli_list);</span>
+<span class="lineNum">     470 </span><span class="lineCov">        481 :     if(pbc_cli_list.length()&gt;0) {</span>
+<span class="lineNum">     471 </span>            :       pbc_cli_given=true;
+<span class="lineNum">     472 </span><span class="lineCov">         34 :       vector&lt;string&gt; words=Tools::getWords(pbc_cli_list,&quot;,&quot;);</span>
+<span class="lineNum">     473 </span><span class="lineCov">         17 :       if(words.size()==3) {</span>
+<span class="lineNum">     474 </span><span class="lineCov">        170 :         for(int i=0; i&lt;3; i++) sscanf(words[i].c_str(),&quot;%100lf&quot;,&amp;(pbc_cli_box[4*i]));</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :       } else if(words.size()==9) {</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :         for(int i=0; i&lt;9; i++) sscanf(words[i].c_str(),&quot;%100lf&quot;,&amp;(pbc_cli_box[i]));</span>
+<span class="lineNum">     477 </span>            :       } else {
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :         string msg=&quot;ERROR: cannot parse command-line box &quot;+pbc_cli_list;</span>
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :         fprintf(stderr,&quot;%s\n&quot;,msg.c_str());</span>
+<span class="lineNum">     480 </span>            :         return 1;
+<span class="lineNum">     481 </span>            :       }
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span>            :     }
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineCov">        962 :     parse(&quot;--natoms&quot;,command_line_natoms);</span>
+<span class="lineNum">     486 </span>            : 
+<span class="lineNum">     487 </span>            :   }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span><span class="lineCov">        512 :   if(debug_dd &amp;&amp; debug_pd) error(&quot;cannot use debug-dd and debug-pd at the same time&quot;);</span>
+<span class="lineNum">     491 </span><span class="lineCov">        512 :   if(debug_pd || debug_dd) {</span>
+<span class="lineNum">     492 </span><span class="lineCov">         60 :     if( !Communicator::initialized() ) error(&quot;needs mpi for debug-pd&quot;);</span>
+<span class="lineNum">     493 </span>            :   }
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span>            :   Plumed p;
+<span class="lineNum">     496 </span><span class="lineCov">        512 :   int rr=sizeof(real);</span>
+<span class="lineNum">     497 </span>            :   p.cmd(&quot;setRealPrecision&quot;,&amp;rr);
+<span class="lineNum">     498 </span>            :   int checknatoms=-1;
+<span class="lineNum">     499 </span><span class="lineCov">        512 :   long int step=0;</span>
+<span class="lineNum">     500 </span><span class="lineCov">       1024 :   parse(&quot;--initial-step&quot;,step);</span>
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span><span class="lineCov">        512 :   if(Communicator::initialized()) {</span>
+<span class="lineNum">     503 </span><span class="lineCov">        212 :     if(multi) {</span>
+<span class="lineNum">     504 </span><span class="lineCov">        122 :       if(intracomm.Get_rank()==0) p.cmd(&quot;GREX setMPIIntercomm&quot;,&amp;intercomm.Get_comm());</span>
+<span class="lineNum">     505 </span><span class="lineCov">        122 :       p.cmd(&quot;GREX setMPIIntracomm&quot;,&amp;intracomm.Get_comm());</span>
+<span class="lineNum">     506 </span>            :       p.cmd(&quot;GREX init&quot;);
+<span class="lineNum">     507 </span>            :     }
+<span class="lineNum">     508 </span><span class="lineCov">        212 :     p.cmd(&quot;setMPIComm&quot;,&amp;intracomm.Get_comm());</span>
+<span class="lineNum">     509 </span>            :   }
+<span class="lineNum">     510 </span>            :   p.cmd(&quot;setMDLengthUnits&quot;,&amp;units.getLength());
+<span class="lineNum">     511 </span>            :   p.cmd(&quot;setMDChargeUnits&quot;,&amp;units.getCharge());
+<span class="lineNum">     512 </span>            :   p.cmd(&quot;setMDMassUnits&quot;,&amp;units.getMass());
+<span class="lineNum">     513 </span>            :   p.cmd(&quot;setMDEngine&quot;,&quot;driver&quot;);
+<span class="lineNum">     514 </span>            :   p.cmd(&quot;setTimestep&quot;,&amp;timestep);
+<span class="lineNum">     515 </span>            :   p.cmd(&quot;setPlumedDat&quot;,plumedFile.c_str());
+<span class="lineNum">     516 </span>            :   p.cmd(&quot;setLog&quot;,out);
+<span class="lineNum">     517 </span>            : 
+<span class="lineNum">     518 </span>            :   int natoms;
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span><span class="lineCov">       1024 :   FILE* fp=NULL; FILE* fp_forces=NULL; OFile fp_dforces;</span>
+<span class="lineNum">     521 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     522 </span>            :   XDRFILE* xd=NULL;
+<span class="lineNum">     523 </span>            : #endif
+<span class="lineNum">     524 </span><span class="lineCov">        512 :   if(!noatoms) {</span>
+<span class="lineNum">     525 </span><span class="lineCov">        481 :     if (trajectoryFile==&quot;-&quot;)</span>
+<span class="lineNum">     526 </span>            :       fp=in;
+<span class="lineNum">     527 </span>            :     else {
+<span class="lineNum">     528 </span><span class="lineCov">        481 :       if(multi) {</span>
+<span class="lineNum">     529 </span>            :         string n;
+<span class="lineNum">     530 </span><span class="lineCov">        122 :         Tools::convert(intercomm.Get_rank(),n);</span>
+<span class="lineNum">     531 </span><span class="lineCov">        244 :         std::string testfile=FileBase::appendSuffix(trajectoryFile,&quot;.&quot;+n);</span>
+<span class="lineNum">     532 </span><span class="lineCov">        122 :         FILE* tmp_fp=fopen(testfile.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     533 </span><span class="lineCov">        122 :         if(tmp_fp) { fclose(tmp_fp); trajectoryFile=testfile.c_str();}</span>
+<span class="lineNum">     534 </span>            :       }
+<span class="lineNum">     535 </span><span class="lineCov">        481 :       if(use_molfile==true) {</span>
+<span class="lineNum">     536 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     537 </span><span class="lineCov">        108 :         h_in = api-&gt;open_file_read(trajectoryFile.c_str(), trajectory_fmt.c_str(), &amp;natoms);</span>
+<span class="lineNum">     538 </span><span class="lineCov">         54 :         if(natoms==MOLFILE_NUMATOMS_UNKNOWN) {</span>
+<span class="lineNum">     539 </span><span class="lineCov">          2 :           if(command_line_natoms&gt;=0) natoms=command_line_natoms;</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :           else error(&quot;this file format does not provide number of atoms; use --natoms on the command line&quot;);</span>
+<span class="lineNum">     541 </span>            :         }
+<span class="lineNum">     542 </span><span class="lineCov">         54 :         ts_in.coords = new float [3*natoms];</span>
+<span class="lineNum">     543 </span>            : #endif
+<span class="lineNum">     544 </span><span class="lineCov">        852 :       } else if(trajectory_fmt==&quot;xdr-xtc&quot; || trajectory_fmt==&quot;xdr-trr&quot;) {</span>
+<span class="lineNum">     545 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     546 </span><span class="lineCov">          5 :         xd=xdrfile_open(trajectoryFile.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     547 </span><span class="lineCov">          5 :         if(!xd) {</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :           string msg=&quot;ERROR: Error opening trajectory file &quot;+trajectoryFile;</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :           fprintf(stderr,&quot;%s\n&quot;,msg.c_str());</span>
+<span class="lineNum">     550 </span>            :           return 1;
+<span class="lineNum">     551 </span>            :         }
+<span class="lineNum">     552 </span><span class="lineCov">          7 :         if(trajectory_fmt==&quot;xdr-xtc&quot;) read_xtc_natoms(&amp;trajectoryFile[0],&amp;natoms);</span>
+<span class="lineNum">     553 </span><span class="lineCov">          8 :         if(trajectory_fmt==&quot;xdr-trr&quot;) read_trr_natoms(&amp;trajectoryFile[0],&amp;natoms);</span>
+<span class="lineNum">     554 </span>            : #endif
+<span class="lineNum">     555 </span>            :       } else {
+<span class="lineNum">     556 </span><span class="lineCov">        422 :         fp=fopen(trajectoryFile.c_str(),&quot;r&quot;);</span>
+<span class="lineNum">     557 </span><span class="lineCov">        422 :         if(!fp) {</span>
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :           string msg=&quot;ERROR: Error opening trajectory file &quot;+trajectoryFile;</span>
+<span class="lineNum">     559 </span><span class="lineNoCov">          0 :           fprintf(stderr,&quot;%s\n&quot;,msg.c_str());</span>
+<span class="lineNum">     560 </span>            : // cppcheck detects a false positive here. I suppress it:
+<span class="lineNum">     561 </span>            : // cppcheck-suppress memleak
+<span class="lineNum">     562 </span>            :           return 1;
+<span class="lineNum">     563 </span>            :         }
+<span class="lineNum">     564 </span>            :       }
+<span class="lineNum">     565 </span>            :     }
+<span class="lineNum">     566 </span><span class="lineCov">        481 :     if(dumpforces.length()&gt;0) {</span>
+<span class="lineNum">     567 </span><span class="lineCov">        327 :       if(Communicator::initialized() &amp;&amp; pc.Get_size()&gt;1) {</span>
+<span class="lineNum">     568 </span>            :         string n;
+<span class="lineNum">     569 </span><span class="lineCov">        160 :         Tools::convert(pc.Get_rank(),n);</span>
+<span class="lineNum">     570 </span><span class="lineCov">        320 :         dumpforces+=&quot;.&quot;+n;</span>
+<span class="lineNum">     571 </span>            :       }
+<span class="lineNum">     572 </span><span class="lineCov">        327 :       fp_forces=fopen(dumpforces.c_str(),&quot;w&quot;);</span>
+<span class="lineNum">     573 </span>            :     }
+<span class="lineNum">     574 </span><span class="lineCov">        481 :     if(debugforces.length()&gt;0) {</span>
+<span class="lineNum">     575 </span><span class="lineCov">          9 :       if(Communicator::initialized() &amp;&amp; pc.Get_size()&gt;1) {</span>
+<span class="lineNum">     576 </span>            :         string n;
+<span class="lineNum">     577 </span><span class="lineCov">          6 :         Tools::convert(pc.Get_rank(),n);</span>
+<span class="lineNum">     578 </span><span class="lineCov">         12 :         debugforces+=&quot;.&quot;+n;</span>
+<span class="lineNum">     579 </span>            :       }
+<span class="lineNum">     580 </span><span class="lineCov">          9 :       fp_dforces.open(debugforces);</span>
+<span class="lineNum">     581 </span>            :     }
+<span class="lineNum">     582 </span>            :   }
+<span class="lineNum">     583 </span>            : 
+<span class="lineNum">     584 </span>            :   std::string line;
+<span class="lineNum">     585 </span>            :   std::vector&lt;real&gt; coordinates;
+<span class="lineNum">     586 </span>            :   std::vector&lt;real&gt; forces;
+<span class="lineNum">     587 </span>            :   std::vector&lt;real&gt; masses;
+<span class="lineNum">     588 </span>            :   std::vector&lt;real&gt; charges;
+<span class="lineNum">     589 </span>            :   std::vector&lt;real&gt; cell;
+<span class="lineNum">     590 </span>            :   std::vector&lt;real&gt; virial;
+<span class="lineNum">     591 </span>            :   std::vector&lt;real&gt; numder;
+<span class="lineNum">     592 </span>            : 
+<span class="lineNum">     593 </span>            : // variables to test particle decomposition
+<span class="lineNum">     594 </span>            :   int pd_nlocal;
+<span class="lineNum">     595 </span>            :   int pd_start;
+<span class="lineNum">     596 </span>            : // variables to test random decomposition (=domain decomposition)
+<span class="lineNum">     597 </span>            :   std::vector&lt;int&gt;  dd_gatindex;
+<span class="lineNum">     598 </span>            :   std::vector&lt;int&gt;  dd_g2l;
+<span class="lineNum">     599 </span>            :   std::vector&lt;real&gt; dd_masses;
+<span class="lineNum">     600 </span>            :   std::vector&lt;real&gt; dd_charges;
+<span class="lineNum">     601 </span>            :   std::vector&lt;real&gt; dd_forces;
+<span class="lineNum">     602 </span>            :   std::vector&lt;real&gt; dd_coordinates;
+<span class="lineNum">     603 </span>            :   int dd_nlocal;
+<span class="lineNum">     604 </span>            : // random stream to choose decompositions
+<span class="lineNum">     605 </span><span class="lineCov">        512 :   Random rnd;</span>
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span><span class="lineCov">      24990 :   while(true) {</span>
+<span class="lineNum">     608 </span><span class="lineCov">      25502 :     if(!noatoms) {</span>
+<span class="lineNum">     609 </span><span class="lineCov">      24826 :       if(use_molfile==true) {</span>
+<span class="lineNum">     610 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     611 </span>            :         int rc;
+<span class="lineNum">     612 </span><span class="lineCov">       2373 :         rc = api-&gt;read_next_timestep(h_in, natoms, &amp;ts_in);</span>
+<span class="lineNum">     613 </span>            :         //if(rc==MOLFILE_SUCCESS){
+<span class="lineNum">     614 </span>            :         //       printf(&quot; read this one :success \n&quot;);
+<span class="lineNum">     615 </span>            :         //}
+<span class="lineNum">     616 </span><span class="lineCov">       2373 :         if(rc==MOLFILE_EOF) {</span>
+<span class="lineNum">     617 </span>            :           //printf(&quot; read this one :eof or error \n&quot;);
+<span class="lineNum">     618 </span>            :           break;
+<span class="lineNum">     619 </span>            :         }
+<span class="lineNum">     620 </span>            : #endif
+<span class="lineNum">     621 </span><span class="lineCov">      24636 :       } else if(trajectory_fmt==&quot;xyz&quot; || trajectory_fmt==&quot;gro&quot;) {</span>
+<span class="lineNum">     622 </span><span class="lineCov">      22384 :         if(!Tools::getline(fp,line)) break;</span>
+<span class="lineNum">     623 </span>            :       }
+<span class="lineNum">     624 </span>            :     }
+<span class="lineNum">     625 </span>            : 
+<span class="lineNum">     626 </span>            :     bool first_step=false;
+<span class="lineNum">     627 </span><span class="lineCov">      25026 :     if(!noatoms) {</span>
+<span class="lineNum">     628 </span><span class="lineCov">      48465 :       if(use_molfile==false &amp;&amp; (trajectory_fmt==&quot;xyz&quot; || trajectory_fmt==&quot;gro&quot;)) {</span>
+<span class="lineNum">     629 </span><span class="lineCov">      21962 :         if(trajectory_fmt==&quot;gro&quot;) if(!Tools::getline(fp,line)) error(&quot;premature end of trajectory file&quot;);</span>
+<span class="lineNum">     630 </span><span class="lineCov">      21962 :         sscanf(line.c_str(),&quot;%100d&quot;,&amp;natoms);</span>
+<span class="lineNum">     631 </span>            :       }
+<span class="lineNum">     632 </span>            :     }
+<span class="lineNum">     633 </span><span class="lineCov">      25026 :     if(checknatoms&lt;0 &amp;&amp; !noatoms) {</span>
+<span class="lineNum">     634 </span><span class="lineCov">        481 :       pd_nlocal=natoms;</span>
+<span class="lineNum">     635 </span><span class="lineCov">        481 :       pd_start=0;</span>
+<span class="lineNum">     636 </span>            :       first_step=true;
+<span class="lineNum">     637 </span><span class="lineCov">        962 :       masses.assign(natoms,NAN);</span>
+<span class="lineNum">     638 </span><span class="lineCov">        962 :       charges.assign(natoms,NAN);</span>
+<span class="lineNum">     639 </span>            : //case pdb: structure
+<span class="lineNum">     640 </span><span class="lineCov">        481 :       if(pdbfile.length()&gt;0) {</span>
+<span class="lineNum">     641 </span><span class="lineCov">      10845 :         for(unsigned i=0; i&lt;pdb.size(); ++i) {</span>
+<span class="lineNum">     642 </span><span class="lineCov">      10788 :           AtomNumber an=pdb.getAtomNumbers()[i];</span>
+<span class="lineNum">     643 </span>            :           unsigned index=an.index();
+<span class="lineNum">     644 </span><span class="lineCov">       5394 :           if( index&gt;=unsigned(natoms) ) error(&quot;atom index in pdb exceeds the number of atoms in trajectory&quot;);</span>
+<span class="lineNum">     645 </span><span class="lineCov">      16182 :           masses[index]=pdb.getOccupancy()[i];</span>
+<span class="lineNum">     646 </span><span class="lineCov">      10788 :           charges[index]=pdb.getBeta()[i];</span>
+<span class="lineNum">     647 </span>            :         }
+<span class="lineNum">     648 </span>            :       }
+<span class="lineNum">     649 </span><span class="lineCov">        481 :       if(mcfile.length()&gt;0) {</span>
+<span class="lineNum">     650 </span><span class="lineCov">          8 :         IFile ifile;</span>
+<span class="lineNum">     651 </span><span class="lineCov">          4 :         ifile.open(mcfile);</span>
+<span class="lineNum">     652 </span>            :         int index; double mass; double charge;
+<span class="lineNum">     653 </span><span class="lineCov">       2176 :         while(ifile.scanField(&quot;index&quot;,index).scanField(&quot;mass&quot;,mass).scanField(&quot;charge&quot;,charge).scanField()) {</span>
+<span class="lineNum">     654 </span><span class="lineCov">        864 :           masses[index]=mass;</span>
+<span class="lineNum">     655 </span><span class="lineCov">        864 :           charges[index]=charge;</span>
+<span class="lineNum">     656 </span>            :         }
+<span class="lineNum">     657 </span>            :       }
+<span class="lineNum">     658 </span><span class="lineCov">      24545 :     } else if( checknatoms&lt;0 &amp;&amp; noatoms ) {</span>
+<span class="lineNum">     659 </span><span class="lineCov">         31 :       natoms=0;</span>
+<span class="lineNum">     660 </span>            :     }
+<span class="lineNum">     661 </span><span class="lineCov">      25026 :     if( checknatoms&lt;0 ) {</span>
+<span class="lineNum">     662 </span><span class="lineCov">        512 :       if(kt&gt;=0) {</span>
+<span class="lineNum">     663 </span>            :         p.cmd(&quot;setKbT&quot;,&amp;kt);
+<span class="lineNum">     664 </span>            :       }
+<span class="lineNum">     665 </span><span class="lineCov">        512 :       checknatoms=natoms;</span>
+<span class="lineNum">     666 </span>            :       p.cmd(&quot;setNatoms&quot;,&amp;natoms);
+<span class="lineNum">     667 </span>            :       p.cmd(&quot;init&quot;);
+<span class="lineNum">     668 </span>            :     }
+<span class="lineNum">     669 </span><span class="lineCov">      25026 :     if(checknatoms!=natoms) {</span>
+<span class="lineNum">     670 </span><span class="lineNoCov">          0 :       std::string stepstr; Tools::convert(step,stepstr);</span>
+<span class="lineNum">     671 </span><span class="lineNoCov">          0 :       error(&quot;number of atoms in frame &quot; + stepstr + &quot; does not match number of atoms in first frame&quot;);</span>
+<span class="lineNum">     672 </span>            :     }
+<span class="lineNum">     673 </span>            : 
+<span class="lineNum">     674 </span><span class="lineCov">      50052 :     coordinates.assign(3*natoms,real(0.0));</span>
+<span class="lineNum">     675 </span><span class="lineCov">      50052 :     forces.assign(3*natoms,real(0.0));</span>
+<span class="lineNum">     676 </span><span class="lineCov">      50052 :     cell.assign(9,real(0.0));</span>
+<span class="lineNum">     677 </span><span class="lineCov">      50052 :     virial.assign(9,real(0.0));</span>
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span><span class="lineCov">      25026 :     if( first_step || rnd.U01()&gt;0.5) {</span>
+<span class="lineNum">     680 </span><span class="lineCov">      13099 :       if(debug_pd) {</span>
+<span class="lineNum">     681 </span><span class="lineCov">        136 :         int npe=intracomm.Get_size();</span>
+<span class="lineNum">     682 </span><span class="lineCov">        136 :         vector&lt;int&gt; loc(npe,0);</span>
+<span class="lineNum">     683 </span><span class="lineCov">        136 :         vector&lt;int&gt; start(npe,0);</span>
+<span class="lineNum">     684 </span><span class="lineCov">        952 :         for(int i=0; i&lt;npe-1; i++) {</span>
+<span class="lineNum">     685 </span><span class="lineCov">        408 :           int cc=(natoms*2*rnd.U01())/npe;</span>
+<span class="lineNum">     686 </span><span class="lineCov">        816 :           if(start[i]+cc&gt;natoms) cc=natoms-start[i];</span>
+<span class="lineNum">     687 </span><span class="lineCov">        408 :           loc[i]=cc;</span>
+<span class="lineNum">     688 </span><span class="lineCov">       1224 :           start[i+1]=start[i]+loc[i];</span>
+<span class="lineNum">     689 </span>            :         }
+<span class="lineNum">     690 </span><span class="lineCov">        408 :         loc[npe-1]=natoms-start[npe-1];</span>
+<span class="lineNum">     691 </span><span class="lineCov">        136 :         intracomm.Bcast(loc,0);</span>
+<span class="lineNum">     692 </span><span class="lineCov">        136 :         intracomm.Bcast(start,0);</span>
+<span class="lineNum">     693 </span><span class="lineCov">        272 :         pd_nlocal=loc[intracomm.Get_rank()];</span>
+<span class="lineNum">     694 </span><span class="lineCov">        272 :         pd_start=start[intracomm.Get_rank()];</span>
+<span class="lineNum">     695 </span><span class="lineCov">        136 :         if(intracomm.Get_rank()==0) {</span>
+<span class="lineNum">     696 </span>            :           fprintf(out,&quot;\nDRIVER: Reassigning particle decomposition\n&quot;);
+<span class="lineNum">     697 </span><span class="lineCov">        442 :           fprintf(out,&quot;DRIVER: &quot;); for(int i=0; i&lt;npe; i++) fprintf(out,&quot;%d &quot;,loc[i]); printf(&quot;\n&quot;);</span>
+<span class="lineNum">     698 </span><span class="lineCov">        442 :           fprintf(out,&quot;DRIVER: &quot;); for(int i=0; i&lt;npe; i++) fprintf(out,&quot;%d &quot;,start[i]); printf(&quot;\n&quot;);</span>
+<span class="lineNum">     699 </span>            :         }
+<span class="lineNum">     700 </span>            :         p.cmd(&quot;setAtomsNlocal&quot;,&amp;pd_nlocal);
+<span class="lineNum">     701 </span>            :         p.cmd(&quot;setAtomsContiguous&quot;,&amp;pd_start);
+<span class="lineNum">     702 </span><span class="lineCov">      12963 :       } else if(debug_dd) {</span>
+<span class="lineNum">     703 </span><span class="lineCov">        910 :         int npe=intracomm.Get_size();</span>
+<span class="lineNum">     704 </span><span class="lineCov">        910 :         int rank=intracomm.Get_rank();</span>
+<span class="lineNum">     705 </span><span class="lineCov">       1820 :         dd_charges.assign(natoms,0.0);</span>
+<span class="lineNum">     706 </span><span class="lineCov">       1820 :         dd_masses.assign(natoms,0.0);</span>
+<span class="lineNum">     707 </span><span class="lineCov">       1820 :         dd_gatindex.assign(natoms,-1);</span>
+<span class="lineNum">     708 </span><span class="lineCov">       1820 :         dd_g2l.assign(natoms,-1);</span>
+<span class="lineNum">     709 </span><span class="lineCov">       1820 :         dd_coordinates.assign(3*natoms,0.0);</span>
+<span class="lineNum">     710 </span><span class="lineCov">       1820 :         dd_forces.assign(3*natoms,0.0);</span>
+<span class="lineNum">     711 </span><span class="lineCov">        910 :         dd_nlocal=0;</span>
+<span class="lineNum">     712 </span><span class="lineCov">      96154 :         for(int i=0; i&lt;natoms; ++i) {</span>
+<span class="lineNum">     713 </span><span class="lineCov">      47622 :           double r=rnd.U01()*npe;</span>
+<span class="lineNum">     714 </span><span class="lineCov">     104582 :           int n; for(n=0; n&lt;npe; n++) if(n+1&gt;r)break;</span>
+<span class="lineNum">     715 </span><span class="lineCov">      47622 :           plumed_assert(n&lt;npe);</span>
+<span class="lineNum">     716 </span><span class="lineCov">      47622 :           if(n==rank) {</span>
+<span class="lineNum">     717 </span><span class="lineCov">      34446 :             dd_gatindex[dd_nlocal]=i;</span>
+<span class="lineNum">     718 </span><span class="lineCov">      34446 :             dd_g2l[i]=dd_nlocal;</span>
+<span class="lineNum">     719 </span><span class="lineCov">      34446 :             dd_charges[dd_nlocal]=charges[i];</span>
+<span class="lineNum">     720 </span><span class="lineCov">      34446 :             dd_masses[dd_nlocal]=masses[i];</span>
+<span class="lineNum">     721 </span><span class="lineCov">      17223 :             dd_nlocal++;</span>
+<span class="lineNum">     722 </span>            :           }
+<span class="lineNum">     723 </span>            :         }
+<span class="lineNum">     724 </span><span class="lineCov">        910 :         if(intracomm.Get_rank()==0) {</span>
+<span class="lineNum">     725 </span>            :           fprintf(out,&quot;\nDRIVER: Reassigning domain decomposition\n&quot;);
+<span class="lineNum">     726 </span>            :         }
+<span class="lineNum">     727 </span>            :         p.cmd(&quot;setAtomsNlocal&quot;,&amp;dd_nlocal);
+<span class="lineNum">     728 </span>            :         p.cmd(&quot;setAtomsGatindex&quot;,&amp;dd_gatindex[0]);
+<span class="lineNum">     729 </span>            :       }
+<span class="lineNum">     730 </span>            :     }
+<span class="lineNum">     731 </span>            : 
+<span class="lineNum">     732 </span><span class="lineCov">      25026 :     int plumedStopCondition=0;</span>
+<span class="lineNum">     733 </span><span class="lineCov">      25026 :     if(!noatoms) {</span>
+<span class="lineNum">     734 </span><span class="lineCov">      24350 :       if(use_molfile) {</span>
+<span class="lineNum">     735 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     736 </span><span class="lineCov">       2319 :         if(pbc_cli_given==false) {</span>
+<span class="lineNum">     737 </span><span class="lineCov">       2316 :           if(ts_in.A&gt;0.0) { // this is negative if molfile does not provide box</span>
+<span class="lineNum">     738 </span>            :             // info on the cell: convert using pbcset.tcl from pbctools in vmd distribution
+<span class="lineNum">     739 </span><span class="lineCov">       2313 :             real cosBC=cos(ts_in.alpha*pi/180.);</span>
+<span class="lineNum">     740 </span>            :             //double sinBC=sin(ts_in.alpha*pi/180.);
+<span class="lineNum">     741 </span><span class="lineCov">       2313 :             real cosAC=cos(ts_in.beta*pi/180.);</span>
+<span class="lineNum">     742 </span><span class="lineCov">       2313 :             real cosAB=cos(ts_in.gamma*pi/180.);</span>
+<span class="lineNum">     743 </span><span class="lineCov">       2313 :             real sinAB=sin(ts_in.gamma*pi/180.);</span>
+<span class="lineNum">     744 </span><span class="lineCov">       2313 :             real Ax=ts_in.A;</span>
+<span class="lineNum">     745 </span><span class="lineCov">       2313 :             real Bx=ts_in.B*cosAB;</span>
+<span class="lineNum">     746 </span><span class="lineCov">       2313 :             real By=ts_in.B*sinAB;</span>
+<span class="lineNum">     747 </span><span class="lineCov">       2313 :             real Cx=ts_in.C*cosAC;</span>
+<span class="lineNum">     748 </span><span class="lineCov">       2313 :             real Cy=(ts_in.C*ts_in.B*cosBC-Cx*Bx)/By;</span>
+<span class="lineNum">     749 </span><span class="lineCov">       2313 :             real Cz=sqrt(ts_in.C*ts_in.C-Cx*Cx-Cy*Cy);</span>
+<span class="lineNum">     750 </span><span class="lineCov">       4626 :             cell[0]=Ax/10.; cell[1]=0.; cell[2]=0.;</span>
+<span class="lineNum">     751 </span><span class="lineCov">       2313 :             cell[3]=Bx/10.; cell[4]=By/10.; cell[5]=0.;</span>
+<span class="lineNum">     752 </span><span class="lineCov">       2313 :             cell[6]=Cx/10.; cell[7]=Cy/10.; cell[8]=Cz/10.;</span>
+<span class="lineNum">     753 </span>            :           } else {
+<span class="lineNum">     754 </span><span class="lineCov">          6 :             cell[0]=0.0; cell[1]=0.0; cell[2]=0.0;</span>
+<span class="lineNum">     755 </span><span class="lineCov">          3 :             cell[3]=0.0; cell[4]=0.0; cell[5]=0.0;</span>
+<span class="lineNum">     756 </span><span class="lineCov">          3 :             cell[6]=0.0; cell[7]=0.0; cell[8]=0.0;</span>
+<span class="lineNum">     757 </span>            :           }
+<span class="lineNum">     758 </span>            :         } else {
+<span class="lineNum">     759 </span><span class="lineCov">         57 :           for(unsigned i=0; i&lt;9; i++)cell[i]=pbc_cli_box[i];</span>
+<span class="lineNum">     760 </span>            :         }
+<span class="lineNum">     761 </span>            :         // info on coords
+<span class="lineNum">     762 </span>            :         // the order is xyzxyz...
+<span class="lineNum">     763 </span><span class="lineCov">    4567677 :         for(unsigned i=0; i&lt;3*natoms; i++) {</span>
+<span class="lineNum">     764 </span><span class="lineCov">    4565358 :           coordinates[i]=real(ts_in.coords[i]/10.); //convert to nm</span>
+<span class="lineNum">     765 </span>            :           //cerr&lt;&lt;&quot;COOR &quot;&lt;&lt;coordinates[i]&lt;&lt;endl;
+<span class="lineNum">     766 </span>            :         }
+<span class="lineNum">     767 </span>            : #endif
+<span class="lineNum">     768 </span><span class="lineCov">      44032 :       } else if(trajectory_fmt==&quot;xdr-xtc&quot; || trajectory_fmt==&quot;xdr-trr&quot;) {</span>
+<span class="lineNum">     769 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     770 </span>            :         int localstep;
+<span class="lineNum">     771 </span>            :         float time;
+<span class="lineNum">     772 </span>            :         matrix box;
+<span class="lineNum">     773 </span><span class="lineCov">         69 :         rvec* pos=new rvec[natoms];</span>
+<span class="lineNum">     774 </span>            :         float prec,lambda;
+<span class="lineNum">     775 </span>            :         int ret=exdrOK;
+<span class="lineNum">     776 </span><span class="lineCov">         69 :         if(trajectory_fmt==&quot;xdr-xtc&quot;) ret=read_xtc(xd,natoms,&amp;localstep,&amp;time,box,pos,&amp;prec);</span>
+<span class="lineNum">     777 </span><span class="lineCov">         69 :         if(trajectory_fmt==&quot;xdr-trr&quot;) ret=read_trr(xd,natoms,&amp;localstep,&amp;time,&amp;lambda,box,pos,NULL,NULL);</span>
+<span class="lineNum">     778 </span><span class="lineCov">         69 :         if(stride==0) step=localstep;</span>
+<span class="lineNum">     779 </span><span class="lineCov">         69 :         if(ret==exdrENDOFFILE) break;</span>
+<span class="lineNum">     780 </span><span class="lineCov">         67 :         if(ret!=exdrOK) break;</span>
+<span class="lineNum">     781 </span><span class="lineCov">        832 :         for(unsigned i=0; i&lt;3; i++) for(unsigned j=0; j&lt;3; j++) cell[3*i+j]=box[i][j];</span>
+<span class="lineNum">     782 </span><span class="lineCov">      10976 :         for(unsigned i=0; i&lt;natoms; i++) for(unsigned j=0; j&lt;3; j++)</span>
+<span class="lineNum">     783 </span><span class="lineCov">      16368 :             coordinates[3*i+j]=real(pos[i][j]);</span>
+<span class="lineNum">     784 </span><span class="lineCov">         64 :         delete [] pos;</span>
+<span class="lineNum">     785 </span>            : #endif
+<span class="lineNum">     786 </span>            :       } else {
+<span class="lineNum">     787 </span><span class="lineCov">      21962 :         if(trajectory_fmt==&quot;xyz&quot;) {</span>
+<span class="lineNum">     788 </span><span class="lineCov">      19947 :           if(!Tools::getline(fp,line)) error(&quot;premature end of trajectory file&quot;);</span>
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span><span class="lineCov">      19947 :           std::vector&lt;double&gt; celld(9,0.0);</span>
+<span class="lineNum">     791 </span><span class="lineCov">      19947 :           if(pbc_cli_given==false) {</span>
+<span class="lineNum">     792 </span><span class="lineCov">      19747 :             std::vector&lt;std::string&gt; words;</span>
+<span class="lineNum">     793 </span><span class="lineCov">      39494 :             words=Tools::getWords(line);</span>
+<span class="lineNum">     794 </span><span class="lineCov">      19747 :             if(words.size()==3) {</span>
+<span class="lineNum">     795 </span><span class="lineCov">      19285 :               sscanf(line.c_str(),&quot;%100lf %100lf %100lf&quot;,&amp;celld[0],&amp;celld[4],&amp;celld[8]);</span>
+<span class="lineNum">     796 </span><span class="lineCov">        462 :             } else if(words.size()==9) {</span>
+<span class="lineNum">     797 </span><span class="lineCov">        462 :               sscanf(line.c_str(),&quot;%100lf %100lf %100lf %100lf %100lf %100lf %100lf %100lf %100lf&quot;,</span>
+<span class="lineNum">     798 </span>            :                      &amp;celld[0], &amp;celld[1], &amp;celld[2],
+<span class="lineNum">     799 </span>            :                      &amp;celld[3], &amp;celld[4], &amp;celld[5],
+<span class="lineNum">     800 </span>            :                      &amp;celld[6], &amp;celld[7], &amp;celld[8]);
+<span class="lineNum">     801 </span><span class="lineNoCov">          0 :             } else error(&quot;needed box in second line of xyz file&quot;);</span>
+<span class="lineNum">     802 </span>            :           } else {                      // from command line
+<span class="lineNum">     803 </span><span class="lineCov">        200 :             celld=pbc_cli_box;</span>
+<span class="lineNum">     804 </span>            :           }
+<span class="lineNum">     805 </span><span class="lineCov">     378993 :           for(unsigned i=0; i&lt;9; i++)cell[i]=real(celld[i]);</span>
+<span class="lineNum">     806 </span>            :         }
+<span class="lineNum">     807 </span>            :         int ddist=0;
+<span class="lineNum">     808 </span>            :         // Read coordinates
+<span class="lineNum">     809 </span><span class="lineCov">    3331894 :         for(int i=0; i&lt;natoms; i++) {</span>
+<span class="lineNum">     810 </span><span class="lineCov">    1654966 :           bool ok=Tools::getline(fp,line);</span>
+<span class="lineNum">     811 </span><span class="lineCov">    1654966 :           if(!ok) error(&quot;premature end of trajectory file&quot;);</span>
+<span class="lineNum">     812 </span>            :           double cc[3];
+<span class="lineNum">     813 </span><span class="lineCov">    1654966 :           if(trajectory_fmt==&quot;xyz&quot;) {</span>
+<span class="lineNum">     814 </span>            :             char dummy[1000];
+<span class="lineNum">     815 </span><span class="lineCov">    1579770 :             int ret=std::sscanf(line.c_str(),&quot;%999s %100lf %100lf %100lf&quot;,dummy,&amp;cc[0],&amp;cc[1],&amp;cc[2]);</span>
+<span class="lineNum">     816 </span><span class="lineCov">    1579770 :             if(ret!=4) error(&quot;cannot read line&quot;+line);</span>
+<span class="lineNum">     817 </span><span class="lineCov">      75196 :           } else if(trajectory_fmt==&quot;gro&quot;) {</span>
+<span class="lineNum">     818 </span>            :             // do the gromacs way
+<span class="lineNum">     819 </span><span class="lineCov">      75196 :             if(!i) {</span>
+<span class="lineNum">     820 </span>            :               //
+<span class="lineNum">     821 </span>            :               // calculate the distance between dots (as in gromacs gmxlib/confio.c, routine get_w_conf )
+<span class="lineNum">     822 </span>            :               //
+<span class="lineNum">     823 </span>            :               const char      *p1, *p2, *p3;
+<span class="lineNum">     824 </span>            :               p1 = strchr(line.c_str(), '.');
+<span class="lineNum">     825 </span><span class="lineCov">       2015 :               if (p1 == NULL) error(&quot;seems there are no coordinates in the gro file&quot;);</span>
+<span class="lineNum">     826 </span><span class="lineCov">       2015 :               p2 = strchr(&amp;p1[1], '.');</span>
+<span class="lineNum">     827 </span><span class="lineCov">       2015 :               if (p2 == NULL) error(&quot;seems there is only one coordinates in the gro file&quot;);</span>
+<span class="lineNum">     828 </span><span class="lineCov">       2015 :               ddist = p2 - p1;</span>
+<span class="lineNum">     829 </span><span class="lineCov">       2015 :               p3 = strchr(&amp;p2[1], '.');</span>
+<span class="lineNum">     830 </span><span class="lineCov">       2015 :               if (p3 == NULL)error(&quot;seems there are only two coordinates in the gro file&quot;);</span>
+<span class="lineNum">     831 </span><span class="lineCov">       2015 :               if (p3 - p2 != ddist)error(&quot;not uniform spacing in fields in the gro file&quot;);</span>
+<span class="lineNum">     832 </span>            :             }
+<span class="lineNum">     833 </span><span class="lineCov">     150392 :             Tools::convert(line.substr(20,ddist),cc[0]);</span>
+<span class="lineNum">     834 </span><span class="lineCov">     150392 :             Tools::convert(line.substr(20+ddist,ddist),cc[1]);</span>
+<span class="lineNum">     835 </span><span class="lineCov">     150392 :             Tools::convert(line.substr(20+ddist+ddist,ddist),cc[2]);</span>
+<span class="lineNum">     836 </span><span class="lineNoCov">          0 :           } else plumed_error();</span>
+<span class="lineNum">     837 </span><span class="lineCov">    1654966 :           if(!debug_pd || ( i&gt;=pd_start &amp;&amp; i&lt;pd_start+pd_nlocal) ) {</span>
+<span class="lineNum">     838 </span><span class="lineCov">    3274292 :             coordinates[3*i]=real(cc[0]);</span>
+<span class="lineNum">     839 </span><span class="lineCov">    3274292 :             coordinates[3*i+1]=real(cc[1]);</span>
+<span class="lineNum">     840 </span><span class="lineCov">    3274292 :             coordinates[3*i+2]=real(cc[2]);</span>
+<span class="lineNum">     841 </span>            :           }
+<span class="lineNum">     842 </span>            :         }
+<span class="lineNum">     843 </span><span class="lineCov">      21962 :         if(trajectory_fmt==&quot;gro&quot;) {</span>
+<span class="lineNum">     844 </span><span class="lineCov">       2015 :           if(!Tools::getline(fp,line)) error(&quot;premature end of trajectory file&quot;);</span>
+<span class="lineNum">     845 </span><span class="lineCov">       4030 :           std::vector&lt;string&gt; words=Tools::getWords(line);</span>
+<span class="lineNum">     846 </span><span class="lineCov">       2015 :           if(words.size()&lt;3) error(&quot;cannot understand box format&quot;);</span>
+<span class="lineNum">     847 </span><span class="lineCov">       2015 :           Tools::convert(words[0],cell[0]);</span>
+<span class="lineNum">     848 </span><span class="lineCov">       2015 :           Tools::convert(words[1],cell[4]);</span>
+<span class="lineNum">     849 </span><span class="lineCov">       2015 :           Tools::convert(words[2],cell[8]);</span>
+<span class="lineNum">     850 </span><span class="lineCov">       2233 :           if(words.size()&gt;3) Tools::convert(words[3],cell[1]);</span>
+<span class="lineNum">     851 </span><span class="lineCov">       2233 :           if(words.size()&gt;4) Tools::convert(words[4],cell[2]);</span>
+<span class="lineNum">     852 </span><span class="lineCov">       2233 :           if(words.size()&gt;5) Tools::convert(words[5],cell[3]);</span>
+<span class="lineNum">     853 </span><span class="lineCov">       2233 :           if(words.size()&gt;6) Tools::convert(words[6],cell[5]);</span>
+<span class="lineNum">     854 </span><span class="lineCov">       2233 :           if(words.size()&gt;7) Tools::convert(words[7],cell[6]);</span>
+<span class="lineNum">     855 </span><span class="lineCov">       2233 :           if(words.size()&gt;8) Tools::convert(words[8],cell[7]);</span>
+<span class="lineNum">     856 </span>            :         }
+<span class="lineNum">     857 </span>            : 
+<span class="lineNum">     858 </span>            :       }
+<span class="lineNum">     859 </span>            : 
+<span class="lineNum">     860 </span>            :       p.cmd(&quot;setStepLong&quot;,&amp;step);
+<span class="lineNum">     861 </span>            :       p.cmd(&quot;setStopFlag&quot;,&amp;plumedStopCondition);
+<span class="lineNum">     862 </span>            : 
+<span class="lineNum">     863 </span><span class="lineCov">      24345 :       if(debug_dd) {</span>
+<span class="lineNum">     864 </span><span class="lineCov">      66368 :         for(int i=0; i&lt;dd_nlocal; ++i) {</span>
+<span class="lineNum">     865 </span><span class="lineCov">      64664 :           int kk=dd_gatindex[i];</span>
+<span class="lineNum">     866 </span><span class="lineCov">      96996 :           dd_coordinates[3*i+0]=coordinates[3*kk+0];</span>
+<span class="lineNum">     867 </span><span class="lineCov">      96996 :           dd_coordinates[3*i+1]=coordinates[3*kk+1];</span>
+<span class="lineNum">     868 </span><span class="lineCov">      96996 :           dd_coordinates[3*i+2]=coordinates[3*kk+2];</span>
+<span class="lineNum">     869 </span>            :         }
+<span class="lineNum">     870 </span>            :         p.cmd(&quot;setForces&quot;,&amp;dd_forces[0]);
+<span class="lineNum">     871 </span>            :         p.cmd(&quot;setPositions&quot;,&amp;dd_coordinates[0]);
+<span class="lineNum">     872 </span>            :         p.cmd(&quot;setMasses&quot;,&amp;dd_masses[0]);
+<span class="lineNum">     873 </span>            :         p.cmd(&quot;setCharges&quot;,&amp;dd_charges[0]);
+<span class="lineNum">     874 </span>            :       } else {
+<span class="lineNum">     875 </span>            : // this is required to avoid troubles when the last domain
+<span class="lineNum">     876 </span>            : // contains zero atoms
+<span class="lineNum">     877 </span>            : // Basically, for empty domains we pass null pointers
+<span class="lineNum">     878 </span>            : #define fix_pd(xx) (pd_nlocal!=0?&amp;xx:NULL)
+<span class="lineNum">     879 </span><span class="lineCov">      22641 :         p.cmd(&quot;setForces&quot;,fix_pd(forces[3*pd_start]));</span>
+<span class="lineNum">     880 </span><span class="lineCov">      22641 :         p.cmd(&quot;setPositions&quot;,fix_pd(coordinates[3*pd_start]));</span>
+<span class="lineNum">     881 </span><span class="lineCov">      22641 :         p.cmd(&quot;setMasses&quot;,fix_pd(masses[pd_start]));</span>
+<span class="lineNum">     882 </span><span class="lineCov">      22641 :         p.cmd(&quot;setCharges&quot;,fix_pd(charges[pd_start]));</span>
+<span class="lineNum">     883 </span>            :       }
+<span class="lineNum">     884 </span>            :       p.cmd(&quot;setBox&quot;,&amp;cell[0]);
+<span class="lineNum">     885 </span>            :       p.cmd(&quot;setVirial&quot;,&amp;virial[0]);
+<span class="lineNum">     886 </span>            :     } else {
+<span class="lineNum">     887 </span>            :       p.cmd(&quot;setStepLong&quot;,&amp;step);
+<span class="lineNum">     888 </span>            :       p.cmd(&quot;setStopFlag&quot;,&amp;plumedStopCondition);
+<span class="lineNum">     889 </span>            :     }
+<span class="lineNum">     890 </span>            :     p.cmd(&quot;calc&quot;);
+<span class="lineNum">     891 </span>            : 
+<span class="lineNum">     892 </span>            : // this is necessary as only processor zero is adding to the virial:
+<span class="lineNum">     893 </span><span class="lineCov">      25021 :     intracomm.Bcast(virial,0);</span>
+<span class="lineNum">     894 </span><span class="lineCov">      25021 :     if(debug_pd) intracomm.Sum(forces);</span>
+<span class="lineNum">     895 </span><span class="lineCov">      25021 :     if(debug_dd) {</span>
+<span class="lineNum">     896 </span><span class="lineCov">      66368 :       for(int i=0; i&lt;dd_nlocal; i++) {</span>
+<span class="lineNum">     897 </span><span class="lineCov">     129328 :         forces[3*dd_gatindex[i]+0]=dd_forces[3*i+0];</span>
+<span class="lineNum">     898 </span><span class="lineCov">      96996 :         forces[3*dd_gatindex[i]+1]=dd_forces[3*i+1];</span>
+<span class="lineNum">     899 </span><span class="lineCov">      96996 :         forces[3*dd_gatindex[i]+2]=dd_forces[3*i+2];</span>
+<span class="lineNum">     900 </span>            :       }
+<span class="lineNum">     901 </span><span class="lineCov">       3408 :       dd_forces.assign(3*natoms,0.0);</span>
+<span class="lineNum">     902 </span><span class="lineCov">       1704 :       intracomm.Sum(forces);</span>
+<span class="lineNum">     903 </span>            :     }
+<span class="lineNum">     904 </span><span class="lineCov">      25021 :     if(debug_grex &amp;&amp;step%grex_stride==0) {</span>
+<span class="lineNum">     905 </span>            :       p.cmd(&quot;GREX savePositions&quot;);
+<span class="lineNum">     906 </span><span class="lineCov">         84 :       if(intracomm.Get_rank()&gt;0) {</span>
+<span class="lineNum">     907 </span>            :         p.cmd(&quot;GREX prepare&quot;);
+<span class="lineNum">     908 </span>            :       } else {
+<span class="lineNum">     909 </span><span class="lineCov">         42 :         int r=intercomm.Get_rank();</span>
+<span class="lineNum">     910 </span><span class="lineCov">         42 :         int n=intercomm.Get_size();</span>
+<span class="lineNum">     911 </span><span class="lineCov">         42 :         int partner=r+(2*((r+step/grex_stride)%2))-1;</span>
+<span class="lineNum">     912 </span><span class="lineCov">         42 :         if(partner&lt;0)partner=0;</span>
+<span class="lineNum">     913 </span><span class="lineCov">         42 :         if(partner&gt;=n) partner=n-1;</span>
+<span class="lineNum">     914 </span>            :         p.cmd(&quot;GREX setPartner&quot;,&amp;partner);
+<span class="lineNum">     915 </span>            :         p.cmd(&quot;GREX calculate&quot;);
+<span class="lineNum">     916 </span>            :         p.cmd(&quot;GREX shareAllDeltaBias&quot;);
+<span class="lineNum">     917 </span><span class="lineCov">        294 :         for(int i=0; i&lt;n; i++) {</span>
+<span class="lineNum">     918 </span><span class="lineCov">        126 :           string s; Tools::convert(i,s);</span>
+<span class="lineNum">     919 </span><span class="lineCov">        252 :           real a=NAN; s=&quot;GREX getDeltaBias &quot;+s; p.cmd(s.c_str(),&amp;a);</span>
+<span class="lineNum">     920 </span><span class="lineCov">        126 :           if(grex_log) fprintf(grex_log,&quot; %f&quot;,a);</span>
+<span class="lineNum">     921 </span>            :         }
+<span class="lineNum">     922 </span><span class="lineCov">         42 :         if(grex_log) fprintf(grex_log,&quot;\n&quot;);</span>
+<span class="lineNum">     923 </span>            :       }
+<span class="lineNum">     924 </span>            :     }
+<span class="lineNum">     925 </span>            : 
+<span class="lineNum">     926 </span>            : 
+<span class="lineNum">     927 </span><span class="lineCov">      25021 :     if(fp_forces) {</span>
+<span class="lineNum">     928 </span><span class="lineCov">      15895 :       fprintf(fp_forces,&quot;%d\n&quot;,natoms);</span>
+<span class="lineNum">     929 </span><span class="lineCov">     270215 :       string fmtv=dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot;\n&quot;;</span>
+<span class="lineNum">     930 </span><span class="lineCov">      79475 :       string fmt=dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot; &quot;+dumpforcesFmt+&quot;\n&quot;;</span>
+<span class="lineNum">     931 </span><span class="lineCov">      15895 :       if(dumpfullvirial) {</span>
+<span class="lineNum">     932 </span><span class="lineCov">        117 :         fprintf(fp_forces,fmtv.c_str(),virial[0],virial[1],virial[2],virial[3],virial[4],virial[5],virial[6],virial[7],virial[8]);</span>
+<span class="lineNum">     933 </span>            :       } else {
+<span class="lineNum">     934 </span><span class="lineCov">      15778 :         fprintf(fp_forces,fmt.c_str(),virial[0],virial[4],virial[8]);</span>
+<span class="lineNum">     935 </span>            :       }
+<span class="lineNum">     936 </span><span class="lineCov">      31790 :       fmt=&quot;X &quot;+fmt;</span>
+<span class="lineNum">     937 </span><span class="lineCov">    2502671 :       for(int i=0; i&lt;natoms; i++)</span>
+<span class="lineNum">     938 </span><span class="lineCov">    4973552 :         fprintf(fp_forces,fmt.c_str(),forces[3*i],forces[3*i+1],forces[3*i+2]);</span>
+<span class="lineNum">     939 </span>            :     }
+<span class="lineNum">     940 </span><span class="lineCov">      25021 :     if(debugforces.length()&gt;0) {</span>
+<span class="lineNum">     941 </span>            :       // Now call the routine to work out the derivatives numerically
+<span class="lineNum">     942 </span><span class="lineCov">         30 :       numder.assign(3*natoms+9,real(0.0)); real base=0;</span>
+<span class="lineNum">     943 </span>            :       p.cmd(&quot;getBias&quot;,&amp;base);
+<span class="lineNum">     944 </span><span class="lineCov">         15 :       if( fabs(base)&lt;epsilon ) printf(&quot;WARNING: bias for configuration appears to be zero so debugging forces is trivial&quot;);</span>
+<span class="lineNum">     945 </span><span class="lineCov">         15 :       evaluateNumericalDerivatives( step, p, coordinates, masses, charges, cell, base, numder );</span>
+<span class="lineNum">     946 </span>            : 
+<span class="lineNum">     947 </span>            :       // And output everything to a file
+<span class="lineNum">     948 </span><span class="lineCov">         30 :       fp_dforces.fmtField(&quot; &quot; + dumpforcesFmt);</span>
+<span class="lineNum">     949 </span><span class="lineCov">        225 :       for(int i=0; i&lt;3*natoms; ++i) {</span>
+<span class="lineNum">     950 </span><span class="lineCov">        210 :         fp_dforces.printField(&quot;parameter&quot;,(int)i);</span>
+<span class="lineNum">     951 </span><span class="lineCov">        315 :         fp_dforces.printField(&quot;analytical&quot;,forces[i]);</span>
+<span class="lineNum">     952 </span><span class="lineCov">        210 :         fp_dforces.printField(&quot;numerical&quot;,-numder[i]);</span>
+<span class="lineNum">     953 </span><span class="lineCov">        105 :         fp_dforces.printField();</span>
+<span class="lineNum">     954 </span>            :       }
+<span class="lineNum">     955 </span>            :       // And print the virial
+<span class="lineNum">     956 </span><span class="lineCov">        285 :       for(int i=0; i&lt;9; ++i) {</span>
+<span class="lineNum">     957 </span><span class="lineCov">        270 :         fp_dforces.printField(&quot;parameter&quot;,3*natoms+i );</span>
+<span class="lineNum">     958 </span><span class="lineCov">        405 :         fp_dforces.printField(&quot;analytical&quot;,virial[i] );</span>
+<span class="lineNum">     959 </span><span class="lineCov">        405 :         fp_dforces.printField(&quot;numerical&quot;,-numder[3*natoms+i]);</span>
+<span class="lineNum">     960 </span><span class="lineCov">        135 :         fp_dforces.printField();</span>
+<span class="lineNum">     961 </span>            :       }
+<span class="lineNum">     962 </span>            :     }
+<span class="lineNum">     963 </span>            : 
+<span class="lineNum">     964 </span><span class="lineCov">      25021 :     if(noatoms &amp;&amp; plumedStopCondition) break;</span>
+<span class="lineNum">     965 </span>            : 
+<span class="lineNum">     966 </span><span class="lineCov">      24990 :     step+=stride;</span>
+<span class="lineNum">     967 </span>            :   }
+<span class="lineNum">     968 </span>            :   p.cmd(&quot;runFinalJobs&quot;);
+<span class="lineNum">     969 </span>            : 
+<span class="lineNum">     970 </span><span class="lineCov">        512 :   if(fp_forces) fclose(fp_forces);</span>
+<span class="lineNum">     971 </span><span class="lineCov">        512 :   if(debugforces.length()&gt;0) fp_dforces.close();</span>
+<span class="lineNum">     972 </span><span class="lineCov">        512 :   if(fp &amp;&amp; fp!=in)fclose(fp);</span>
+<span class="lineNum">     973 </span>            : #ifdef __PLUMED_HAS_XDRFILE
+<span class="lineNum">     974 </span><span class="lineCov">        512 :   if(xd) xdrfile_close(xd);</span>
+<span class="lineNum">     975 </span>            : #endif
+<span class="lineNum">     976 </span>            : #ifdef __PLUMED_HAS_MOLFILE_PLUGINS
+<span class="lineNum">     977 </span><span class="lineCov">        512 :   if(h_in) api-&gt;close_file_read(h_in);</span>
+<span class="lineNum">     978 </span><span class="lineCov">        512 :   if(ts_in.coords) delete [] ts_in.coords;</span>
+<span class="lineNum">     979 </span>            : #endif
+<span class="lineNum">     980 </span><span class="lineCov">        512 :   if(grex_log) fclose(grex_log);</span>
+<span class="lineNum">     981 </span>            : 
+<span class="lineNum">     982 </span>            :   return 0;
+<span class="lineNum">     983 </span>            : }
+<a name="984"><span class="lineNum">     984 </span>            : </a>
+<span class="lineNum">     985 </span>            : template&lt;typename real&gt;
+<span class="lineNum">     986 </span><span class="lineCov">         15 : void Driver&lt;real&gt;::evaluateNumericalDerivatives( const long int&amp; step, Plumed&amp; p, const std::vector&lt;real&gt;&amp; coordinates,</span>
+<span class="lineNum">     987 </span>            :     const std::vector&lt;real&gt;&amp; masses, const std::vector&lt;real&gt;&amp; charges,
+<span class="lineNum">     988 </span>            :     std::vector&lt;real&gt;&amp; cell, const double&amp; base, std::vector&lt;real&gt;&amp; numder ) {
+<span class="lineNum">     989 </span>            : 
+<span class="lineNum">     990 </span><span class="lineCov">         15 :   int natoms = coordinates.size() / 3; real delta = sqrt(epsilon);</span>
+<span class="lineNum">     991 </span><span class="lineCov">         15 :   std::vector&lt;Vector&gt; pos(natoms); real bias=0;</span>
+<span class="lineNum">     992 </span><span class="lineCov">         15 :   std::vector&lt;real&gt; fake_forces( 3*natoms ), fake_virial(9);</span>
+<span class="lineNum">     993 </span><span class="lineCov">         85 :   for(int i=0; i&lt;natoms; ++i) {</span>
+<span class="lineNum">     994 </span><span class="lineCov">        350 :     for(unsigned j=0; j&lt;3; ++j) pos[i][j]=coordinates[3*i+j];</span>
+<span class="lineNum">     995 </span>            :   }
+<span class="lineNum">     996 </span>            : 
+<span class="lineNum">     997 </span><span class="lineCov">         85 :   for(int i=0; i&lt;natoms; ++i) {</span>
+<span class="lineNum">     998 </span><span class="lineCov">        245 :     for(unsigned j=0; j&lt;3; ++j) {</span>
+<span class="lineNum">     999 </span><span class="lineCov">        210 :       pos[i][j]=pos[i][j]+delta;</span>
+<span class="lineNum">    1000 </span>            :       p.cmd(&quot;setStepLong&quot;,&amp;step);
+<span class="lineNum">    1001 </span><span class="lineCov">        105 :       p.cmd(&quot;setPositions&quot;,&amp;pos[0][0]);</span>
+<span class="lineNum">    1002 </span>            :       p.cmd(&quot;setForces&quot;,&amp;fake_forces[0]);
+<span class="lineNum">    1003 </span>            :       p.cmd(&quot;setMasses&quot;,&amp;masses[0]);
+<span class="lineNum">    1004 </span>            :       p.cmd(&quot;setCharges&quot;,&amp;charges[0]);
+<span class="lineNum">    1005 </span>            :       p.cmd(&quot;setBox&quot;,&amp;cell[0]);
+<span class="lineNum">    1006 </span>            :       p.cmd(&quot;setVirial&quot;,&amp;fake_virial[0]);
+<span class="lineNum">    1007 </span>            :       p.cmd(&quot;prepareCalc&quot;);
+<span class="lineNum">    1008 </span>            :       p.cmd(&quot;performCalcNoUpdate&quot;);
+<span class="lineNum">    1009 </span>            :       p.cmd(&quot;getBias&quot;,&amp;bias);
+<span class="lineNum">    1010 </span><span class="lineCov">        210 :       pos[i][j]=coordinates[3*i+j];</span>
+<span class="lineNum">    1011 </span><span class="lineCov">        210 :       numder[3*i+j] = (bias - base) / delta;</span>
+<span class="lineNum">    1012 </span>            :     }
+<span class="lineNum">    1013 </span>            :   }
+<span class="lineNum">    1014 </span>            : 
+<span class="lineNum">    1015 </span>            :   // Create the cell
+<span class="lineNum">    1016 </span><span class="lineCov">         15 :   Tensor box( cell[0], cell[1], cell[2], cell[3], cell[4], cell[5], cell[6], cell[7], cell[8] );</span>
+<span class="lineNum">    1017 </span>            :   // And the virial
+<span class="lineNum">    1018 </span><span class="lineCov">         15 :   Pbc pbc; pbc.setBox( box ); Tensor nvirial;</span>
+<span class="lineNum">    1019 </span><span class="lineCov">        195 :   for(unsigned i=0; i&lt;3; i++) for(unsigned k=0; k&lt;3; k++) {</span>
+<span class="lineNum">    1020 </span><span class="lineCov">        135 :       double arg0=box(i,k);</span>
+<span class="lineNum">    1021 </span><span class="lineCov">        765 :       for(int j=0; j&lt;natoms; ++j) pos[j]=pbc.realToScaled( pos[j] );</span>
+<span class="lineNum">    1022 </span><span class="lineCov">        270 :       cell[3*i+k]=box(i,k)=box(i,k)+delta; pbc.setBox(box);</span>
+<span class="lineNum">    1023 </span><span class="lineCov">        765 :       for(int j=0; j&lt;natoms; j++) pos[j]=pbc.scaledToReal( pos[j] );</span>
+<span class="lineNum">    1024 </span>            :       p.cmd(&quot;setStepLong&quot;,&amp;step);
+<span class="lineNum">    1025 </span><span class="lineCov">        135 :       p.cmd(&quot;setPositions&quot;,&amp;pos[0][0]);</span>
+<span class="lineNum">    1026 </span>            :       p.cmd(&quot;setForces&quot;,&amp;fake_forces[0]);
+<span class="lineNum">    1027 </span>            :       p.cmd(&quot;setMasses&quot;,&amp;masses[0]);
+<span class="lineNum">    1028 </span>            :       p.cmd(&quot;setCharges&quot;,&amp;charges[0]);
+<span class="lineNum">    1029 </span>            :       p.cmd(&quot;setBox&quot;,&amp;cell[0]);
+<span class="lineNum">    1030 </span>            :       p.cmd(&quot;setVirial&quot;,&amp;fake_virial[0]);
+<span class="lineNum">    1031 </span>            :       p.cmd(&quot;prepareCalc&quot;);
+<span class="lineNum">    1032 </span>            :       p.cmd(&quot;performCalcNoUpdate&quot;);
+<span class="lineNum">    1033 </span>            :       p.cmd(&quot;getBias&quot;,&amp;bias);
+<span class="lineNum">    1034 </span><span class="lineCov">        270 :       cell[3*i+k]=box(i,k)=arg0; pbc.setBox(box);</span>
+<span class="lineNum">    1035 </span><span class="lineCov">       2340 :       for(int j=0; j&lt;natoms; j++) for(unsigned n=0; n&lt;3; ++n) pos[j][n]=coordinates[3*j+n];</span>
+<span class="lineNum">    1036 </span><span class="lineCov">        135 :       nvirial(i,k) = ( bias - base ) / delta;</span>
+<span class="lineNum">    1037 </span>            :     }
+<span class="lineNum">    1038 </span><span class="lineCov">         15 :   nvirial=-matmul(box.transpose(),nvirial);</span>
+<span class="lineNum">    1039 </span><span class="lineCov">        195 :   for(unsigned i=0; i&lt;3; i++) for(unsigned k=0; k&lt;3; k++)  numder[3*natoms+3*i+k] = nvirial(i,k);</span>
+<span class="lineNum">    1040 </span>            : 
+<span class="lineNum">    1041 </span><span class="lineCov">         15 : }</span>
+<a name="1042"><span class="lineNum">    1042 </span>            : </a>
+<span class="lineNum">    1043 </span>            : }
+<span class="lineNum">    1044 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

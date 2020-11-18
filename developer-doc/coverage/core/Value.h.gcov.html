@@ -1,0 +1,383 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - core/Value.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">core</a> - Value.h<span style="font-size: 80%;"> (source / <a href="Value.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntryHi">94.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_core_Value_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_core_Value_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;map&gt;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Exception.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;tools/AtomNumber.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;tools/Vector.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : class ActionWithValue;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /// \ingroup TOOLBOX
+<span class="lineNum">      38 </span>            : /// A class for holding the value of a function together with its derivatives.
+<span class="lineNum">      39 </span>            : /// Typically, an  object of type PLMD::ActionWithValue will contain one
+<span class="lineNum">      40 </span>            : /// object of type PLUMD::Value that will be named after the label.  If the
+<span class="lineNum">      41 </span>            : /// PLMD::ActionWithValue is part of a class that calculates multiple components
+<span class="lineNum">      42 </span>            : /// then the class will contain multiple that will be called label.component-name
+<span class="lineNum">      43 </span>            : /// This class is used to pass information between different PLMD::Action
+<a name="44"><span class="lineNum">      44 </span>            : /// objects.  However, if you find a use for a tempory PLMD::Value in some method</a>
+<span class="lineNum">      45 </span>            : /// you are implementing please feel free to use it.
+<span class="lineNum">      46 </span><span class="lineCov">    2455190 : class Value {</span>
+<span class="lineNum">      47 </span>            :   friend class ActionWithValue;
+<span class="lineNum">      48 </span>            : /// This copies the contents of a value into a second value (just the derivatives and value)
+<span class="lineNum">      49 </span>            :   friend void copy( const Value&amp; val1, Value&amp; val2 );
+<span class="lineNum">      50 </span>            : /// This copies the contents of a value into a second value (but second value is a pointer)
+<span class="lineNum">      51 </span>            :   friend void copy( const Value&amp; val, Value* val2 );
+<span class="lineNum">      52 </span>            : /// This adds some derivatives onto the value
+<span class="lineNum">      53 </span>            :   friend void add( const Value&amp; val1, Value* valout );
+<span class="lineNum">      54 </span>            : /// This calculates val1*val2 and sorts out the derivatives
+<span class="lineNum">      55 </span>            :   friend void product( const Value&amp; val1, const Value&amp; val2, Value&amp; valout );
+<span class="lineNum">      56 </span>            : /// This calculates va1/val2 and sorts out the derivatives
+<span class="lineNum">      57 </span>            :   friend void quotient( const Value&amp; val1, const Value&amp; val2, Value* valout );
+<span class="lineNum">      58 </span>            : private:
+<span class="lineNum">      59 </span>            : /// The action in which this quantity is calculated
+<span class="lineNum">      60 </span>            :   ActionWithValue* action;
+<span class="lineNum">      61 </span>            : /// Had the value been set
+<span class="lineNum">      62 </span>            :   bool value_set;
+<span class="lineNum">      63 </span>            : /// The value of the quantity
+<span class="lineNum">      64 </span>            :   double value;
+<span class="lineNum">      65 </span>            : /// The force acting on this quantity
+<span class="lineNum">      66 </span>            :   double inputForce;
+<span class="lineNum">      67 </span>            : /// A flag telling us we have a force acting on this quantity
+<span class="lineNum">      68 </span>            :   bool hasForce;
+<span class="lineNum">      69 </span>            : /// The derivatives of the quantity stored in value
+<span class="lineNum">      70 </span>            :   std::vector&lt;double&gt; derivatives;
+<span class="lineNum">      71 </span>            :   std::map&lt;AtomNumber,Vector&gt; gradients;
+<span class="lineNum">      72 </span>            : /// The name of this quantiy
+<span class="lineNum">      73 </span>            :   std::string name;
+<span class="lineNum">      74 </span>            : /// Does this quanity have derivatives
+<span class="lineNum">      75 </span>            :   bool hasDeriv;
+<span class="lineNum">      76 </span>            : /// Is this quantity periodic
+<span class="lineNum">      77 </span>            :   enum {unset,periodic,notperiodic} periodicity;
+<span class="lineNum">      78 </span>            : /// Various quantities that describe the domain of this value
+<span class="lineNum">      79 </span>            :   std::string str_min, str_max;
+<span class="lineNum">      80 </span>            :   double min,max;
+<span class="lineNum">      81 </span>            :   double max_minus_min;
+<span class="lineNum">      82 </span>            :   double inv_max_minus_min;
+<span class="lineNum">      83 </span>            : /// Complete the setup of the periodicity
+<span class="lineNum">      84 </span>            :   void setupPeriodicity();
+<span class="lineNum">      85 </span>            : // bring value within PBCs
+<span class="lineNum">      86 </span>            :   void applyPeriodicity();
+<span class="lineNum">      87 </span>            : public:
+<span class="lineNum">      88 </span>            : /// A constructor that can be used to make Vectors of values
+<span class="lineNum">      89 </span>            :   Value();
+<span class="lineNum">      90 </span>            : /// A constructor that is used throughout the code to setup the value poiters
+<span class="lineNum">      91 </span>            :   Value(ActionWithValue* av, const std::string&amp; name, const bool withderiv);
+<span class="lineNum">      92 </span>            : /// Set the value of the function
+<span class="lineNum">      93 </span>            :   void set(double);
+<span class="lineNum">      94 </span>            : /// Add something to the value of the function
+<span class="lineNum">      95 </span>            :   void add(double);
+<span class="lineNum">      96 </span>            : /// Get the value of the function
+<span class="lineNum">      97 </span>            :   double get() const;
+<span class="lineNum">      98 </span>            : /// Find out if the value has been set
+<span class="lineNum">      99 </span>            :   bool valueHasBeenSet() const;
+<span class="lineNum">     100 </span>            : /// Check if the value is periodic
+<span class="lineNum">     101 </span>            :   bool isPeriodic() const;
+<span class="lineNum">     102 </span>            : /// Set the function not periodic
+<span class="lineNum">     103 </span>            :   void setNotPeriodic();
+<span class="lineNum">     104 </span>            : /// Set the domain of the function
+<span class="lineNum">     105 </span>            :   void setDomain(const std::string&amp;, const std::string&amp;);
+<span class="lineNum">     106 </span>            : /// Get the domain of the quantity
+<span class="lineNum">     107 </span>            :   void getDomain(std::string&amp;,std::string&amp;) const;
+<span class="lineNum">     108 </span>            : /// Get the domain of the quantity
+<span class="lineNum">     109 </span>            :   void getDomain(double&amp;,double&amp;) const;
+<span class="lineNum">     110 </span>            : /// Get the name of the quantity
+<span class="lineNum">     111 </span>            :   const std::string&amp; getName() const;
+<span class="lineNum">     112 </span>            : /// Check whether or not this particular quantity has derivatives
+<span class="lineNum">     113 </span>            :   bool hasDerivatives()const;
+<span class="lineNum">     114 </span>            : /// Get the number of derivatives that this particular value has
+<span class="lineNum">     115 </span>            :   unsigned getNumberOfDerivatives() const;
+<span class="lineNum">     116 </span>            : /// Set the number of derivatives
+<span class="lineNum">     117 </span>            :   void resizeDerivatives(int n);
+<span class="lineNum">     118 </span>            : /// Set all the derivatives to zero
+<span class="lineNum">     119 </span>            :   void clearDerivatives();
+<span class="lineNum">     120 </span>            : /// Add some derivative to the ith component of the derivatives array
+<span class="lineNum">     121 </span>            :   void addDerivative(unsigned i,double d);
+<span class="lineNum">     122 </span>            : /// Set the value of the ith component of the derivatives array
+<span class="lineNum">     123 </span>            :   void setDerivative(unsigned i, double d);
+<span class="lineNum">     124 </span>            : /// Apply the chain rule to the derivatives
+<span class="lineNum">     125 </span>            :   void chainRule(double df);
+<span class="lineNum">     126 </span>            : /// Get the derivative with respect to component n
+<span class="lineNum">     127 </span>            :   double getDerivative(const unsigned n) const;
+<span class="lineNum">     128 </span>            : /// Clear the input force on the variable
+<span class="lineNum">     129 </span>            :   void clearInputForce();
+<span class="lineNum">     130 </span>            : /// Add some force on this value
+<span class="lineNum">     131 </span>            :   void  addForce(double f);
+<span class="lineNum">     132 </span>            : /// Get the value of the force on this colvar
+<span class="lineNum">     133 </span>            :   double getForce() const ;
+<span class="lineNum">     134 </span>            : /// Apply the forces to the derivatives using the chain rule (if there are no forces this routine returns false)
+<span class="lineNum">     135 </span>            :   bool applyForce( std::vector&lt;double&gt;&amp; forces ) const ;
+<span class="lineNum">     136 </span>            : /// Calculate the difference between the instantaneous value of the function and some other point: other_point-inst_val
+<span class="lineNum">     137 </span>            :   double difference(double)const;
+<span class="lineNum">     138 </span>            : /// Calculate the difference between two values of this function: d2 -d1
+<span class="lineNum">     139 </span>            :   double difference(double d1,double d2)const;
+<span class="lineNum">     140 </span>            : /// This returns the pointer to the action where this value is calculated
+<span class="lineNum">     141 </span>            :   ActionWithValue* getPntrToAction();
+<span class="lineNum">     142 </span>            : /// Bring back one value into the correct pbc if needed, else give back the value
+<span class="lineNum">     143 </span>            :   double bringBackInPbc(double d1)const;
+<span class="lineNum">     144 </span>            : /// This sets up the gradients
+<span class="lineNum">     145 </span>            :   void setGradients();
+<span class="lineNum">     146 </span>            :   static double projection(const Value&amp;,const Value&amp;);
+<span class="lineNum">     147 </span>            : };
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : void copy( const Value&amp; val1, Value&amp; val2 );
+<span class="lineNum">     150 </span>            : void copy( const Value&amp; val1, Value* val2 );
+<span class="lineNum">     151 </span>            : void add( const Value&amp; val1, Value* valout );
+<a name="152"><span class="lineNum">     152 </span>            : </a>
+<span class="lineNum">     153 </span>            : inline
+<span class="lineNum">     154 </span><span class="lineCov">   39215596 : void Value::applyPeriodicity() {</span>
+<span class="lineNum">     155 </span><span class="lineCov">   39215596 :   if(periodicity==periodic) {</span>
+<span class="lineNum">     156 </span><span class="lineCov">   30688010 :     value=min+difference(min,value);</span>
+<span class="lineNum">     157 </span><span class="lineCov">   30688010 :     if(value&lt;min)value+=max_minus_min;</span>
+<span class="lineNum">     158 </span>            :   }
+<span class="lineNum">     159 </span><span class="lineCov">   39215596 : }</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : inline
+<span class="lineNum">     162 </span>            : void product( const Value&amp; val1, const Value&amp; val2, Value&amp; valout ) {
+<span class="lineNum">     163 </span>            :   plumed_assert( val1.derivatives.size()==val2.derivatives.size() );
+<span class="lineNum">     164 </span>            :   if( valout.derivatives.size()!=val1.derivatives.size() ) valout.resizeDerivatives( val1.derivatives.size() );
+<span class="lineNum">     165 </span>            :   valout.value_set=false;
+<span class="lineNum">     166 </span>            :   valout.clearDerivatives();
+<span class="lineNum">     167 </span>            :   double u=val1.value;
+<span class="lineNum">     168 </span>            :   double v=val2.value;
+<span class="lineNum">     169 </span>            :   for(unsigned i=0; i&lt;val1.derivatives.size(); ++i) {
+<span class="lineNum">     170 </span>            :     valout.addDerivative(i, u*val2.derivatives[i] + v*val1.derivatives[i] );
+<span class="lineNum">     171 </span>            :   }
+<span class="lineNum">     172 </span>            :   valout.set( u*v );
+<span class="lineNum">     173 </span>            : }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : inline
+<span class="lineNum">     176 </span>            : void quotient( const Value&amp; val1, const Value&amp; val2, Value* valout ) {
+<span class="lineNum">     177 </span>            :   plumed_assert( val1.derivatives.size()==val2.derivatives.size() );
+<span class="lineNum">     178 </span>            :   if( valout-&gt;derivatives.size()!=val1.derivatives.size() ) valout-&gt;resizeDerivatives( val1.derivatives.size() );
+<span class="lineNum">     179 </span>            :   valout-&gt;value_set=false;
+<span class="lineNum">     180 </span>            :   valout-&gt;clearDerivatives();
+<span class="lineNum">     181 </span>            :   double u=val1.get();
+<span class="lineNum">     182 </span>            :   double v=val2.get();
+<span class="lineNum">     183 </span>            :   for(unsigned i=0; i&lt;val1.getNumberOfDerivatives(); ++i) {
+<span class="lineNum">     184 </span>            :     valout-&gt;addDerivative(i, v*val1.getDerivative(i) - u*val2.getDerivative(i) );
+<span class="lineNum">     185 </span>            :   }
+<span class="lineNum">     186 </span>            :   valout-&gt;chainRule( 1/(v*v) ); valout-&gt;set( u / v );
+<span class="lineNum">     187 </span>            : }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : inline
+<span class="lineNum">     190 </span>            : void Value::set(double v) {
+<span class="lineNum">     191 </span><span class="lineCov">   39089215 :   value_set=true;</span>
+<span class="lineNum">     192 </span><span class="lineCov">   39215596 :   value=v;</span>
+<span class="lineNum">     193 </span><span class="lineCov">   39215596 :   applyPeriodicity();</span>
+<span class="lineNum">     194 </span>            : }
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : inline
+<span class="lineNum">     197 </span>            : void Value::add(double v) {
+<span class="lineNum">     198 </span>            :   value_set=true;
+<span class="lineNum">     199 </span>            :   value+=v;
+<span class="lineNum">     200 </span>            :   applyPeriodicity();
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : inline
+<span class="lineNum">     204 </span>            : double Value::get()const {
+<span class="lineNum">     205 </span><span class="lineCov">   42061876 :   return value;</span>
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : inline
+<span class="lineNum">     209 </span>            : bool Value::valueHasBeenSet() const {
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :   return value_set;</span>
+<span class="lineNum">     211 </span>            : }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : inline
+<span class="lineNum">     214 </span>            : const std::string&amp; Value::getName()const {
+<span class="lineNum">     215 </span><span class="lineCov">    3245018 :   return name;</span>
+<span class="lineNum">     216 </span>            : }
+<a name="217"><span class="lineNum">     217 </span>            : </a>
+<span class="lineNum">     218 </span>            : inline
+<span class="lineNum">     219 </span><span class="lineCov">     338586 : unsigned Value::getNumberOfDerivatives() const {</span>
+<span class="lineNum">     220 </span><span class="lineCov">     338586 :   plumed_massert(hasDeriv,&quot;the derivatives array for this value has zero size&quot;);</span>
+<span class="lineNum">     221 </span><span class="lineCov">     338586 :   return derivatives.size();</span>
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : inline
+<span class="lineNum">     225 </span>            : double Value::getDerivative(const unsigned n) const {
+<span class="lineNum">     226 </span>            :   plumed_dbg_massert(n&lt;derivatives.size(),&quot;you are asking for a derivative that is out of bounds&quot;);
+<span class="lineNum">     227 </span><span class="lineCov">   82785980 :   return derivatives[n];</span>
+<span class="lineNum">     228 </span>            : }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : inline
+<span class="lineNum">     231 </span>            : bool Value::hasDerivatives() const {
+<span class="lineNum">     232 </span><span class="lineCov">      13030 :   return hasDeriv;</span>
+<span class="lineNum">     233 </span>            : }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : inline
+<span class="lineNum">     236 </span>            : void Value::resizeDerivatives(int n) {
+<span class="lineNum">     237 </span><span class="lineCov"> 4102745976 :   if(hasDeriv) derivatives.resize(n);</span>
+<span class="lineNum">     238 </span>            : }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : inline
+<span class="lineNum">     241 </span>            : void Value::addDerivative(unsigned i,double d) {
+<span class="lineNum">     242 </span>            :   plumed_dbg_massert(i&lt;derivatives.size(),&quot;derivative is out of bounds&quot;);
+<span class="lineNum">     243 </span><span class="lineCov">  129695818 :   derivatives[i]+=d;</span>
+<span class="lineNum">     244 </span>            : }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : inline
+<span class="lineNum">     247 </span>            : void Value::setDerivative(unsigned i, double d) {
+<span class="lineNum">     248 </span>            :   plumed_dbg_massert(i&lt;derivatives.size(),&quot;derivative is out of bounds&quot;);
+<span class="lineNum">     249 </span><span class="lineCov">     110981 :   derivatives[i]=d;</span>
+<span class="lineNum">     250 </span>            : }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : inline
+<span class="lineNum">     253 </span>            : void Value::chainRule(double df) {
+<span class="lineNum">     254 </span><span class="lineCov">      48790 :   for(unsigned i=0; i&lt;derivatives.size(); ++i) derivatives[i]*=df;</span>
+<span class="lineNum">     255 </span>            : }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            : inline
+<span class="lineNum">     258 </span>            : void Value::clearInputForce() {
+<span class="lineNum">     259 </span><span class="lineCov">     426184 :   hasForce=false;</span>
+<span class="lineNum">     260 </span><span class="lineCov">     426184 :   inputForce=0.0;</span>
+<span class="lineNum">     261 </span>            : }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : inline
+<span class="lineNum">     264 </span>            : void Value::clearDerivatives() {
+<span class="lineNum">     265 </span><span class="lineCov">     433601 :   value_set=false;</span>
+<span class="lineNum">     266 </span><span class="lineCov">     867202 :   std::fill(derivatives.begin(), derivatives.end(), 0);</span>
+<span class="lineNum">     267 </span>            : }
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            : inline
+<span class="lineNum">     270 </span>            : void Value::addForce(double f) {
+<span class="lineNum">     271 </span>            :   plumed_dbg_massert(hasDerivatives(),&quot;forces can only be added to values with derivatives&quot;);
+<span class="lineNum">     272 </span><span class="lineCov">     118645 :   hasForce=true;</span>
+<span class="lineNum">     273 </span><span class="lineCov">     118645 :   inputForce+=f;</span>
+<span class="lineNum">     274 </span>            : }
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : inline
+<span class="lineNum">     277 </span>            : double Value::getForce() const {
+<span class="lineNum">     278 </span><span class="lineCov">       4698 :   return inputForce;</span>
+<span class="lineNum">     279 </span>            : }
+<a name="280"><span class="lineNum">     280 </span>            : /// d2-d1</a>
+<span class="lineNum">     281 </span>            : inline
+<span class="lineNum">     282 </span><span class="lineCov">   86277149 : double Value::difference(double d1,double d2)const {</span>
+<span class="lineNum">     283 </span><span class="lineCov">   86277149 :   if(periodicity==notperiodic) {</span>
+<span class="lineNum">     284 </span><span class="lineCov">   21544706 :     return d2-d1;</span>
+<span class="lineNum">     285 </span><span class="lineCov">   64732443 :   } else if(periodicity==periodic) {</span>
+<span class="lineNum">     286 </span><span class="lineCov">   64732443 :     double s=(d2-d1)*inv_max_minus_min;</span>
+<span class="lineNum">     287 </span>            :     // remember: pbc brings the difference in a range of -0.5:0.5
+<span class="lineNum">     288 </span>            :     s=Tools::pbc(s);
+<span class="lineNum">     289 </span><span class="lineCov">   64732443 :     return s*max_minus_min;</span>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :   } else plumed_merror(&quot;periodicity should be set to compute differences&quot;);</span>
+<span class="lineNum">     291 </span>            : }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : inline
+<span class="lineNum">     294 </span>            : double Value::bringBackInPbc(double d1)const {
+<span class="lineNum">     295 </span><span class="lineCov">        690 :   return min+max_minus_min/2.+difference(min+max_minus_min/2., d1);</span>
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : inline
+<span class="lineNum">     299 </span>            : double Value::difference(double d)const {
+<span class="lineNum">     300 </span><span class="lineCov">   41605998 :   return difference(get(),d);</span>
+<span class="lineNum">     301 </span>            : }
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : }
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            : #endif
+<span class="lineNum">     306 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

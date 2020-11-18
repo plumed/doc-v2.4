@@ -1,0 +1,558 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - drr/DRR.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">drr</a> - DRR.cpp<span style="font-size: 80%;"> (source / <a href="DRR.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">233</td>
+            <td class="headerCovTableEntry">241</td>
+            <td class="headerCovTableEntryHi">96.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryHi">95.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2017 of Haochuan Chen (excluding colvar_UIestimator.h)
+<span class="lineNum">       3 </span>            :     Copyright (c) 2017 of Haohao Fu (colvar_UIestimator.h)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       6 </span>            :     it under the terms of the GNU Lesser General Public License as published
+<span class="lineNum">       7 </span>            :     by the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       8 </span>            :     (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      13 </span>            :     GNU Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :     You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      16 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      17 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      18 </span>            : #ifdef __PLUMED_HAS_BOOST_SERIALIZATION
+<span class="lineNum">      19 </span>            : #include &quot;DRR.h&quot;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : namespace PLMD {
+<a name="22"><span class="lineNum">      22 </span>            : namespace drr {</a>
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span><span class="lineNoCov">          0 : bool DRRAxis::isInBoundary(double x) const {</span>
+<span class="lineNum">      25 </span><span class="lineNoCov">          0 :   if (x &lt; min || x &gt; max)</span>
+<span class="lineNum">      26 </span>            :     return false;
+<span class="lineNum">      27 </span>            :   else
+<span class="lineNum">      28 </span><span class="lineNoCov">          0 :     return true;</span>
+<a name="29"><span class="lineNum">      29 </span>            : }</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">        736 : bool DRRAxis::isRealPeriodic() const {</span>
+<span class="lineNum">      32 </span><span class="lineCov">        736 :   if (periodic == true) {</span>
+<span class="lineNum">      33 </span><span class="lineCov">       2160 :     if(std::abs(domainMax - max) &lt; binWidth &amp;&amp; std::abs(domainMin - min) &lt; binWidth) {</span>
+<span class="lineNum">      34 </span>            :       return true;
+<span class="lineNum">      35 </span>            :     }
+<span class="lineNum">      36 </span>            :     else {
+<span class="lineNum">      37 </span>            :       return false;
+<span class="lineNum">      38 </span>            :     }
+<span class="lineNum">      39 </span>            :   }
+<span class="lineNum">      40 </span>            :   else {
+<span class="lineNum">      41 </span>            :     return false;
+<span class="lineNum">      42 </span>            :   }
+<a name="43"><span class="lineNum">      43 </span>            : }</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">          2 : DRRAxis DRRAxis::merge(const DRRAxis &amp;d1, const DRRAxis &amp;d2) {</span>
+<span class="lineNum">      46 </span><span class="lineCov">          6 :   const double newmin = std::min(d1.getMin(), d2.getMin());</span>
+<span class="lineNum">      47 </span><span class="lineCov">          6 :   const double newmax = std::max(d1.getMax(), d2.getMax());</span>
+<span class="lineNum">      48 </span>            :   const double newWidth = d1.getWidth();
+<span class="lineNum">      49 </span><span class="lineCov">          2 :   const size_t newbins = size_t(std::nearbyint((newmax - newmin) / newWidth));</span>
+<span class="lineNum">      50 </span>            :   const bool newpbc = d1.isPeriodic();
+<span class="lineNum">      51 </span><span class="lineCov">          6 :   const double newdmin = std::min(d1.getDomainMin(), d2.getDomainMin());</span>
+<span class="lineNum">      52 </span><span class="lineCov">          6 :   const double newdmax = std::max(d1.getDomainMax(), d2.getDomainMax());</span>
+<span class="lineNum">      53 </span>            :   DRRAxis result(newmin, newmax, newbins, newpbc, newdmin, newdmax);
+<span class="lineNum">      54 </span><span class="lineCov">          2 :   return result;</span>
+<a name="55"><span class="lineNum">      55 </span>            : }</a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">         24 : std::vector&lt;double&gt; DRRAxis::getMiddlePoints() {</span>
+<span class="lineNum">      58 </span><span class="lineCov">         24 :   std::vector&lt;double&gt; result(nbins, 0);</span>
+<span class="lineNum">      59 </span><span class="lineCov">         24 :   const double width = getWidth();</span>
+<span class="lineNum">      60 </span><span class="lineCov">         24 :   double temp = min - width / 2;</span>
+<span class="lineNum">      61 </span><span class="lineCov">         48 :   std::generate(std::begin(result), std::end(result), [&amp;]() {</span>
+<span class="lineNum">      62 </span><span class="lineCov">       1772 :     temp += width;</span>
+<span class="lineNum">      63 </span>            :     return temp;
+<span class="lineNum">      64 </span>            :   });
+<span class="lineNum">      65 </span><span class="lineCov">         24 :   return result;</span>
+<a name="66"><span class="lineNum">      66 </span>            : }</a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">     393293 : size_t DRRForceGrid::index1D(const DRRAxis &amp;c, double x) {</span>
+<span class="lineNum">      69 </span>            : #ifdef DEBUG_DRR
+<span class="lineNum">      70 </span>            :   if (x &lt; c.min || x &gt; c.max) {
+<span class="lineNum">      71 </span>            :     std::cerr &lt;&lt; &quot;This is a bug!&quot; &lt;&lt; '\n';
+<span class="lineNum">      72 </span>            :     std::cerr &lt;&lt; &quot;CV should be larger than minimal value or smaller than the &quot;
+<span class="lineNum">      73 </span>            :               &quot;maximum value of dimension.&quot;
+<span class="lineNum">      74 </span>            :               &lt;&lt; '\n';
+<span class="lineNum">      75 </span>            :     std::cerr &lt;&lt; &quot;min = &quot; &lt;&lt; c.min &lt;&lt; '\n';
+<span class="lineNum">      76 </span>            :     std::cerr &lt;&lt; &quot;max = &quot; &lt;&lt; c.max &lt;&lt; '\n';
+<span class="lineNum">      77 </span>            :     std::cerr &lt;&lt; &quot;x = &quot; &lt;&lt; x &lt;&lt; std::endl;
+<span class="lineNum">      78 </span>            :     std::abort();
+<span class="lineNum">      79 </span>            :   }
+<span class="lineNum">      80 </span>            : #endif
+<span class="lineNum">      81 </span><span class="lineCov">     393293 :   size_t idx = size_t(std::floor((x - c.min) / c.binWidth));</span>
+<span class="lineNum">      82 </span><span class="lineCov">     393293 :   idx = (idx == c.nbins) ? (c.nbins - 1) : idx;</span>
+<span class="lineNum">      83 </span><span class="lineCov">     393293 :   return idx;</span>
+<span class="lineNum">      84 </span>            : }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         16 : void DRRForceGrid::fillTable(const std::vector&lt;std::vector&lt;double&gt;&gt; &amp;in) {</span>
+<span class="lineNum">      87 </span><span class="lineCov">         32 :   table.resize(ndims, std::vector&lt;double&gt;(sampleSize, 0));</span>
+<span class="lineNum">      88 </span><span class="lineCov">         36 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">      89 </span>            :     size_t repeatAll = 1, repeatOne = 1;
+<span class="lineNum">      90 </span><span class="lineCov">         24 :     for (size_t j = i + 1; j &lt; ndims; ++j)</span>
+<span class="lineNum">      91 </span><span class="lineCov">          4 :       repeatOne *= in[j].size();</span>
+<span class="lineNum">      92 </span><span class="lineCov">         28 :     for (size_t j = 0; j &lt; i; ++j)</span>
+<span class="lineNum">      93 </span><span class="lineCov">          4 :       repeatAll *= in[j].size();</span>
+<span class="lineNum">      94 </span>            :     size_t in_i_sz = in[i].size();
+<span class="lineNum">      95 </span><span class="lineCov">       3540 :     for (size_t l = 0; l &lt; in_i_sz; ++l)</span>
+<span class="lineNum">      96 </span><span class="lineCov">       1760 :       std::fill_n(std::begin(table[i]) + l * repeatOne, repeatOne, in[i][l]);</span>
+<span class="lineNum">      97 </span><span class="lineCov">        362 :     for (size_t k = 0; k &lt; repeatAll - 1; ++k)</span>
+<span class="lineNum">      98 </span>            :       std::copy_n(std::begin(table[i]), repeatOne * in_i_sz,
+<span class="lineNum">      99 </span><span class="lineCov">        362 :                   std::begin(table[i]) + repeatOne * in_i_sz * (k + 1));</span>
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span><span class="lineCov">         16 : }</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">         16 : DRRForceGrid::DRRForceGrid()</span>
+<span class="lineNum">     104 </span>            :   : suffix(&quot;&quot;), ndims(0), dimensions(0), sampleSize(0), forceSize(0),
+<span class="lineNum">     105 </span><span class="lineCov">         16 :     headers(&quot;&quot;), table(0), forces(0), samples(0), endpoints(0), shifts(0), outputunit(1.0) {}</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">          8 : DRRForceGrid::DRRForceGrid(const std::vector&lt;DRRAxis&gt; &amp;p_dimensions,</span>
+<span class="lineNum">     108 </span><span class="lineCov">          8 :                            const std::string &amp;p_suffix, bool initializeTable)</span>
+<span class="lineNum">     109 </span><span class="lineCov">         56 :   : suffix(p_suffix), ndims(p_dimensions.size()), dimensions(p_dimensions) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">          8 :   sampleSize = 1;</span>
+<span class="lineNum">     111 </span><span class="lineCov">         16 :   std::vector&lt;std::vector&lt;double&gt;&gt; mp(ndims);</span>
+<span class="lineNum">     112 </span><span class="lineCov">         16 :   std::stringstream ss;</span>
+<span class="lineNum">     113 </span><span class="lineCov">          8 :   ss &lt;&lt; &quot;# &quot; &lt;&lt; ndims &lt;&lt; '\n';</span>
+<span class="lineNum">     114 </span><span class="lineCov">          8 :   shifts.resize(ndims, 0);</span>
+<span class="lineNum">     115 </span><span class="lineCov">         28 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">         10 :     sampleSize = dimensions[i].nbins * sampleSize;</span>
+<span class="lineNum">     117 </span><span class="lineCov">         20 :     mp[i] = dimensions[i].getMiddlePoints();</span>
+<span class="lineNum">     118 </span><span class="lineCov">         10 :     shifts[i] = std::accumulate(</span>
+<span class="lineNum">     119 </span>            :                   std::begin(dimensions), std::begin(dimensions) + i, size_t(1),
+<span class="lineNum">     120 </span><span class="lineCov">          2 :     [](size_t k, const DRRAxis &amp;d) { return k * d.getBins(); });</span>
+<span class="lineNum">     121 </span>            :     ss.precision(std::numeric_limits&lt;double&gt;::max_digits10);
+<span class="lineNum">     122 </span><span class="lineCov">         10 :     ss &lt;&lt; std::fixed &lt;&lt; &quot;# &quot; &lt;&lt; dimensions[i].min &lt;&lt; ' '</span>
+<span class="lineNum">     123 </span><span class="lineCov">         10 :        &lt;&lt; dimensions[i].getWidth() &lt;&lt; ' ' &lt;&lt; dimensions[i].nbins;</span>
+<span class="lineNum">     124 </span><span class="lineCov">         10 :     if (dimensions[i].isPeriodic())</span>
+<span class="lineNum">     125 </span>            :       ss &lt;&lt; &quot; 1&quot; &lt;&lt; '\n';
+<span class="lineNum">     126 </span>            :     else
+<span class="lineNum">     127 </span>            :       ss &lt;&lt; &quot; 0&quot; &lt;&lt; '\n';
+<span class="lineNum">     128 </span>            :   }
+<span class="lineNum">     129 </span><span class="lineCov">         16 :   headers = ss.str();</span>
+<span class="lineNum">     130 </span><span class="lineCov">          8 :   if (initializeTable)</span>
+<span class="lineNum">     131 </span><span class="lineCov">          6 :     fillTable(mp);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          8 :   forceSize = sampleSize * ndims;</span>
+<span class="lineNum">     133 </span><span class="lineCov">          8 :   forces.resize(forceSize, 0.0);</span>
+<span class="lineNum">     134 </span><span class="lineCov">          8 :   samples.resize(sampleSize, 0);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          8 :   outputunit = 1.0;</span>
+<span class="lineNum">     136 </span>            :   // For 1D pmf
+<span class="lineNum">     137 </span><span class="lineCov">          8 :   if (ndims == 1) {</span>
+<span class="lineNum">     138 </span><span class="lineCov">         12 :     endpoints.resize(dimensions[0].nbins + 1, 0);</span>
+<span class="lineNum">     139 </span><span class="lineCov">          6 :     double ep = dimensions[0].min;</span>
+<span class="lineNum">     140 </span>            :     double stride = dimensions[0].getWidth();
+<span class="lineNum">     141 </span><span class="lineCov">        440 :     for (auto &amp;i : endpoints) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">        434 :       i = ep;</span>
+<span class="lineNum">     143 </span><span class="lineCov">        434 :       ep += stride;</span>
+<span class="lineNum">     144 </span>            :     }
+<span class="lineNum">     145 </span>            :   }
+<span class="lineNum">     146 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">       2463 : bool DRRForceGrid::isInBoundary(const std::vector&lt;double&gt; &amp;pos) const {</span>
+<span class="lineNum">     149 </span>            :   bool result = true;
+<span class="lineNum">     150 </span><span class="lineCov">       5885 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">       5022 :     if (pos[i] &lt; dimensions[i].min || pos[i] &gt; dimensions[i].max)</span>
+<span class="lineNum">     152 </span>            :       return false;
+<span class="lineNum">     153 </span>            :   }
+<span class="lineNum">     154 </span>            :   return result;
+<span class="lineNum">     155 </span>            : }
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">     165817 : size_t DRRForceGrid::sampleAddress(const std::vector&lt;double&gt; &amp;pos) const {</span>
+<span class="lineNum">     158 </span>            :   size_t saddr = 0;
+<span class="lineNum">     159 </span><span class="lineCov">     821547 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     160 </span><span class="lineCov">     983595 :     saddr += shifts[i] * index1D(dimensions[i], pos[i]);</span>
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span><span class="lineCov">     165817 :   return saddr;</span>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">        829 : bool DRRForceGrid::store(const std::vector&lt;double&gt; &amp;pos,</span>
+<span class="lineNum">     166 </span>            :                          const std::vector&lt;double&gt; &amp;f,
+<span class="lineNum">     167 </span>            :                          unsigned long int nsamples) {
+<span class="lineNum">     168 </span><span class="lineCov">        829 :   if (isInBoundary(pos)) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">        829 :     if (nsamples == 0)</span>
+<span class="lineNum">     170 </span>            :       return true;
+<span class="lineNum">     171 </span><span class="lineCov">        429 :     const size_t baseaddr = sampleAddress(pos) * ndims;</span>
+<span class="lineNum">     172 </span><span class="lineCov">        858 :     samples[baseaddr / ndims] += nsamples;</span>
+<span class="lineNum">     173 </span><span class="lineCov">        429 :     auto it_fa = std::begin(forces) + baseaddr;</span>
+<span class="lineNum">     174 </span><span class="lineCov">        429 :     std::transform(std::begin(f), std::end(f), it_fa, it_fa,</span>
+<span class="lineNum">     175 </span>            :                    std::plus&lt;double&gt;());
+<span class="lineNum">     176 </span><span class="lineCov">        429 :     return true;</span>
+<span class="lineNum">     177 </span>            :   } else {
+<span class="lineNum">     178 </span>            :     return false;
+<span class="lineNum">     179 </span>            :   }
+<span class="lineNum">     180 </span>            : }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">          2 : std::vector&lt;DRRAxis&gt; DRRForceGrid::merge(const std::vector&lt;DRRAxis&gt; &amp;dA,</span>
+<span class="lineNum">     183 </span>            :     const std::vector&lt;DRRAxis&gt; &amp;dB) {
+<span class="lineNum">     184 </span><span class="lineCov">          2 :   std::vector&lt;DRRAxis&gt; dR(dA.size());</span>
+<span class="lineNum">     185 </span><span class="lineCov">          2 :   std::transform(std::begin(dA), std::end(dA), std::begin(dB), std::begin(dR),</span>
+<span class="lineNum">     186 </span>            :                  DRRAxis::merge);
+<span class="lineNum">     187 </span><span class="lineCov">          2 :   return dR;</span>
+<span class="lineNum">     188 </span>            : }
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : std::vector&lt;double&gt;
+<span class="lineNum">     191 </span><span class="lineCov">        800 : DRRForceGrid::getAccumulatedForces(const std::vector&lt;double&gt; &amp;pos) const {</span>
+<span class="lineNum">     192 </span><span class="lineCov">        800 :   std::vector&lt;double&gt; result(ndims, 0);</span>
+<span class="lineNum">     193 </span><span class="lineCov">        800 :   if (!isInBoundary(pos))</span>
+<span class="lineNum">     194 </span>            :     return result;
+<span class="lineNum">     195 </span><span class="lineCov">        400 :   const size_t baseaddr = sampleAddress(pos) * ndims;</span>
+<span class="lineNum">     196 </span>            :   std::copy(std::begin(forces) + baseaddr,
+<span class="lineNum">     197 </span>            :             std::begin(forces) + baseaddr + ndims, std::begin(result));
+<span class="lineNum">     198 </span><span class="lineCov">        400 :   return result;</span>
+<span class="lineNum">     199 </span>            : }
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span><span class="lineCov">      66242 : unsigned long int DRRForceGrid::getCount(const std::vector&lt;double&gt; &amp;pos,</span>
+<span class="lineNum">     202 </span>            :     bool SkipCheck) const {
+<span class="lineNum">     203 </span><span class="lineCov">      66242 :   if (!SkipCheck) {</span>
+<span class="lineNum">     204 </span><span class="lineCov">        800 :     if (!isInBoundary(pos)) {</span>
+<span class="lineNum">     205 </span>            :       return 0;
+<span class="lineNum">     206 </span>            :     }
+<span class="lineNum">     207 </span>            :   }
+<span class="lineNum">     208 </span><span class="lineCov">     131684 :   return samples[sampleAddress(pos)];</span>
+<span class="lineNum">     209 </span>            : }
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineCov">      33056 : std::vector&lt;double&gt; DRRForceGrid::getGradient(const std::vector&lt;double&gt; &amp;pos,</span>
+<span class="lineNum">     212 </span>            :     bool SkipCheck) const {
+<span class="lineNum">     213 </span><span class="lineCov">      33056 :   std::vector&lt;double&gt; result(ndims, 0);</span>
+<span class="lineNum">     214 </span><span class="lineCov">      33056 :   if (!SkipCheck) {</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :     if (!isInBoundary(pos)) {</span>
+<span class="lineNum">     216 </span>            :       return result;
+<span class="lineNum">     217 </span>            :     }
+<span class="lineNum">     218 </span>            :   }
+<span class="lineNum">     219 </span><span class="lineCov">      33056 :   const size_t baseaddr = sampleAddress(pos) * ndims;</span>
+<span class="lineNum">     220 </span><span class="lineCov">      66112 :   if (samples[baseaddr / ndims] == 0)</span>
+<span class="lineNum">     221 </span>            :     return result;
+<span class="lineNum">     222 </span>            :   auto it_fa = std::begin(forces) + baseaddr;
+<span class="lineNum">     223 </span><span class="lineCov">      33005 :   std::transform(it_fa, it_fa + ndims, std::begin(result), [&amp;](double fa) {</span>
+<span class="lineNum">     224 </span><span class="lineCov">     130804 :     return (-1.0) * fa / samples[baseaddr / ndims];</span>
+<span class="lineNum">     225 </span><span class="lineCov">      98407 :   });</span>
+<span class="lineNum">     226 </span><span class="lineCov">      33005 :   return result;</span>
+<span class="lineNum">     227 </span>            : }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : std::vector&lt;double&gt;
+<span class="lineNum">     230 </span><span class="lineCov">      33028 : DRRForceGrid::getCountsLogDerivative(const std::vector&lt;double&gt; &amp;pos) const {</span>
+<span class="lineNum">     231 </span><span class="lineCov">      33028 :   const size_t addr = sampleAddress(pos);</span>
+<span class="lineNum">     232 </span><span class="lineCov">      33028 :   const unsigned long int count_this = samples[addr];</span>
+<span class="lineNum">     233 </span><span class="lineCov">      33028 :   std::vector&lt;double&gt; result(ndims, 0);</span>
+<span class="lineNum">     234 </span><span class="lineCov">     163884 :   for (size_t i = 0; i &lt; ndims; ++i) {</span>
+<span class="lineNum">     235 </span>            :     const double binWidth = dimensions[i].getWidth();
+<span class="lineNum">     236 </span>            :     const size_t addr_first =
+<span class="lineNum">     237 </span><span class="lineCov">     130856 :       addr - shifts[i] * index1D(dimensions[i], pos[i]) + 0;</span>
+<span class="lineNum">     238 </span><span class="lineCov">     130856 :     const size_t addr_last = addr_first + shifts[i] * (dimensions[i].nbins - 1);</span>
+<span class="lineNum">     239 </span><span class="lineCov">      65428 :     if (addr == addr_first) {</span>
+<span class="lineNum">     240 </span><span class="lineCov">        368 :       if (dimensions[i].isRealPeriodic() == true) {</span>
+<span class="lineNum">     241 </span><span class="lineCov">        360 :         const unsigned long int &amp;count_next = samples[addr + shifts[i]];</span>
+<span class="lineNum">     242 </span>            :         const unsigned long int &amp;count_prev = samples[addr_last];
+<span class="lineNum">     243 </span><span class="lineCov">        360 :         if (count_next != 0 &amp;&amp; count_prev != 0)</span>
+<span class="lineNum">     244 </span><span class="lineCov">        360 :           result[i] =</span>
+<span class="lineNum">     245 </span><span class="lineCov">       1080 :             (std::log(count_next) - std::log(count_prev)) / (2 * binWidth);</span>
+<span class="lineNum">     246 </span>            :       } else {
+<span class="lineNum">     247 </span><span class="lineCov">          8 :         const unsigned long int &amp;count_next = samples[addr + shifts[i]];</span>
+<span class="lineNum">     248 </span><span class="lineCov">          8 :         const unsigned long int &amp;count_next2 = samples[addr + shifts[i] * 2];</span>
+<span class="lineNum">     249 </span><span class="lineCov">          8 :         if (count_next != 0 &amp;&amp; count_this != 0 &amp;&amp; count_next2 != 0)</span>
+<span class="lineNum">     250 </span><span class="lineCov">          4 :           result[i] =</span>
+<span class="lineNum">     251 </span><span class="lineCov">         12 :             (std::log(count_next2) * (-1.0) + std::log(count_next) * 4.0 -</span>
+<span class="lineNum">     252 </span><span class="lineCov">          8 :              std::log(count_this) * 3.0) /</span>
+<span class="lineNum">     253 </span><span class="lineCov">          4 :             (2.0 * binWidth);</span>
+<span class="lineNum">     254 </span>            :       }
+<span class="lineNum">     255 </span><span class="lineCov">      65060 :     } else if (addr == addr_last) {</span>
+<span class="lineNum">     256 </span><span class="lineCov">        368 :       if (dimensions[i].isRealPeriodic() == true) {</span>
+<span class="lineNum">     257 </span><span class="lineCov">        360 :         const unsigned long int &amp;count_prev = samples[addr - shifts[i]];</span>
+<span class="lineNum">     258 </span>            :         const unsigned long int &amp;count_next = samples[addr_first];
+<span class="lineNum">     259 </span><span class="lineCov">        360 :         if (count_next != 0 &amp;&amp; count_prev != 0)</span>
+<span class="lineNum">     260 </span><span class="lineCov">        360 :           result[i] =</span>
+<span class="lineNum">     261 </span><span class="lineCov">       1080 :             (std::log(count_next) - std::log(count_prev)) / (2 * binWidth);</span>
+<span class="lineNum">     262 </span>            :       } else {
+<span class="lineNum">     263 </span><span class="lineCov">          8 :         const unsigned long int &amp;count_prev = samples[addr - shifts[i]];</span>
+<span class="lineNum">     264 </span><span class="lineCov">          8 :         const unsigned long int &amp;count_prev2 = samples[addr - shifts[i] * 2];</span>
+<span class="lineNum">     265 </span><span class="lineCov">          8 :         if (count_prev != 0 &amp;&amp; count_this != 0 &amp;&amp; count_prev2 != 0)</span>
+<span class="lineNum">     266 </span><span class="lineCov">         16 :           result[i] = (std::log(count_this) * 3.0 - std::log(count_prev) * 4.0 +</span>
+<span class="lineNum">     267 </span><span class="lineCov">          8 :                        std::log(count_prev2)) /</span>
+<span class="lineNum">     268 </span><span class="lineCov">          4 :                       (2.0 * binWidth);</span>
+<span class="lineNum">     269 </span>            :       }
+<span class="lineNum">     270 </span>            :     } else {
+<span class="lineNum">     271 </span><span class="lineCov">      64692 :       const unsigned long int &amp;count_prev = samples[addr - shifts[i]];</span>
+<span class="lineNum">     272 </span><span class="lineCov">      64692 :       const unsigned long int &amp;count_next = samples[addr + shifts[i]];</span>
+<span class="lineNum">     273 </span><span class="lineCov">      64692 :       if (count_next != 0 &amp;&amp; count_prev != 0)</span>
+<span class="lineNum">     274 </span><span class="lineCov">      64664 :         result[i] =</span>
+<span class="lineNum">     275 </span><span class="lineCov">     193992 :           (std::log(count_next) - std::log(count_prev)) / (2 * binWidth);</span>
+<span class="lineNum">     276 </span>            :     }
+<span class="lineNum">     277 </span>            :   }
+<span class="lineNum">     278 </span><span class="lineCov">      33028 :   return result;</span>
+<span class="lineNum">     279 </span>            : }
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            : // Write the gradients to a .grad file.
+<span class="lineNum">     282 </span>            : // void DRRForceGrid::writeGrad(std::string filename) const {
+<span class="lineNum">     283 </span>            : //   std::stringstream ssg;
+<span class="lineNum">     284 </span>            : //   std::fstream fsgrad;
+<span class="lineNum">     285 </span>            : //   filename += suffix + &quot;.grad&quot;;
+<span class="lineNum">     286 </span>            : //   ssg &lt;&lt; headers;
+<span class="lineNum">     287 </span>            : //   ssg &lt;&lt; std::left &lt;&lt; std::fixed &lt;&lt; std::setprecision(OUTPUTPRECISION);
+<span class="lineNum">     288 </span>            : //   for (size_t i = 0; i &lt; sampleSize; ++i) {
+<span class="lineNum">     289 </span>            : //     std::vector&lt;double&gt; pos(ndims, 0);
+<span class="lineNum">     290 </span>            : //     for (size_t j = 0; j &lt; ndims; ++j) {
+<span class="lineNum">     291 </span>            : //       pos[j] = table[j][i];
+<span class="lineNum">     292 </span>            : //       ssg &lt;&lt; ' ' &lt;&lt; table[j][i];
+<span class="lineNum">     293 </span>            : //     }
+<span class="lineNum">     294 </span>            : //     const std::vector&lt;double&gt; f = getGradient(pos, true);
+<span class="lineNum">     295 </span>            : //     for (const auto &amp;i : f)
+<span class="lineNum">     296 </span>            : //       ssg &lt;&lt; ' ' &lt;&lt; i;
+<span class="lineNum">     297 </span>            : //     ssg &lt;&lt; '\n';
+<span class="lineNum">     298 </span>            : //   }
+<span class="lineNum">     299 </span>            : //   fsgrad.open(filename.c_str(), std::ios_base::out);
+<span class="lineNum">     300 </span>            : //   fsgrad.write(ssg.str().c_str(), ssg.str().length());
+<span class="lineNum">     301 </span>            : //   fsgrad.close();
+<span class="lineNum">     302 </span>            : // }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">         10 : void DRRForceGrid::write1DPMF(std::string filename) const {</span>
+<span class="lineNum">     305 </span><span class="lineCov">         20 :   filename += suffix + &quot;.pmf&quot;;</span>
+<span class="lineNum">     306 </span>            :   FILE *ppmf;
+<span class="lineNum">     307 </span><span class="lineCov">         10 :   ppmf = fopen(filename.c_str(), &quot;w&quot;);</span>
+<span class="lineNum">     308 </span>            :   const double w = dimensions[0].getWidth();
+<span class="lineNum">     309 </span>            :   double pmf = 0;
+<span class="lineNum">     310 </span><span class="lineCov">         10 :   fprintf(ppmf, &quot;%.9f %.9f\n&quot;, endpoints[0], pmf);</span>
+<span class="lineNum">     311 </span><span class="lineCov">       1294 :   for (size_t i = 0; i &lt; dimensions[0].nbins; ++i) {</span>
+<span class="lineNum">     312 </span><span class="lineCov">        642 :     std::vector&lt;double&gt; pos(1, 0);</span>
+<span class="lineNum">     313 </span><span class="lineCov">        642 :     pos[0] = table[0][i];</span>
+<span class="lineNum">     314 </span><span class="lineCov">        642 :     const std::vector&lt;double&gt; f = getGradient(pos, true);</span>
+<span class="lineNum">     315 </span><span class="lineCov">        642 :     pmf += f[0] * w;</span>
+<span class="lineNum">     316 </span><span class="lineCov">       1284 :     fprintf(ppmf, &quot;%.9f %.9f\n&quot;, endpoints[i + 1], pmf);</span>
+<span class="lineNum">     317 </span>            :   }
+<span class="lineNum">     318 </span><span class="lineCov">         10 :   fclose(ppmf);</span>
+<span class="lineNum">     319 </span><span class="lineCov">         10 : }</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            : // Write the gradients to a .count file.
+<span class="lineNum">     322 </span>            : // void DRRForceGrid::writeCount(std::string filename) const {
+<span class="lineNum">     323 </span>            : //   std::stringstream ssc;
+<span class="lineNum">     324 </span>            : //   std::fstream fscount;
+<span class="lineNum">     325 </span>            : //   filename += suffix + &quot;.count&quot;;
+<span class="lineNum">     326 </span>            : //   ssc &lt;&lt; headers;
+<span class="lineNum">     327 </span>            : //   ssc &lt;&lt; std::left &lt;&lt; std::fixed &lt;&lt; std::setprecision(OUTPUTPRECISION);
+<span class="lineNum">     328 </span>            : //   std::vector&lt;double&gt; pos(ndims, 0);
+<span class="lineNum">     329 </span>            : //   for (size_t i = 0; i &lt; sampleSize; ++i) {
+<span class="lineNum">     330 </span>            : //     for (size_t j = 0; j &lt; ndims; ++j) {
+<span class="lineNum">     331 </span>            : //       pos[j] = table[j][i];
+<span class="lineNum">     332 </span>            : //       ssc &lt;&lt; ' ' &lt;&lt; table[j][i];
+<span class="lineNum">     333 </span>            : //     }
+<span class="lineNum">     334 </span>            : //     ssc &lt;&lt; ' ' &lt;&lt; getCount(pos, true) &lt;&lt; '\n';
+<span class="lineNum">     335 </span>            : //   }
+<span class="lineNum">     336 </span>            : //   fscount.open(filename.c_str(), std::ios_base::out);
+<span class="lineNum">     337 </span>            : //   fscount.write(ssc.str().c_str(), ssc.str().length());
+<span class="lineNum">     338 </span>            : //   fscount.close();
+<span class="lineNum">     339 </span>            : // }
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineCov">         12 : void DRRForceGrid::writeAll(const std::string &amp;filename) const {</span>
+<span class="lineNum">     342 </span><span class="lineCov">         24 :   std::string countname = filename + suffix + &quot;.count&quot;;</span>
+<span class="lineNum">     343 </span><span class="lineCov">         24 :   std::string gradname = filename + suffix + &quot;.grad&quot;;</span>
+<span class="lineNum">     344 </span><span class="lineCov">         12 :   std::vector&lt;double&gt; pos(ndims, 0);</span>
+<span class="lineNum">     345 </span>            :   FILE *pGrad, *pCount;
+<span class="lineNum">     346 </span><span class="lineCov">         12 :   pGrad = fopen(gradname.c_str(), &quot;w&quot;);</span>
+<span class="lineNum">     347 </span><span class="lineCov">         12 :   pCount = fopen(countname.c_str(), &quot;w&quot;);</span>
+<span class="lineNum">     348 </span>            :   char *buffer1, *buffer2;
+<span class="lineNum">     349 </span><span class="lineCov">         12 :   buffer1 = (char*)malloc((sizeof(double))*sampleSize*ndims);</span>
+<span class="lineNum">     350 </span><span class="lineCov">         12 :   buffer2 = (char*)malloc((sizeof(double))*sampleSize*ndims);</span>
+<span class="lineNum">     351 </span><span class="lineCov">         12 :   setvbuf(pGrad, buffer1, _IOFBF, (sizeof(double))*sampleSize*ndims);</span>
+<span class="lineNum">     352 </span><span class="lineCov">         12 :   setvbuf(pCount, buffer2, _IOFBF, (sizeof(double))*sampleSize*ndims);</span>
+<span class="lineNum">     353 </span><span class="lineCov">         12 :   fwrite(headers.c_str(), sizeof(char), strlen(headers.c_str()), pGrad);</span>
+<span class="lineNum">     354 </span><span class="lineCov">         12 :   fwrite(headers.c_str(), sizeof(char), strlen(headers.c_str()), pCount);</span>
+<span class="lineNum">     355 </span><span class="lineCov">     130896 :   for (size_t i = 0; i &lt; sampleSize; ++i) {</span>
+<span class="lineNum">     356 </span><span class="lineCov">     325926 :     for (size_t j = 0; j &lt; ndims; ++j) {</span>
+<span class="lineNum">     357 </span><span class="lineCov">     130242 :       pos[j] = table[j][i];</span>
+<span class="lineNum">     358 </span><span class="lineCov">     130242 :       fprintf(pGrad, &quot; %.9f&quot;, table[j][i]);</span>
+<span class="lineNum">     359 </span><span class="lineCov">     130242 :       fprintf(pCount, &quot; %.9f&quot;, table[j][i]);</span>
+<span class="lineNum">     360 </span>            :     }
+<span class="lineNum">     361 </span><span class="lineCov">      65442 :     fprintf(pCount, &quot; %lu\n&quot;, getCount(pos, true));</span>
+<span class="lineNum">     362 </span><span class="lineCov">      65442 :     std::vector&lt;double&gt; f = getGradient(pos, true);</span>
+<span class="lineNum">     363 </span><span class="lineCov">     325926 :     for (size_t j = 0; j &lt; ndims; ++j) {</span>
+<span class="lineNum">     364 </span><span class="lineCov">     130242 :       fprintf(pGrad, &quot; %.9f&quot;, (f[j] / outputunit));</span>
+<span class="lineNum">     365 </span>            :     }
+<span class="lineNum">     366 </span>            :     fprintf(pGrad, &quot;\n&quot;);
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span><span class="lineCov">         12 :   fclose(pGrad);</span>
+<span class="lineNum">     369 </span><span class="lineCov">         12 :   fclose(pCount);</span>
+<span class="lineNum">     370 </span><span class="lineCov">         12 :   free(buffer1);</span>
+<span class="lineNum">     371 </span><span class="lineCov">         12 :   free(buffer2);</span>
+<span class="lineNum">     372 </span><span class="lineCov">         12 :   if (ndims == 1) {</span>
+<span class="lineNum">     373 </span><span class="lineCov">         20 :     write1DPMF(filename);</span>
+<span class="lineNum">     374 </span>            :   }
+<span class="lineNum">     375 </span><span class="lineCov">         12 : }</span>
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span><span class="lineCov">         34 : bool ABF::store_getbias(const std::vector&lt;double&gt; &amp;pos,</span>
+<span class="lineNum">     378 </span>            :                         const std::vector&lt;double&gt; &amp;f,
+<span class="lineNum">     379 </span>            :                         std::vector&lt;double&gt; &amp;fbias, double fullsamples) {
+<span class="lineNum">     380 </span><span class="lineCov">         34 :   if (!isInBoundary(pos)) {</span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :     std::fill(std::begin(fbias), std::end(fbias), 0.0);</span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     383 </span>            :   }
+<span class="lineNum">     384 </span><span class="lineCov">         34 :   const size_t baseaddr = sampleAddress(pos);</span>
+<span class="lineNum">     385 </span>            :   unsigned long int &amp;count = samples[baseaddr];
+<span class="lineNum">     386 </span><span class="lineCov">         34 :   ++count;</span>
+<span class="lineNum">     387 </span><span class="lineCov">         34 :   double factor = 2 * (static_cast&lt;double&gt;(count)) / fullsamples - 1;</span>
+<span class="lineNum">     388 </span><span class="lineCov">         34 :   factor = factor &lt; 0 ? 0 : factor &gt; 1 ? 1 : factor; // Clamp to [0,1]</span>
+<span class="lineNum">     389 </span><span class="lineCov">         34 :   auto it_fa = std::begin(forces) + baseaddr * ndims;</span>
+<span class="lineNum">     390 </span>            :   auto it_fb = std::begin(fbias);
+<span class="lineNum">     391 </span>            :   auto it_f = std::begin(f);
+<span class="lineNum">     392 </span>            :   do {
+<span class="lineNum">     393 </span><span class="lineCov">         58 :     (*it_fa) += (*it_f); // Accumulate instantaneous force</span>
+<span class="lineNum">     394 </span><span class="lineCov">         58 :     (*it_fb) =</span>
+<span class="lineNum">     395 </span><span class="lineCov">         58 :       factor * (*it_fa) * (-1.0) / static_cast&lt;double&gt;(count); // Calculate bias force</span>
+<span class="lineNum">     396 </span>            :     ++it_fa;
+<span class="lineNum">     397 </span>            :     ++it_fb;
+<span class="lineNum">     398 </span>            :     ++it_f;
+<span class="lineNum">     399 </span><span class="lineCov">         58 :   } while (it_f != std::end(f));</span>
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            :   return true;
+<span class="lineNum">     402 </span>            : }
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span><span class="lineCov">          1 : ABF ABF::mergewindow(const ABF &amp;aWA, const ABF &amp;aWB) {</span>
+<span class="lineNum">     405 </span>            :   const std::vector&lt;DRRAxis&gt; dA = aWA.getDimensions();
+<span class="lineNum">     406 </span>            :   const std::vector&lt;DRRAxis&gt; dB = aWB.getDimensions();
+<span class="lineNum">     407 </span><span class="lineCov">          1 :   const std::vector&lt;DRRAxis&gt; dR = merge(dA, dB);</span>
+<span class="lineNum">     408 </span><span class="lineCov">          1 :   const std::string suffix = &quot;.abf&quot;;</span>
+<span class="lineNum">     409 </span>            :   ABF result(dR, suffix);
+<span class="lineNum">     410 </span><span class="lineCov">          1 :   const std::vector&lt;std::vector&lt;double&gt;&gt; table = result.getTable();</span>
+<span class="lineNum">     411 </span>            :   const size_t nrows = result.getSampleSize();
+<span class="lineNum">     412 </span>            :   const size_t ncols = result.getNumberOfDimension();
+<span class="lineNum">     413 </span><span class="lineCov">          1 :   std::vector&lt;double&gt; pos(ncols, 0);</span>
+<span class="lineNum">     414 </span><span class="lineCov">        401 :   for (size_t i = 0; i &lt; nrows; ++i) {</span>
+<span class="lineNum">     415 </span><span class="lineCov">        600 :     for (size_t j = 0; j &lt; ncols; ++j) {</span>
+<span class="lineNum">     416 </span><span class="lineCov">        200 :       pos[j] = table[j][i];</span>
+<span class="lineNum">     417 </span>            :     }
+<span class="lineNum">     418 </span><span class="lineCov">        200 :     const unsigned long int countA = aWA.getCount(pos, false);</span>
+<span class="lineNum">     419 </span><span class="lineCov">        200 :     const unsigned long int countB = aWB.getCount(pos, false);</span>
+<span class="lineNum">     420 </span><span class="lineCov">        200 :     const std::vector&lt;double&gt; aForceA = aWA.getAccumulatedForces(pos);</span>
+<span class="lineNum">     421 </span><span class="lineCov">        200 :     const std::vector&lt;double&gt; aForceB = aWB.getAccumulatedForces(pos);</span>
+<span class="lineNum">     422 </span><span class="lineCov">        200 :     result.store(pos, aForceA, countA);</span>
+<span class="lineNum">     423 </span><span class="lineCov">        200 :     result.store(pos, aForceB, countB);</span>
+<span class="lineNum">     424 </span>            :   }
+<span class="lineNum">     425 </span><span class="lineCov">          1 :   return result;</span>
+<span class="lineNum">     426 </span>            : }
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineCov">      33028 : std::vector&lt;double&gt; CZAR::getGradient(const std::vector&lt;double&gt; &amp;pos,</span>
+<span class="lineNum">     429 </span>            :                                       bool SkipCheck) const {
+<span class="lineNum">     430 </span><span class="lineCov">      33028 :   std::vector&lt;double&gt; result(ndims, 0);</span>
+<span class="lineNum">     431 </span><span class="lineCov">      33028 :   if (!SkipCheck) {</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :     if (!isInBoundary(pos)) {</span>
+<span class="lineNum">     433 </span>            :       return result;
+<span class="lineNum">     434 </span>            :     }
+<span class="lineNum">     435 </span>            :   }
+<span class="lineNum">     436 </span><span class="lineCov">      33028 :   if (kbt &lt;= std::numeric_limits&lt;double&gt;::epsilon()) {</span>
+<span class="lineNum">     437 </span>            :     std::cerr &lt;&lt; &quot;ERROR! The kbt shouldn't be zero when use CZAR estimator. &quot;
+<span class="lineNum">     438 </span>            :               &lt;&lt; '\n';
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :     std::abort();</span>
+<span class="lineNum">     440 </span>            :   }
+<span class="lineNum">     441 </span><span class="lineCov">      33028 :   const size_t baseaddr = sampleAddress(pos) * ndims;</span>
+<span class="lineNum">     442 </span><span class="lineCov">      33028 :   const std::vector&lt;double&gt; log_deriv(getCountsLogDerivative(pos));</span>
+<span class="lineNum">     443 </span><span class="lineCov">      66056 :   if (samples[baseaddr / ndims] == 0)</span>
+<span class="lineNum">     444 </span>            :     return result;
+<span class="lineNum">     445 </span>            :   auto it_fa = std::begin(forces) + baseaddr;
+<span class="lineNum">     446 </span><span class="lineCov">      33002 :   std::transform(it_fa, it_fa + ndims, std::begin(log_deriv),</span>
+<span class="lineNum">     447 </span>            :   std::begin(result), [&amp;](double fa, double ld) {
+<span class="lineNum">     448 </span><span class="lineCov">     130800 :     return fa * (-1.0) / samples[baseaddr / ndims] - kbt * ld;</span>
+<span class="lineNum">     449 </span><span class="lineCov">      98402 :   });</span>
+<span class="lineNum">     450 </span><span class="lineCov">      33002 :   return result;</span>
+<span class="lineNum">     451 </span>            : }
+<span class="lineNum">     452 </span>            : 
+<span class="lineNum">     453 </span><span class="lineCov">          1 : CZAR CZAR::mergewindow(const CZAR &amp;cWA, const CZAR &amp;cWB) {</span>
+<span class="lineNum">     454 </span>            :   const std::vector&lt;DRRAxis&gt; dA = cWA.getDimensions();
+<span class="lineNum">     455 </span>            :   const std::vector&lt;DRRAxis&gt; dB = cWB.getDimensions();
+<span class="lineNum">     456 </span><span class="lineCov">          1 :   const std::vector&lt;DRRAxis&gt; dR = merge(dA, dB);</span>
+<span class="lineNum">     457 </span>            :   const double newkbt = cWA.getkbt();
+<span class="lineNum">     458 </span><span class="lineCov">          1 :   const std::string suffix = &quot;.czar&quot;;</span>
+<span class="lineNum">     459 </span>            :   CZAR result(dR, suffix, newkbt);
+<span class="lineNum">     460 </span><span class="lineCov">          1 :   const std::vector&lt;std::vector&lt;double&gt;&gt; table = result.getTable();</span>
+<span class="lineNum">     461 </span>            :   const size_t nrows = result.getSampleSize();
+<span class="lineNum">     462 </span>            :   const size_t ncols = result.getNumberOfDimension();
+<span class="lineNum">     463 </span><span class="lineCov">          1 :   std::vector&lt;double&gt; pos(ncols, 0);</span>
+<span class="lineNum">     464 </span><span class="lineCov">        401 :   for (size_t i = 0; i &lt; nrows; ++i) {</span>
+<span class="lineNum">     465 </span><span class="lineCov">        600 :     for (size_t j = 0; j &lt; ncols; ++j) {</span>
+<span class="lineNum">     466 </span><span class="lineCov">        200 :       pos[j] = table[j][i];</span>
+<span class="lineNum">     467 </span>            :     }
+<span class="lineNum">     468 </span><span class="lineCov">        200 :     const unsigned long int countA = cWA.getCount(pos);</span>
+<span class="lineNum">     469 </span><span class="lineCov">        200 :     const unsigned long int countB = cWB.getCount(pos);</span>
+<span class="lineNum">     470 </span><span class="lineCov">        200 :     const std::vector&lt;double&gt; aForceA = cWA.getAccumulatedForces(pos);</span>
+<span class="lineNum">     471 </span><span class="lineCov">        200 :     const std::vector&lt;double&gt; aForceB = cWB.getAccumulatedForces(pos);</span>
+<span class="lineNum">     472 </span><span class="lineCov">        200 :     result.store(pos, aForceA, countA);</span>
+<span class="lineNum">     473 </span><span class="lineCov">        200 :     result.store(pos, aForceB, countB);</span>
+<span class="lineNum">     474 </span>            :   }
+<span class="lineNum">     475 </span><span class="lineCov">          1 :   return result;</span>
+<span class="lineNum">     476 </span>            : }
+<a name="477"><span class="lineNum">     477 </span>            : </a>
+<span class="lineNum">     478 </span>            : }
+<span class="lineNum">     479 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - bias/BiasValue.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">bias</a> - BiasValue.cpp<span style="font-size: 80%;"> (source / <a href="BiasValue.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Bias.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace PLMD {
+<span class="lineNum">      30 </span>            : namespace bias {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //+PLUMEDOC BIAS BIASVALUE
+<span class="lineNum">      33 </span>            : /*
+<span class="lineNum">      34 </span>            : Takes the value of one variable and use it as a bias
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : This is the simplest possible bias: the bias potential is equal to a collective variable.
+<span class="lineNum">      37 </span>            : It is useful to create custom biasing potential, e.g. applying a function (see \ref Function)
+<span class="lineNum">      38 </span>            : to some collective variable then using the value of this function directly as a bias.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \par Examples
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : The following input tells plumed to use the value of the distance between atoms 3 and 5
+<span class="lineNum">      43 </span>            : and the value of the distance between atoms 2 and 4 as biases.
+<span class="lineNum">      44 </span>            : It then tells plumed to print the energy of the restraint
+<span class="lineNum">      45 </span>            : \plumedfile
+<span class="lineNum">      46 </span>            : DISTANCE ATOMS=3,5 LABEL=d1
+<span class="lineNum">      47 </span>            : DISTANCE ATOMS=3,6 LABEL=d2
+<span class="lineNum">      48 </span>            : BIASVALUE ARG=d1,d2 LABEL=b
+<span class="lineNum">      49 </span>            : PRINT ARG=d1,d2,b.d1,b.d2
+<span class="lineNum">      50 </span>            : \endplumedfile
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : Another thing one can do is asking one system to follow
+<span class="lineNum">      53 </span>            : a circle in sin/cos according a  time dependence
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : \plumedfile
+<span class="lineNum">      56 </span>            : t: TIME
+<span class="lineNum">      57 </span>            : # this just print cos and sin of time
+<span class="lineNum">      58 </span>            : cos: MATHEVAL ARG=t VAR=t FUNC=cos(t) PERIODIC=NO
+<span class="lineNum">      59 </span>            : sin: MATHEVAL ARG=t VAR=t FUNC=sin(t) PERIODIC=NO
+<span class="lineNum">      60 </span>            : c1: COM ATOMS=1,2
+<span class="lineNum">      61 </span>            : c2: COM ATOMS=3,4
+<span class="lineNum">      62 </span>            : d: DISTANCE COMPONENTS ATOMS=c1,c2
+<span class="lineNum">      63 </span>            : PRINT ARG=t,cos,sin,d.x,d.y,d.z STRIDE=1 FILE=colvar FMT=%8.4f
+<span class="lineNum">      64 </span>            : # this calculates sine and cosine of a projected component of distance
+<span class="lineNum">      65 </span>            : mycos:  MATHEVAL ARG=d.x,d.y  VAR=x,y   FUNC=x/sqrt(x*x+y*y) PERIODIC=NO
+<span class="lineNum">      66 </span>            : mysin:  MATHEVAL ARG=d.x,d.y  VAR=x,y   FUNC=y/sqrt(x*x+y*y) PERIODIC=NO
+<span class="lineNum">      67 </span>            : # this creates a moving spring so that the system follows a circle-like dynamics
+<span class="lineNum">      68 </span>            : # but it is not a bias, it is a simple value now
+<span class="lineNum">      69 </span>            : vv1:  MATHEVAL ARG=mycos,mysin,cos,sin VAR=mc,ms,c,s  FUNC=100*((mc-c)^2+(ms-s)^2) PERIODIC=NO
+<span class="lineNum">      70 </span>            : # this takes the value calculated with matheval and uses as a bias
+<span class="lineNum">      71 </span>            : cc: BIASVALUE ARG=vv1
+<span class="lineNum">      72 </span>            : # some printout
+<span class="lineNum">      73 </span>            : PRINT ARG=t,cos,sin,d.x,d.y,d.z,mycos,mysin,cc.bias.vv1 STRIDE=1 FILE=colvar FMT=%8.4f
+<span class="lineNum">      74 </span>            : \endplumedfile
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : */
+<a name="77"><span class="lineNum">      77 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">         38 : class BiasValue : public Bias {</span>
+<span class="lineNum">      80 </span>            : public:
+<span class="lineNum">      81 </span>            :   explicit BiasValue(const ActionOptions&amp;);
+<span class="lineNum">      82 </span>            :   void calculate();
+<span class="lineNum">      83 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="84"><span class="lineNum">      84 </span>            : };</a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">       6471 : PLUMED_REGISTER_ACTION(BiasValue,&quot;BIASVALUE&quot;)</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">         20 : void BiasValue::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">         20 :   Bias::registerKeywords(keys);</span>
+<span class="lineNum">      90 </span><span class="lineCov">         40 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">      91 </span>            :   // Should be _bias below
+<span class="lineNum">      92 </span><span class="lineCov">         80 :   keys.addOutputComponent(&quot;_bias&quot;,&quot;default&quot;,&quot;one or multiple instances of this quantity will be refereceable elsewhere in the input file. &quot;</span>
+<span class="lineNum">      93 </span>            :                           &quot;these quantities will named with  the arguments of the bias followed by &quot;
+<span class="lineNum">      94 </span>            :                           &quot;the character string _bias. These quantities tell the user how much the bias is &quot;
+<span class="lineNum">      95 </span>            :                           &quot;due to each of the colvars.&quot;);
+<span class="lineNum">      96 </span><span class="lineCov">         20 : }</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">         19 : BiasValue::BiasValue(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      99 </span><span class="lineCov">         19 :   PLUMED_BIAS_INIT(ao)</span>
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span><span class="lineCov">         19 :   checkRead();</span>
+<span class="lineNum">     102 </span>            :   // add one bias for each argument
+<span class="lineNum">     103 </span><span class="lineCov">         59 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">         20 :     string ss=getPntrToArgument(i)-&gt;getName()+&quot;_bias&quot;;</span>
+<span class="lineNum">     105 </span><span class="lineCov">         20 :     addComponent(ss); componentIsNotPeriodic(ss);</span>
+<span class="lineNum">     106 </span>            :   }
+<a name="107"><span class="lineNum">     107 </span><span class="lineCov">         19 : }</span></a>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">        138 : void BiasValue::calculate() {</span>
+<span class="lineNum">     110 </span>            :   double bias=0.0;
+<span class="lineNum">     111 </span><span class="lineCov">        426 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) {</span>
+<span class="lineNum">     112 </span>            :     double val; val=getArgument(i);
+<span class="lineNum">     113 </span><span class="lineCov">        144 :     getPntrToComponent(i+1)-&gt;set(val);</span>
+<span class="lineNum">     114 </span><span class="lineCov">        144 :     setOutputForce(i,-1.);</span>
+<span class="lineNum">     115 </span><span class="lineCov">        144 :     bias+=val;</span>
+<span class="lineNum">     116 </span>            :   }
+<span class="lineNum">     117 </span>            :   setBias(bias);
+<span class="lineNum">     118 </span><span class="lineCov">        138 : }</span>
+<a name="119"><span class="lineNum">     119 </span>            : </a>
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

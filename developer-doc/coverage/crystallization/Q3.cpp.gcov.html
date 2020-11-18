@@ -1,0 +1,290 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - crystallization/Q3.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">crystallization</a> - Q3.cpp<span style="font-size: 80%;"> (source / <a href="Q3.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryLo">28.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryLo">53.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2014-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Steinhardt.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;LocalSteinhardt.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC MCOLVAR Q3
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : Calculate 3rd order Steinhardt parameters.
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : The 3rd order Steinhardt parameters allow us to measure the degree to which the first coordination shell
+<span class="lineNum">      31 </span>            : around an atom is ordered.  The Steinhardt parameter for atom, \f$i\f$ is complex vector whose components are
+<span class="lineNum">      32 </span>            : calculated using the following formula:
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : \f[
+<span class="lineNum">      35 </span>            : q_{3m}(i) = \frac{\sum_j \sigma( r_{ij} ) Y_{3m}(\mathbf{r}_{ij}) }{\sum_j \sigma( r_{ij} ) }
+<span class="lineNum">      36 </span>            : \f]
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : where \f$Y_{3m}\f$ is one of the 3rd order spherical harmonics so \f$m\f$ is a number that runs from \f$-3\f$ to
+<span class="lineNum">      39 </span>            : \f$+3\f$.  The function \f$\sigma( r_{ij} )\f$ is a \ref switchingfunction that acts on the distance between
+<span class="lineNum">      40 </span>            : atoms \f$i\f$ and \f$j\f$.  The parameters of this function should be set so that it the function is equal to one
+<span class="lineNum">      41 </span>            : when atom \f$j\f$ is in the first coordination sphere of atom \f$i\f$ and is zero otherwise.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The Steinhardt parameters can be used to measure the degree of order in the system in a variety of different ways.  The
+<span class="lineNum">      44 </span>            : simplest way of measuring whether or not the coordination sphere is ordered is to simply take the norm of the above vector i.e.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : \f[
+<span class="lineNum">      47 </span>            : Q_3(i) = \sqrt{ \sum_{m=-3}^3 q_{3m}(i)^{*} q_{3m}(i) }
+<span class="lineNum">      48 </span>            : \f]
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : This norm is small when the coordination shell is disordered and larger when the coordination shell is ordered. Furthermore, when
+<span class="lineNum">      51 </span>            : the keywords LESS_THAN, MIN, MAX, HISTOGRAM, MEAN and so on are used with this colvar it is the distribution of these normed quantities
+<span class="lineNum">      52 </span>            : that is investigated.
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : Other measures of order can be taken by averaging the components of the individual \f$q_3\f$ vectors individually or by taking dot products of
+<span class="lineNum">      55 </span>            : the \f$q_{3}\f$ vectors on adjacent atoms.  More information on these variables can be found in the documentation for \ref LOCAL_Q3,
+<span class="lineNum">      56 </span>            : \ref LOCAL_AVERAGE and \ref NLINKS.
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : \par Examples
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : The following command calculates the average Q3 parameter for the 64 atoms in a box of Lennard Jones and prints this
+<span class="lineNum">      61 </span>            : quantity to a file called colvar:
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : \plumedfile
+<span class="lineNum">      64 </span>            : Q3 SPECIES=1-64 D_0=1.3 R_0=0.2 MEAN LABEL=q3
+<span class="lineNum">      65 </span>            : PRINT ARG=q3.mean FILE=colvar
+<span class="lineNum">      66 </span>            : \endplumedfile
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : The following command calculates the histogram of Q3 parameters for the 64 atoms in a box of Lennard Jones and prints these
+<span class="lineNum">      69 </span>            : quantities to a file called colvar:
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : \plumedfile
+<span class="lineNum">      72 </span>            : Q3 SPECIES=1-64 D_0=1.3 R_0=0.2 HISTOGRAM={GAUSSIAN LOWER=0.0 UPPER=1.0 NBINS=20 SMEAR=0.1} LABEL=q3
+<span class="lineNum">      73 </span>            : PRINT ARG=q3.* FILE=colvar
+<span class="lineNum">      74 </span>            : \endplumedfile
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : The following command could be used to measure the Q3 paramters that describe the arrangement of chlorine ions around the
+<span class="lineNum">      77 </span>            : sodium atoms in NaCl.  The imagined system here is composed of 64 NaCl formula units and the atoms are arranged in the input
+<span class="lineNum">      78 </span>            : with the 64 Na\f$^+\f$ ions followed by the 64 Cl\f$-\f$ ions.  Once again the average Q3 paramter is calculated and output to a
+<span class="lineNum">      79 </span>            : file called colvar
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : \plumedfile
+<span class="lineNum">      82 </span>            : Q3 SPECIESA=1-64 SPECIESB=65-128 D_0=1.3 R_0=0.2 MEAN LABEL=q3
+<span class="lineNum">      83 </span>            : PRINT ARG=q3.mean FILE=colvar
+<span class="lineNum">      84 </span>            : \endplumedfile
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : */
+<span class="lineNum">      87 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : //+PLUMEDOC MCOLVARF LOCAL_Q3
+<span class="lineNum">      90 </span>            : /*
+<span class="lineNum">      91 </span>            : Calculate the local degree of order around an atoms by taking the average dot product between the \f$q_3\f$ vector on the central atom and the \f$q_3\f$ vector
+<span class="lineNum">      92 </span>            : on the atoms in the first coordination sphere.
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : The \ref Q3 command allows one to calculate one complex vectors for each of the atoms in your system that describe the degree of order in the coordination sphere
+<span class="lineNum">      95 </span>            : around a particular atom. The difficulty with these vectors comes when combining the order parameters from all of the individual atoms/molecules so as to get a
+<span class="lineNum">      96 </span>            : measure of the global degree of order for the system. The simplest way of doing this - calculating the average Steinhardt parameter - can be problematic. If one is
+<span class="lineNum">      97 </span>            : examining nucleation say only the order parameters for those atoms in the nucleus will change significantly when the nucleus forms. The order parameters for the
+<span class="lineNum">      98 </span>            : atoms in the surrounding liquid will remain pretty much the same. As such if one models a small nucleus embedded in a very large amount of solution/melt any
+<span class="lineNum">      99 </span>            : change in the average order parameter will be negligible. Substantial changes in the value of this average can be observed in simulations of nucleation but only
+<span class="lineNum">     100 </span>            : because the number of atoms is relatively small.
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : When the average \ref Q3 parameter is used to bias the dynamics a problems
+<span class="lineNum">     103 </span>            : can occur. These averaged coordinates cannot distinguish between the correct,
+<span class="lineNum">     104 </span>            : single-nucleus pathway and a concerted pathway in which all the atoms rearrange
+<span class="lineNum">     105 </span>            : themselves into their solid-like configuration simultaneously. This second type
+<span class="lineNum">     106 </span>            : of pathway would be impossible in reality because there is a large entropic
+<span class="lineNum">     107 </span>            : barrier that prevents concerted processes like this from happening.  However,
+<span class="lineNum">     108 </span>            : in the finite sized systems that are commonly simulated this barrier is reduced
+<span class="lineNum">     109 </span>            : substantially. As a result in simulations where average Steinhardt parameters
+<span class="lineNum">     110 </span>            : are biased there are often quite dramatic system size effects
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : If one wants to simulate nucleation using some form on
+<span class="lineNum">     113 </span>            : biased dynamics what is really required is an order parameter that measures:
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : - Whether or not the coordination spheres around atoms are ordered
+<span class="lineNum">     116 </span>            : - Whether or not the atoms that are ordered are clustered together in a crystalline nucleus
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : \ref LOCAL_AVERAGE and \ref NLINKS are variables that can be combined with the Steinhardt parameteters allow to calculate variables that satisfy these requirements.
+<span class="lineNum">     119 </span>            : LOCAL_Q3 is another variable that can be used in these sorts of calculations. The LOCAL_Q3 parameter for a particular atom is a number that measures the extent to
+<span class="lineNum">     120 </span>            : which the orientation of the atoms in the first coordination sphere of an atom match the orientation of the central atom.  It does this by calculating the following
+<span class="lineNum">     121 </span>            : quantity for each of the atoms in the system:
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : \f[
+<span class="lineNum">     124 </span>            :  s_i = \frac{ \sum_j \sigma( r_{ij} ) \sum_{m=-3}^3 q_{3m}^{*}(i)q_{3m}(j) }{ \sum_j \sigma( r_{ij} ) }
+<span class="lineNum">     125 </span>            : \f]
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : where \f$q_{3m}(i)\f$ and \f$q_{3m}(j)\f$ are the 3rd order Steinhardt vectors calculated for atom \f$i\f$ and atom \f$j\f$ respectively and the asterix denotes complex
+<span class="lineNum">     128 </span>            : conjugation.  The function
+<span class="lineNum">     129 </span>            : \f$\sigma( r_{ij} )\f$ is a \ref switchingfunction that acts on the distance between atoms \f$i\f$ and \f$j\f$.  The parameters of this function should be set
+<span class="lineNum">     130 </span>            : so that it the function is equal to one when atom \f$j\f$ is in the first coordination sphere of atom \f$i\f$ and is zero otherwise.  The sum in the numerator
+<span class="lineNum">     131 </span>            : of this expression is the dot product of the Steinhardt parameters for atoms \f$i\f$ and \f$j\f$ and thus measures the degree to which the orientations of these
+<span class="lineNum">     132 </span>            : adjacent atoms is correlated.
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : \par Examples
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : The following command calculates the average value of the LOCAL_Q3 parameter for the 64 Lennard Jones atoms in the system under study and prints this
+<span class="lineNum">     137 </span>            : quantity to a file called colvar.
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : \plumedfile
+<span class="lineNum">     140 </span>            : Q3 SPECIES=1-64 D_0=1.3 R_0=0.2 LABEL=q3
+<span class="lineNum">     141 </span>            : LOCAL_Q3 SPECIES=q3 SWITCH={RATIONAL D_0=1.3 R_0=0.2} MEAN LABEL=lq3
+<span class="lineNum">     142 </span>            : PRINT ARG=lq3.mean FILE=colvar
+<span class="lineNum">     143 </span>            : \endplumedfile
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : The following input calculates the distribution of LOCAL_Q3 parameters at any given time and outputs this information to a file.
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : \plumedfile
+<span class="lineNum">     148 </span>            : Q3 SPECIES=1-64 D_0=1.3 R_0=0.2 LABEL=q3
+<span class="lineNum">     149 </span>            : LOCAL_Q3 SPECIES=q3 SWITCH={RATIONAL D_0=1.3 R_0=0.2} HISTOGRAM={GAUSSIAN LOWER=0.0 UPPER=1.0 NBINS=20 SMEAR=0.1} LABEL=lq3
+<span class="lineNum">     150 </span>            : PRINT ARG=lq3.* FILE=colvar
+<span class="lineNum">     151 </span>            : \endplumedfile
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : The following calculates the LOCAL_Q3 parameters for atoms 1-5 only. For each of these atoms comparisons of the geometry of the coordination sphere
+<span class="lineNum">     154 </span>            : are done with those of all the other atoms in the system.  The final quantity is the average and is outputted to a file
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : \plumedfile
+<span class="lineNum">     157 </span>            : Q3 SPECIESA=1-5 SPECIESB=1-64 D_0=1.3 R_0=0.2 LABEL=q3a
+<span class="lineNum">     158 </span>            : Q3 SPECIESA=6-64 SPECIESB=1-64 D_0=1.3 R_0=0.2 LABEL=q3b
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : LOCAL_Q3 SPECIES=q3a,q3b SWITCH={RATIONAL D_0=1.3 R_0=0.2} MEAN LOWMEM LABEL=w3
+<span class="lineNum">     161 </span>            : PRINT ARG=w3.* FILE=colvar
+<span class="lineNum">     162 </span>            : \endplumedfile
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : */
+<span class="lineNum">     165 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : namespace PLMD {
+<a name="169"><span class="lineNum">     169 </span>            : namespace crystallization {</a>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 : class Q3 : public Steinhardt {</span>
+<span class="lineNum">     172 </span>            : public:
+<span class="lineNum">     173 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     174 </span>            :   explicit Q3( const ActionOptions&amp; ao );
+<a name="175"><span class="lineNum">     175 </span>            : };</a>
+<span class="lineNum">     176 </span>            : 
+<a name="177"><span class="lineNum">     177 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(Q3,&quot;Q3&quot;)</span></a>
+<span class="lineNum">     178 </span>            : typedef LocalSteinhardt&lt;Q3&gt; LOCAL_Q3;
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(LOCAL_Q3,&quot;LOCAL_Q3&quot;)</span></a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">          1 : void Q3::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     182 </span><span class="lineCov">          1 :   Steinhardt::registerKeywords( keys );</span>
+<a name="183"><span class="lineNum">     183 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 : Q3::Q3(const ActionOptions&amp; ao ):</span>
+<span class="lineNum">     186 </span>            :   Action(ao),
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   Steinhardt(ao)</span>
+<span class="lineNum">     188 </span>            : {
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :   setAngularMomentum(3);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : // Spherical harmonics normalization:
+<span class="lineNum">     192 </span>            : // even =  sqrt ( ((2l+1)*(l-m)!) / (4*pi*(l+m)!) )
+<span class="lineNum">     193 </span>            : // odd  = -sqrt ( ((2l+1)*(l-m)!) / (4*pi*(l+m)!) )
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :   normaliz.resize( 4 );</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :   normaliz[0] = sqrt( ( 7.0*6.0 ) / (4.0*pi*6.0) );</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :   normaliz[1] = -sqrt( ( 7.0*2.0 ) / (4.0*pi*24.0) );</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :   normaliz[2] = sqrt( ( 7.0*1.0) / (4.0*pi*120.0) );</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :   normaliz[3] = -sqrt( ( 7.0*1.0) / (4.0*pi*720.0) );</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : // Legendre polynomial coefficients of order three
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :   coeff_poly.resize( 4 );</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :   coeff_poly[0]=0.0;</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :   coeff_poly[1]=-1.5;</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :   coeff_poly[2]=0.0;</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :   coeff_poly[3]=2.5;</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 : }</span>
+<a name="210"><span class="lineNum">     210 </span>            : </a>
+<span class="lineNum">     211 </span>            : }
+<span class="lineNum">     212 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     213 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - gridtools/DumpCube.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">gridtools</a> - DumpCube.cpp<span style="font-size: 80%;"> (source / <a href="DumpCube.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryMed">89.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;GridPrintingBase.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/OFile.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //+PLUMEDOC GRIDANALYSIS DUMPCUBE
+<span class="lineNum">      27 </span>            : /*
+<span class="lineNum">      28 </span>            : Output a three dimensional grid using the Gaussian cube file format.
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : Suppose you have calculated the value of a function on a three dimensional grid.
+<span class="lineNum">      31 </span>            : This function might be a \ref HISTOGRAM or it might be a free energy energy surface
+<span class="lineNum">      32 </span>            : that was calculated from this histogram by using \ref CONVERT_TO_FES.  Alternatively,
+<span class="lineNum">      33 </span>            : your function might be a phase-field that was calculated using \ref MULTICOLVARDENS.
+<span class="lineNum">      34 </span>            : Whatever the function is, however, you obviously cannot show it using a typical contour
+<span class="lineNum">      35 </span>            : plotting program such as gnuplot as you have three input variables.
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : Tools like VMD have nice features for plotting these types of three dimensional functions
+<span class="lineNum">      38 </span>            : but typically you are required to use a Gaussian cube file format to input the data.  This
+<span class="lineNum">      39 </span>            : action thus allows you to output a function evaluated on a grid to a Gaussian cube file format.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : \par Examples
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : The input below can be used to postprocess a trajectory.  A histogram as a function of the distance
+<span class="lineNum">      44 </span>            : between atoms 1 and 2, the distance between atom 1 and 3 and the angle between the vector connecting atoms 1 and
+<span class="lineNum">      45 </span>            : 2 and 1 and 3 is computed using kernel density estimation.  Once all the data contained in the trajectory has been read in and
+<span class="lineNum">      46 </span>            : all the kernels have been added the resulting histogram is output to a file called histoA1.cube.  This file has the
+<span class="lineNum">      47 </span>            : Gaussian cube file format.  The histogram can thus be visualized using tools such as VMD.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \plumedfile
+<span class="lineNum">      50 </span>            : x1: DISTANCE ATOMS=1,2
+<span class="lineNum">      51 </span>            : x2: DISTANCE ATOMS=1,3
+<span class="lineNum">      52 </span>            : x3: ANGLE ATOMS=1,2,3
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : hA1: HISTOGRAM ARG=x1,x2,x3 GRID_MIN=0.0,0.0,0.0 GRID_MAX=3.0,3.0,3.0 GRID_BIN=10,10,10 BANDWIDTH=1.0,1.0,1.0
+<span class="lineNum">      55 </span>            : DUMPCUBE GRID=hA1 FILE=histoA1.cube
+<span class="lineNum">      56 </span>            : \endplumedfile
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : */
+<span class="lineNum">      59 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : namespace PLMD {
+<a name="62"><span class="lineNum">      62 </span>            : namespace gridtools {</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          6 : class DumpCube : public GridPrintingBase {</span>
+<span class="lineNum">      65 </span>            : private:
+<span class="lineNum">      66 </span>            :   unsigned mycomp;
+<span class="lineNum">      67 </span>            : public:
+<span class="lineNum">      68 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      69 </span>            :   explicit DumpCube(const ActionOptions&amp;ao);
+<span class="lineNum">      70 </span>            :   void printGrid( OFile&amp; ofile ) const ;
+<a name="71"><span class="lineNum">      71 </span>            : };</a>
+<span class="lineNum">      72 </span>            : 
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">       6458 : PLUMED_REGISTER_ACTION(DumpCube,&quot;DUMPCUBE&quot;)</span></a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">          7 : void DumpCube::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      76 </span><span class="lineCov">          7 :   GridPrintingBase::registerKeywords( keys );</span>
+<span class="lineNum">      77 </span><span class="lineCov">         28 :   keys.add(&quot;optional&quot;,&quot;COMPONENT&quot;,&quot;if your input is a vector field use this to specifiy the component of the input vector field for which you wish to output&quot;);</span>
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          6 : DumpCube::DumpCube(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      81 </span>            :   Action(ao),
+<span class="lineNum">      82 </span><span class="lineCov">          6 :   GridPrintingBase(ao)</span>
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span><span class="lineCov">         12 :   fmt = fmt + &quot; &quot;;</span>
+<span class="lineNum">      85 </span><span class="lineCov">         12 :   if( ingrid-&gt;getType()!=&quot;flat&quot; ) error(&quot;cannot dump grid of type &quot; + ingrid-&gt;getType() + &quot; using DUMPCUBE&quot;);</span>
+<span class="lineNum">      86 </span><span class="lineCov">         12 :   if( ingrid-&gt;getDimension()!=3 ) error(&quot;cannot print cube file if grid does not contain three dimensional data&quot;);</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">          6 :   if( ingrid-&gt;getNumberOfComponents()==1 ) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">          6 :     mycomp=0;</span>
+<span class="lineNum">      90 </span>            :   } else {
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     int tcomp=-1; parse(&quot;COMPONENT&quot;,tcomp);</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     if( tcomp&lt;0 ) error(&quot;component of vector field was not specified - use COMPONENT keyword&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     mycomp=tcomp*(1+ingrid-&gt;getDimension()); if( ingrid-&gt;noDerivatives() ) mycomp=tcomp;</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :     log.printf(&quot;  using %dth component of grid \n&quot;,tcomp );</span>
+<span class="lineNum">      95 </span>            :   }
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">          6 :   checkRead();</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          8 : void DumpCube::printGrid( OFile&amp; ofile ) const {</span>
+<span class="lineNum">     101 </span><span class="lineCov">          8 :   double lunit = ingrid-&gt;getCubeUnits();</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">          8 :   ofile.printf(&quot;PLUMED CUBE FILE\n&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">          8 :   ofile.printf(&quot;OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z\n&quot;);</span>
+<span class="lineNum">     105 </span>            :   // Number of atoms followed by position of origin (origin set so that center of grid is in center of cell)
+<span class="lineNum">     106 </span><span class="lineCov">         32 :   std::string ostr = &quot;%d &quot; + fmt + fmt + fmt + &quot;\n&quot;;</span>
+<span class="lineNum">     107 </span><span class="lineCov">         40 :   ofile.printf(ostr.c_str(),1,-0.5*lunit*ingrid-&gt;getGridExtent(0),-0.5*lunit*ingrid-&gt;getGridExtent(1),-0.5*lunit*ingrid-&gt;getGridExtent(2));</span>
+<span class="lineNum">     108 </span><span class="lineCov">         40 :   ofile.printf(ostr.c_str(),ingrid-&gt;getNbin()[0],lunit*ingrid-&gt;getGridSpacing()[0],0.0,0.0);  // Number of bins in each direction followed by</span>
+<span class="lineNum">     109 </span><span class="lineCov">         40 :   ofile.printf(ostr.c_str(),ingrid-&gt;getNbin()[1],0.0,lunit*ingrid-&gt;getGridSpacing()[1],0.0);  // shape of voxel</span>
+<span class="lineNum">     110 </span><span class="lineCov">         40 :   ofile.printf(ostr.c_str(),ingrid-&gt;getNbin()[2],0.0,0.0,lunit*ingrid-&gt;getGridSpacing()[2]);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          8 :   ofile.printf(ostr.c_str(),1,0.0,0.0,0.0); // Fake atom otherwise VMD doesn't work</span>
+<span class="lineNum">     112 </span><span class="lineCov">          8 :   std::vector&lt;unsigned&gt; pp(3); std::vector&lt;unsigned&gt; nbin( ingrid-&gt;getNbin() );</span>
+<span class="lineNum">     113 </span><span class="lineCov">        336 :   for(pp[0]=0; pp[0]&lt;nbin[0]; ++pp[0]) {</span>
+<span class="lineNum">     114 </span><span class="lineCov">       5400 :     for(pp[1]=0; pp[1]&lt;nbin[1]; ++pp[1]) {</span>
+<span class="lineNum">     115 </span><span class="lineCov">     120552 :       for(pp[2]=0; pp[2]&lt;nbin[2]; ++pp[2]) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">      76976 :         ofile.printf(fmt.c_str(), ingrid-&gt;getGridElement( ingrid-&gt;getIndex(pp), mycomp ) );</span>
+<span class="lineNum">     117 </span><span class="lineCov">      38488 :         if(pp[2]%6==5) ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     118 </span>            :       }
+<span class="lineNum">     119 </span><span class="lineCov">       1696 :       ofile.printf(&quot;\n&quot;);</span>
+<span class="lineNum">     120 </span>            :     }
+<span class="lineNum">     121 </span>            :   }
+<span class="lineNum">     122 </span><span class="lineCov">          8 : }</span>
+<a name="123"><span class="lineNum">     123 </span>            : </a>
+<span class="lineNum">     124 </span>            : }
+<span class="lineNum">     125 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

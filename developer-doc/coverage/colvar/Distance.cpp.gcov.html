@@ -1,0 +1,311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/Distance.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - Distance.cpp<span style="font-size: 80%;"> (source / <a href="Distance.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Pbc.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<span class="lineNum">      32 </span>            : namespace colvar {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //+PLUMEDOC COLVAR DISTANCE
+<span class="lineNum">      35 </span>            : /*
+<span class="lineNum">      36 </span>            : Calculate the distance between a pair of atoms.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : By default the distance is computed taking into account periodic
+<span class="lineNum">      39 </span>            : boundary conditions. This behavior can be changed with the NOPBC flag.
+<span class="lineNum">      40 </span>            : Moreover, single components in cartesian space (x,y, and z, with COMPONENTS)
+<span class="lineNum">      41 </span>            : or single components projected to the three lattice vectors (a,b, and c, with SCALED_COMPONENTS)
+<span class="lineNum">      42 </span>            : can be also computed.
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : Notice that Cartesian components will not have the proper periodicity!
+<span class="lineNum">      45 </span>            : If you have to study e.g. the permeation of a molecule across a membrane,
+<span class="lineNum">      46 </span>            : better to use SCALED_COMPONENTS.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \par Examples
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : The following input tells plumed to print the distance between atoms 3 and 5,
+<span class="lineNum">      51 </span>            : the distance between atoms 2 and 4 and the x component of the distance between atoms 2 and 4.
+<span class="lineNum">      52 </span>            : \plumedfile
+<span class="lineNum">      53 </span>            : d1:  DISTANCE ATOMS=3,5
+<span class="lineNum">      54 </span>            : d2:  DISTANCE ATOMS=2,4
+<span class="lineNum">      55 </span>            : d2c: DISTANCE ATOMS=2,4 COMPONENTS
+<span class="lineNum">      56 </span>            : PRINT ARG=d1,d2,d2c.x
+<span class="lineNum">      57 </span>            : \endplumedfile
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : The following input computes the end-to-end distance for a polymer
+<span class="lineNum">      60 </span>            : of 100 atoms and keeps it at a value around 5.
+<span class="lineNum">      61 </span>            : \plumedfile
+<span class="lineNum">      62 </span>            : WHOLEMOLECULES ENTITY0=1-100
+<span class="lineNum">      63 </span>            : e2e: DISTANCE ATOMS=1,100 NOPBC
+<span class="lineNum">      64 </span>            : RESTRAINT ARG=e2e KAPPA=1 AT=5
+<span class="lineNum">      65 </span>            : \endplumedfile
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : Notice that NOPBC is used
+<span class="lineNum">      68 </span>            : to be sure that if the end-to-end distance is larger than half the simulation
+<span class="lineNum">      69 </span>            : box the distance is compute properly. Also notice that, since many MD
+<span class="lineNum">      70 </span>            : codes break molecules across cell boundary, it might be necessary to
+<span class="lineNum">      71 </span>            : use the \ref WHOLEMOLECULES keyword (also notice that it should be
+<span class="lineNum">      72 </span>            : _before_ distance). The list of atoms provided to \ref WHOLEMOLECULES
+<span class="lineNum">      73 </span>            : here contains all the atoms between 1 and 100. Strictly speaking, this
+<span class="lineNum">      74 </span>            : is not necessary. If you know for sure that atoms with difference in
+<span class="lineNum">      75 </span>            : the index say equal to 10 are _not_ going to be farther than half cell
+<span class="lineNum">      76 </span>            : you can e.g. use
+<span class="lineNum">      77 </span>            : \plumedfile
+<span class="lineNum">      78 </span>            : WHOLEMOLECULES ENTITY0=1,10,20,30,40,50,60,70,80,90,100
+<span class="lineNum">      79 </span>            : e2e: DISTANCE ATOMS=1,100 NOPBC
+<span class="lineNum">      80 </span>            : RESTRAINT ARG=e2e KAPPA=1 AT=5
+<span class="lineNum">      81 </span>            : \endplumedfile
+<span class="lineNum">      82 </span>            : Just be sure that the ordered list provide to \ref WHOLEMOLECULES has the following
+<span class="lineNum">      83 </span>            : properties:
+<span class="lineNum">      84 </span>            : - Consecutive atoms should be closer than half-cell throughout the entire simulation.
+<span class="lineNum">      85 </span>            : - Atoms required later for the distance (e.g. 1 and 100) should be included in the list
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : The following example shows how to take into account periodicity e.g.
+<span class="lineNum">      88 </span>            : in z-component of a distance
+<span class="lineNum">      89 </span>            : \plumedfile
+<span class="lineNum">      90 </span>            : # this is a center of mass of a large group
+<span class="lineNum">      91 </span>            : c: COM ATOMS=1-100
+<span class="lineNum">      92 </span>            : # this is the distance between atom 101 and the group
+<span class="lineNum">      93 </span>            : d: DISTANCE ATOMS=c,101 COMPONENTS
+<span class="lineNum">      94 </span>            : # this makes a new variable, dd, equal to d and periodic, with domain -10,10
+<span class="lineNum">      95 </span>            : # this is the right choise if e.g. the cell is orthorombic and its size in
+<span class="lineNum">      96 </span>            : # z direction is 20.
+<span class="lineNum">      97 </span>            : dz: COMBINE ARG=d.z PERIODIC=-10,10
+<span class="lineNum">      98 </span>            : # metadynamics on dd
+<span class="lineNum">      99 </span>            : METAD ARG=dz SIGMA=0.1 HEIGHT=0.1 PACE=200
+<span class="lineNum">     100 </span>            : \endplumedfile
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : Using SCALED_COMPONENTS this problem should not arise because they are always periodic
+<span class="lineNum">     103 </span>            : with domain (-0.5,+0.5).
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : */
+<a name="109"><span class="lineNum">     109 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">        712 : class Distance : public Colvar {</span>
+<span class="lineNum">     112 </span>            :   bool components;
+<span class="lineNum">     113 </span>            :   bool scaled_components;
+<span class="lineNum">     114 </span>            :   bool pbc;
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : public:
+<span class="lineNum">     117 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">     118 </span>            :   explicit Distance(const ActionOptions&amp;);
+<span class="lineNum">     119 </span>            : // active methods:
+<span class="lineNum">     120 </span>            :   virtual void calculate();
+<a name="121"><span class="lineNum">     121 </span>            : };</a>
+<span class="lineNum">     122 </span>            : 
+<a name="123"><span class="lineNum">     123 </span><span class="lineCov">       6810 : PLUMED_REGISTER_ACTION(Distance,&quot;DISTANCE&quot;)</span></a>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">        359 : void Distance::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     126 </span><span class="lineCov">        359 :   Colvar::registerKeywords( keys );</span>
+<span class="lineNum">     127 </span><span class="lineCov">       1436 :   keys.add(&quot;atoms&quot;,&quot;ATOMS&quot;,&quot;the pair of atom that we are calculating the distance between&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">       1077 :   keys.addFlag(&quot;COMPONENTS&quot;,false,&quot;calculate the x, y and z components of the distance separately and store them as label.x, label.y and label.z&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">       1077 :   keys.addFlag(&quot;SCALED_COMPONENTS&quot;,false,&quot;calculate the a, b and c scaled components of the distance separately and store them as label.a, label.b and label.c&quot;);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       1436 :   keys.addOutputComponent(&quot;x&quot;,&quot;COMPONENTS&quot;,&quot;the x-component of the vector connecting the two atoms&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineCov">       1436 :   keys.addOutputComponent(&quot;y&quot;,&quot;COMPONENTS&quot;,&quot;the y-component of the vector connecting the two atoms&quot;);</span>
+<span class="lineNum">     132 </span><span class="lineCov">       1436 :   keys.addOutputComponent(&quot;z&quot;,&quot;COMPONENTS&quot;,&quot;the z-component of the vector connecting the two atoms&quot;);</span>
+<span class="lineNum">     133 </span><span class="lineCov">       1436 :   keys.addOutputComponent(&quot;a&quot;,&quot;SCALED_COMPONENTS&quot;,&quot;the normalized projection on the first lattice vector of the vector connecting the two atoms&quot;);</span>
+<span class="lineNum">     134 </span><span class="lineCov">       1436 :   keys.addOutputComponent(&quot;b&quot;,&quot;SCALED_COMPONENTS&quot;,&quot;the normalized projection on the second lattice vector of the vector connecting the two atoms&quot;);</span>
+<span class="lineNum">     135 </span><span class="lineCov">       1436 :   keys.addOutputComponent(&quot;c&quot;,&quot;SCALED_COMPONENTS&quot;,&quot;the normalized projection on the third lattice vector of the vector connecting the two atoms&quot;);</span>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">        359 : }</span></a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">        358 : Distance::Distance(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     139 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">     140 </span>            :   components(false),
+<span class="lineNum">     141 </span>            :   scaled_components(false),
+<span class="lineNum">     142 </span><span class="lineCov">        360 :   pbc(true)</span>
+<span class="lineNum">     143 </span>            : {
+<span class="lineNum">     144 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     145 </span><span class="lineCov">        716 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     146 </span><span class="lineCov">        358 :   if(atoms.size()!=2)</span>
+<span class="lineNum">     147 </span><span class="lineCov">          2 :     error(&quot;Number of specified atoms should be 2&quot;);</span>
+<span class="lineNum">     148 </span><span class="lineCov">        714 :   parseFlag(&quot;COMPONENTS&quot;,components);</span>
+<span class="lineNum">     149 </span><span class="lineCov">        714 :   parseFlag(&quot;SCALED_COMPONENTS&quot;,scaled_components);</span>
+<span class="lineNum">     150 </span><span class="lineCov">        357 :   bool nopbc=!pbc;</span>
+<span class="lineNum">     151 </span><span class="lineCov">        714 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     152 </span><span class="lineCov">        357 :   pbc=!nopbc;</span>
+<span class="lineNum">     153 </span><span class="lineCov">        357 :   checkRead();</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">        714 :   log.printf(&quot;  between atoms %d %d\n&quot;,atoms[0].serial(),atoms[1].serial());</span>
+<span class="lineNum">     156 </span><span class="lineCov">        357 :   if(pbc) log.printf(&quot;  using periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     157 </span><span class="lineCov">          2 :   else    log.printf(&quot;  without periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">        358 :   if(components &amp;&amp; scaled_components) error(&quot;COMPONENTS and SCALED_COMPONENTS are not compatible&quot;);</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">        356 :   if(components) {</span>
+<span class="lineNum">     162 </span><span class="lineCov">         87 :     addComponentWithDerivatives(&quot;x&quot;); componentIsNotPeriodic(&quot;x&quot;);</span>
+<span class="lineNum">     163 </span><span class="lineCov">         87 :     addComponentWithDerivatives(&quot;y&quot;); componentIsNotPeriodic(&quot;y&quot;);</span>
+<span class="lineNum">     164 </span><span class="lineCov">         87 :     addComponentWithDerivatives(&quot;z&quot;); componentIsNotPeriodic(&quot;z&quot;);</span>
+<span class="lineNum">     165 </span><span class="lineCov">         29 :     log&lt;&lt;&quot;  WARNING: components will not have the proper periodicity - see manual\n&quot;;</span>
+<span class="lineNum">     166 </span><span class="lineCov">        327 :   } else if(scaled_components) {</span>
+<span class="lineNum">     167 </span><span class="lineCov">         10 :     addComponentWithDerivatives(&quot;a&quot;); componentIsPeriodic(&quot;a&quot;,&quot;-0.5&quot;,&quot;+0.5&quot;);</span>
+<span class="lineNum">     168 </span><span class="lineCov">         10 :     addComponentWithDerivatives(&quot;b&quot;); componentIsPeriodic(&quot;b&quot;,&quot;-0.5&quot;,&quot;+0.5&quot;);</span>
+<span class="lineNum">     169 </span><span class="lineCov">         10 :     addComponentWithDerivatives(&quot;c&quot;); componentIsPeriodic(&quot;c&quot;,&quot;-0.5&quot;,&quot;+0.5&quot;);</span>
+<span class="lineNum">     170 </span>            :   } else {
+<span class="lineNum">     171 </span><span class="lineCov">        325 :     addValueWithDerivatives(); setNotPeriodic();</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">        356 :   requestAtoms(atoms);</span>
+<span class="lineNum">     176 </span><span class="lineCov">        356 : }</span>
+<span class="lineNum">     177 </span>            : 
+<a name="178"><span class="lineNum">     178 </span>            : </a>
+<span class="lineNum">     179 </span>            : // calculator
+<span class="lineNum">     180 </span><span class="lineCov">      24227 : void Distance::calculate() {</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">      24227 :   if(pbc) makeWhole();</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineCov">      24227 :   Vector distance=delta(getPosition(0),getPosition(1));</span>
+<span class="lineNum">     185 </span><span class="lineCov">      24227 :   const double value=distance.modulo();</span>
+<span class="lineNum">     186 </span><span class="lineCov">      24227 :   const double invvalue=1.0/value;</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">      24227 :   if(components) {</span>
+<span class="lineNum">     189 </span><span class="lineCov">        584 :     Value* valuex=getPntrToComponent(&quot;x&quot;);</span>
+<span class="lineNum">     190 </span><span class="lineCov">        584 :     Value* valuey=getPntrToComponent(&quot;y&quot;);</span>
+<span class="lineNum">     191 </span><span class="lineCov">        584 :     Value* valuez=getPntrToComponent(&quot;z&quot;);</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineCov">        584 :     setAtomsDerivatives (valuex,0,Vector(-1,0,0));</span>
+<span class="lineNum">     194 </span><span class="lineCov">        292 :     setAtomsDerivatives (valuex,1,Vector(+1,0,0));</span>
+<span class="lineNum">     195 </span><span class="lineCov">        292 :     setBoxDerivativesNoPbc(valuex);</span>
+<span class="lineNum">     196 </span><span class="lineCov">        292 :     valuex-&gt;set(distance[0]);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">        292 :     setAtomsDerivatives (valuey,0,Vector(0,-1,0));</span>
+<span class="lineNum">     199 </span><span class="lineCov">        292 :     setAtomsDerivatives (valuey,1,Vector(0,+1,0));</span>
+<span class="lineNum">     200 </span><span class="lineCov">        292 :     setBoxDerivativesNoPbc(valuey);</span>
+<span class="lineNum">     201 </span><span class="lineCov">        292 :     valuey-&gt;set(distance[1]);</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineCov">        292 :     setAtomsDerivatives (valuez,0,Vector(0,0,-1));</span>
+<span class="lineNum">     204 </span><span class="lineCov">        292 :     setAtomsDerivatives (valuez,1,Vector(0,0,+1));</span>
+<span class="lineNum">     205 </span><span class="lineCov">        292 :     setBoxDerivativesNoPbc(valuez);</span>
+<span class="lineNum">     206 </span><span class="lineCov">        292 :     valuez-&gt;set(distance[2]);</span>
+<span class="lineNum">     207 </span><span class="lineCov">      23935 :   } else if(scaled_components) {</span>
+<span class="lineNum">     208 </span><span class="lineCov">         22 :     Value* valuea=getPntrToComponent(&quot;a&quot;);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         22 :     Value* valueb=getPntrToComponent(&quot;b&quot;);</span>
+<span class="lineNum">     210 </span><span class="lineCov">         22 :     Value* valuec=getPntrToComponent(&quot;c&quot;);</span>
+<span class="lineNum">     211 </span><span class="lineCov">         11 :     Vector d=getPbc().realToScaled(distance);</span>
+<span class="lineNum">     212 </span><span class="lineCov">         22 :     setAtomsDerivatives (valuea,0,matmul(getPbc().getInvBox(),Vector(-1,0,0)));</span>
+<span class="lineNum">     213 </span><span class="lineCov">         11 :     setAtomsDerivatives (valuea,1,matmul(getPbc().getInvBox(),Vector(+1,0,0)));</span>
+<span class="lineNum">     214 </span><span class="lineCov">         11 :     valuea-&gt;set(Tools::pbc(d[0]));</span>
+<span class="lineNum">     215 </span><span class="lineCov">         11 :     setAtomsDerivatives (valueb,0,matmul(getPbc().getInvBox(),Vector(0,-1,0)));</span>
+<span class="lineNum">     216 </span><span class="lineCov">         11 :     setAtomsDerivatives (valueb,1,matmul(getPbc().getInvBox(),Vector(0,+1,0)));</span>
+<span class="lineNum">     217 </span><span class="lineCov">         11 :     valueb-&gt;set(Tools::pbc(d[1]));</span>
+<span class="lineNum">     218 </span><span class="lineCov">         11 :     setAtomsDerivatives (valuec,0,matmul(getPbc().getInvBox(),Vector(0,0,-1)));</span>
+<span class="lineNum">     219 </span><span class="lineCov">         11 :     setAtomsDerivatives (valuec,1,matmul(getPbc().getInvBox(),Vector(0,0,+1)));</span>
+<span class="lineNum">     220 </span><span class="lineCov">         11 :     valuec-&gt;set(Tools::pbc(d[2]));</span>
+<span class="lineNum">     221 </span>            :   } else {
+<span class="lineNum">     222 </span><span class="lineCov">      47848 :     setAtomsDerivatives(0,-invvalue*distance);</span>
+<span class="lineNum">     223 </span><span class="lineCov">      47848 :     setAtomsDerivatives(1,invvalue*distance);</span>
+<span class="lineNum">     224 </span>            :     setBoxDerivativesNoPbc();
+<span class="lineNum">     225 </span><span class="lineCov">      23924 :     setValue           (value);</span>
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">      24227 : }</span>
+<a name="229"><span class="lineNum">     229 </span>            : </a>
+<span class="lineNum">     230 </span>            : }
+<span class="lineNum">     231 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

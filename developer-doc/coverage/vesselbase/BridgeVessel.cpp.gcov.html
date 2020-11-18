@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - vesselbase/BridgeVessel.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">vesselbase</a> - BridgeVessel.cpp<span style="font-size: 80%;"> (source / <a href="BridgeVessel.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">94</td>
+            <td class="headerCovTableEntry">97</td>
+            <td class="headerCovTableEntryHi">96.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryHi">93.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;BridgeVessel.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/Matrix.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionWithArguments.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;StoreDataVessel.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace PLMD {
+<a name="28"><span class="lineNum">      28 </span>            : namespace vesselbase {</a>
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span><span class="lineCov">         46 : BridgeVessel::BridgeVessel( const VesselOptions&amp; da ):</span>
+<span class="lineNum">      31 </span>            :   Vessel(da),
+<span class="lineNum">      32 </span>            :   inum(0),
+<span class="lineNum">      33 </span>            : // in_normal_calculate(false)
+<span class="lineNum">      34 </span>            :   myOutputAction(NULL),
+<span class="lineNum">      35 </span>            :   myOutputValues(NULL),
+<span class="lineNum">      36 </span><span class="lineCov">         92 :   my_tmp_val(0,0)</span>
+<span class="lineNum">      37 </span>            : {
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">         46 : }</span></a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">        513 : void BridgeVessel::resize() {</span>
+<span class="lineNum">      41 </span><span class="lineCov">        513 :   if( myOutputAction-&gt;checkNumericalDerivatives() ) {</span>
+<span class="lineNum">      42 </span><span class="lineCov">         30 :     mynumerical_values.resize( getAction()-&gt;getNumberOfDerivatives()*myOutputValues-&gt;getNumberOfComponents() );</span>
+<span class="lineNum">      43 </span><span class="lineCov">         10 :     inum=0;</span>
+<span class="lineNum">      44 </span>            :   }
+<span class="lineNum">      45 </span>            :   // This bit ensures that we can store data in a bridge function if needs be
+<span class="lineNum">      46 </span>            :   // Notice we need to resize der_list in the underlying action as this is called
+<span class="lineNum">      47 </span>            :   // from a bridge
+<span class="lineNum">      48 </span><span class="lineCov">        513 :   if( myOutputAction-&gt;mydata ) {</span>
+<span class="lineNum">      49 </span>            :     unsigned dsize=(myOutputAction-&gt;mydata)-&gt;getSizeOfDerivativeList();
+<span class="lineNum">      50 </span><span class="lineCov">         12 :     if( getAction()-&gt;der_list.size()!=dsize ) getAction()-&gt;der_list.resize( dsize );</span>
+<span class="lineNum">      51 </span>            :   }
+<span class="lineNum">      52 </span><span class="lineCov">        513 :   unsigned tmp=0; resizeBuffer( myOutputAction-&gt;getSizeOfBuffer( tmp ) );</span>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">        513 : }</span></a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">         46 : void BridgeVessel::setOutputAction( ActionWithVessel* myact ) {</span>
+<span class="lineNum">      56 </span><span class="lineCov">         46 :   ActionWithValue* checkme=dynamic_cast&lt;ActionWithValue*&gt;( getAction() );</span>
+<span class="lineNum">      57 </span><span class="lineCov">         46 :   plumed_massert( checkme, &quot;vessel in bridge must inherit from ActionWithValue&quot;);</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">         46 :   myOutputAction=myact;</span>
+<span class="lineNum">      60 </span><span class="lineCov">         46 :   myOutputValues=dynamic_cast&lt;ActionWithValue*&gt;( myact );</span>
+<span class="lineNum">      61 </span><span class="lineCov">         46 :   plumed_massert( myOutputValues, &quot;bridging vessel must inherit from ActionWithValue&quot;);</span>
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">         46 : }</span></a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 : std::string BridgeVessel::description() {</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :   plumed_merror(&quot;I shouldn't end up here&quot;);</span>
+<a name="66"><span class="lineNum">      66 </span>            : }</a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">       3025 : void BridgeVessel::prepare() {</span>
+<span class="lineNum">      69 </span><span class="lineCov">       3025 :   myOutputAction-&gt;doJobsRequiredBeforeTaskList();</span>
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">       3025 : }</span></a>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">       3025 : void BridgeVessel::setBufferStart( unsigned&amp; start ) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">       3025 :   unsigned tmp=myOutputAction-&gt;getSizeOfBuffer( start );</span>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">       3025 : }</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">     102743 : MultiValue&amp; BridgeVessel::transformDerivatives( const unsigned&amp; current, MultiValue&amp; invals, MultiValue&amp; outvals ) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">     205022 :   if( outvals.getNumberOfValues()!=myOutputAction-&gt;getNumberOfQuantities() ||</span>
+<span class="lineNum">      78 </span><span class="lineCov">     102279 :       outvals.getNumberOfDerivatives()!=myOutputAction-&gt;getNumberOfDerivatives() ) {</span>
+<span class="lineNum">      79 </span><span class="lineCov">       2287 :     outvals.resize( myOutputAction-&gt;getNumberOfQuantities(), myOutputAction-&gt;getNumberOfDerivatives() );</span>
+<span class="lineNum">      80 </span>            :   }
+<span class="lineNum">      81 </span><span class="lineCov">     102743 :   myOutputAction-&gt;transformBridgedDerivatives( current, invals, outvals );</span>
+<span class="lineNum">      82 </span><span class="lineCov">     102743 :   return outvals;</span>
+<a name="83"><span class="lineNum">      83 </span>            : }</a>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">     102743 : void BridgeVessel::calculate( const unsigned&amp; current, MultiValue&amp; myvals, std::vector&lt;double&gt;&amp; buffer, std::vector&lt;unsigned&gt;&amp; der_list ) const {</span>
+<span class="lineNum">      86 </span>            :   // in_normal_calculate=true;
+<span class="lineNum">      87 </span><span class="lineCov">     205486 :   if( myvals.get(0)&lt;myOutputAction-&gt;getTolerance() ) return;</span>
+<span class="lineNum">      88 </span><span class="lineCov">      62508 :   myOutputAction-&gt;calculateAllVessels( current, myvals, myvals, buffer, der_list );</span>
+<span class="lineNum">      89 </span><span class="lineCov">      62508 :   return;</span>
+<a name="90"><span class="lineNum">      90 </span>            : }</a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">       3025 : void BridgeVessel::finish( const std::vector&lt;double&gt;&amp; buffer ) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">       3025 :   myOutputAction-&gt;finishComputations( buffer );</span>
+<span class="lineNum">      94 </span><span class="lineCov">       3025 :   if( myOutputAction-&gt;checkNumericalDerivatives() ) {</span>
+<span class="lineNum">      95 </span><span class="lineCov">       3860 :     if ( inum&lt;mynumerical_values.size() ) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">       5400 :       for(int i=0; i&lt;myOutputValues-&gt;getNumberOfComponents(); ++i) {</span>
+<span class="lineNum">      97 </span><span class="lineCov">       2160 :         mynumerical_values[inum]=myOutputValues-&gt;getOutputQuantity(i);</span>
+<span class="lineNum">      98 </span><span class="lineCov">       1080 :         inum++;</span>
+<span class="lineNum">      99 </span>            :       }
+<span class="lineNum">     100 </span>            :       plumed_dbg_assert( inum&lt;=mynumerical_values.size() );
+<span class="lineNum">     101 </span>            :     } else {
+<span class="lineNum">     102 </span><span class="lineCov">        850 :       plumed_assert( inum==mynumerical_values.size() );</span>
+<span class="lineNum">     103 </span>            :     }
+<span class="lineNum">     104 </span>            :   }
+<a name="105"><span class="lineNum">     105 </span><span class="lineCov">       3025 : }</span></a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">         65 : void BridgeVessel::completeNumericalDerivatives() {</span>
+<span class="lineNum">     108 </span><span class="lineCov">        130 :   unsigned nextra = myOutputAction-&gt;getNumberOfDerivatives() - getAction()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     109 </span><span class="lineCov">        130 :   Matrix&lt;double&gt; tmpder( myOutputValues-&gt;getNumberOfComponents(), nextra );</span>
+<span class="lineNum">     110 </span><span class="lineCov">         65 :   ActionWithVessel* vval=dynamic_cast&lt;ActionWithVessel*&gt;( myOutputAction );</span>
+<span class="lineNum">     111 </span><span class="lineCov">       1505 :   for(unsigned i=0; i&lt;nextra; ++i) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">       1440 :     vval-&gt;bridgeVariable=i; getAction()-&gt;calculate();</span>
+<span class="lineNum">     113 </span><span class="lineCov">       3600 :     for(int j=0; j&lt;myOutputValues-&gt;getNumberOfComponents(); ++j) tmpder(j,i) = myOutputValues-&gt;getOutputQuantity(j);</span>
+<span class="lineNum">     114 </span>            :   }
+<span class="lineNum">     115 </span><span class="lineCov">        130 :   vval-&gt;bridgeVariable=nextra; getAction()-&gt;calculate();</span>
+<span class="lineNum">     116 </span><span class="lineCov">        130 :   plumed_assert( inum==mynumerical_values.size() ); inum=0;  // Reset inum now that we have finished calling calculate</span>
+<span class="lineNum">     117 </span><span class="lineCov">        130 :   std::vector&lt;double&gt; base( myOutputValues-&gt;getNumberOfComponents() );</span>
+<span class="lineNum">     118 </span><span class="lineCov">        325 :   for(int j=0; j&lt;myOutputValues-&gt;getNumberOfComponents(); ++j) base[j] = myOutputValues-&gt;getOutputQuantity(j);</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :   const double delta=sqrt(epsilon);
+<span class="lineNum">     121 </span><span class="lineCov">         65 :   ActionAtomistic* aa=dynamic_cast&lt;ActionAtomistic*&gt;( getAction() );</span>
+<span class="lineNum">     122 </span><span class="lineCov">         65 :   unsigned nvals=myOutputValues-&gt;getNumberOfComponents();</span>
+<span class="lineNum">     123 </span><span class="lineCov">        130 :   for(unsigned j=0; j&lt;nvals; ++j) ( myOutputValues-&gt;copyOutput(j) )-&gt;clearDerivatives();</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">         65 :   if( aa ) {</span>
+<span class="lineNum">     126 </span><span class="lineCov">         65 :     ActionWithArguments* aarg=dynamic_cast&lt;ActionWithArguments*&gt;( getAction() );</span>
+<span class="lineNum">     127 </span><span class="lineCov">        130 :     plumed_assert( !aarg ); Tensor box=aa-&gt;getBox();</span>
+<span class="lineNum">     128 </span>            :     unsigned natoms=aa-&gt;getNumberOfAtoms();
+<span class="lineNum">     129 </span><span class="lineCov">        130 :     for(unsigned j=0; j&lt;nvals; ++j) {</span>
+<span class="lineNum">     130 </span><span class="lineCov">         65 :       double ref=( myOutputValues-&gt;copyOutput(j) )-&gt;get();</span>
+<span class="lineNum">     131 </span><span class="lineCov">         65 :       if( ( myOutputValues-&gt;copyOutput(j) )-&gt;getNumberOfDerivatives()&gt;0 ) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">       1055 :         for(unsigned i=0; i&lt;3*natoms; ++i) {</span>
+<span class="lineNum">     133 </span><span class="lineCov">        990 :           double d=( mynumerical_values[i*nvals+j] - ref)/delta;</span>
+<span class="lineNum">     134 </span><span class="lineCov">        495 :           ( myOutputValues-&gt;copyOutput(j) )-&gt;addDerivative(i,d);</span>
+<span class="lineNum">     135 </span>            :         }
+<span class="lineNum">     136 </span><span class="lineCov">         65 :         Tensor virial;</span>
+<span class="lineNum">     137 </span><span class="lineCov">        845 :         for(int i=0; i&lt;3; i++) for(int k=0; k&lt;3; k++) {</span>
+<span class="lineNum">     138 </span><span class="lineCov">       1170 :             virial(i,k)=( mynumerical_values[ nvals*(3*natoms + 3*i + k) + j ]-ref)/delta;</span>
+<span class="lineNum">     139 </span>            :           }
+<span class="lineNum">     140 </span><span class="lineCov">         65 :         virial=-matmul(box.transpose(),virial);</span>
+<span class="lineNum">     141 </span><span class="lineCov">        845 :         for(int i=0; i&lt;3; i++) for(int k=0; k&lt;3; k++) ( myOutputValues-&gt;copyOutput(j) )-&gt;addDerivative(3*natoms+3*k+i,virial(k,i));</span>
+<span class="lineNum">     142 </span>            :       }
+<span class="lineNum">     143 </span>            :     }
+<span class="lineNum">     144 </span>            :   } else {
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :     plumed_merror(&quot;not implemented or tested yet&quot;);</span>
+<span class="lineNum">     146 </span>            : //      unsigned nder=myOutputAction-&gt;getNumberOfDerivatives();
+<span class="lineNum">     147 </span>            : //      for(unsigned j=0;j&lt;nvals;++j){
+<span class="lineNum">     148 </span>            : //          double ref=( myOutputValues-&gt;copyOutput(j) )-&gt;get();
+<span class="lineNum">     149 </span>            : //              for(unsigned i=0;i&lt;nder;++i){
+<span class="lineNum">     150 </span>            : //                  double d=( mynumerical_values[i*nvals+j] - ref)/delta;
+<span class="lineNum">     151 </span>            : //                  ( myOutputValues-&gt;copyOutput(j) )-&gt;addDerivative(i,d);
+<span class="lineNum">     152 </span>            : //              }
+<span class="lineNum">     153 </span>            : //          }
+<span class="lineNum">     154 </span>            : //      }
+<span class="lineNum">     155 </span>            :   }
+<span class="lineNum">     156 </span>            :   // Add the derivatives wrt to the local quantities we are working with
+<span class="lineNum">     157 </span><span class="lineCov">        260 :   for(unsigned j=0; j&lt;nvals; ++j) {</span>
+<span class="lineNum">     158 </span>            :     unsigned k=0;
+<span class="lineNum">     159 </span><span class="lineCov">        785 :     for(unsigned i=getAction()-&gt;getNumberOfDerivatives(); i&lt;myOutputAction-&gt;getNumberOfDerivatives(); ++i) {</span>
+<span class="lineNum">     160 </span><span class="lineCov">       2880 :       ( myOutputValues-&gt;copyOutput(j) )-&gt;addDerivative( i, (tmpder(j,k)-base[j])/sqrt(epsilon) ); k++;</span>
+<span class="lineNum">     161 </span>            :     }
+<span class="lineNum">     162 </span>            :   }
+<a name="163"><span class="lineNum">     163 </span><span class="lineCov">         65 : }</span></a>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">        795 : bool BridgeVessel::applyForce( std::vector&lt;double&gt;&amp; outforces ) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">       1590 :   bool hasforce=false; outforces.assign(outforces.size(),0.0);</span>
+<span class="lineNum">     167 </span><span class="lineCov">        795 :   unsigned ndertot = myOutputAction-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     168 </span><span class="lineCov">        795 :   unsigned nextra = ndertot - getAction()-&gt;getNumberOfDerivatives();</span>
+<span class="lineNum">     169 </span><span class="lineCov">        795 :   std::vector&lt;double&gt; forces( ndertot ), eforces( nextra, 0.0 );</span>
+<span class="lineNum">     170 </span><span class="lineCov">       4395 :   for(unsigned i=0; i&lt;myOutputAction-&gt;getNumberOfVessels(); ++i) {</span>
+<span class="lineNum">     171 </span><span class="lineCov">        935 :     if( ( myOutputAction-&gt;getPntrToVessel(i) )-&gt;applyForce( forces ) ) {</span>
+<span class="lineNum">     172 </span>            :       hasforce=true;
+<span class="lineNum">     173 </span><span class="lineCov">    1043198 :       for(unsigned j=0; j&lt;outforces.size(); ++j) outforces[j]+=forces[j];</span>
+<span class="lineNum">     174 </span><span class="lineCov">        283 :       for(unsigned j=0; j&lt;nextra; ++j) eforces[j]+=forces[ outforces.size()+j ];</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span>            :   }
+<span class="lineNum">     177 </span><span class="lineCov">        795 :   if(hasforce) myOutputAction-&gt;applyBridgeForces( eforces );</span>
+<span class="lineNum">     178 </span><span class="lineCov">        795 :   return hasforce;</span>
+<a name="179"><span class="lineNum">     179 </span>            : }</a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">        795 : void BridgeVessel::copyTaskFlags() {</span>
+<span class="lineNum">     182 </span><span class="lineCov">        795 :   myOutputAction-&gt;deactivateAllTasks();</span>
+<span class="lineNum">     183 </span><span class="lineCov">     267018 :   for(unsigned i=0; i&lt;getAction()-&gt;nactive_tasks; ++i) myOutputAction-&gt;taskFlags[ getAction()-&gt;indexOfTaskInFullList[i] ] = 1;</span>
+<span class="lineNum">     184 </span><span class="lineCov">        795 :   myOutputAction-&gt;lockContributors();</span>
+<a name="185"><span class="lineNum">     185 </span><span class="lineCov">        795 : }</span></a>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">      13042 : MultiValue&amp; BridgeVessel::getTemporyMultiValue() {</span>
+<span class="lineNum">     188 </span><span class="lineCov">      13042 :   return my_tmp_val;</span>
+<span class="lineNum">     189 </span>            : }
+<a name="190"><span class="lineNum">     190 </span>            : </a>
+<span class="lineNum">     191 </span>            : }
+<span class="lineNum">     192 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     193 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

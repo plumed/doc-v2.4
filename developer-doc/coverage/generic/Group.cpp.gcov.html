@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/Group.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - Group.cpp<span style="font-size: 80%;"> (source / <a href="Group.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">69</td>
+            <td class="headerCovTableEntry">71</td>
+            <td class="headerCovTableEntryHi">97.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryLo">69.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionAtomistic.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;tools/IFile.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;tools/Tools.h&quot;
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      30 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace PLMD {
+<span class="lineNum">      35 </span>            : namespace generic {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : //+PLUMEDOC GENERIC GROUP
+<span class="lineNum">      38 </span>            : /*
+<span class="lineNum">      39 </span>            : Define a group of atoms so that a particular list of atoms can be referenced with a single label
+<span class="lineNum">      40 </span>            : in definitions of CVs or virtual atoms.
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : Atoms can be listed as comma separated numbers (i.e. `1,2,3,10,45,7,9`) , simple positive ranges
+<span class="lineNum">      43 </span>            : (i.e. `20-40`), ranges with a stride either positive or negative (i.e. `20-40:2` or `80-50:-2`) or as
+<span class="lineNum">      44 </span>            : comma separated combinations of all the former methods (`1,2,4,5,10-20,21-40:2,80-50:-2`).
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : Moreover, lists can be imported from ndx files (GROMACS format). Use `NDX_FILE` to set the name of
+<span class="lineNum">      47 </span>            : the index file and `NDX_GROUP` to set the name of the group to be imported (default is first one).
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : It is also possible to remove atoms from a list and or sort them using keywords `REMOVE`, `SORT`, and `UNIQUE`.
+<span class="lineNum">      50 </span>            : The flow is the following:
+<span class="lineNum">      51 </span>            : - If `ATOMS` is present, then take the ordered list of atoms from the `ATOMS` keyword as a starting list.
+<span class="lineNum">      52 </span>            : - If `NDX_FILE` is present, then append to it the list obtained from the gromacs group.
+<span class="lineNum">      53 </span>            : - If `REMOVE` is present, then remove the first occurence of each of these atoms from the list.
+<span class="lineNum">      54 </span>            :   If one tries to remove an atom that was not listed plumed adds a notice in the output.
+<span class="lineNum">      55 </span>            :   An atom that is present twice in the original list might be removed twice.
+<span class="lineNum">      56 </span>            : - If `SORT` is present, then the resulting list is sorted by increasing serial number.
+<span class="lineNum">      57 </span>            : - If `UNIQUE` is present, then the resuling list is sorted by increasing serial number _and_ duplicate elements are removed.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : Notice that this command just creates a shortcut, and does not imply any real calculation.
+<span class="lineNum">      60 </span>            : So, having a huge group defined does not slow down your calculation in any way.
+<span class="lineNum">      61 </span>            : It is just convenient to better organize input files. Might be used in combination with
+<span class="lineNum">      62 </span>            : the \ref INCLUDE command so as to store long group definitions in a separate file.
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : \par Examples
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : This command create a group of atoms containing atoms 1, 4, 7, 11 and 14 (labeled 'o'), and another containing
+<span class="lineNum">      68 </span>            : atoms 2, 3, 5, 6, 8, 9, 12, and 13 (labeled 'h'):
+<span class="lineNum">      69 </span>            : \plumedfile
+<span class="lineNum">      70 </span>            : o: GROUP ATOMS=1,4,7,11,14
+<span class="lineNum">      71 </span>            : h: GROUP ATOMS=2,3,5,6,8,9,12,13
+<span class="lineNum">      72 </span>            : # compute the coordination among the two groups
+<span class="lineNum">      73 </span>            : c: COORDINATION GROUPA=o GROUPB=h R_0=0.3
+<span class="lineNum">      74 </span>            : # same could have been obtained without GROUP, just writing:
+<span class="lineNum">      75 </span>            : # c: COORDINATION GROUPA=1,4,7,11,14 GROUPB=2,3,5,6,8,9,12,13
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : # print the coordination on file 'colvar'
+<span class="lineNum">      78 </span>            : PRINT ARG=c FILE=colvar
+<span class="lineNum">      79 </span>            : \endplumedfile
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : Groups can be conveniently stored in a separate file.
+<span class="lineNum">      82 </span>            : E.g. one could create a file named `groups.dat` which reads
+<span class="lineNum">      83 </span>            : \plumedfile
+<span class="lineNum">      84 </span>            : o: GROUP ATOMS=1,4,7,11,14
+<span class="lineNum">      85 </span>            : h: GROUP ATOMS=2,3,5,6,8,9,12,13
+<span class="lineNum">      86 </span>            : \endplumedfile
+<span class="lineNum">      87 </span>            : and then include it in the main 'plumed.dat' file
+<span class="lineNum">      88 </span>            : \plumedfile
+<span class="lineNum">      89 </span>            : INCLUDE FILE=groups.dat
+<span class="lineNum">      90 </span>            : # compute the coordination among the two groups
+<span class="lineNum">      91 </span>            : c: COORDINATION GROUPA=o GROUPB=h R_0=0.3
+<span class="lineNum">      92 </span>            : # print the coordination on file 'colvar'
+<span class="lineNum">      93 </span>            : PRINT ARG=c FILE=colvar
+<span class="lineNum">      94 </span>            : \endplumedfile
+<span class="lineNum">      95 </span>            : The `groups.dat` file could be very long and include lists of thousand atoms without cluttering the main plumed.dat file.
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : A GROMACS index file can also be imported
+<span class="lineNum">      98 </span>            : \plumedfile
+<span class="lineNum">      99 </span>            : # import group named 'protein' from file index.ndx
+<span class="lineNum">     100 </span>            : pro: GROUP NDX_FILE=index.ndx NDX_GROUP=protein
+<span class="lineNum">     101 </span>            : # dump all the atoms of the protein on a trajectory file
+<span class="lineNum">     102 </span>            : DUMPATOMS ATOMS=pro FILE=traj.gro
+<span class="lineNum">     103 </span>            : \endplumedfile
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : A list can be edited with `REMOVE`. For instance, if you
+<span class="lineNum">     106 </span>            : are using a water model with three atoms per molecule, you can
+<span class="lineNum">     107 </span>            : easily construct the list of hydrogens in this manner
+<span class="lineNum">     108 </span>            : \plumedfile
+<span class="lineNum">     109 </span>            : # take one atom every three, that is oxygens
+<span class="lineNum">     110 </span>            : ox: GROUP ATOMS=1-90:3
+<span class="lineNum">     111 </span>            : # take the remaining atoms, that is hydrogens
+<span class="lineNum">     112 </span>            : hy: GROUP ATOMS=1-90 REMOVE=ox
+<span class="lineNum">     113 </span>            : DUMPATOMS ATOMS=ox FILE=ox.gro
+<span class="lineNum">     114 </span>            : DUMPATOMS ATOMS=hy FILE=hy.gro
+<span class="lineNum">     115 </span>            : \endplumedfile
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : */
+<span class="lineNum">     119 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : class Group:
+<span class="lineNum">     122 </span>            :   public ActionAtomistic
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : public:
+<span class="lineNum">     126 </span>            :   explicit Group(const ActionOptions&amp;ao);
+<a name="127"><span class="lineNum">     127 </span>            :   ~Group();</a>
+<a name="128"><span class="lineNum">     128 </span>            :   static void registerKeywords( Keywords&amp; keys );</a>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :   void calculate() {}</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :   void apply() {}</span>
+<a name="131"><span class="lineNum">     131 </span>            : };</a>
+<span class="lineNum">     132 </span>            : 
+<a name="133"><span class="lineNum">     133 </span><span class="lineCov">       6539 : PLUMED_REGISTER_ACTION(Group,&quot;GROUP&quot;)</span></a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">         87 : Group::Group(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     136 </span>            :   Action(ao),
+<span class="lineNum">     137 </span><span class="lineCov">         87 :   ActionAtomistic(ao)</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span>            :   vector&lt;AtomNumber&gt; atoms;
+<span class="lineNum">     140 </span><span class="lineCov">        174 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     141 </span>            :   std::string ndxfile,ndxgroup;
+<span class="lineNum">     142 </span><span class="lineCov">        174 :   parse(&quot;NDX_FILE&quot;,ndxfile);</span>
+<span class="lineNum">     143 </span><span class="lineCov">        174 :   parse(&quot;NDX_GROUP&quot;,ndxgroup);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         93 :   if(ndxfile.length()&gt;0 &amp;&amp; atoms.size()&gt;0) error(&quot;either use explicit atom list or import from index file&quot;);</span>
+<span class="lineNum">     145 </span><span class="lineCov">        168 :   if(ndxfile.length()==0 &amp;&amp; ndxgroup.size()&gt;0) error(&quot;NDX_GROUP can be only used is NDX_FILE is also used&quot;);</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">         87 :   if(ndxfile.length()&gt;0) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">         16 :     if(ndxgroup.size()&gt;0) log&lt;&lt;&quot;  importing group '&quot;+ndxgroup+&quot;'&quot;;</span>
+<span class="lineNum">     149 </span><span class="lineCov">          1 :     else                  log&lt;&lt;&quot;  importing first group&quot;;</span>
+<span class="lineNum">     150 </span><span class="lineCov">          6 :     log&lt;&lt;&quot; from index file &quot;&lt;&lt;ndxfile&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">         12 :     IFile ifile;</span>
+<span class="lineNum">     153 </span><span class="lineCov">          6 :     ifile.open(ndxfile);</span>
+<span class="lineNum">     154 </span>            :     std::string line;
+<span class="lineNum">     155 </span>            :     std::string groupname;
+<span class="lineNum">     156 </span>            :     bool firstgroup=true;
+<span class="lineNum">     157 </span>            :     bool groupfound=false;
+<span class="lineNum">     158 </span><span class="lineCov">       2468 :     while(ifile.getline(line)) {</span>
+<span class="lineNum">     159 </span><span class="lineCov">       2462 :       std::vector&lt;std::string&gt; words=Tools::getWords(line);</span>
+<span class="lineNum">     160 </span><span class="lineCov">       2487 :       if(words.size()&gt;=3 &amp;&amp; words[0]==&quot;[&quot; &amp;&amp; words[2]==&quot;]&quot;) {</span>
+<span class="lineNum">     161 </span><span class="lineCov">         44 :         if(groupname.length()&gt;0) firstgroup=false;</span>
+<span class="lineNum">     162 </span>            :         groupname=words[1];
+<span class="lineNum">     163 </span><span class="lineCov">         83 :         if(groupname==ndxgroup || ndxgroup.length()==0) groupfound=true;</span>
+<span class="lineNum">     164 </span><span class="lineCov">       2505 :       } else if(groupname==ndxgroup || (firstgroup &amp;&amp; ndxgroup.length()==0)) {</span>
+<span class="lineNum">     165 </span><span class="lineCov">       5928 :         for(unsigned i=0; i&lt;words.size(); i++) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">       1888 :           AtomNumber at; Tools::convert(words[i],at);</span>
+<span class="lineNum">     167 </span><span class="lineCov">       1888 :           atoms.push_back(at);</span>
+<span class="lineNum">     168 </span>            :         }
+<span class="lineNum">     169 </span>            :       }
+<span class="lineNum">     170 </span>            :     }
+<span class="lineNum">     171 </span><span class="lineCov">          6 :     if(!groupfound) error(&quot;group has not been found in index file&quot;);</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :   std::vector&lt;AtomNumber&gt; remove;
+<span class="lineNum">     175 </span><span class="lineCov">        174 :   parseAtomList(&quot;REMOVE&quot;,remove);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         87 :   if(remove.size()&gt;0) {</span>
+<span class="lineNum">     177 </span>            :     std::vector&lt;AtomNumber&gt; notfound;
+<span class="lineNum">     178 </span>            :     unsigned k=0;
+<span class="lineNum">     179 </span><span class="lineCov">          1 :     log&lt;&lt;&quot;  removing these atoms from the list:&quot;;</span>
+<span class="lineNum">     180 </span><span class="lineCov">         14 :     for(unsigned i=0; i&lt;remove.size(); i++) {</span>
+<span class="lineNum">     181 </span><span class="lineCov">          4 :       const auto it = find(atoms.begin(),atoms.end(),remove[i]);</span>
+<span class="lineNum">     182 </span><span class="lineCov">          4 :       if(it!=atoms.end()) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">          3 :         if(k%25==0) log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     184 </span><span class="lineCov">          6 :         log&lt;&lt;&quot; &quot;&lt;&lt;(*it).serial();</span>
+<span class="lineNum">     185 </span><span class="lineCov">          3 :         k++;</span>
+<span class="lineNum">     186 </span>            :         atoms.erase(it);
+<span class="lineNum">     187 </span><span class="lineCov">          1 :       } else notfound.push_back(remove[i]);</span>
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span><span class="lineCov">          1 :     log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     190 </span><span class="lineCov">          1 :     if(notfound.size()&gt;0) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">          1 :       log&lt;&lt;&quot;  the following atoms were not found:&quot;;</span>
+<span class="lineNum">     192 </span><span class="lineCov">          5 :       for(unsigned i=0; i&lt;notfound.size(); i++) log&lt;&lt;&quot; &quot;&lt;&lt;notfound[i].serial();</span>
+<span class="lineNum">     193 </span><span class="lineCov">          1 :       log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     194 </span>            :     }
+<span class="lineNum">     195 </span>            :   }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineCov">         87 :   bool sortme=false;</span>
+<span class="lineNum">     198 </span><span class="lineCov">        174 :   parseFlag(&quot;SORT&quot;,sortme);</span>
+<span class="lineNum">     199 </span><span class="lineCov">         87 :   if(sortme) {</span>
+<span class="lineNum">     200 </span><span class="lineCov">          1 :     log&lt;&lt;&quot;  atoms are sorted\n&quot;;</span>
+<span class="lineNum">     201 </span>            :     sort(atoms.begin(),atoms.end());
+<span class="lineNum">     202 </span>            :   }
+<span class="lineNum">     203 </span><span class="lineCov">         87 :   bool unique=false;</span>
+<span class="lineNum">     204 </span><span class="lineCov">        174 :   parseFlag(&quot;UNIQUE&quot;,unique);</span>
+<span class="lineNum">     205 </span><span class="lineCov">         87 :   if(unique) {</span>
+<span class="lineNum">     206 </span><span class="lineCov">          1 :     log&lt;&lt;&quot;  sorting atoms and removing duplicates\n&quot;;</span>
+<span class="lineNum">     207 </span><span class="lineCov">          1 :     Tools::removeDuplicates(atoms);</span>
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">        174 :   this-&gt;atoms.insertGroup(getLabel(),atoms);</span>
+<span class="lineNum">     211 </span><span class="lineCov">         87 :   log.printf(&quot;  list of atoms:&quot;);</span>
+<span class="lineNum">     212 </span><span class="lineCov">      52218 :   for(unsigned i=0; i&lt;atoms.size(); i++) {</span>
+<span class="lineNum">     213 </span><span class="lineCov">      17348 :     if(i%25==0) log&lt;&lt;&quot;\n&quot;;</span>
+<span class="lineNum">     214 </span><span class="lineCov">      34696 :     log&lt;&lt;&quot; &quot;&lt;&lt;atoms[i].serial();</span>
+<span class="lineNum">     215 </span>            :   }
+<span class="lineNum">     216 </span><span class="lineCov">         87 :   log.printf(&quot;\n&quot;);</span>
+<a name="217"><span class="lineNum">     217 </span><span class="lineCov">         87 : }</span></a>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineCov">         88 : void Group::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">     220 </span><span class="lineCov">         88 :   Action::registerKeywords( keys );</span>
+<span class="lineNum">     221 </span><span class="lineCov">         88 :   ActionAtomistic::registerKeywords( keys );</span>
+<span class="lineNum">     222 </span><span class="lineCov">        352 :   keys.add(&quot;atoms&quot;, &quot;ATOMS&quot;, &quot;the numerical indexes for the set of atoms in the group&quot;);</span>
+<span class="lineNum">     223 </span><span class="lineCov">        352 :   keys.add(&quot;atoms&quot;, &quot;REMOVE&quot;,&quot;remove these atoms from the list&quot;);</span>
+<span class="lineNum">     224 </span><span class="lineCov">        264 :   keys.addFlag(&quot;SORT&quot;,false,&quot;sort the resulting list&quot;);</span>
+<span class="lineNum">     225 </span><span class="lineCov">        264 :   keys.addFlag(&quot;UNIQUE&quot;,false,&quot;sort atoms and remove duplicated ones&quot;);</span>
+<span class="lineNum">     226 </span><span class="lineCov">        352 :   keys.add(&quot;optional&quot;, &quot;NDX_FILE&quot;, &quot;the name of index file (gromacs syntax)&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">        352 :   keys.add(&quot;optional&quot;, &quot;NDX_GROUP&quot;, &quot;the name of the group to be imported (gromacs syntax) - first group found is used by default&quot;);</span>
+<a name="228"><span class="lineNum">     228 </span><span class="lineCov">         88 : }</span></a>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">        261 : Group::~Group() {</span>
+<span class="lineNum">     231 </span><span class="lineCov">        174 :   atoms.removeGroup(getLabel());</span>
+<span class="lineNum">     232 </span><span class="lineCov">        174 : }</span>
+<a name="233"><span class="lineNum">     233 </span>            : </a>
+<span class="lineNum">     234 </span>            : }
+<span class="lineNum">     235 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     236 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

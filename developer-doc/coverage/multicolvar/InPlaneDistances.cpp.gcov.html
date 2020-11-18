@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - multicolvar/InPlaneDistances.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">multicolvar</a> - InPlaneDistances.cpp<span style="font-size: 80%;"> (source / <a href="InPlaneDistances.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntryLo">22.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryLo">41.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;MultiColvarBase.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;AtomValuePack.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/SwitchingFunction.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;vesselbase/LessThan.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;vesselbase/Between.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;tools/Angle.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;string&gt;
+<span class="lineNum">      31 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : using namespace std;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace PLMD {
+<span class="lineNum">      36 </span>            : namespace multicolvar {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : //+PLUMEDOC MCOLVAR INPLANEDISTANCES
+<span class="lineNum">      39 </span>            : /*
+<span class="lineNum">      40 </span>            : Calculate distances in the plane perpendicular to an axis
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : Each quantity calculated in this CV uses the positions of two atoms, this indices of which are specified using the VECTORSTART and VECTOREND keywords, to specify the
+<span class="lineNum">      43 </span>            : orientation of a vector, \f$\mathbf{n}\f$.  The perpendicular distance between this vector and the position of some third atom is then computed using:
+<span class="lineNum">      44 </span>            : \f[
+<span class="lineNum">      45 </span>            :  x_j = |\mathbf{r}_{j}| \sin (\theta_j)
+<span class="lineNum">      46 </span>            : \f]
+<span class="lineNum">      47 </span>            : where \f$\mathbf{r}_j\f$ is the distance between one of the two atoms that define the vector \f$\mathbf{n}\f$ and a third atom (atom \f$j\f$) and where \f$\theta_j\f$
+<span class="lineNum">      48 </span>            : is the angle between the vector \f$\mathbf{n}\f$ and the vector \f$\mathbf{r}_{j}\f$.  The \f$x_j\f$ values for each of the atoms specified using the GROUP keyword are calculated.
+<span class="lineNum">      49 </span>            : Keywords such as MORE_THAN and LESS_THAN can then be used to calculate the number of these quantities that are more or less than a given cutoff.
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : \par Examples
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : The following input can be used to calculate the number of atoms that have indices greater than 3 and less than 101 that
+<span class="lineNum">      54 </span>            : are within a cylinder with a radius of 0.3 nm that has its long axis aligned with the vector connecting atoms 1 and 2.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : \plumedfile
+<span class="lineNum">      57 </span>            : d1: INPLANEDISTANCES VECTORSTART=1 VECTOREND=2 GROUP=3-100 LESS_THAN={RATIONAL D_0=0.2 R_0=0.1}
+<span class="lineNum">      58 </span>            : PRINT ARG=d1.lessthan FILE=colvar
+<span class="lineNum">      59 </span>            : \endplumedfile
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : */
+<a name="63"><span class="lineNum">      63 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 : class InPlaneDistances : public MultiColvarBase {</span>
+<span class="lineNum">      66 </span>            : public:
+<span class="lineNum">      67 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      68 </span>            :   explicit InPlaneDistances(const ActionOptions&amp;);
+<a name="69"><span class="lineNum">      69 </span>            : // active methods:</a>
+<span class="lineNum">      70 </span>            :   virtual double compute(const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const ;
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<a name="72"><span class="lineNum">      72 </span>            : };</a>
+<span class="lineNum">      73 </span>            : 
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">       6452 : PLUMED_REGISTER_ACTION(InPlaneDistances,&quot;INPLANEDISTANCES&quot;)</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">          1 : void InPlaneDistances::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">          1 :   MultiColvarBase::registerKeywords( keys );</span>
+<span class="lineNum">      78 </span><span class="lineCov">          4 :   keys.use(&quot;ALT_MIN&quot;); keys.use(&quot;LOWEST&quot;); keys.use(&quot;HIGHEST&quot;);</span>
+<span class="lineNum">      79 </span><span class="lineCov">          5 :   keys.use(&quot;MEAN&quot;); keys.use(&quot;MIN&quot;); keys.use(&quot;MAX&quot;); keys.use(&quot;LESS_THAN&quot;);</span>
+<span class="lineNum">      80 </span><span class="lineCov">          5 :   keys.use(&quot;MORE_THAN&quot;); keys.use(&quot;BETWEEN&quot;); keys.use(&quot;HISTOGRAM&quot;); keys.use(&quot;MOMENTS&quot;);</span>
+<span class="lineNum">      81 </span><span class="lineCov">          4 :   keys.add(&quot;atoms&quot;,&quot;VECTORSTART&quot;,&quot;The first atom position that is used to define the normal to the plane of interest&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineCov">          4 :   keys.add(&quot;atoms&quot;,&quot;VECTOREND&quot;,&quot;The second atom position that is used to defin the normal to the plane of interest&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">          4 :   keys.add(&quot;atoms-2&quot;,&quot;GROUP&quot;,&quot;The set of atoms for which you wish to calculate the in plane distance &quot;);</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 : InPlaneDistances::InPlaneDistances(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      87 </span>            :   Action(ao),
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :   MultiColvarBase(ao)</span>
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span>            :   // Read in the atoms
+<span class="lineNum">      91 </span>            :   std::vector&lt;AtomNumber&gt; all_atoms;
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :   readThreeGroups(&quot;GROUP&quot;,&quot;VECTORSTART&quot;,&quot;VECTOREND&quot;,false,false,all_atoms);</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :   // Check atoms are OK
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :   if( getFullNumberOfTasks()!=getNumberOfAtoms()-2 ) error(&quot;you should specify one atom for VECTORSTART and one atom for VECTOREND only&quot;);</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :   // Setup the multicolvar base
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :   setupMultiColvarBase( all_atoms ); readVesselKeywords();</span>
+<span class="lineNum">      99 </span>            :   // And check everything has been read in correctly
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :   checkRead();</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : // Now check if we can use link cells
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :   if( getNumberOfVessels()&gt;0 ) {</span>
+<span class="lineNum">     104 </span>            :     bool use_link=false; double rcut;
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     vesselbase::LessThan* lt=dynamic_cast&lt;vesselbase::LessThan*&gt;( getPntrToVessel(0) );</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     if( lt ) {</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :       use_link=true; rcut=lt-&gt;getCutoff();</span>
+<span class="lineNum">     108 </span>            :     } else {
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :       vesselbase::Between* bt=dynamic_cast&lt;vesselbase::Between*&gt;( getPntrToVessel(0) );</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :       if( bt ) {</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         use_link=true; rcut=bt-&gt;getCutoff();</span>
+<span class="lineNum">     112 </span>            :       }
+<span class="lineNum">     113 </span>            :     }
+<span class="lineNum">     114 </span>            :     if( use_link ) {
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :       for(unsigned i=1; i&lt;getNumberOfVessels(); ++i) {</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         vesselbase::LessThan* lt2=dynamic_cast&lt;vesselbase::LessThan*&gt;( getPntrToVessel(i) );</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :         vesselbase::Between* bt=dynamic_cast&lt;vesselbase::Between*&gt;( getPntrToVessel(i) );</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :         if( lt2 ) {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :           double tcut=lt2-&gt;getCutoff();</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :           if( tcut&gt;rcut ) rcut=tcut;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         } else if( bt ) {</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :           double tcut=bt-&gt;getCutoff();</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :           if( tcut&gt;rcut ) rcut=tcut;</span>
+<span class="lineNum">     124 </span>            :         } else {
+<span class="lineNum">     125 </span>            :           use_link=false;
+<span class="lineNum">     126 </span>            :         }
+<span class="lineNum">     127 </span>            :       }
+<span class="lineNum">     128 </span>            :     }
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     if( use_link ) setLinkCellCutoff( rcut );</span>
+<span class="lineNum">     130 </span>            :   }
+<a name="131"><span class="lineNum">     131 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 : double InPlaneDistances::compute( const unsigned&amp; tindex, AtomValuePack&amp; myatoms ) const {</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :   Vector normal=getSeparation( myatoms.getPosition(1), myatoms.getPosition(2) );</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :   Vector dir=getSeparation( myatoms.getPosition(1), myatoms.getPosition(0) );</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :   PLMD::Angle a; Vector ddij, ddik; double angle=a.compute(normal,dir,ddij,ddik);</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :   double sangle=sin(angle), cangle=cos(angle);</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :   double dd=dir.modulo(), invdd=1.0/dd, val=dd*sangle;</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :   addAtomDerivatives( 1, 0, dd*cangle*ddik + sangle*invdd*dir, myatoms );</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :   addAtomDerivatives( 1, 1, -dd*cangle*(ddik+ddij) - sangle*invdd*dir, myatoms );</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   addAtomDerivatives( 1, 2, dd*cangle*ddij, myatoms );</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :   myatoms.addBoxDerivatives( 1, -dd*cangle*(Tensor(normal,ddij)+Tensor(dir,ddik)) - sangle*invdd*Tensor(dir,dir) );</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :   return val;</span>
+<span class="lineNum">     146 </span>            : }
+<a name="147"><span class="lineNum">     147 </span>            : </a>
+<span class="lineNum">     148 </span>            : }
+<span class="lineNum">     149 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

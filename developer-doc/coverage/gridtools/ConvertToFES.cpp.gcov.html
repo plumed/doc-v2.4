@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - gridtools/ConvertToFES.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">gridtools</a> - ConvertToFES.cpp<span style="font-size: 80%;"> (source / <a href="ConvertToFES.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntryHi">95.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">88.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/PlumedMain.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/Atoms.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ActionWithInputGrid.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //+PLUMEDOC GRIDANALYSIS CONVERT_TO_FES
+<span class="lineNum">      28 </span>            : /*
+<span class="lineNum">      29 </span>            : Convert a histogram, \f$H(x)\f$, to a free energy surface using \f$F(x) = -k_B T \ln H(x)\f$.
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : This action allows you to take a free energy surface that was calculated using the \ref HISTOGRAM
+<span class="lineNum">      32 </span>            : action and to convert it to a free energy surface.  This transformation performed by doing:
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : \f[
+<span class="lineNum">      35 </span>            : F(x) = -k_B T \ln H(x)
+<span class="lineNum">      36 </span>            : \f]
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : The free energy calculated on a grid is output by this action and can be printed using \ref DUMPGRID
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : \par Examples
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : This is a typical example showing how CONVERT_TO_FES might be used when postprocessing a trajectory.
+<span class="lineNum">      43 </span>            : The input below calculates the free energy as a function of the distance between atom 1 and atom 2.
+<span class="lineNum">      44 </span>            : This is done by accumulating a histogram as a function of this distance using kernel density estimation
+<span class="lineNum">      45 </span>            : and the HISTOGRAM action.  All the data within this trajectory is used in the construction of this
+<span class="lineNum">      46 </span>            : HISTOGRAM.  Finally, once all the data has been read in, the histogram is converted to a free energy
+<span class="lineNum">      47 </span>            : using the formula above and the free energy is output to a file called fes.dat
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : \plumedfile
+<span class="lineNum">      50 </span>            : x: DISTANCE ATOMS=1,2
+<span class="lineNum">      51 </span>            : hA1: HISTOGRAM ARG=x GRID_MIN=0.0 GRID_MAX=3.0 GRID_BIN=100 BANDWIDTH=0.1
+<span class="lineNum">      52 </span>            : ff: CONVERT_TO_FES GRID=hA1 TEMP=300
+<span class="lineNum">      53 </span>            : DUMPGRID GRID=ff FILE=fes.dat
+<span class="lineNum">      54 </span>            : \endplumedfile
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : */
+<span class="lineNum">      57 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : namespace PLMD {
+<a name="60"><span class="lineNum">      60 </span>            : namespace gridtools {</a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">         14 : class ConvertToFES : public ActionWithInputGrid {</span>
+<span class="lineNum">      63 </span>            : private:
+<span class="lineNum">      64 </span>            :   double simtemp;
+<span class="lineNum">      65 </span>            :   bool activated;
+<span class="lineNum">      66 </span>            : public:
+<span class="lineNum">      67 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<a name="68"><span class="lineNum">      68 </span>            :   explicit ConvertToFES(const ActionOptions&amp;ao);</a>
+<a name="69"><span class="lineNum">      69 </span>            :   unsigned getNumberOfQuantities() const ;</a>
+<span class="lineNum">      70 </span><span class="lineCov">         12 :   void prepare() { activated=true; }</span>
+<a name="71"><span class="lineNum">      71 </span><span class="lineCov">         15 :   void prepareForAveraging() { ActionWithInputGrid::prepareForAveraging(); activated=false; }</span></a>
+<a name="72"><span class="lineNum">      72 </span>            :   void compute( const unsigned&amp; current, MultiValue&amp; myvals ) const ;</a>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :   bool isPeriodic() { return false; }</span>
+<span class="lineNum">      74 </span><span class="lineCov">         72 :   bool onStep() const { return activated; }</span>
+<span class="lineNum">      75 </span>            :   void runFinalJobs();
+<a name="76"><span class="lineNum">      76 </span>            : };</a>
+<span class="lineNum">      77 </span>            : 
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">       6459 : PLUMED_REGISTER_ACTION(ConvertToFES,&quot;CONVERT_TO_FES&quot;)</span></a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          8 : void ConvertToFES::registerKeywords( Keywords&amp; keys ) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">          8 :   ActionWithInputGrid::registerKeywords( keys );</span>
+<span class="lineNum">      82 </span><span class="lineCov">         32 :   keys.add(&quot;optional&quot;,&quot;TEMP&quot;,&quot;the temperature at which you are operating&quot;);</span>
+<span class="lineNum">      83 </span><span class="lineCov">         32 :   keys.remove(&quot;STRIDE&quot;); keys.remove(&quot;KERNEL&quot;); keys.remove(&quot;BANDWIDTH&quot;);</span>
+<span class="lineNum">      84 </span><span class="lineCov">         32 :   keys.remove(&quot;LOGWEIGHTS&quot;); keys.remove(&quot;CLEAR&quot;); keys.remove(&quot;NORMALIZATION&quot;);</span>
+<a name="85"><span class="lineNum">      85 </span><span class="lineCov">          8 : }</span></a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          7 : ConvertToFES::ConvertToFES(const ActionOptions&amp;ao):</span>
+<span class="lineNum">      88 </span>            :   Action(ao),
+<span class="lineNum">      89 </span>            :   ActionWithInputGrid(ao),
+<span class="lineNum">      90 </span><span class="lineCov">          7 :   activated(false)</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineCov">          7 :   plumed_assert( ingrid-&gt;getNumberOfComponents()==1 );</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :   // Create a grid
+<span class="lineNum">      95 </span><span class="lineCov">         49 :   createGrid( &quot;grid&quot;, &quot;COMPONENTS=&quot; + getLabel() + &quot; &quot; + ingrid-&gt;getInputString() );</span>
+<span class="lineNum">      96 </span><span class="lineCov">         14 :   if( ingrid-&gt;noDerivatives() ) mygrid-&gt;setNoDerivatives();</span>
+<span class="lineNum">      97 </span>            :   std::vector&lt;double&gt; fspacing;
+<span class="lineNum">      98 </span><span class="lineCov">         14 :   mygrid-&gt;setBounds( ingrid-&gt;getMin(), ingrid-&gt;getMax(), ingrid-&gt;getNbin(), fspacing);</span>
+<span class="lineNum">      99 </span><span class="lineCov">          7 :   setAveragingAction( mygrid, true );</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">         14 :   simtemp=0.; parse(&quot;TEMP&quot;,simtemp);</span>
+<span class="lineNum">     102 </span><span class="lineCov">         14 :   if(simtemp&gt;0) simtemp*=plumed.getAtoms().getKBoltzmann();</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :   else simtemp=plumed.getAtoms().getKbT();</span>
+<span class="lineNum">     104 </span><span class="lineCov">          7 :   if( simtemp==0 ) error(&quot;TEMP not set - use keyword TEMP&quot;);</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   // Now create task list
+<span class="lineNum">     107 </span><span class="lineCov">       5579 :   for(unsigned i=0; i&lt;mygrid-&gt;getNumberOfPoints(); ++i) addTaskToList(i);</span>
+<span class="lineNum">     108 </span>            :   // And activate all tasks
+<span class="lineNum">     109 </span><span class="lineCov">          7 :   deactivateAllTasks();</span>
+<span class="lineNum">     110 </span><span class="lineCov">      16709 :   for(unsigned i=0; i&lt;mygrid-&gt;getNumberOfPoints(); ++i) taskFlags[i]=1;</span>
+<span class="lineNum">     111 </span><span class="lineCov">          7 :   lockContributors();</span>
+<a name="112"><span class="lineNum">     112 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">         60 : unsigned ConvertToFES::getNumberOfQuantities() const {</span>
+<span class="lineNum">     115 </span><span class="lineCov">        120 :   if( mygrid-&gt;noDerivatives() ) return 2;</span>
+<span class="lineNum">     116 </span><span class="lineCov">         56 :   return 2 + mygrid-&gt;getDimension();</span>
+<a name="117"><span class="lineNum">     117 </span>            : }</a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">      11293 : void ConvertToFES::compute( const unsigned&amp; current, MultiValue&amp; myvals ) const {</span>
+<span class="lineNum">     120 </span><span class="lineCov">      11293 :   double val=getFunctionValue( current ); myvals.setValue(1, -simtemp*std::log(val) );</span>
+<span class="lineNum">     121 </span><span class="lineCov">      22586 :   if( !mygrid-&gt;noDerivatives() &amp;&amp; val&gt;0 ) {</span>
+<span class="lineNum">     122 </span><span class="lineCov">      95070 :     for(unsigned i=0; i&lt;mygrid-&gt;getDimension(); ++i) myvals.setValue( 2+i, -(simtemp/val)*ingrid-&gt;getGridElement(current,i+1) );</span>
+<span class="lineNum">     123 </span>            :   }
+<a name="124"><span class="lineNum">     124 </span><span class="lineCov">      11293 : }</span></a>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">          7 : void ConvertToFES::runFinalJobs() {</span>
+<span class="lineNum">     127 </span><span class="lineCov">          7 :   activated=true; update();</span>
+<span class="lineNum">     128 </span><span class="lineCov">          7 : }</span>
+<a name="129"><span class="lineNum">     129 </span>            : </a>
+<span class="lineNum">     130 </span>            : }
+<span class="lineNum">     131 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

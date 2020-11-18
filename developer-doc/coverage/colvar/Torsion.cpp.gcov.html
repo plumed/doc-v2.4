@@ -1,0 +1,276 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - colvar/Torsion.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">colvar</a> - Torsion.cpp<span style="font-size: 80%;"> (source / <a href="Torsion.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">64</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntryHi">91.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;Colvar.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/Torsion.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace PLMD {
+<span class="lineNum">      32 </span>            : namespace colvar {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //+PLUMEDOC COLVAR TORSION
+<span class="lineNum">      35 </span>            : /*
+<span class="lineNum">      36 </span>            : Calculate a torsional angle.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : This command can be used to compute the torsion between four atoms or alternatively
+<span class="lineNum">      39 </span>            : to calculate the angle between two vectors projected on the plane
+<span class="lineNum">      40 </span>            : orthogonal to an axis.
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : \par Examples
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : This input tells plumed to print the torsional angle between atoms 1, 2, 3 and 4
+<span class="lineNum">      45 </span>            : on file COLVAR.
+<span class="lineNum">      46 </span>            : \plumedfile
+<span class="lineNum">      47 </span>            : t: TORSION ATOMS=1,2,3,4
+<span class="lineNum">      48 </span>            : # this is an alternative, equivalent, definition:
+<span class="lineNum">      49 </span>            : # t: TORSION VECTOR1=2,1 AXIS=2,3 VECTOR2=3,4
+<span class="lineNum">      50 </span>            : PRINT ARG=t FILE=COLVAR
+<span class="lineNum">      51 </span>            : \endplumedfile
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : If you are working with a protein you can specify the special named torsion angles \f$\phi\f$, \f$\psi\f$, \f$\omega\f$ and \f$\chi_1\f$
+<span class="lineNum">      54 </span>            : by using TORSION in combination with the \ref MOLINFO command.  This can be done by using the following
+<span class="lineNum">      55 </span>            : syntax.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : \plumedfile
+<span class="lineNum">      58 </span>            : MOLINFO MOLTYPE=protein STRUCTURE=myprotein.pdb
+<span class="lineNum">      59 </span>            : t1: TORSION ATOMS=@phi-3
+<span class="lineNum">      60 </span>            : t2: TORSION ATOMS=@psi-4
+<span class="lineNum">      61 </span>            : PRINT ARG=t1,t2 FILE=colvar STRIDE=10
+<span class="lineNum">      62 </span>            : \endplumedfile
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : Here, \@phi-3 tells plumed that you would like to calculate the \f$\phi\f$ angle in the third residue of the protein.
+<span class="lineNum">      65 </span>            : Similarly \@psi-4 tells plumed that you want to calculate the \f$\psi\f$ angle of the 4th residue of the protein.
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : Both of the previous examples specify that the torsion angle should be calculated based on the position of four atoms.
+<span class="lineNum">      68 </span>            : For the first example in particular the assumption when the torsion is specified in this way is that there are chemical
+<span class="lineNum">      69 </span>            : bonds between atoms 1 and 2, atoms 2 and 3 and atoms 3 and 4. In general, however, a torsional angle measures the angle
+<span class="lineNum">      70 </span>            : between two planes, which have at least one vector in common.  As shown below, there is thus an alternate, more general, way
+<span class="lineNum">      71 </span>            : through which we can define a torsional angle:
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : \plumedfile
+<span class="lineNum">      74 </span>            : t1: TORSION VECTOR1=1,2 AXIS=3,4 VECTOR2=5,6
+<span class="lineNum">      75 </span>            : PRINT ARG=t1 FILE=colvar STRIDE=20
+<span class="lineNum">      76 </span>            : \endplumedfile
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : This input instructs PLUMED to calculate the angle between the plane containing the vector connecting atoms 1 and 2 and the vector
+<span class="lineNum">      79 </span>            : connecting atoms 3 and 4 and the plane containing this second vector and the vector connecting atoms 5 and 6.  We can even use
+<span class="lineNum">      80 </span>            : PLUMED to calculate the torsional angle between two bond vectors around the z-axis as shown below:
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : \plumedfile
+<span class="lineNum">      83 </span>            : a0: FIXEDATOM AT=0,0,0
+<span class="lineNum">      84 </span>            : az: FIXEDATOM AT=0,0,1
+<span class="lineNum">      85 </span>            : t1: TORSION VECTOR1=1,2 AXIS=a0,az VECTOR2=5,6
+<span class="lineNum">      86 </span>            : PRINT ARG=t1 FILE=colvar STRIDE=20
+<span class="lineNum">      87 </span>            : \endplumedfile
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : */
+<a name="91"><span class="lineNum">      91 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">        880 : class Torsion : public Colvar {</span>
+<span class="lineNum">      94 </span>            :   bool pbc;
+<span class="lineNum">      95 </span>            :   bool do_cosine;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : public:
+<span class="lineNum">      98 </span>            :   explicit Torsion(const ActionOptions&amp;);
+<span class="lineNum">      99 </span>            : // active methods:
+<span class="lineNum">     100 </span>            :   virtual void calculate();
+<span class="lineNum">     101 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="102"><span class="lineNum">     102 </span>            : };</a>
+<span class="lineNum">     103 </span>            : 
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">       6894 : PLUMED_REGISTER_ACTION(Torsion,&quot;TORSION&quot;)</span></a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">        443 : void Torsion::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     107 </span><span class="lineCov">        443 :   Colvar::registerKeywords( keys );</span>
+<span class="lineNum">     108 </span><span class="lineCov">       1772 :   keys.add(&quot;atoms-1&quot;,&quot;ATOMS&quot;,&quot;the four atoms involved in the torsional angle&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">       1772 :   keys.add(&quot;atoms-2&quot;,&quot;AXIS&quot;,&quot;two atoms that define an axis.  You can use this to find the angle in the plane perpendicular to the axis between the vectors specified using the VECTOR1 and VECTOR2 keywords.&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       1772 :   keys.add(&quot;atoms-2&quot;,&quot;VECTOR1&quot;,&quot;two atoms that define a vector.  You can use this in combination with VECTOR2 and AXIS&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">       1772 :   keys.add(&quot;atoms-2&quot;,&quot;VECTOR2&quot;,&quot;two atoms that define a vector.  You can use this in combination with VECTOR1 and AXIS&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineCov">       1329 :   keys.addFlag(&quot;COSINE&quot;,false,&quot;calculate cosine instead of dihedral&quot;);</span>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">        443 : }</span></a>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">        442 : Torsion::Torsion(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     116 </span>            :   PLUMED_COLVAR_INIT(ao),
+<span class="lineNum">     117 </span>            :   pbc(true),
+<span class="lineNum">     118 </span><span class="lineCov">        444 :   do_cosine(false)</span>
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span>            :   vector&lt;AtomNumber&gt; atoms,v1,v2,axis;
+<span class="lineNum">     121 </span><span class="lineCov">        884 :   parseAtomList(&quot;ATOMS&quot;,atoms);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        884 :   parseAtomList(&quot;VECTOR1&quot;,v1);</span>
+<span class="lineNum">     123 </span><span class="lineCov">        884 :   parseAtomList(&quot;VECTOR2&quot;,v2);</span>
+<span class="lineNum">     124 </span><span class="lineCov">        884 :   parseAtomList(&quot;AXIS&quot;,axis);</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">        884 :   parseFlag(&quot;COSINE&quot;,do_cosine);</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">        442 :   bool nopbc=!pbc;</span>
+<span class="lineNum">     129 </span><span class="lineCov">        884 :   parseFlag(&quot;NOPBC&quot;,nopbc);</span>
+<span class="lineNum">     130 </span><span class="lineCov">        442 :   pbc=!nopbc;</span>
+<span class="lineNum">     131 </span><span class="lineCov">        442 :   checkRead();</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">        442 :   if(atoms.size()==4) {</span>
+<span class="lineNum">     134 </span><span class="lineCov">       1303 :     if(!(v1.empty() &amp;&amp; v2.empty() &amp;&amp; axis.empty()))</span>
+<span class="lineNum">     135 </span><span class="lineCov">          2 :       error(&quot;ATOMS keyword is not compatible with VECTOR1, VECTOR2 and AXIS keywords&quot;);</span>
+<span class="lineNum">     136 </span><span class="lineCov">        868 :     log.printf(&quot;  between atoms %d %d %d %d\n&quot;,atoms[0].serial(),atoms[1].serial(),atoms[2].serial(),atoms[3].serial());</span>
+<span class="lineNum">     137 </span><span class="lineCov">        434 :     atoms.resize(6);</span>
+<span class="lineNum">     138 </span><span class="lineCov">        434 :     atoms[5]=atoms[3];</span>
+<span class="lineNum">     139 </span><span class="lineCov">        434 :     atoms[4]=atoms[2];</span>
+<span class="lineNum">     140 </span><span class="lineCov">        434 :     atoms[3]=atoms[2];</span>
+<span class="lineNum">     141 </span><span class="lineCov">        434 :     atoms[2]=atoms[1];</span>
+<span class="lineNum">     142 </span><span class="lineCov">          7 :   } else if(atoms.empty()) {</span>
+<span class="lineNum">     143 </span><span class="lineCov">         18 :     if(!(v1.size()==2 &amp;&amp; v2.size()==2 &amp;&amp; axis.size()==2))</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :       error(&quot;VECTOR1, VECTOR2 and AXIS should specify 2 atoms each&quot;);</span>
+<span class="lineNum">     145 </span><span class="lineCov">         12 :     log.printf(&quot;  between lines %d-%d and %d-%d, projected on the plane orthogonal to line %d-%d\n&quot;,</span>
+<span class="lineNum">     146 </span>            :                v1[0].serial(),v1[1].serial(),v2[0].serial(),v2[1].serial(),axis[0].serial(),axis[1].serial());
+<span class="lineNum">     147 </span><span class="lineCov">          6 :     atoms.resize(6);</span>
+<span class="lineNum">     148 </span><span class="lineCov">          6 :     atoms[0]=v1[1];</span>
+<span class="lineNum">     149 </span><span class="lineCov">          6 :     atoms[1]=v1[0];</span>
+<span class="lineNum">     150 </span><span class="lineCov">          6 :     atoms[2]=axis[0];</span>
+<span class="lineNum">     151 </span><span class="lineCov">          6 :     atoms[3]=axis[1];</span>
+<span class="lineNum">     152 </span><span class="lineCov">          6 :     atoms[4]=v2[0];</span>
+<span class="lineNum">     153 </span><span class="lineCov">          6 :     atoms[5]=v2[1];</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :   } else error(&quot;ATOMS should specify 4 atoms&quot;);</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">        440 :   if(pbc) log.printf(&quot;  using periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     157 </span><span class="lineCov">        108 :   else    log.printf(&quot;  without periodic boundary conditions\n&quot;);</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">        440 :   if(do_cosine) log.printf(&quot;  calculating cosine instead of torsion\n&quot;);</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">        440 :   addValueWithDerivatives();</span>
+<span class="lineNum">     162 </span><span class="lineCov">       1320 :   if(!do_cosine) setPeriodic(&quot;-pi&quot;,&quot;pi&quot;);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :   else setNotPeriodic();</span>
+<span class="lineNum">     164 </span><span class="lineCov">        440 :   requestAtoms(atoms);</span>
+<span class="lineNum">     165 </span><span class="lineCov">        440 : }</span>
+<a name="166"><span class="lineNum">     166 </span>            : </a>
+<span class="lineNum">     167 </span>            : // calculator
+<span class="lineNum">     168 </span><span class="lineCov">      24039 : void Torsion::calculate() {</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">      24039 :   Vector d0,d1,d2;</span>
+<span class="lineNum">     171 </span><span class="lineCov">      24039 :   if(pbc) makeWhole();</span>
+<span class="lineNum">     172 </span><span class="lineCov">      24039 :   d0=delta(getPosition(1),getPosition(0));</span>
+<span class="lineNum">     173 </span><span class="lineCov">      24039 :   d1=delta(getPosition(3),getPosition(2));</span>
+<span class="lineNum">     174 </span><span class="lineCov">      24039 :   d2=delta(getPosition(5),getPosition(4));</span>
+<span class="lineNum">     175 </span><span class="lineCov">      24039 :   Vector dd0,dd1,dd2;</span>
+<span class="lineNum">     176 </span>            :   PLMD::Torsion t;
+<span class="lineNum">     177 </span><span class="lineCov">      24039 :   double torsion=t.compute(d0,d1,d2,dd0,dd1,dd2);</span>
+<span class="lineNum">     178 </span><span class="lineCov">      24039 :   if(do_cosine) {</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     dd0 *= -sin(torsion);</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :     dd1 *= -sin(torsion);</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     dd2 *= -sin(torsion);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     torsion = cos(torsion);</span>
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span><span class="lineCov">      24039 :   setAtomsDerivatives(0,dd0);</span>
+<span class="lineNum">     185 </span><span class="lineCov">      48078 :   setAtomsDerivatives(1,-dd0);</span>
+<span class="lineNum">     186 </span>            :   setAtomsDerivatives(2,dd1);
+<span class="lineNum">     187 </span><span class="lineCov">      48078 :   setAtomsDerivatives(3,-dd1);</span>
+<span class="lineNum">     188 </span>            :   setAtomsDerivatives(4,dd2);
+<span class="lineNum">     189 </span><span class="lineCov">      48078 :   setAtomsDerivatives(5,-dd2);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">      24039 :   setValue           (torsion);</span>
+<span class="lineNum">     192 </span>            :   setBoxDerivativesNoPbc();
+<span class="lineNum">     193 </span><span class="lineCov">      24039 : }</span>
+<a name="194"><span class="lineNum">     194 </span>            : </a>
+<span class="lineNum">     195 </span>            : }
+<span class="lineNum">     196 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

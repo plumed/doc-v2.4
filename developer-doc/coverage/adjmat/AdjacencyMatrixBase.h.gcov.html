@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - adjmat/AdjacencyMatrixBase.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">adjmat</a> - AdjacencyMatrixBase.h<span style="font-size: 80%;"> (source / <a href="AdjacencyMatrixBase.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2015-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_adjmat_AdjacencyMatrixBase_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_adjmat_AdjacencyMatrixBase_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;multicolvar/MultiColvarBase.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;AdjacencyMatrixVessel.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<a name="29"><span class="lineNum">      29 </span>            : namespace adjmat {</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         21 : class AdjacencyMatrixBase : public multicolvar::MultiColvarBase {</span>
+<span class="lineNum">      32 </span>            :   friend class AdjacencyMatrixVessel;
+<span class="lineNum">      33 </span>            :   friend class ActionWithInputMatrix;
+<span class="lineNum">      34 </span>            :   friend class MatrixColumnSums;
+<span class="lineNum">      35 </span>            :   friend class MatrixRowSums;
+<span class="lineNum">      36 </span>            : private:
+<span class="lineNum">      37 </span>            : /// Used for read in of multiple connection descriptors
+<span class="lineNum">      38 </span>            :   unsigned connect_id;
+<span class="lineNum">      39 </span>            : /// Do we need to separate out the tasks for the third atoms
+<span class="lineNum">      40 </span>            :   bool no_third_dim_accum;
+<span class="lineNum">      41 </span>            : /// This is the vessel that stores the adjacency matrix
+<span class="lineNum">      42 </span>            :   AdjacencyMatrixVessel* mat;
+<span class="lineNum">      43 </span>            : /// This is used within AdjacencyMatrixVessel to recalculate matrix elements
+<span class="lineNum">      44 </span>            : /// whcih is useful when we are operating with lowmem
+<span class="lineNum">      45 </span>            :   void recalculateMatrixElement( const unsigned&amp; myelem, MultiValue&amp; myvals );
+<span class="lineNum">      46 </span>            : /// Finish the setup of the matrix
+<span class="lineNum">      47 </span>            :   void finishMatrixSetup( const bool&amp; symmetric, const std::vector&lt;AtomNumber&gt;&amp; all_atoms );
+<span class="lineNum">      48 </span>            : protected:
+<span class="lineNum">      49 </span>            : /// Read in a matrix involving a maximum of two species
+<span class="lineNum">      50 </span>            :   void readMaxTwoSpeciesMatrix( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, const bool&amp; symmetric );
+<span class="lineNum">      51 </span>            : /// Read in a matrix involving a maximum of three species
+<span class="lineNum">      52 </span>            :   void readMaxThreeSpeciesMatrix( const std::string&amp; key0, const std::string&amp; key1, const std::string&amp; key2, const std::string&amp; keym, const bool&amp; symmetric );
+<span class="lineNum">      53 </span>            : /// Get the dimensions of the matrix of types
+<span class="lineNum">      54 </span>            :   void retrieveTypeDimensions( unsigned&amp; nrows, unsigned&amp; ncols, unsigned&amp; ntype ) const ;
+<span class="lineNum">      55 </span>            : /// Retrieve the vessel that holds the adjacency matrix
+<span class="lineNum">      56 </span>            :   AdjacencyMatrixVessel* getAdjacencyVessel();
+<span class="lineNum">      57 </span>            : /// Put the indices of the matrix elements in current atoms
+<span class="lineNum">      58 </span>            :   void setMatrixIndexesForTask( const unsigned&amp; ii );
+<span class="lineNum">      59 </span>            : /// Add derivatives to a matrix element
+<span class="lineNum">      60 </span>            :   void addDerivativesOnMatrixElement( const unsigned&amp; ielem, const unsigned&amp; jrow, const double&amp; df, Matrix&lt;double&gt;&amp; der );
+<span class="lineNum">      61 </span>            : /// Read in the information on the connectors
+<span class="lineNum">      62 </span>            :   void parseConnectionDescriptions( const std::string&amp; key, const bool&amp; multiple, const unsigned&amp; nrow_t );
+<span class="lineNum">      63 </span>            : protected:
+<span class="lineNum">      64 </span>            : /// Get the number of nodes of different types
+<span class="lineNum">      65 </span>            :   unsigned getNumberOfNodeTypes() const ;
+<span class="lineNum">      66 </span>            : /// Get the size of the vectors that were stored in the base colvars
+<span class="lineNum">      67 </span>            :   unsigned getSizeOfInputVectors() const ;
+<span class="lineNum">      68 </span>            : /// Return the group this atom is a part of
+<span class="lineNum">      69 </span>            :   unsigned getBaseColvarNumber( const unsigned&amp; ) const ;
+<span class="lineNum">      70 </span>            : public:
+<span class="lineNum">      71 </span>            :   static void registerKeywords( Keywords&amp; keys );
+<span class="lineNum">      72 </span>            :   explicit AdjacencyMatrixBase(const ActionOptions&amp;);
+<span class="lineNum">      73 </span>            : /// Create the connection object
+<a name="74"><span class="lineNum">      74 </span>            :   virtual void setupConnector( const unsigned&amp; id, const unsigned&amp; i, const unsigned&amp; j, const std::vector&lt;std::string&gt;&amp; desc ) = 0;</a>
+<span class="lineNum">      75 </span>            : /// None of these things are allowed
+<span class="lineNum">      76 </span><span class="lineCov">         23 :   bool isPeriodic() { return false; }</span>
+<span class="lineNum">      77 </span>            :   Vector getCentralAtom() { plumed_merror(&quot;cannot find central atoms for adjacency matrix actions&quot;); Vector dum; return dum; }
+<span class="lineNum">      78 </span>            : /// Get the atom number
+<span class="lineNum">      79 </span>            :   AtomNumber getAbsoluteIndexOfCentralAtom( const unsigned&amp; i ) const ;
+<span class="lineNum">      80 </span>            : };
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : inline
+<span class="lineNum">      83 </span>            : AdjacencyMatrixVessel* AdjacencyMatrixBase::getAdjacencyVessel() {
+<span class="lineNum">      84 </span>            :   return mat;
+<span class="lineNum">      85 </span>            : }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : inline
+<span class="lineNum">      88 </span>            : unsigned AdjacencyMatrixBase::getBaseColvarNumber( const unsigned&amp; inum ) const {
+<span class="lineNum">      89 </span><span class="lineCov">  899652436 :   if( atom_lab[inum].first&gt;0 ) return atom_lab[inum].first-1;</span>
+<span class="lineNum">      90 </span>            :   return 0;
+<span class="lineNum">      91 </span>            : }
+<a name="92"><span class="lineNum">      92 </span>            : </a>
+<span class="lineNum">      93 </span>            : inline
+<span class="lineNum">      94 </span><span class="lineCov">        504 : AtomNumber AdjacencyMatrixBase::getAbsoluteIndexOfCentralAtom( const unsigned&amp; iatom ) const {</span>
+<span class="lineNum">      95 </span><span class="lineCov">       1008 :   if( atom_lab[iatom].first&gt;0 ) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">        156 :     unsigned mmc=atom_lab[ iatom ].first - 1;</span>
+<span class="lineNum">      97 </span><span class="lineCov">        312 :     return mybasemulticolvars[mmc]-&gt;getAbsoluteIndexOfCentralAtom( atom_lab[iatom].second );</span>
+<span class="lineNum">      98 </span>            :   }
+<span class="lineNum">      99 </span><span class="lineCov">        348 :   return ActionAtomistic::getAbsoluteIndex( atom_lab[iatom].second );</span>
+<span class="lineNum">     100 </span>            : }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : }
+<span class="lineNum">     103 </span>            : }
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

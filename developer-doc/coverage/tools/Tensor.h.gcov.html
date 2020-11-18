@@ -1,0 +1,584 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - tools/Tensor.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">tools</a> - Tensor.h<span style="font-size: 80%;"> (source / <a href="Tensor.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">130</td>
+            <td class="headerCovTableEntry">130</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #ifndef __PLUMED_tools_Tensor_h
+<span class="lineNum">      23 </span>            : #define __PLUMED_tools_Tensor_h
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;MatrixSquareBracketsAccess.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Vector.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;LoopUnroller.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifdef _GLIBCXX_DEBUG
+<span class="lineNum">      30 </span>            : #include &quot;Exception.h&quot;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /**
+<span class="lineNum">      36 </span>            : \ingroup TOOLBOX
+<span class="lineNum">      37 </span>            : Class implementing fixed size matrices of doubles
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : \tparam n The number rows
+<span class="lineNum">      40 </span>            : \tparam m The number columns
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : This class implements a matrix of doubles with size fixed at
+<span class="lineNum">      43 </span>            : compile time. It is useful for small fixed size objects (e.g.
+<span class="lineNum">      44 </span>            : 3x3 tensors) as it does not waste space to store the vector size.
+<span class="lineNum">      45 </span>            : Moreover, as the compiler knows the size, it can be completely
+<span class="lineNum">      46 </span>            : opimized inline.
+<span class="lineNum">      47 </span>            : Most of the loops are explicitly unrolled using PLMD::LoopUnroller class
+<span class="lineNum">      48 </span>            : Matrix elements are initialized to zero by default. Notice that
+<span class="lineNum">      49 </span>            : this means that constructor is a bit slow. This point might change
+<span class="lineNum">      50 </span>            : in future if we find performance issues.
+<span class="lineNum">      51 </span>            : It takes advantage of MatrixSquareBracketsAccess to provide both
+<span class="lineNum">      52 </span>            : () and [] syntax for access.
+<span class="lineNum">      53 </span>            : Several functions are declared as friends even if not necessary so as to
+<span class="lineNum">      54 </span>            : properly appear in Doxygen documentation.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : Aliases are defined to simplify common declarations (Tensor, Tensor2d, Tensor3d, Tensor4d).
+<span class="lineNum">      57 </span>            : Also notice that some operations are only available for 3x3 tensors.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : Example of usage
+<span class="lineNum">      60 </span>            : \verbatim
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : #include &quot;Tensor.h&quot;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : using namespace PLMD;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : int main(){
+<span class="lineNum">      67 </span>            :   Tensor a;
+<span class="lineNum">      68 </span>            :   TensorGeneric&lt;3,2&gt; b;
+<span class="lineNum">      69 </span>            :   TensorGeneric&lt;3,2&gt; c=matmul(a,b);
+<span class="lineNum">      70 </span>            :   return 0;
+<span class="lineNum">      71 </span>            : }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : \endverbatim
+<span class="lineNum">      74 </span>            : */
+<span class="lineNum">      75 </span>            : template &lt;unsigned n,unsigned m&gt;
+<span class="lineNum">      76 </span>            : class TensorGeneric:
+<span class="lineNum">      77 </span>            :   public MatrixSquareBracketsAccess&lt;TensorGeneric&lt;n,m&gt;,double&gt;
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span>            :   double d[n*m];
+<span class="lineNum">      80 </span>            : public:
+<span class="lineNum">      81 </span>            : /// initialize the tensor to zero
+<span class="lineNum">      82 </span>            :   TensorGeneric();
+<span class="lineNum">      83 </span>            : /// initialize a tensor as an external product of two Vector
+<span class="lineNum">      84 </span>            :   TensorGeneric(const VectorGeneric&lt;n&gt;&amp;v1,const VectorGeneric&lt;m&gt;&amp;v2);
+<span class="lineNum">      85 </span>            : /// initialize a tensor with 4 values, in standard C order
+<span class="lineNum">      86 </span>            :   TensorGeneric(double,double,double,double);
+<span class="lineNum">      87 </span>            : /// initialize a tensor with 9 values, in standard C order
+<span class="lineNum">      88 </span>            :   TensorGeneric(double,double,double,double,double,double,double,double,double);
+<span class="lineNum">      89 </span>            : /// set it to zero
+<span class="lineNum">      90 </span>            :   void zero();
+<span class="lineNum">      91 </span>            : /// access element
+<span class="lineNum">      92 </span>            :   double &amp; operator() (unsigned i,unsigned j);
+<span class="lineNum">      93 </span>            : /// access element
+<span class="lineNum">      94 </span>            :   const double &amp; operator() (unsigned i,unsigned j)const;
+<span class="lineNum">      95 </span>            : /// increment
+<span class="lineNum">      96 </span>            :   TensorGeneric&amp; operator +=(const TensorGeneric&lt;n,m&gt;&amp; b);
+<span class="lineNum">      97 </span>            : /// decrement
+<span class="lineNum">      98 </span>            :   TensorGeneric&amp; operator -=(const TensorGeneric&lt;n,m&gt;&amp; b);
+<span class="lineNum">      99 </span>            : /// multiply
+<span class="lineNum">     100 </span>            :   TensorGeneric&amp; operator *=(double);
+<span class="lineNum">     101 </span>            : /// divide
+<span class="lineNum">     102 </span>            :   TensorGeneric&amp; operator /=(double);
+<span class="lineNum">     103 </span>            : /// return +t
+<span class="lineNum">     104 </span>            :   TensorGeneric operator +()const;
+<span class="lineNum">     105 </span>            : /// return -t
+<span class="lineNum">     106 </span>            :   TensorGeneric operator -()const;
+<span class="lineNum">     107 </span>            : /// set j-th column
+<span class="lineNum">     108 </span>            :   TensorGeneric&amp; setCol(unsigned j,const VectorGeneric&lt;n&gt; &amp; c);
+<span class="lineNum">     109 </span>            : /// set i-th row
+<span class="lineNum">     110 </span>            :   TensorGeneric&amp; setRow(unsigned i,const VectorGeneric&lt;m&gt; &amp; r);
+<span class="lineNum">     111 </span>            : /// get j-th column
+<span class="lineNum">     112 </span>            :   VectorGeneric&lt;n&gt; getCol(unsigned j)const;
+<span class="lineNum">     113 </span>            : /// get i-th row
+<span class="lineNum">     114 </span>            :   VectorGeneric&lt;m&gt; getRow(unsigned i)const;
+<span class="lineNum">     115 </span>            : /// return t1+t2
+<span class="lineNum">     116 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     117 </span>            :   friend TensorGeneric&lt;n_,m_&gt; operator+(const TensorGeneric&lt;n_,m_&gt;&amp;,const TensorGeneric&lt;n_,m_&gt;&amp;);
+<span class="lineNum">     118 </span>            : /// return t1+t2
+<span class="lineNum">     119 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     120 </span>            :   friend TensorGeneric&lt;n_,m_&gt; operator-(const TensorGeneric&lt;n_,m_&gt;&amp;,const TensorGeneric&lt;n_,m_&gt;&amp;);
+<span class="lineNum">     121 </span>            : /// scale the tensor by a factor s
+<span class="lineNum">     122 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     123 </span>            :   friend TensorGeneric&lt;n_,m_&gt; operator*(double,const TensorGeneric&lt;n_,m_&gt;&amp;);
+<span class="lineNum">     124 </span>            : /// scale the tensor by a factor s
+<span class="lineNum">     125 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     126 </span>            :   friend TensorGeneric&lt;n_,m_&gt; operator*(const TensorGeneric&lt;n_,m_&gt;&amp;,double s);
+<span class="lineNum">     127 </span>            : /// scale the tensor by a factor 1/s
+<span class="lineNum">     128 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     129 </span>            :   friend TensorGeneric&lt;n_,m_&gt; operator/(const TensorGeneric&lt;n_,m_&gt;&amp;,double s);
+<span class="lineNum">     130 </span>            : /// returns the determinant
+<span class="lineNum">     131 </span>            :   double determinant()const;
+<span class="lineNum">     132 </span>            : /// return an identity tensor
+<span class="lineNum">     133 </span>            :   static TensorGeneric&lt;n,n&gt; identity();
+<span class="lineNum">     134 </span>            : /// return the matrix inverse
+<span class="lineNum">     135 </span>            :   TensorGeneric inverse()const;
+<span class="lineNum">     136 </span>            : /// return the transpose matrix
+<span class="lineNum">     137 </span>            :   TensorGeneric&lt;m,n&gt; transpose()const;
+<span class="lineNum">     138 </span>            : /// matrix-matrix multiplication
+<span class="lineNum">     139 </span>            :   template&lt;unsigned n_,unsigned m_,unsigned l_&gt;
+<span class="lineNum">     140 </span>            :   friend TensorGeneric&lt;n_,l_&gt; matmul(const TensorGeneric&lt;n_,m_&gt;&amp;,const TensorGeneric&lt;m_,l_&gt;&amp;);
+<span class="lineNum">     141 </span>            : /// matrix-vector multiplication
+<span class="lineNum">     142 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     143 </span>            :   friend VectorGeneric&lt;n_&gt; matmul(const TensorGeneric&lt;n_,m_&gt;&amp;,const VectorGeneric&lt;m_&gt;&amp;);
+<span class="lineNum">     144 </span>            : /// vector-matrix multiplication
+<span class="lineNum">     145 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     146 </span>            :   friend VectorGeneric&lt;n_&gt; matmul(const VectorGeneric&lt;m_&gt;&amp;,const TensorGeneric&lt;m_,n_&gt;&amp;);
+<span class="lineNum">     147 </span>            : /// vector-vector multiplication (maps to dotProduct)
+<span class="lineNum">     148 </span>            :   template&lt;unsigned n_&gt;
+<span class="lineNum">     149 </span>            :   friend double matmul(const VectorGeneric&lt;n_&gt;&amp;,const VectorGeneric&lt;n_&gt;&amp;);
+<span class="lineNum">     150 </span>            : /// matrix-matrix-matrix multiplication
+<span class="lineNum">     151 </span>            :   template&lt;unsigned n_,unsigned m_,unsigned l_,unsigned i_&gt;
+<span class="lineNum">     152 </span>            :   friend TensorGeneric&lt;n_,i_&gt; matmul(const TensorGeneric&lt;n_,m_&gt;&amp;,const TensorGeneric&lt;m_,l_&gt;&amp;,const TensorGeneric&lt;l_,i_&gt;&amp;);
+<span class="lineNum">     153 </span>            : /// matrix-matrix-vector multiplication
+<span class="lineNum">     154 </span>            :   template&lt;unsigned n_,unsigned m_,unsigned l_&gt;
+<span class="lineNum">     155 </span>            :   friend VectorGeneric&lt;n_&gt; matmul(const TensorGeneric&lt;n_,m_&gt;&amp;,const TensorGeneric&lt;m_,l_&gt;&amp;,const VectorGeneric&lt;l_&gt;&amp;);
+<span class="lineNum">     156 </span>            : /// vector-matrix-matrix multiplication
+<span class="lineNum">     157 </span>            :   template&lt;unsigned n_,unsigned m_,unsigned l_&gt;
+<span class="lineNum">     158 </span>            :   friend VectorGeneric&lt;l_&gt; matmul(const VectorGeneric&lt;n_&gt;&amp;,const TensorGeneric&lt;n_,m_&gt;&amp;,const TensorGeneric&lt;m_,l_&gt;&amp;);
+<span class="lineNum">     159 </span>            : /// vector-matrix-vector multiplication
+<span class="lineNum">     160 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     161 </span>            :   friend double matmul(const VectorGeneric&lt;n_&gt;&amp;,const TensorGeneric&lt;n_,m_&gt;&amp;,const VectorGeneric&lt;m_&gt;&amp;);
+<span class="lineNum">     162 </span>            : /// returns the determinant of a tensor
+<span class="lineNum">     163 </span>            :   friend double determinant(const TensorGeneric&lt;3,3&gt;&amp;);
+<span class="lineNum">     164 </span>            : /// returns the inverse of a tensor (same as inverse())
+<span class="lineNum">     165 </span>            :   friend TensorGeneric&lt;3,3&gt; inverse(const TensorGeneric&lt;3,3&gt;&amp;);
+<span class="lineNum">     166 </span>            : /// returns the transpose of a tensor (same as transpose())
+<span class="lineNum">     167 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     168 </span>            :   friend TensorGeneric&lt;n_,m_&gt; transpose(const TensorGeneric&lt;m_,n_&gt;&amp;);
+<span class="lineNum">     169 </span>            : /// returns the transpose of a tensor (same as TensorGeneric(const VectorGeneric&amp;,const VectorGeneric&amp;))
+<a name="170"><span class="lineNum">     170 </span>            :   template&lt;unsigned n_,unsigned m_&gt;</a>
+<a name="171"><span class="lineNum">     171 </span>            :   friend TensorGeneric&lt;n_,m_&gt; extProduct(const VectorGeneric&lt;n&gt;&amp;,const VectorGeneric&lt;m&gt;&amp;);</a>
+<a name="172"><span class="lineNum">     172 </span><span class="lineCov">    4257443 :   friend TensorGeneric&lt;3,3&gt; dcrossDv1(const VectorGeneric&lt;3&gt;&amp;,const VectorGeneric&lt;3&gt;&amp;);</span></a>
+<a name="173"><span class="lineNum">     173 </span><span class="lineCov">    4835099 :   friend TensorGeneric&lt;3,3&gt; dcrossDv2(const VectorGeneric&lt;3&gt;&amp;,const VectorGeneric&lt;3&gt;&amp;);</span></a>
+<span class="lineNum">     174 </span><span class="lineCov">     144414 :   friend TensorGeneric&lt;3,3&gt; VcrossTensor(const VectorGeneric&lt;3&gt;&amp;,const TensorGeneric&lt;3,3&gt;&amp;);</span>
+<a name="175"><span class="lineNum">     175 </span><span class="lineCov">      48138 :   friend TensorGeneric&lt;3,3&gt; VcrossTensor(const TensorGeneric&lt;3,3&gt;&amp;,const VectorGeneric&lt;3&gt;&amp;);</span></a>
+<span class="lineNum">     176 </span>            : /// Derivative of a normalized vector
+<span class="lineNum">     177 </span><span class="lineCov">      48138 :   friend TensorGeneric&lt;3,3&gt; deriNorm(const VectorGeneric&lt;3&gt;&amp;,const TensorGeneric&lt;3,3&gt;&amp;);</span>
+<span class="lineNum">     178 </span>            : /// &lt;&lt; operator.
+<span class="lineNum">     179 </span>            : /// Allows printing tensor `t` with `std::cout&lt;&lt;t;`
+<span class="lineNum">     180 </span>            :   template&lt;unsigned n_,unsigned m_&gt;
+<span class="lineNum">     181 </span>            :   friend std::ostream &amp; operator&lt;&lt;(std::ostream &amp;os, const TensorGeneric&lt;n_,m_&gt;&amp;);
+<span class="lineNum">     182 </span>            : };
+<a name="183"><span class="lineNum">     183 </span>            : </a>
+<span class="lineNum">     184 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     185 </span><span class="lineCov">   39660503 : TensorGeneric&lt;n,m&gt;::TensorGeneric() {</span>
+<span class="lineNum">     186 </span><span class="lineCov">   39660503 :   LoopUnroller&lt;n*m&gt;::_zero(d);</span>
+<span class="lineNum">     187 </span><span class="lineCov">   39660503 : }</span>
+<a name="188"><span class="lineNum">     188 </span>            : </a>
+<span class="lineNum">     189 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     190 </span><span class="lineCov">  129874959 : TensorGeneric&lt;n,m&gt;::TensorGeneric(const VectorGeneric&lt;n&gt;&amp;v1,const VectorGeneric&lt;m&gt;&amp;v2) {</span>
+<span class="lineNum">     191 </span><span class="lineCov">  519499836 :   for(unsigned i=0; i&lt;n; i++)for(unsigned j=0; j&lt;m; j++)d[i*m+j]=v1[i]*v2[j];</span>
+<span class="lineNum">     192 </span><span class="lineCov">  129874959 : }</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : template&lt;&gt;
+<span class="lineNum">     195 </span>            : inline
+<span class="lineNum">     196 </span>            : TensorGeneric&lt;2,2&gt;::TensorGeneric(double d00,double d01,double d10,double d11) {
+<span class="lineNum">     197 </span>            :   d[0]=d00;
+<span class="lineNum">     198 </span>            :   d[1]=d01;
+<span class="lineNum">     199 </span>            :   d[2]=d10;
+<span class="lineNum">     200 </span>            :   d[3]=d11;
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : template&lt;&gt;
+<span class="lineNum">     204 </span>            : inline
+<span class="lineNum">     205 </span><span class="lineCov">    9156237 : TensorGeneric&lt;3,3&gt;::TensorGeneric(double d00,double d01,double d02,double d10,double d11,double d12,double d20,double d21,double d22) {</span>
+<span class="lineNum">     206 </span><span class="lineCov">    9156237 :   d[0]=d00;</span>
+<span class="lineNum">     207 </span><span class="lineCov">    9156237 :   d[1]=d01;</span>
+<span class="lineNum">     208 </span><span class="lineCov">    9156237 :   d[2]=d02;</span>
+<span class="lineNum">     209 </span><span class="lineCov">    9156237 :   d[3]=d10;</span>
+<span class="lineNum">     210 </span><span class="lineCov">    9156237 :   d[4]=d11;</span>
+<span class="lineNum">     211 </span><span class="lineCov">    9156237 :   d[5]=d12;</span>
+<span class="lineNum">     212 </span><span class="lineCov">    9156237 :   d[6]=d20;</span>
+<span class="lineNum">     213 </span><span class="lineCov">    9156237 :   d[7]=d21;</span>
+<span class="lineNum">     214 </span><span class="lineCov">    9156237 :   d[8]=d22;</span>
+<span class="lineNum">     215 </span>            : }
+<a name="216"><span class="lineNum">     216 </span>            : </a>
+<span class="lineNum">     217 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     218 </span><span class="lineCov">     355191 : void TensorGeneric&lt;n,m&gt;::zero() {</span>
+<span class="lineNum">     219 </span><span class="lineCov">     355191 :   LoopUnroller&lt;n*m&gt;::_zero(d);</span>
+<span class="lineNum">     220 </span><span class="lineCov">     355191 : }</span>
+<a name="221"><span class="lineNum">     221 </span>            : </a>
+<span class="lineNum">     222 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     223 </span><span class="lineCov">  178727603 : double &amp; TensorGeneric&lt;n,m&gt;::operator() (unsigned i,unsigned j) {</span>
+<span class="lineNum">     224 </span>            : #ifdef _GLIBCXX_DEBUG
+<span class="lineNum">     225 </span>            :   plumed_assert(i&lt;n &amp;&amp; j&lt;m);
+<span class="lineNum">     226 </span>            : #endif
+<span class="lineNum">     227 </span><span class="lineCov">  178727603 :   return d[m*i+j];</span>
+<span class="lineNum">     228 </span>            : }
+<a name="229"><span class="lineNum">     229 </span>            : </a>
+<span class="lineNum">     230 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     231 </span><span class="lineCov"> 4454750629 : const double &amp; TensorGeneric&lt;n,m&gt;::operator() (unsigned i,unsigned j)const {</span>
+<span class="lineNum">     232 </span>            : #ifdef _GLIBCXX_DEBUG
+<span class="lineNum">     233 </span>            :   plumed_assert(i&lt;n &amp;&amp; j&lt;m);
+<span class="lineNum">     234 </span>            : #endif
+<span class="lineNum">     235 </span><span class="lineCov"> 4454750629 :   return d[m*i+j];</span>
+<span class="lineNum">     236 </span>            : }
+<a name="237"><span class="lineNum">     237 </span>            : </a>
+<span class="lineNum">     238 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     239 </span><span class="lineCov">   38149660 : TensorGeneric&lt;n,m&gt;&amp; TensorGeneric&lt;n,m&gt;::operator +=(const TensorGeneric&lt;n,m&gt;&amp; b) {</span>
+<span class="lineNum">     240 </span><span class="lineCov">   38149660 :   LoopUnroller&lt;n*m&gt;::_add(d,b.d);</span>
+<span class="lineNum">     241 </span><span class="lineCov">   38149660 :   return *this;</span>
+<span class="lineNum">     242 </span>            : }
+<a name="243"><span class="lineNum">     243 </span>            : </a>
+<span class="lineNum">     244 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     245 </span><span class="lineCov">   24605920 : TensorGeneric&lt;n,m&gt;&amp; TensorGeneric&lt;n,m&gt;::operator -=(const TensorGeneric&lt;n,m&gt;&amp; b) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">   24605920 :   LoopUnroller&lt;n*m&gt;::_sub(d,b.d);</span>
+<span class="lineNum">     247 </span><span class="lineCov">   24605920 :   return *this;</span>
+<span class="lineNum">     248 </span>            : }
+<a name="249"><span class="lineNum">     249 </span>            : </a>
+<span class="lineNum">     250 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     251 </span><span class="lineCov">  122591275 : TensorGeneric&lt;n,m&gt;&amp; TensorGeneric&lt;n,m&gt;::operator *=(double s) {</span>
+<span class="lineNum">     252 </span><span class="lineCov">  122591275 :   LoopUnroller&lt;n*m&gt;::_mul(d,s);</span>
+<span class="lineNum">     253 </span><span class="lineCov">  122591275 :   return *this;</span>
+<span class="lineNum">     254 </span>            : }
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     257 </span>            : TensorGeneric&lt;n,m&gt;&amp; TensorGeneric&lt;n,m&gt;::operator /=(double s) {
+<span class="lineNum">     258 </span>            :   LoopUnroller&lt;n*m&gt;::_mul(d,1.0/s);
+<span class="lineNum">     259 </span>            :   return *this;
+<span class="lineNum">     260 </span>            : }
+<a name="261"><span class="lineNum">     261 </span>            : </a>
+<span class="lineNum">     262 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     263 </span><span class="lineCov">      19111 : TensorGeneric&lt;n,m&gt; TensorGeneric&lt;n,m&gt;::operator+()const {</span>
+<span class="lineNum">     264 </span><span class="lineCov">      19111 :   return *this;</span>
+<span class="lineNum">     265 </span>            : }
+<a name="266"><span class="lineNum">     266 </span>            : </a>
+<span class="lineNum">     267 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     268 </span><span class="lineCov">      61898 : TensorGeneric&lt;n,m&gt; TensorGeneric&lt;n,m&gt;::operator-()const {</span>
+<span class="lineNum">     269 </span><span class="lineCov">      61898 :   TensorGeneric&lt;n,m&gt; r;</span>
+<span class="lineNum">     270 </span><span class="lineCov">      61898 :   LoopUnroller&lt;n*m&gt;::_neg(r.d,d);</span>
+<span class="lineNum">     271 </span><span class="lineCov">      61898 :   return r;</span>
+<span class="lineNum">     272 </span>            : }
+<a name="273"><span class="lineNum">     273 </span>            : </a>
+<span class="lineNum">     274 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     275 </span><span class="lineCov">      29160 : TensorGeneric&lt;n,m&gt;&amp; TensorGeneric&lt;n,m&gt;::setCol(unsigned j,const VectorGeneric&lt;n&gt; &amp; c) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">     116640 :   for(unsigned i=0; i&lt;n; ++i) (*this)(i,j)=c(i);</span>
+<span class="lineNum">     277 </span><span class="lineCov">      29160 :   return *this;</span>
+<span class="lineNum">     278 </span>            : }
+<a name="279"><span class="lineNum">     279 </span>            : </a>
+<span class="lineNum">     280 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     281 </span><span class="lineCov">    2856339 : TensorGeneric&lt;n,m&gt;&amp; TensorGeneric&lt;n,m&gt;::setRow(unsigned i,const VectorGeneric&lt;m&gt; &amp; r) {</span>
+<span class="lineNum">     282 </span><span class="lineCov">   11425356 :   for(unsigned j=0; j&lt;m; ++j) (*this)(i,j)=r(j);</span>
+<span class="lineNum">     283 </span><span class="lineCov">    2856339 :   return *this;</span>
+<span class="lineNum">     284 </span>            : }
+<a name="285"><span class="lineNum">     285 </span>            : </a>
+<span class="lineNum">     286 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     287 </span><span class="lineCov">      24300 : VectorGeneric&lt;n&gt; TensorGeneric&lt;n,m&gt;::getCol(unsigned j)const {</span>
+<span class="lineNum">     288 </span><span class="lineCov">      24300 :   VectorGeneric&lt;n&gt; v;</span>
+<span class="lineNum">     289 </span><span class="lineCov">      97200 :   for(unsigned i=0; i&lt;n; ++i) v(i)=(*this)(i,j);</span>
+<span class="lineNum">     290 </span><span class="lineCov">      24300 :   return v;</span>
+<span class="lineNum">     291 </span>            : }
+<a name="292"><span class="lineNum">     292 </span>            : </a>
+<span class="lineNum">     293 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     294 </span><span class="lineCov">    3171426 : VectorGeneric&lt;m&gt; TensorGeneric&lt;n,m&gt;::getRow(unsigned i)const {</span>
+<span class="lineNum">     295 </span><span class="lineCov">    3171426 :   VectorGeneric&lt;m&gt; v;</span>
+<span class="lineNum">     296 </span><span class="lineCov">   12685704 :   for(unsigned j=0; j&lt;m; ++j) v(j)=(*this)(i,j);</span>
+<span class="lineNum">     297 </span><span class="lineCov">    3171426 :   return v;</span>
+<span class="lineNum">     298 </span>            : }
+<a name="299"><span class="lineNum">     299 </span>            : </a>
+<span class="lineNum">     300 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     301 </span><span class="lineCov">    2194702 : TensorGeneric&lt;n,m&gt; operator+(const TensorGeneric&lt;n,m&gt;&amp;t1,const TensorGeneric&lt;n,m&gt;&amp;t2) {</span>
+<span class="lineNum">     302 </span><span class="lineCov">    2194702 :   TensorGeneric&lt;n,m&gt; t(t1);</span>
+<span class="lineNum">     303 </span><span class="lineCov">    2194702 :   t+=t2;</span>
+<span class="lineNum">     304 </span><span class="lineCov">    2194702 :   return t;</span>
+<span class="lineNum">     305 </span>            : }
+<a name="306"><span class="lineNum">     306 </span>            : </a>
+<span class="lineNum">     307 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     308 </span><span class="lineCov">    1236908 : TensorGeneric&lt;n,m&gt; operator-(const TensorGeneric&lt;n,m&gt;&amp;t1,const TensorGeneric&lt;n,m&gt;&amp;t2) {</span>
+<span class="lineNum">     309 </span><span class="lineCov">    1236908 :   TensorGeneric&lt;n,m&gt; t(t1);</span>
+<span class="lineNum">     310 </span><span class="lineCov">    1236908 :   t-=t2;</span>
+<span class="lineNum">     311 </span><span class="lineCov">    1236908 :   return t;</span>
+<span class="lineNum">     312 </span>            : }
+<a name="313"><span class="lineNum">     313 </span>            : </a>
+<span class="lineNum">     314 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     315 </span><span class="lineCov">  122586248 : TensorGeneric&lt;n,m&gt; operator*(const TensorGeneric&lt;n,m&gt;&amp;t1,double s) {</span>
+<span class="lineNum">     316 </span><span class="lineCov">  122586248 :   TensorGeneric&lt;n,m&gt; t(t1);</span>
+<span class="lineNum">     317 </span><span class="lineCov">  122586248 :   t*=s;</span>
+<span class="lineNum">     318 </span><span class="lineCov">  122586248 :   return t;</span>
+<span class="lineNum">     319 </span>            : }
+<a name="320"><span class="lineNum">     320 </span>            : </a>
+<span class="lineNum">     321 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     322 </span><span class="lineCov">   99559883 : TensorGeneric&lt;n,m&gt; operator*(double s,const TensorGeneric&lt;n,m&gt;&amp;t1) {</span>
+<span class="lineNum">     323 </span><span class="lineCov">   99559883 :   return t1*s;</span>
+<span class="lineNum">     324 </span>            : }
+<a name="325"><span class="lineNum">     325 </span>            : </a>
+<span class="lineNum">     326 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     327 </span><span class="lineCov">         14 : TensorGeneric&lt;n,m&gt; operator/(const TensorGeneric&lt;n,m&gt;&amp;t1,double s) {</span>
+<span class="lineNum">     328 </span><span class="lineCov">         14 :   return t1*(1.0/s);</span>
+<span class="lineNum">     329 </span>            : }
+<span class="lineNum">     330 </span>            : 
+<a name="331"><span class="lineNum">     331 </span>            : template&lt;&gt;</a>
+<span class="lineNum">     332 </span>            : inline
+<span class="lineNum">     333 </span><span class="lineCov">     129758 : double TensorGeneric&lt;3,3&gt;::determinant()const {</span>
+<span class="lineNum">     334 </span>            :   return
+<span class="lineNum">     335 </span><span class="lineCov">     129758 :     d[0]*d[4]*d[8]</span>
+<span class="lineNum">     336 </span><span class="lineCov">     129758 :     + d[1]*d[5]*d[6]</span>
+<span class="lineNum">     337 </span><span class="lineCov">     129758 :     + d[2]*d[3]*d[7]</span>
+<span class="lineNum">     338 </span><span class="lineCov">     129758 :     - d[0]*d[5]*d[7]</span>
+<span class="lineNum">     339 </span><span class="lineCov">     129758 :     - d[1]*d[3]*d[8]</span>
+<span class="lineNum">     340 </span><span class="lineCov">     129758 :     - d[2]*d[4]*d[6];</span>
+<span class="lineNum">     341 </span>            : }
+<span class="lineNum">     342 </span>            : 
+<a name="343"><span class="lineNum">     343 </span>            : template&lt;unsigned n,unsigned m&gt;</a>
+<span class="lineNum">     344 </span>            : inline
+<span class="lineNum">     345 </span><span class="lineCov">    1748638 : TensorGeneric&lt;n,n&gt; TensorGeneric&lt;n,m&gt;::identity() {</span>
+<span class="lineNum">     346 </span><span class="lineCov">    1748638 :   TensorGeneric&lt;n,n&gt; t;</span>
+<span class="lineNum">     347 </span><span class="lineCov">    6994552 :   for(unsigned i=0; i&lt;n; i++) t(i,i)=1.0;</span>
+<span class="lineNum">     348 </span><span class="lineCov">    1748638 :   return t;</span>
+<span class="lineNum">     349 </span>            : }
+<a name="350"><span class="lineNum">     350 </span>            : </a>
+<span class="lineNum">     351 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     352 </span><span class="lineCov">    2548408 : TensorGeneric&lt;m,n&gt; TensorGeneric&lt;n,m&gt;::transpose()const {</span>
+<span class="lineNum">     353 </span><span class="lineCov">    2548408 :   TensorGeneric&lt;m,n&gt; t;</span>
+<span class="lineNum">     354 </span><span class="lineCov">   10193632 :   for(unsigned i=0; i&lt;m; i++)for(unsigned j=0; j&lt;n; j++) t(i,j)=(*this)(j,i);</span>
+<span class="lineNum">     355 </span><span class="lineCov">    2548408 :   return t;</span>
+<span class="lineNum">     356 </span>            : }
+<span class="lineNum">     357 </span>            : 
+<a name="358"><span class="lineNum">     358 </span>            : template&lt;&gt;</a>
+<span class="lineNum">     359 </span>            : inline
+<span class="lineNum">     360 </span><span class="lineCov">      81911 : TensorGeneric&lt;3,3&gt; TensorGeneric&lt;3,3&gt;::inverse()const {</span>
+<span class="lineNum">     361 </span><span class="lineCov">      81911 :   TensorGeneric t;</span>
+<span class="lineNum">     362 </span><span class="lineCov">      81911 :   double invdet=1.0/determinant();</span>
+<span class="lineNum">     363 </span><span class="lineCov">    1064843 :   for(unsigned i=0; i&lt;3; i++) for(unsigned j=0; j&lt;3; j++)</span>
+<span class="lineNum">     364 </span><span class="lineCov">    1474398 :       t(j,i)=invdet*(   (*this)((i+1)%3,(j+1)%3)*(*this)((i+2)%3,(j+2)%3)</span>
+<span class="lineNum">     365 </span><span class="lineCov">     737199 :                         -(*this)((i+1)%3,(j+2)%3)*(*this)((i+2)%3,(j+1)%3));</span>
+<span class="lineNum">     366 </span><span class="lineCov">      81911 :   return t;</span>
+<span class="lineNum">     367 </span>            : }
+<a name="368"><span class="lineNum">     368 </span>            : </a>
+<span class="lineNum">     369 </span>            : template&lt;unsigned n,unsigned m,unsigned l&gt;
+<span class="lineNum">     370 </span><span class="lineCov">    4484906 : TensorGeneric&lt;n,l&gt; matmul(const TensorGeneric&lt;n,m&gt;&amp;a,const TensorGeneric&lt;m,l&gt;&amp;b) {</span>
+<span class="lineNum">     371 </span><span class="lineCov">    4484906 :   TensorGeneric&lt;n,l&gt; t;</span>
+<span class="lineNum">     372 </span><span class="lineCov">  139032086 :   for(unsigned i=0; i&lt;n; i++) for(unsigned j=0; j&lt;l; j++) for(unsigned k=0; k&lt;m; k++) {</span>
+<span class="lineNum">     373 </span><span class="lineCov">  121092462 :         t(i,j)+=a(i,k)*b(k,j);</span>
+<span class="lineNum">     374 </span>            :       }
+<span class="lineNum">     375 </span><span class="lineCov">    4484906 :   return t;</span>
+<span class="lineNum">     376 </span>            : }
+<a name="377"><span class="lineNum">     377 </span>            : </a>
+<span class="lineNum">     378 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     379 </span><span class="lineCov">   27216235 : VectorGeneric&lt;n&gt; matmul(const TensorGeneric&lt;n,m&gt;&amp;a,const VectorGeneric&lt;m&gt;&amp;b) {</span>
+<span class="lineNum">     380 </span><span class="lineCov">   27216235 :   VectorGeneric&lt;n&gt; t;</span>
+<span class="lineNum">     381 </span><span class="lineCov">  108864940 :   for(unsigned i=0; i&lt;n; i++) for(unsigned j=0; j&lt;m; j++) t(i)+=a(i,j)*b(j);</span>
+<span class="lineNum">     382 </span><span class="lineCov">   27216235 :   return t;</span>
+<span class="lineNum">     383 </span>            : }
+<a name="384"><span class="lineNum">     384 </span>            : </a>
+<span class="lineNum">     385 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     386 </span><span class="lineCov">   19518494 : VectorGeneric&lt;n&gt; matmul(const VectorGeneric&lt;m&gt;&amp;a,const TensorGeneric&lt;m,n&gt;&amp;b) {</span>
+<span class="lineNum">     387 </span><span class="lineCov">   19518494 :   VectorGeneric&lt;n&gt; t;</span>
+<span class="lineNum">     388 </span><span class="lineCov">   78073976 :   for(unsigned i=0; i&lt;n; i++) for(unsigned j=0; j&lt;m; j++) t(i)+=a(j)*b(j,i);</span>
+<span class="lineNum">     389 </span><span class="lineCov">   19518494 :   return t;</span>
+<span class="lineNum">     390 </span>            : }
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span>            : template&lt;unsigned n_&gt;
+<span class="lineNum">     393 </span>            : double matmul(const VectorGeneric&lt;n_&gt;&amp;a,const VectorGeneric&lt;n_&gt;&amp;b) {
+<span class="lineNum">     394 </span>            :   return dotProduct(a,b);
+<span class="lineNum">     395 </span>            : }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            : template&lt;unsigned n,unsigned m,unsigned l,unsigned i&gt;
+<span class="lineNum">     398 </span>            : TensorGeneric&lt;n,i&gt; matmul(const TensorGeneric&lt;n,m&gt;&amp;a,const TensorGeneric&lt;m,l&gt;&amp;b,const TensorGeneric&lt;l,i&gt;&amp;c) {
+<span class="lineNum">     399 </span>            :   return matmul(matmul(a,b),c);
+<span class="lineNum">     400 </span>            : }
+<a name="401"><span class="lineNum">     401 </span>            : </a>
+<span class="lineNum">     402 </span>            : template&lt;unsigned n,unsigned m,unsigned l&gt;
+<span class="lineNum">     403 </span><span class="lineCov">     179928 : VectorGeneric&lt;n&gt; matmul(const TensorGeneric&lt;n,m&gt;&amp;a,const TensorGeneric&lt;m,l&gt;&amp;b,const VectorGeneric&lt;l&gt;&amp;c) {</span>
+<span class="lineNum">     404 </span><span class="lineCov">     179928 :   return matmul(matmul(a,b),c);</span>
+<span class="lineNum">     405 </span>            : }
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span>            : template&lt;unsigned n,unsigned m,unsigned l&gt;
+<span class="lineNum">     408 </span>            : VectorGeneric&lt;l&gt; matmul(const VectorGeneric&lt;n&gt;&amp;a,const TensorGeneric&lt;n,m&gt;&amp;b,const TensorGeneric&lt;m,l&gt;&amp;c) {
+<span class="lineNum">     409 </span>            :   return matmul(matmul(a,b),c);
+<span class="lineNum">     410 </span>            : }
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     413 </span>            : double matmul(const VectorGeneric&lt;n&gt;&amp;a,const TensorGeneric&lt;n,m&gt;&amp;b,const VectorGeneric&lt;m&gt;&amp;c) {
+<span class="lineNum">     414 </span>            :   return matmul(matmul(a,b),c);
+<span class="lineNum">     415 </span>            : }
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span>            : inline
+<span class="lineNum">     418 </span>            : double determinant(const TensorGeneric&lt;3,3&gt;&amp;t) {
+<span class="lineNum">     419 </span><span class="lineCov">         17 :   return t.determinant();</span>
+<span class="lineNum">     420 </span>            : }
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            : inline
+<span class="lineNum">     423 </span>            : TensorGeneric&lt;3,3&gt; inverse(const TensorGeneric&lt;3,3&gt;&amp;t) {
+<span class="lineNum">     424 </span><span class="lineCov">      41189 :   return t.inverse();</span>
+<span class="lineNum">     425 </span>            : }
+<a name="426"><span class="lineNum">     426 </span>            : </a>
+<span class="lineNum">     427 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     428 </span><span class="lineCov">     375783 : TensorGeneric&lt;n,m&gt; transpose(const TensorGeneric&lt;m,n&gt;&amp;t) {</span>
+<span class="lineNum">     429 </span><span class="lineCov">     375783 :   return t.transpose();</span>
+<span class="lineNum">     430 </span>            : }
+<a name="431"><span class="lineNum">     431 </span>            : </a>
+<span class="lineNum">     432 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     433 </span><span class="lineCov">    1235235 : TensorGeneric&lt;n,m&gt; extProduct(const VectorGeneric&lt;n&gt;&amp;v1,const VectorGeneric&lt;m&gt;&amp;v2) {</span>
+<span class="lineNum">     434 </span><span class="lineCov">    1235235 :   return TensorGeneric&lt;n,m&gt;(v1,v2);</span>
+<span class="lineNum">     435 </span>            : }
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            : inline
+<span class="lineNum">     438 </span>            : TensorGeneric&lt;3,3&gt; dcrossDv1(const VectorGeneric&lt;3&gt;&amp;v1,const VectorGeneric&lt;3&gt;&amp;v2) {
+<span class="lineNum">     439 </span>            :   (void) v1; // this is to avoid warnings. still the syntax of this function is a bit dummy...
+<span class="lineNum">     440 </span>            :   return TensorGeneric&lt;3,3&gt;(
+<span class="lineNum">     441 </span>            :            0.0, v2[2],-v2[1],
+<span class="lineNum">     442 </span><span class="lineCov">    4257443 :            -v2[2],   0.0, v2[0],</span>
+<span class="lineNum">     443 </span><span class="lineCov">   12772329 :            v2[1],-v2[0],   0.0);</span>
+<span class="lineNum">     444 </span>            : }
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span>            : inline
+<span class="lineNum">     447 </span>            : TensorGeneric&lt;3,3&gt; dcrossDv2(const VectorGeneric&lt;3&gt;&amp;v1,const VectorGeneric&lt;3&gt;&amp;v2) {
+<span class="lineNum">     448 </span>            :   (void) v2; // this is to avoid warnings. still the syntax of this function is a bit dummy...
+<span class="lineNum">     449 </span>            :   return TensorGeneric&lt;3,3&gt;(
+<span class="lineNum">     450 </span>            :            0.0,-v1[2],v1[1],
+<span class="lineNum">     451 </span><span class="lineCov">    4835099 :            v1[2],0.0,-v1[0],</span>
+<span class="lineNum">     452 </span><span class="lineCov">   14505297 :            -v1[1],v1[0],0.0);</span>
+<span class="lineNum">     453 </span>            : }
+<span class="lineNum">     454 </span>            : 
+<span class="lineNum">     455 </span>            : template&lt;unsigned n,unsigned m&gt;
+<span class="lineNum">     456 </span>            : std::ostream &amp; operator&lt;&lt;(std::ostream &amp;os, const TensorGeneric&lt;n,m&gt;&amp; t) {
+<span class="lineNum">     457 </span>            :   for(unsigned i=0; i&lt;n; i++)for(unsigned j=0; j&lt;m; j++) {
+<span class="lineNum">     458 </span>            :       if(i!=(n-1) || j!=(m-1)) os&lt;&lt;t(i,j)&lt;&lt;&quot; &quot;;
+<span class="lineNum">     459 </span>            :       else os&lt;&lt;t(i,j);
+<span class="lineNum">     460 </span>            :     }
+<span class="lineNum">     461 </span>            :   return os;
+<span class="lineNum">     462 </span>            : }
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            : /// \ingroup TOOLBOX
+<span class="lineNum">     465 </span>            : typedef TensorGeneric&lt;2,2&gt; Tensor2d;
+<span class="lineNum">     466 </span>            : /// \ingroup TOOLBOX
+<span class="lineNum">     467 </span>            : typedef TensorGeneric&lt;3,3&gt; Tensor3d;
+<span class="lineNum">     468 </span>            : /// \ingroup TOOLBOX
+<span class="lineNum">     469 </span>            : typedef TensorGeneric&lt;4,4&gt; Tensor4d;
+<span class="lineNum">     470 </span>            : /// \ingroup TOOLBOX
+<span class="lineNum">     471 </span>            : typedef Tensor3d Tensor;
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span>            : inline
+<span class="lineNum">     474 </span>            : TensorGeneric&lt;3,3&gt; VcrossTensor(const VectorGeneric&lt;3&gt;&amp;v1,const TensorGeneric&lt;3,3&gt;&amp;v2) {
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span><span class="lineCov">     144414 :   TensorGeneric&lt;3,3&gt; t;</span>
+<span class="lineNum">     477 </span><span class="lineCov">    1010898 :   for(unsigned i=0; i&lt;3; i++) {</span>
+<span class="lineNum">     478 </span><span class="lineCov">     433242 :     t.setRow(i,matmul(dcrossDv2(v1,v1),v2.getRow(i)));</span>
+<span class="lineNum">     479 </span>            :   }
+<span class="lineNum">     480 </span><span class="lineCov">     144414 :   return t;</span>
+<span class="lineNum">     481 </span>            : }
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span>            : inline
+<span class="lineNum">     484 </span>            : TensorGeneric&lt;3,3&gt; VcrossTensor(const TensorGeneric&lt;3,3&gt;&amp;v2,const VectorGeneric&lt;3&gt;&amp;v1) {
+<span class="lineNum">     485 </span><span class="lineCov">      48138 :   TensorGeneric&lt;3,3&gt; t;</span>
+<span class="lineNum">     486 </span><span class="lineCov">     336966 :   for(unsigned i=0; i&lt;3; i++) {</span>
+<span class="lineNum">     487 </span><span class="lineCov">     144414 :     t.setRow(i,-matmul(dcrossDv2(v1,v1),v2.getRow(i)));</span>
+<span class="lineNum">     488 </span>            :   }
+<span class="lineNum">     489 </span><span class="lineCov">      48138 :   return t;</span>
+<span class="lineNum">     490 </span>            : }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            : inline
+<span class="lineNum">     494 </span>            : TensorGeneric&lt;3,3&gt; deriNorm(const VectorGeneric&lt;3&gt;&amp;v1,const TensorGeneric&lt;3,3&gt;&amp;v2) {
+<span class="lineNum">     495 </span>            :   // delta(v) = delta(v1/v1.norm) = 1/v1.norm*(delta(v1) - (v.delta(v1))cross v;
+<span class="lineNum">     496 </span><span class="lineCov">      48138 :   double over_norm = 1./v1.modulo();</span>
+<span class="lineNum">     497 </span><span class="lineCov">      48138 :   return over_norm*(v2 - over_norm*over_norm*(extProduct(matmul(v2,v1),v1)));</span>
+<span class="lineNum">     498 </span>            : }
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span>            : }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            : #endif
+<span class="lineNum">     507 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

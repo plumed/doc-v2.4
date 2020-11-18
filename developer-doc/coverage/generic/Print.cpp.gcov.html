@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - generic/Print.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">generic</a> - Print.cpp<span style="font-size: 80%;"> (source / <a href="Print.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">56</td>
+            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntryHi">96.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryMed">86.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2011-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;core/ActionPilot.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;core/ActionWithArguments.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;core/ActionRegister.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace PLMD {
+<span class="lineNum">      29 </span>            : namespace generic {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //+PLUMEDOC PRINTANALYSIS PRINT
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : Print quantities to a file.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : This directive can be used multiple times
+<span class="lineNum">      36 </span>            : in the input so you can print files with different strides or print different quantities
+<span class="lineNum">      37 </span>            : to different files.  You can control the buffering of output using the \subpage FLUSH keyword.
+<span class="lineNum">      38 </span>            : Output file is either appended or backed up depending on the presence of the \ref RESTART action.
+<span class="lineNum">      39 </span>            : A per-action `RESTART` keyword can be used as well.
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : Notice that printing happens in the so-called &quot;update&quot; phase. This implies that printing
+<span class="lineNum">      42 </span>            : is affected by the presence of \ref UPDATE_IF actions. In addition, one might decide to start
+<span class="lineNum">      43 </span>            : and stop printing at preassigned values of time using the `UPDATE_FROM` and `UPDATE_UNTIL` keywords.
+<span class="lineNum">      44 </span>            : Keep into account that even on steps when the action is not updated (and thus the file is not printed)
+<span class="lineNum">      45 </span>            : the argument will be activated. In other words, if you use `UPDATE_FROM` to start printing at a given time,
+<span class="lineNum">      46 </span>            : the collective variables this PRINT statement depends on will be computed also before that time.
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : \par Examples
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : The following input instructs plumed to print the distance between atoms 3 and 5 on a file
+<span class="lineNum">      51 </span>            : called COLVAR every 10 steps, and the distance and total energy on a file called COLVAR_ALL
+<span class="lineNum">      52 </span>            : every 1000 steps.
+<span class="lineNum">      53 </span>            : \plumedfile
+<span class="lineNum">      54 </span>            : # compute distance:
+<span class="lineNum">      55 </span>            : distance: DISTANCE ATOMS=2,5
+<span class="lineNum">      56 </span>            : # compute total energy (potential)
+<span class="lineNum">      57 </span>            : energy: ENERGY
+<span class="lineNum">      58 </span>            : # print distance on a file
+<span class="lineNum">      59 </span>            : PRINT ARG=distance          STRIDE=10   FILE=COLVAR
+<span class="lineNum">      60 </span>            : # print both variables on another file
+<span class="lineNum">      61 </span>            : PRINT ARG=distance,energy   STRIDE=1000 FILE=COLVAR_ALL
+<span class="lineNum">      62 </span>            : \endplumedfile
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : Notice that \ref DISTANCE and \ref ENERGY are computed respectively every 10 and 1000 steps, that is
+<span class="lineNum">      65 </span>            : only when required.
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : */
+<span class="lineNum">      68 </span>            : //+ENDPLUMEDOC
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : class Print :
+<span class="lineNum">      71 </span>            :   public ActionPilot,
+<span class="lineNum">      72 </span>            :   public ActionWithArguments
+<span class="lineNum">      73 </span>            : {
+<span class="lineNum">      74 </span>            :   string file;
+<span class="lineNum">      75 </span>            :   OFile ofile;
+<span class="lineNum">      76 </span>            :   string fmt;
+<span class="lineNum">      77 </span>            : // small internal utility
+<span class="lineNum">      78 </span>            : /////////////////////////////////////////
+<span class="lineNum">      79 </span>            : // these are crazy things just for debug:
+<span class="lineNum">      80 </span>            : // they allow to change regularly the
+<span class="lineNum">      81 </span>            : // printed argument
+<span class="lineNum">      82 </span>            :   int rotate;
+<span class="lineNum">      83 </span>            :   int rotateCountdown;
+<span class="lineNum">      84 </span>            :   int rotateLast;
+<span class="lineNum">      85 </span>            :   vector&lt;Value*&gt; rotateArguments;
+<a name="86"><span class="lineNum">      86 </span>            : /////////////////////////////////////////</a>
+<span class="lineNum">      87 </span>            : public:
+<span class="lineNum">      88 </span><span class="lineCov">      24064 :   void calculate() {}</span>
+<span class="lineNum">      89 </span>            :   void prepare();
+<a name="90"><span class="lineNum">      90 </span>            :   explicit Print(const ActionOptions&amp;);</a>
+<span class="lineNum">      91 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<span class="lineNum">      92 </span><span class="lineCov">      23956 :   void apply() {}</span>
+<span class="lineNum">      93 </span>            :   void update();
+<span class="lineNum">      94 </span>            :   ~Print();
+<a name="95"><span class="lineNum">      95 </span>            : };</a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">       7034 : PLUMED_REGISTER_ACTION(Print,&quot;PRINT&quot;)</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">        583 : void Print::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">        583 :   Action::registerKeywords(keys);</span>
+<span class="lineNum">     101 </span><span class="lineCov">        583 :   ActionPilot::registerKeywords(keys);</span>
+<span class="lineNum">     102 </span><span class="lineCov">        583 :   ActionWithArguments::registerKeywords(keys);</span>
+<span class="lineNum">     103 </span><span class="lineCov">       1166 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     104 </span><span class="lineCov">       2915 :   keys.add(&quot;compulsory&quot;,&quot;STRIDE&quot;,&quot;1&quot;,&quot;the frequency with which the quantities of interest should be output&quot;);</span>
+<span class="lineNum">     105 </span><span class="lineCov">       2332 :   keys.add(&quot;optional&quot;,&quot;FILE&quot;,&quot;the name of the file on which to output these quantities&quot;);</span>
+<span class="lineNum">     106 </span><span class="lineCov">       2332 :   keys.add(&quot;optional&quot;,&quot;FMT&quot;,&quot;the format that should be used to output real numbers&quot;);</span>
+<span class="lineNum">     107 </span><span class="lineCov">       2332 :   keys.add(&quot;hidden&quot;,&quot;_ROTATE&quot;,&quot;some funky thing implemented by GBussi&quot;);</span>
+<span class="lineNum">     108 </span><span class="lineCov">       1166 :   keys.use(&quot;RESTART&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineCov">       1166 :   keys.use(&quot;UPDATE_FROM&quot;);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       1166 :   keys.use(&quot;UPDATE_UNTIL&quot;);</span>
+<span class="lineNum">     111 </span><span class="lineCov">        583 : }</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">        582 : Print::Print(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     114 </span>            :   Action(ao),
+<span class="lineNum">     115 </span>            :   ActionPilot(ao),
+<span class="lineNum">     116 </span>            :   ActionWithArguments(ao),
+<span class="lineNum">     117 </span>            :   fmt(&quot;%f&quot;),
+<span class="lineNum">     118 </span><span class="lineCov">       1164 :   rotate(0)</span>
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span><span class="lineCov">        582 :   ofile.link(*this);</span>
+<span class="lineNum">     121 </span><span class="lineCov">       1164 :   parse(&quot;FILE&quot;,file);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        582 :   if(file.length()&gt;0) {</span>
+<span class="lineNum">     123 </span><span class="lineCov">        582 :     ofile.open(file);</span>
+<span class="lineNum">     124 </span><span class="lineCov">       1164 :     log.printf(&quot;  on file %s\n&quot;,file.c_str());</span>
+<span class="lineNum">     125 </span>            :   } else {
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :     log.printf(&quot;  on plumed log file\n&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :     ofile.link(log);</span>
+<span class="lineNum">     128 </span>            :   }
+<span class="lineNum">     129 </span><span class="lineCov">       1164 :   parse(&quot;FMT&quot;,fmt);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       1164 :   fmt=&quot; &quot;+fmt;</span>
+<span class="lineNum">     131 </span><span class="lineCov">       1164 :   log.printf(&quot;  with format %s\n&quot;,fmt.c_str());</span>
+<span class="lineNum">     132 </span><span class="lineCov">       7986 :   for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) ofile.setupPrintValue( getPntrToArgument(i) );</span>
+<span class="lineNum">     133 </span>            : /////////////////////////////////////////
+<span class="lineNum">     134 </span>            : // these are crazy things just for debug:
+<span class="lineNum">     135 </span>            : // they allow to change regularly the
+<span class="lineNum">     136 </span>            : // printed argument
+<span class="lineNum">     137 </span><span class="lineCov">       1164 :   parse(&quot;_ROTATE&quot;,rotate);</span>
+<span class="lineNum">     138 </span><span class="lineCov">        582 :   if(rotate&gt;0) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">          1 :     rotateCountdown=rotate;</span>
+<span class="lineNum">     140 </span><span class="lineCov">         10 :     for(unsigned i=0; i&lt;getNumberOfArguments(); ++i) rotateArguments.push_back( getPntrToArgument(i) );</span>
+<span class="lineNum">     141 </span><span class="lineCov">          1 :     vector&lt;Value*&gt; a(1,rotateArguments[0]);</span>
+<span class="lineNum">     142 </span><span class="lineCov">          2 :     requestArguments(vector&lt;Value*&gt;(1,rotateArguments[0]));</span>
+<span class="lineNum">     143 </span><span class="lineCov">          1 :     rotateLast=0;</span>
+<span class="lineNum">     144 </span>            :   }
+<span class="lineNum">     145 </span>            : /////////////////////////////////////////
+<span class="lineNum">     146 </span><span class="lineCov">        582 :   checkRead();</span>
+<a name="147"><span class="lineNum">     147 </span><span class="lineCov">        582 : }</span></a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">      24172 : void Print::prepare() {</span>
+<span class="lineNum">     150 </span>            : /////////////////////////////////////////
+<span class="lineNum">     151 </span>            : // these are crazy things just for debug:
+<span class="lineNum">     152 </span>            : // they allow to change regularly the
+<span class="lineNum">     153 </span>            : // printed argument
+<span class="lineNum">     154 </span><span class="lineCov">      24172 :   if(rotate&gt;0) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">          5 :     rotateCountdown--;</span>
+<span class="lineNum">     156 </span><span class="lineCov">          5 :     if(rotateCountdown==0) {</span>
+<span class="lineNum">     157 </span><span class="lineCov">          2 :       rotateCountdown=rotate;</span>
+<span class="lineNum">     158 </span><span class="lineCov">          2 :       rotateLast++;</span>
+<span class="lineNum">     159 </span><span class="lineCov">          2 :       rotateLast%=rotateArguments.size();</span>
+<span class="lineNum">     160 </span><span class="lineCov">          6 :       requestArguments(vector&lt;Value*&gt;(1,rotateArguments[rotateLast]));</span>
+<span class="lineNum">     161 </span>            :     }
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            : /////////////////////////////////////////
+<span class="lineNum">     164 </span><span class="lineCov">      24172 : }</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">      23398 : void Print::update() {</span>
+<span class="lineNum">     167 </span><span class="lineCov">      46796 :   ofile.fmtField(&quot; %f&quot;);</span>
+<span class="lineNum">     168 </span><span class="lineCov">      46796 :   ofile.printField(&quot;time&quot;,getTime());</span>
+<span class="lineNum">     169 </span><span class="lineCov">     239154 :   for(unsigned i=0; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">     107878 :     ofile.fmtField(fmt);</span>
+<span class="lineNum">     171 </span><span class="lineCov">     215756 :     ofile.printField( getPntrToArgument(i), getArgument(i) );</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span><span class="lineCov">      23398 :   ofile.printField();</span>
+<a name="174"><span class="lineNum">     174 </span><span class="lineCov">      23398 : }</span></a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">       2328 : Print::~Print() {</span>
+<span class="lineNum">     177 </span><span class="lineCov">       1164 : }</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : }
+<a name="180"><span class="lineNum">     180 </span>            : </a>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

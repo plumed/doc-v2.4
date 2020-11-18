@@ -1,0 +1,377 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - function/FuncPathMSD.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">function</a> - FuncPathMSD.cpp<span style="font-size: 80%;"> (source / <a href="FuncPathMSD.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">75</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntryHi">92.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">91.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2012-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &lt;cmath&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &quot;Function.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;ActionRegister.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      29 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace PLMD {
+<span class="lineNum">      34 </span>            : namespace function {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : //+PLUMEDOC FUNCTION FUNCPATHMSD
+<span class="lineNum">      37 </span>            : /*
+<span class="lineNum">      38 </span>            : This function calculates path collective variables.
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : This is the Path Collective Variables implementation
+<span class="lineNum">      41 </span>            : ( see \cite brand07 ).
+<span class="lineNum">      42 </span>            : This variable computes the progress along a given set of frames that is provided
+<span class="lineNum">      43 </span>            : in input (&quot;s&quot; component) and the distance from them (&quot;z&quot; component).
+<span class="lineNum">      44 </span>            : It is a function of MSD that are obtained by the joint use of MSD variable and SQUARED flag
+<span class="lineNum">      45 </span>            : (see below).
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : \par Examples
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : Here below is a case where you have defined three frames and you want to
+<span class="lineNum">      50 </span>            : calculate the progress alng the path and the distance from it in p1
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : \plumedfile
+<span class="lineNum">      53 </span>            : t1: RMSD REFERENCE=frame_1.dat TYPE=OPTIMAL SQUARED
+<span class="lineNum">      54 </span>            : t2: RMSD REFERENCE=frame_21.dat TYPE=OPTIMAL SQUARED
+<span class="lineNum">      55 </span>            : t3: RMSD REFERENCE=frame_42.dat TYPE=OPTIMAL SQUARED
+<span class="lineNum">      56 </span>            : p1: FUNCPATHMSD ARG=t1,t2,t3 LAMBDA=500.0
+<span class="lineNum">      57 </span>            : PRINT ARG=t1,t2,t3,p1.s,p1.z STRIDE=1 FILE=colvar FMT=%8.4f
+<span class="lineNum">      58 </span>            : \endplumedfile
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : In this second example is shown how to define a PATH in the \ref CONTACTMAP space:
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : \plumedfile
+<span class="lineNum">      63 </span>            : CONTACTMAP ...
+<span class="lineNum">      64 </span>            : ATOMS1=1,2 REFERENCE1=0.1
+<span class="lineNum">      65 </span>            : ATOMS2=3,4 REFERENCE2=0.5
+<span class="lineNum">      66 </span>            : ATOMS3=4,5 REFERENCE3=0.25
+<span class="lineNum">      67 </span>            : ATOMS4=5,6 REFERENCE4=0.0
+<span class="lineNum">      68 </span>            : SWITCH={RATIONAL R_0=1.5}
+<span class="lineNum">      69 </span>            : LABEL=c1
+<span class="lineNum">      70 </span>            : CMDIST
+<span class="lineNum">      71 </span>            : ... CONTACTMAP
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : CONTACTMAP ...
+<span class="lineNum">      74 </span>            : ATOMS1=1,2 REFERENCE1=0.3
+<span class="lineNum">      75 </span>            : ATOMS2=3,4 REFERENCE2=0.9
+<span class="lineNum">      76 </span>            : ATOMS3=4,5 REFERENCE3=0.45
+<span class="lineNum">      77 </span>            : ATOMS4=5,6 REFERENCE4=0.1
+<span class="lineNum">      78 </span>            : SWITCH={RATIONAL R_0=1.5}
+<span class="lineNum">      79 </span>            : LABEL=c2
+<span class="lineNum">      80 </span>            : CMDIST
+<span class="lineNum">      81 </span>            : ... CONTACTMAP
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : CONTACTMAP ...
+<span class="lineNum">      84 </span>            : ATOMS1=1,2 REFERENCE1=1.0
+<span class="lineNum">      85 </span>            : ATOMS2=3,4 REFERENCE2=1.0
+<span class="lineNum">      86 </span>            : ATOMS3=4,5 REFERENCE3=1.0
+<span class="lineNum">      87 </span>            : ATOMS4=5,6 REFERENCE4=1.0
+<span class="lineNum">      88 </span>            : SWITCH={RATIONAL R_0=1.5}
+<span class="lineNum">      89 </span>            : LABEL=c3
+<span class="lineNum">      90 </span>            : CMDIST
+<span class="lineNum">      91 </span>            : ... CONTACTMAP
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : p1: FUNCPATHMSD ARG=c1,c2,c3 LAMBDA=500.0
+<span class="lineNum">      94 </span>            : PRINT ARG=c1,c2,c3,p1.s,p1.z STRIDE=1 FILE=colvar FMT=%8.4f
+<span class="lineNum">      95 </span>            : \endplumedfile
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : */
+<a name="98"><span class="lineNum">      98 </span>            : //+ENDPLUMEDOC</a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          6 : class FuncPathMSD : public Function {</span>
+<span class="lineNum">     101 </span>            :   double lambda;
+<span class="lineNum">     102 </span>            :   int neigh_size;
+<span class="lineNum">     103 </span>            :   double neigh_stride;
+<span class="lineNum">     104 </span>            :   vector&lt; pair&lt;Value *,double&gt; &gt; neighpair;
+<span class="lineNum">     105 </span>            :   map&lt;Value *,double &gt; indexmap; // use double to allow isomaps
+<span class="lineNum">     106 </span>            :   vector &lt;Value*&gt; allArguments;
+<span class="lineNum">     107 </span>            : // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+<span class="lineNum">     108 </span>            : // this below is useful when one wants to sort a vector of double and have back the order
+<span class="lineNum">     109 </span>            : // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+<span class="lineNum">     110 </span>            : // create a custom sorter
+<span class="lineNum">     111 </span>            :   typedef vector&lt;double&gt;::const_iterator myiter;
+<span class="lineNum">     112 </span>            :   struct ordering {
+<span class="lineNum">     113 </span>            :     bool operator ()(pair&lt;unsigned, myiter&gt; const&amp; a, pair&lt;unsigned, myiter&gt; const&amp; b) {
+<span class="lineNum">     114 </span>            :       return *(a.second) &lt; *(b.second);
+<span class="lineNum">     115 </span>            :     }
+<span class="lineNum">     116 </span>            :   };
+<span class="lineNum">     117 </span>            : // sorting utility
+<span class="lineNum">     118 </span>            :   vector&lt;int&gt; increasingOrder( vector&lt;double&gt; &amp;v) {
+<span class="lineNum">     119 </span>            :     // make a pair
+<span class="lineNum">     120 </span>            :     vector&lt; pair&lt;unsigned, myiter&gt; &gt; order(v.size());
+<span class="lineNum">     121 </span>            :     unsigned n = 0;
+<span class="lineNum">     122 </span>            :     for (myiter it = v.begin(); it != v.end(); ++it, ++n) {
+<span class="lineNum">     123 </span>            :       order[n] = make_pair(n, it); // note: heere i do not put the values but the addresses that point to the value
+<span class="lineNum">     124 </span>            :     }
+<span class="lineNum">     125 </span>            :     // now sort according the second value
+<span class="lineNum">     126 </span>            :     sort(order.begin(), order.end(), ordering());
+<span class="lineNum">     127 </span>            :     vector&lt;int&gt; vv(v.size()); n=0;
+<span class="lineNum">     128 </span>            :     for (const auto &amp; it : order) {
+<span class="lineNum">     129 </span>            :       vv[n]=it.first; n++;
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            :     return vv;
+<span class="lineNum">     132 </span>            :   }
+<span class="lineNum">     133 </span>            : // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+<span class="lineNum">     134 </span>            : // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :   struct pairordering {
+<span class="lineNum">     137 </span>            :     bool operator ()(pair&lt;Value *, double&gt; const&amp; a, pair&lt;Value*, double&gt; const&amp; b) {
+<span class="lineNum">     138 </span><span class="lineCov">        437 :       return (a).second &gt; (b).second;</span>
+<span class="lineNum">     139 </span>            :     }
+<span class="lineNum">     140 </span>            :   };
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : public:
+<span class="lineNum">     143 </span>            :   explicit FuncPathMSD(const ActionOptions&amp;);
+<span class="lineNum">     144 </span>            : // active methods:
+<span class="lineNum">     145 </span>            :   virtual void calculate();
+<span class="lineNum">     146 </span>            :   virtual void prepare();
+<span class="lineNum">     147 </span>            :   static void registerKeywords(Keywords&amp; keys);
+<a name="148"><span class="lineNum">     148 </span>            : };</a>
+<span class="lineNum">     149 </span>            : 
+<a name="150"><span class="lineNum">     150 </span><span class="lineCov">       6454 : PLUMED_REGISTER_ACTION(FuncPathMSD,&quot;FUNCPATHMSD&quot;)</span></a>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">          3 : void FuncPathMSD::registerKeywords(Keywords&amp; keys) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">          3 :   Function::registerKeywords(keys);</span>
+<span class="lineNum">     154 </span><span class="lineCov">          6 :   keys.use(&quot;ARG&quot;);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         12 :   keys.add(&quot;compulsory&quot;,&quot;LAMBDA&quot;,&quot;the lambda parameter is needed for smoothing, is in the units of plumed&quot;);</span>
+<span class="lineNum">     156 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;NEIGH_SIZE&quot;,&quot;size of the neighbor list&quot;);</span>
+<span class="lineNum">     157 </span><span class="lineCov">         12 :   keys.add(&quot;optional&quot;,&quot;NEIGH_STRIDE&quot;,&quot;how often the neighbor list needs to be calculated in time units&quot;);</span>
+<span class="lineNum">     158 </span><span class="lineCov">          3 :   componentsAreNotOptional(keys);</span>
+<span class="lineNum">     159 </span><span class="lineCov">         12 :   keys.addOutputComponent(&quot;s&quot;,&quot;default&quot;,&quot;the position on the path&quot;);</span>
+<a name="160"><span class="lineNum">     160 </span><span class="lineCov">         12 :   keys.addOutputComponent(&quot;z&quot;,&quot;default&quot;,&quot;the distance from the path&quot;);</span></a>
+<span class="lineNum">     161 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     162 </span><span class="lineCov">          2 : FuncPathMSD::FuncPathMSD(const ActionOptions&amp;ao):</span>
+<span class="lineNum">     163 </span>            :   Action(ao),
+<span class="lineNum">     164 </span>            :   Function(ao),
+<span class="lineNum">     165 </span>            :   neigh_size(-1),
+<span class="lineNum">     166 </span><span class="lineCov">          6 :   neigh_stride(-1.)</span>
+<span class="lineNum">     167 </span>            : {
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">          4 :   parse(&quot;LAMBDA&quot;,lambda);</span>
+<span class="lineNum">     170 </span><span class="lineCov">          4 :   parse(&quot;NEIGH_SIZE&quot;,neigh_size);</span>
+<span class="lineNum">     171 </span><span class="lineCov">          4 :   parse(&quot;NEIGH_STRIDE&quot;,neigh_stride);</span>
+<span class="lineNum">     172 </span><span class="lineCov">          2 :   checkRead();</span>
+<span class="lineNum">     173 </span><span class="lineCov">          2 :   log.printf(&quot;  lambda is %f\n&quot;,lambda);</span>
+<span class="lineNum">     174 </span>            :   // list the action involved and check the type
+<span class="lineNum">     175 </span><span class="lineCov">          2 :   std::string myname=getPntrToArgument(0)-&gt;getPntrToAction()-&gt;getName();</span>
+<span class="lineNum">     176 </span><span class="lineCov">          2 :   if(myname!=&quot;RMSD&quot;&amp;&amp;myname!=&quot;CONTACTMAP&quot;&amp;&amp;myname!=&quot;DISTANCE&quot;) error(&quot;One or more of your arguments is not of RMSD/CONTACTMAP/DISTANCE type!!!&quot;);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         10 :   for(unsigned i=1; i&lt;getNumberOfArguments(); i++) {</span>
+<span class="lineNum">     178 </span>            :     // for each value get the name and the label of the corresponding action
+<span class="lineNum">     179 </span><span class="lineCov">          8 :     if( getPntrToArgument(i)-&gt;getPntrToAction()-&gt;getName()!=myname ) error(&quot;mismatch between the types of arguments&quot;);</span>
+<span class="lineNum">     180 </span>            :   }
+<span class="lineNum">     181 </span><span class="lineCov">          2 :   log.printf(&quot;  Consistency check completed! Your path cvs look good!\n&quot;);</span>
+<span class="lineNum">     182 </span>            :   // do some neighbor printout
+<span class="lineNum">     183 </span><span class="lineCov">          2 :   if(neigh_stride&gt;0. || neigh_size&gt;0) {</span>
+<span class="lineNum">     184 </span><span class="lineCov">          2 :     if(neigh_size&gt;getNumberOfArguments()) {</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :       log.printf(&quot; List size required ( %d ) is too large: resizing to the maximum number of arg required: %d  \n&quot;,neigh_size,getNumberOfArguments());</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :       neigh_size=getNumberOfArguments();</span>
+<span class="lineNum">     187 </span>            :     }
+<span class="lineNum">     188 </span><span class="lineCov">          1 :     log.printf(&quot;  Neighbor list enabled: \n&quot;);</span>
+<span class="lineNum">     189 </span><span class="lineCov">          1 :     log.printf(&quot;                size   :  %d elements\n&quot;,neigh_size);</span>
+<span class="lineNum">     190 </span><span class="lineCov">          1 :     log.printf(&quot;                stride :  %f time \n&quot;,neigh_stride);</span>
+<span class="lineNum">     191 </span>            :   } else {
+<span class="lineNum">     192 </span><span class="lineCov">          1 :     log.printf(&quot;  Neighbor list NOT enabled \n&quot;);</span>
+<span class="lineNum">     193 </span>            :   }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">          6 :   addComponentWithDerivatives(&quot;s&quot;); componentIsNotPeriodic(&quot;s&quot;);</span>
+<span class="lineNum">     196 </span><span class="lineCov">          6 :   addComponentWithDerivatives(&quot;z&quot;); componentIsNotPeriodic(&quot;z&quot;);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :   // now backup the arguments
+<span class="lineNum">     199 </span><span class="lineCov">         20 :   for(unsigned i=0; i&lt;getNumberOfArguments(); i++)allArguments.push_back(getPntrToArgument(i));</span>
+<span class="lineNum">     200 </span>            :   double i=1.;
+<span class="lineNum">     201 </span><span class="lineCov">          8 :   for(const auto &amp; it : allArguments) {</span>
+<span class="lineNum">     202 </span><span class="lineCov">          6 :     indexmap[it]=i; i+=1.;</span>
+<span class="lineNum">     203 </span>            :   }
+<span class="lineNum">     204 </span>            : 
+<a name="205"><span class="lineNum">     205 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     206 </span>            : // calculator
+<span class="lineNum">     207 </span><span class="lineCov">       1092 : void FuncPathMSD::calculate() {</span>
+<span class="lineNum">     208 </span>            : // log.printf(&quot;NOW CALCULATE! \n&quot;);
+<span class="lineNum">     209 </span>            :   double s_path=0.;
+<span class="lineNum">     210 </span>            :   double partition=0.;
+<span class="lineNum">     211 </span><span class="lineCov">       1092 :   if(neighpair.empty()) { // at first step, resize it</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     neighpair.resize(allArguments.size());</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;allArguments.size(); i++)neighpair[i].first=allArguments[i];</span>
+<span class="lineNum">     214 </span>            :   }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">       2184 :   Value* val_s_path=getPntrToComponent(&quot;s&quot;);</span>
+<span class="lineNum">     217 </span><span class="lineCov">       2184 :   Value* val_z_path=getPntrToComponent(&quot;z&quot;);</span>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineCov">       3959 :   for(auto &amp; it : neighpair) {</span>
+<span class="lineNum">     220 </span><span class="lineCov">       5734 :     it.second=exp(-lambda*(it.first-&gt;get()));</span>
+<span class="lineNum">     221 </span><span class="lineCov">       2867 :     s_path+=(indexmap[it.first])*it.second;</span>
+<span class="lineNum">     222 </span><span class="lineCov">       2867 :     partition+=it.second;</span>
+<span class="lineNum">     223 </span>            :   }
+<span class="lineNum">     224 </span><span class="lineCov">       1092 :   s_path/=partition;</span>
+<span class="lineNum">     225 </span>            :   val_s_path-&gt;set(s_path);
+<span class="lineNum">     226 </span><span class="lineCov">       1092 :   val_z_path-&gt;set(-(1./lambda)*std::log(partition));</span>
+<span class="lineNum">     227 </span>            :   int n=0;
+<span class="lineNum">     228 </span><span class="lineCov">       3959 :   for(const auto &amp; it : neighpair) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">       2867 :     double expval=it.second;</span>
+<span class="lineNum">     230 </span><span class="lineCov">       2867 :     double tmp=lambda*expval*(s_path-(indexmap[it.first]))/partition;</span>
+<span class="lineNum">     231 </span>            :     setDerivative(val_s_path,n,tmp);
+<span class="lineNum">     232 </span><span class="lineCov">       2867 :     setDerivative(val_z_path,n,expval/partition);</span>
+<span class="lineNum">     233 </span><span class="lineCov">       2867 :     n++;</span>
+<span class="lineNum">     234 </span>            :   }
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            : //  log.printf(&quot;CALCULATION DONE! \n&quot;);
+<span class="lineNum">     237 </span><span class="lineCov">       1092 : }</span>
+<span class="lineNum">     238 </span>            : ///
+<a name="239"><span class="lineNum">     239 </span>            : /// this function updates the needed argument list</a>
+<span class="lineNum">     240 </span>            : ///
+<span class="lineNum">     241 </span><span class="lineCov">       1092 : void FuncPathMSD::prepare() {</span>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :   // neighbor list: rank and activate the chain for the next step
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :   // neighbor list: if neigh_size&lt;0 never sort and keep the full vector
+<span class="lineNum">     246 </span>            :   // neighbor list: if neigh_size&gt;0
+<span class="lineNum">     247 </span>            :   //                if the size is full -&gt; sort the vector and decide the dependencies for next step
+<span class="lineNum">     248 </span>            :   //                if the size is not full -&gt; check if next step will need the full dependency otherwise keep this dependencies
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            :   // here just resize the neighpair. The real resizing of reinit will be done by the prepare stage that will modify the  list of arguments
+<span class="lineNum">     251 </span><span class="lineCov">       1092 :   if (neigh_size&gt;0) {</span>
+<span class="lineNum">     252 </span><span class="lineCov">        546 :     if(neighpair.size()==allArguments.size()) { // I just did the complete round: need to sort, shorten and give it a go</span>
+<span class="lineNum">     253 </span>            :       // sort the values
+<span class="lineNum">     254 </span>            :       sort(neighpair.begin(),neighpair.end(),pairordering());
+<span class="lineNum">     255 </span>            :       // resize the effective list
+<span class="lineNum">     256 </span><span class="lineCov">        137 :       neighpair.resize(neigh_size);</span>
+<span class="lineNum">     257 </span><span class="lineCov">        137 :       log.printf(&quot;  NEIGH LIST NOW INCLUDE INDEXES: &quot;);</span>
+<span class="lineNum">     258 </span><span class="lineCov">        685 :       for(int i=0; i&lt;neigh_size; ++i)log.printf(&quot; %f &quot;,indexmap[neighpair[i].first]); log.printf(&quot; \n&quot;);</span>
+<span class="lineNum">     259 </span>            :     } else {
+<span class="lineNum">     260 </span><span class="lineCov">        409 :       if( int(getStep())%int(neigh_stride/getTimeStep())==0 ) {</span>
+<span class="lineNum">     261 </span><span class="lineCov">        137 :         log.printf(&quot; Time %f : recalculating full neighlist \n&quot;,getStep()*getTimeStep());</span>
+<span class="lineNum">     262 </span><span class="lineCov">        274 :         neighpair.resize(allArguments.size());</span>
+<span class="lineNum">     263 </span><span class="lineCov">       1507 :         for(unsigned i=0; i&lt;allArguments.size(); i++)neighpair[i].first=allArguments[i];</span>
+<span class="lineNum">     264 </span>            :       }
+<span class="lineNum">     265 </span>            :     }
+<span class="lineNum">     266 </span>            :   } else {
+<span class="lineNum">     267 </span><span class="lineCov">        546 :     if( int(getStep())==0) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">          2 :       neighpair.resize(allArguments.size());</span>
+<span class="lineNum">     269 </span><span class="lineCov">         11 :       for(unsigned i=0; i&lt;allArguments.size(); i++)neighpair[i].first=allArguments[i];</span>
+<span class="lineNum">     270 </span>            :     }
+<span class="lineNum">     271 </span>            :   }
+<span class="lineNum">     272 </span>            :   vector&lt;Value*&gt; argstocall;
+<span class="lineNum">     273 </span>            : //log.printf(&quot;PREPARING \n&quot;);
+<span class="lineNum">     274 </span>            :   argstocall.clear();
+<span class="lineNum">     275 </span><span class="lineCov">       1092 :   if(!neighpair.empty()) {</span>
+<span class="lineNum">     276 </span><span class="lineCov">       3959 :     for(const auto &amp; it : neighpair) {</span>
+<span class="lineNum">     277 </span><span class="lineCov">       2867 :       argstocall.push_back( it.first );</span>
+<span class="lineNum">     278 </span>            :       //     log.printf(&quot;CALLING %p %f &quot;,(*it).first ,indexmap[(*it).first] );
+<span class="lineNum">     279 </span>            :     }
+<span class="lineNum">     280 </span>            :   } else {
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :     for(unsigned i=0; i&lt;allArguments.size(); i++) {</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :       argstocall.push_back(allArguments[i]);</span>
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span>            :   }
+<span class="lineNum">     285 </span>            : // now the list of argument changes
+<span class="lineNum">     286 </span><span class="lineCov">       1092 :   requestArguments(argstocall);</span>
+<span class="lineNum">     287 </span>            : //now resize the derivatives as well
+<span class="lineNum">     288 </span>            : //for each value in this action
+<span class="lineNum">     289 </span><span class="lineCov">       5460 :   for(int i=0; i&lt; getNumberOfComponents(); i++) {</span>
+<span class="lineNum">     290 </span>            :     //resize the derivative to the number   the
+<span class="lineNum">     291 </span><span class="lineCov">       2184 :     getPntrToComponent(i)-&gt;clearDerivatives();</span>
+<span class="lineNum">     292 </span><span class="lineCov">       2184 :     getPntrToComponent(i)-&gt;resizeDerivatives(getNumberOfArguments());</span>
+<span class="lineNum">     293 </span>            :   }
+<span class="lineNum">     294 </span>            : //log.printf(&quot;PREPARING DONE! \n&quot;);
+<span class="lineNum">     295 </span><span class="lineCov">       1092 : }</span>
+<a name="296"><span class="lineNum">     296 </span>            : </a>
+<span class="lineNum">     297 </span>            : }
+<span class="lineNum">     298 </span><span class="lineCov">       4839 : }</span>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

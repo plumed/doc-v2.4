@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+<meta name="robots" content="noindex">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - plumed test coverage - reference/ReferenceAtoms.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">reference</a> - ReferenceAtoms.cpp<span style="font-size: 80%;"> (source / <a href="ReferenceAtoms.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">plumed test coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntryMed">75.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-11-18 11:20:57</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</a>
+<span class="lineNum">       2 </span>            :    Copyright (c) 2013-2019 The plumed team
+<span class="lineNum">       3 </span>            :    (see the PEOPLE file at the root of the distribution for a list of names)
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    See http://www.plumed.org for more information.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :    This file is part of plumed, version 2.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    plumed is free software: you can redistribute it and/or modify
+<span class="lineNum">      10 </span>            :    it under the terms of the GNU Lesser General Public License as published by
+<span class="lineNum">      11 </span>            :    the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">      12 </span>            :    (at your option) any later version.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    plumed is distributed in the hope that it will be useful,
+<span class="lineNum">      15 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      16 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      17 </span>            :    GNU Lesser General Public License for more details.
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :    You should have received a copy of the GNU Lesser General Public License
+<span class="lineNum">      20 </span>            :    along with plumed.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      21 </span>            : +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+<span class="lineNum">      22 </span>            : #include &quot;ReferenceAtoms.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;tools/OFile.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;tools/PDB.h&quot;
+<span class="lineNum">      25 </span>            : 
+<a name="26"><span class="lineNum">      26 </span>            : namespace PLMD {</a>
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">       1256 : ReferenceAtoms::ReferenceAtoms( const ReferenceConfigurationOptions&amp; ro ):</span>
+<span class="lineNum">      29 </span>            :   ReferenceConfiguration(ro),
+<span class="lineNum">      30 </span><span class="lineCov">       1256 :   checks_were_disabled(false)</span>
+<span class="lineNum">      31 </span>            : {
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">       1256 : }</span></a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">        446 : void ReferenceAtoms::readAtomsFromPDB( const PDB&amp; pdb, const bool allowblocks  ) {</span>
+<span class="lineNum">      35 </span><span class="lineCov">        446 :   if( !allowblocks &amp;&amp; pdb.getNumberOfAtomBlocks()!=1 ) error(&quot;found multi-atom-block pdb format but expecting only one block of atoms&quot;);</span>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineCov">      16006 :   for(unsigned i=0; i&lt;pdb.size(); ++i) {</span>
+<span class="lineNum">      38 </span><span class="lineCov">      23340 :     indices.push_back( pdb.getAtomNumbers()[i] ); reference_atoms.push_back( pdb.getPositions()[i] );</span>
+<span class="lineNum">      39 </span><span class="lineCov">      23340 :     align.push_back( pdb.getOccupancy()[i] ); displace.push_back( pdb.getBeta()[i] );</span>
+<span class="lineNum">      40 </span>            :   }
+<span class="lineNum">      41 </span><span class="lineCov">        892 :   atom_der_index.resize( reference_atoms.size() );</span>
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">        446 : }</span></a>
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">        764 : void ReferenceAtoms::setAtomNumbers( const std::vector&lt;AtomNumber&gt;&amp; numbers ) {</span>
+<span class="lineNum">      45 </span><span class="lineCov">       2292 :   reference_atoms.resize( numbers.size() ); align.resize( numbers.size() );</span>
+<span class="lineNum">      46 </span><span class="lineCov">       2292 :   displace.resize( numbers.size() ); atom_der_index.resize( numbers.size() );</span>
+<span class="lineNum">      47 </span><span class="lineCov">       1528 :   indices.resize( numbers.size() );</span>
+<span class="lineNum">      48 </span><span class="lineCov">      39610 :   for(unsigned i=0; i&lt;numbers.size(); ++i) {</span>
+<span class="lineNum">      49 </span><span class="lineCov">      25388 :     indices[i]=numbers[i]; atom_der_index[i]=i;</span>
+<span class="lineNum">      50 </span>            :   }
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">        764 : }</span></a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">         18 : void ReferenceAtoms::printAtoms( OFile&amp; ofile, const double&amp; lunits ) const {</span>
+<span class="lineNum">      54 </span><span class="lineCov">         54 :   plumed_assert( indices.size()==reference_atoms.size() &amp;&amp; align.size()==reference_atoms.size() &amp;&amp; displace.size()==reference_atoms.size() );</span>
+<span class="lineNum">      55 </span><span class="lineCov">        741 :   for(unsigned i=0; i&lt;reference_atoms.size(); ++i) {</span>
+<span class="lineNum">      56 </span><span class="lineCov">       1410 :     ofile.printf(&quot;ATOM  %5d  X   RES  %4u    %8.3f%8.3f%8.3f%6.2f%6.2f\n&quot;,</span>
+<span class="lineNum">      57 </span>            :                  indices[i].serial(), i,
+<span class="lineNum">      58 </span><span class="lineCov">        940 :                  lunits*reference_atoms[i][0], lunits*reference_atoms[i][1], lunits*reference_atoms[i][2],</span>
+<span class="lineNum">      59 </span>            :                  align[i], displace[i] );
+<span class="lineNum">      60 </span>            :   }
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">         18 : }</span></a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 : bool ReferenceAtoms::parseAtomList( const std::string&amp; key, std::vector&lt;unsigned&gt;&amp; numbers ) {</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :   plumed_assert( numbers.size()==0 );</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :   std::vector&lt;std::string&gt; strings;</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :   if( !parseVector(key,strings,true) ) return false;</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :   Tools::interpretRanges(strings);</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :   numbers.resize( strings.size() );</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :   for(unsigned i=0; i&lt;strings.size(); ++i) {</span>
+<span class="lineNum">      72 </span>            :     AtomNumber atom;
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :     if( !Tools::convert(strings[i],atom ) ) error(&quot;could not convert &quot; + strings[i] + &quot; into atom number&quot;);</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :     bool found=false;
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :     for(unsigned j=0; j&lt;indices.size(); ++j) {</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :       if( atom==indices[j] ) { found=true; numbers[i]=j; break; }</span>
+<span class="lineNum">      78 </span>            :     }
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :     if(!found) error(&quot;atom labelled &quot; + strings[i] + &quot; is not present in pdb input file&quot;);</span>
+<span class="lineNum">      80 </span>            :   }
+<span class="lineNum">      81 </span>            :   return true;
+<a name="82"><span class="lineNum">      82 </span>            : }</a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">        445 : void ReferenceAtoms::getAtomRequests( std::vector&lt;AtomNumber&gt;&amp; numbers, bool disable_checks ) {</span>
+<span class="lineNum">      85 </span><span class="lineCov">        445 :   singleDomainRequests(numbers,disable_checks);</span>
+<a name="86"><span class="lineNum">      86 </span><span class="lineCov">        445 : }</span></a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">        445 : void ReferenceAtoms::singleDomainRequests( std::vector&lt;AtomNumber&gt;&amp; numbers, bool disable_checks ) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">        445 :   checks_were_disabled=disable_checks;</span>
+<span class="lineNum">      90 </span><span class="lineCov">        890 :   atom_der_index.resize( indices.size() );</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">        445 :   if( numbers.size()==0 ) {</span>
+<span class="lineNum">      93 </span><span class="lineCov">      10263 :     for(unsigned i=0; i&lt;indices.size(); ++i) {</span>
+<span class="lineNum">      94 </span><span class="lineCov">       3355 :       numbers.push_back( indices[i] );</span>
+<span class="lineNum">      95 </span><span class="lineCov">       3355 :       atom_der_index[i]=i;</span>
+<span class="lineNum">      96 </span>            :     }
+<span class="lineNum">      97 </span>            :   } else {
+<span class="lineNum">      98 </span><span class="lineCov">        346 :     if(!disable_checks) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">        346 :       if( numbers.size()!=indices.size() ) error(&quot;mismatched numbers of atoms in pdb frames&quot;);</span>
+<span class="lineNum">     100 </span>            :     }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">      14042 :     for(unsigned i=0; i&lt;indices.size(); ++i) {</span>
+<span class="lineNum">     103 </span>            :       bool found=false;
+<span class="lineNum">     104 </span><span class="lineCov">       4450 :       if(!disable_checks) {</span>
+<span class="lineNum">     105 </span><span class="lineCov">       4450 :         if( indices[i]!=numbers[i] ) error(&quot;found mismatched reference atoms in pdb frames&quot;);</span>
+<span class="lineNum">     106 </span><span class="lineCov">       4450 :         atom_der_index[i]=i;</span>
+<span class="lineNum">     107 </span>            :       } else {
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :         for(unsigned j=0; j&lt;numbers.size(); ++j) {</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :           if( indices[i]==numbers[j] ) { found=true; atom_der_index[i]=j; break; }</span>
+<span class="lineNum">     110 </span>            :         }
+<span class="lineNum">     111 </span>            :         if( !found ) {
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :           atom_der_index[i]=numbers.size(); numbers.push_back( indices[i] );</span>
+<span class="lineNum">     113 </span>            :         }
+<span class="lineNum">     114 </span>            :       }
+<span class="lineNum">     115 </span>            :     }
+<span class="lineNum">     116 </span>            :   }
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">        445 : }</span></a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">        494 : void ReferenceAtoms::displaceReferenceAtoms( const double&amp; weight, const std::vector&lt;Vector&gt;&amp; dir ) {</span>
+<span class="lineNum">     120 </span>            :   plumed_dbg_assert( dir.size()==reference_atoms.size() );
+<span class="lineNum">     121 </span><span class="lineCov">       1872 :   for(unsigned i=0; i&lt;dir.size(); ++i) reference_atoms[i] += weight*dir.size()*dir[i];</span>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">        494 : }</span></a>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">       4839 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
